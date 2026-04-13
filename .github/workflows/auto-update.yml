@@ -1,20 +1,21 @@
 name: 每日自动更新价格
-
 on:
   schedule:
-    - cron: "0 0 * * *"  # 每天 UTC 0点（北京时间 8点）运行
-  workflow_dispatch:     # 允许手动点一下运行
+    - cron: "0 1 * * *"
+  workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          persist-credentials: false
 
-      - name: 安装 Python 环境
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -22,13 +23,13 @@ jobs:
       - name: 安装依赖
         run: pip install requests beautifulsoup4
 
-      - name: 执行更新脚本
+      - name: 运行更新脚本
         run: python update-prices.py
 
-      - name: 提交并推送更新
-        run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git add index.html
-          git commit -m "自动更新硬件价格 $(date +'%Y-%m-%d')" || exit 0
-          git push
+      - name: 提交并推送
+        uses: ad-m/github-push-action@master
+        with:
+          branch: main
+          directory: .
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: "自动更新价格 $(date +'%Y-%m-%d')"
