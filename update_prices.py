@@ -3,11 +3,18 @@ import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
-# -------------------------- 配置项 --------------------------
+# -------------------------- 全局配置项 --------------------------
+# 原配件爬取地址
 SOURCE_URL = "http://0532.name/cpu_list"
+# 显卡分类爬取地址（新增）
+GPU_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%98%BE%E5%8D%A1"
 HTML_FILE = "index.html"
+# 原有配件修改行号 761-817
 START_LINE = 760
 END_LINE = 816
+# 显卡插入起始行号 906行（Python索引905）
+GPU_INSERT_LINE = 905
+# 匹配阈值
 MATCH_THRESHOLD = 60
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/532.36"
@@ -33,7 +40,7 @@ def extract_hardware_model(name):
         return [m for m in match.groups() if m][0]
     return name
 
-# -------------------------- 1. 爬取价格 --------------------------
+# -------------------------- 1. 爬取原有配件价格 --------------------------
 def fetch_latest_prices():
     try:
         response = requests.get(SOURCE_URL, headers=HEADERS, timeout=10)
@@ -49,47 +56,50 @@ def fetch_latest_prices():
             model = extract_hardware_model(name)
             if model:
                 price_dict[model] = price
-                print(f"源站：{name} → 纯型号：{model} | 价格：{price}")
-
-        print(f"\n✅ 成功爬取 {len(price_dict)} 个配件")
+        print(f"✅ 成功爬取 {len(price_dict)} 个核心配件")
         return price_dict
 
     except Exception as e:
-        print(f"❌ 爬取失败：{str(e)}")
+        print(f"❌ 爬取配件失败：{str(e)}")
         return {}
 
-# -------------------------- 2. 匹配+【定制加价：锐龙R5-5600 +50】 --------------------------
-def fuzzy_match_price(target_name, price_dict):
-    if not price_dict:
-        return None
+# -------------------------- 2. 【新增】爬取显卡价格 --------------------------
+def fetch_gpu_prices():
+    """爬取显卡分类页面的所有显卡名称+价格"""
+    try:
+        response = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        text = soup.get_text(separator="\n").strip()
+        gpu_list = []
 
-    target_model = extract_hardware_model(target_name)
-    print(f"\n┌── HTML原始：{target_name}")
-    print(f"└── 提取纯型号：{target_model}")
+        pattern = re.compile(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)")
+        matches = pattern.findall(text)
 
-    best_match, score = process.extractOne(
-        target_model,
-        price_dict.keys(),
-        scorer=process.fuzz.token_set_ratio
-    )
+        for name, price in matches:
+            # 清理显卡名称（去除多余符号/空格）
+            clean_name = re.sub(r"\s+", " ", name.strip())
+            if clean_name and price:
+                gpu_list.append({"name": clean_name, "price": price})
+                print(f"显卡：{clean_name} | 价格：{price}")
 
-    if score >= MATCH_THRESHOLD:
-        original_price = price_dict[best_match]
-        # ====================== 定制加价逻辑 ======================
-        # 仅 锐龙R5-5600 (型号：r55600) 自动+50元
-        if target_model == "r55600":
-            new_price = str(float(original_price) + 50)
-            print(f"✅ 匹配成功：{best_match} (相似度:{score}%)")
-            print(f"💰 特殊加价：原价{original_price} → +50 → 新价{new_price}")
-            return new_price
-        # ==========================================================
-        print(f"✅ 匹配成功：{best_match} (相似度:{score}%)")
-        return original_price
-    else:
-        print(f"❌ 匹配失败：保留原价")
-        return None
+        print(f"\n✅ 成功爬取 {len(gpu_list)} 个显卡")
+        return gpu_list
 
-# -------------------------- 3. 更新HTML --------------------------
+    except Exception as e:
+        print(f"❌ 爬取显卡失败：{str(e)}")
+        return []
+
+# -------------------------- 3. 生成显卡标准格式行 --------------------------
+def generate_gpu_lines(gpu_list):
+    """生成和你要求一致的格式：{n:"显卡名",p:价格},"""
+    gpu_lines = []
+    for gpu in gpu_list:
+        line = f'{{n:"{gpu["name"]}",p:{gpu["price"]}}},\n'
+        gpu_lines.append(line)
+    return gpu_lines
+
+# -------------------------- 4. 原有配件价格更新 --------------------------
 def update_html_prices(price_dict):
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -116,16 +126,72 @@ def update_html_prices(price_dict):
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-
-        print(f"\n🎉 更新完成！成功更新 {update_count} 个配件价格！")
+        return update_count
 
     except Exception as e:
-        print(f"❌ 修改失败：{str(e)}")
+        print(f"❌ 修改配件价格失败：{str(e)}")
+        return 0
+
+# -------------------------- 5. 【新增】906行后自动更新显卡 --------------------------
+def update_gpu_section(gpu_lines):
+    """自动替换906行后的显卡区域，无重复、每日更新"""
+    try:
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # 安全处理：如果文件行数不足，补充空行
+        while len(lines) <= GPU_INSERT_LINE:
+            lines.append("\n")
+
+        # 分割文件：前906行 + 新显卡行
+        new_file_content = lines[:GPU_INSERT_LINE + 1]
+        new_file_content.extend(gpu_lines)
+
+        # 保存文件
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.writelines(new_file_content)
+
+        print(f"🎉 显卡更新完成！成功写入 {len(gpu_lines)} 个显卡到906行后")
+
+    except Exception as e:
+        print(f"❌ 更新显卡失败：{str(e)}")
+
+# -------------------------- 6. 模糊匹配+锐龙R5-5600自动加价50 --------------------------
+def fuzzy_match_price(target_name, price_dict):
+    if not price_dict:
+        return None
+
+    target_model = extract_hardware_model(target_name)
+    best_match, score = process.extractOne(
+        target_model,
+        price_dict.keys(),
+        scorer=process.fuzz.token_set_ratio
+    )
+
+    if score >= MATCH_THRESHOLD:
+        original_price = price_dict[best_match]
+        # 定制加价：锐龙R5-5600 +50元
+        if target_model == "r55600":
+            new_price = str(float(original_price) + 50)
+            print(f"💰 R5-5600 加价：{original_price} → {new_price}")
+            return new_price
+        return original_price
+    return None
 
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
-    print("===== 硬件纯型号匹配版 - 价格自动更新 =====")
+    print("===== 全功能版：配件+显卡 每日自动更新 =====")
+    
+    # 1. 更新原有核心配件价格
     prices = fetch_latest_prices()
     if prices:
-        update_html_prices(price_dict=prices)
-    print("===== 执行结束 =====")
+        count = update_html_prices(prices)
+        print(f"✅ 核心配件更新完成：{count} 个")
+
+    # 2. 【新增】自动更新显卡（906行后）
+    gpu_data = fetch_gpu_prices()
+    if gpu_data:
+        gpu_format_lines = generate_gpu_lines(gpu_data)
+        update_gpu_section(gpu_format_lines)
+
+    print("===== 全部任务执行结束 =====")
