@@ -3,40 +3,52 @@ import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
-# -------------------------- 配置项（优化后） --------------------------
+# -------------------------- 配置项 --------------------------
 SOURCE_URL = "http://0532.name/cpu_list"
 HTML_FILE = "index.html"
-START_LINE = 760  # 761行
-END_LINE = 816    # 817行
-# 双重阈值：主阈值70，失败自动降级60（完美适配配件名称）
-MATCH_THRESHOLD = 70
-SECOND_THRESHOLD = 60
+START_LINE = 760
+END_LINE = 816
+MATCH_THRESHOLD = 60  # 纯型号匹配，极低阈值也能精准命中
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 }
 
-# -------------------------- 【核心】名称深度清洗（解决匹配失败） --------------------------
-def clean_name(name):
+# -------------------------- 【核心】提取硬件纯型号（绝杀功能） --------------------------
+def extract_hardware_model(name):
     """
-    清洗配件名称：删除所有干扰匹配的词汇、符号、空格
-    适配：酷睿i5-12400F → i512400F
+    自动提取CPU/显卡/硬件核心型号，删除所有参数、描述、主频、核心数
+    例：i5-14600KF 3.5G 十四核 → 直接提取 i514600kf
     """
     if not name:
         return ""
-    # 1. 统一转小写
-    name = name.lower()
-    # 2. 删除所有干扰词（通用硬件词汇、包装、符号）
-    stop_words = [
-        "酷睿", "锐龙", "intel", "amd", "cpu", "显卡", "主板", "内存", "硬盘", "固态",
-        "盒装", "散片", "全新", "特价", "热销", "电竞", "游戏", "版", "代",
-        "-", "_", "/", "(", ")", "【", "】", "：", ":", " ", "　"
-    ]
-    for word in stop_words:
-        name = name.replace(word, "")
-    # 3. 清理多余空字符，返回纯名称
-    return name.strip()
+    
+    # 1. 清理所有代码符号：{n:"  "} 等无用字符
+    name = re.sub(r'[{n:"\",}]', '', name)
+    
+    # 2. 统一小写 + 移除空格/横杠
+    name = name.lower().replace(" ", "").replace("-", "")
+    
+    # 3. 【核心正则】匹配 Intel/AMD/英伟达 所有主流型号
+    # 匹配：i3/i5/i7/i9、r3/r5/r7/r9、rtx/gtx、12400f/4060/7800x等纯型号
+    pattern = re.compile(
+        r'(i[3579]\d+[a-z0-9]*)|'          # Intel CPU: i514600kf
+        r'(r[3579]\d+[a-z0-9]*)|'          # AMD CPU: r77800x
+        r'(rtx\d+[a-z0-9]*)|'              # 英伟达显卡: rtx4060
+        r'(gtx\d+[a-z0-9]*)|'              # 老显卡: gtx1660
+        r'(amd\d+[a-z0-9]*)|'              # AMD显卡
+        r'(\d+gb)|'                        # 内存/硬盘容量
+        r'(\d+[a-z]+\d*)'                  # 其他硬件型号
+    )
+    
+    match = pattern.search(name)
+    if match:
+        # 返回匹配到的纯型号
+        return [m for m in match.groups() if m][0]
+    
+    # 无匹配则返回清理后的名称
+    return name
 
-# -------------------------- 1. 爬取配件价格 --------------------------
+# -------------------------- 1. 爬取价格（提取纯型号） --------------------------
 def fetch_latest_prices():
     try:
         response = requests.get(SOURCE_URL, headers=HEADERS, timeout=10)
@@ -45,53 +57,49 @@ def fetch_latest_prices():
         text = soup.get_text(separator="\n").strip()
         price_dict = {}
 
-        # 正则匹配所有 名称+￥价格
+        # 匹配名称+价格
         pattern = re.compile(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)")
         matches = pattern.findall(text)
 
         for name, price in matches:
-            clean_name_val = clean_name(name)
-            if clean_name_val:
-                price_dict[clean_name_val] = price
-                print(f"爬取：{name} → 清洗后：{clean_name_val} | 价格：{price}")
+            # 提取源站纯型号
+            model = extract_hardware_model(name)
+            if model:
+                price_dict[model] = price
+                print(f"源站：{name} → 纯型号：{model} | 价格：{price}")
 
-        print(f"\n✅ 成功爬取 {len(price_dict)} 个有效配件")
+        print(f"\n✅ 成功爬取 {len(price_dict)} 个配件")
         return price_dict
 
     except Exception as e:
         print(f"❌ 爬取失败：{str(e)}")
         return {}
 
-# -------------------------- 2. 【优化】超强模糊匹配（永不失败版） --------------------------
+# -------------------------- 2. 纯型号精准匹配 --------------------------
 def fuzzy_match_price(target_name, price_dict):
-    """双重匹配+降级阈值，解决所有匹配失败问题"""
     if not price_dict:
         return None
 
-    # 清洗HTML中的配件名称
-    target_clean = clean_name(target_name)
-    print(f"\n┌── HTML配件：{target_name}")
-    print(f"└── 清洗后：{target_clean}")
+    # 提取HTML配件的纯型号
+    target_model = extract_hardware_model(target_name)
+    print(f"\n┌── HTML原始：{target_name}")
+    print(f"└── 提取纯型号：{target_model}")
 
-    # 最优匹配算法：token_set_ratio（适配部分匹配、乱序、缩写）
+    # 最强乱序/部分匹配算法
     best_match, score = process.extractOne(
-        target_clean,
+        target_model,
         price_dict.keys(),
-        scorer=lambda s1, s2: process.fuzz.token_set_ratio(s1, s2)
+        scorer=process.fuzz.token_set_ratio
     )
 
-    # 双重阈值匹配
     if score >= MATCH_THRESHOLD:
-        print(f"✅ 精准匹配：{best_match} (相似度:{score}%)")
-        return price_dict[best_match]
-    elif score >= SECOND_THRESHOLD:
-        print(f"⚠️  宽松匹配：{best_match} (相似度:{score}%)")
+        print(f"✅ 匹配成功：{best_match} (相似度:{score}%)")
         return price_dict[best_match]
     else:
-        print(f"❌ 匹配失败：保留原价 (相似度:{score}%)")
+        print(f"❌ 匹配失败：保留原价")
         return None
 
-# -------------------------- 3. 修改HTML价格 --------------------------
+# -------------------------- 3. 更新HTML --------------------------
 def update_html_prices(price_dict):
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -106,12 +114,12 @@ def update_html_prices(price_dict):
             if not price_match:
                 continue
 
-            # 提取配件名
+            # 提取配件名称
             item_name = re.sub(r"<[^>]+>|p:\d+(?:\.\d+)?", "", line).strip()
             if not item_name:
                 continue
 
-            # 匹配新价格
+            # 匹配并替换价格
             new_price = fuzzy_match_price(item_name, price_dict)
             if new_price:
                 new_line = re.sub(r"p:\d+(?:\.\d+)?", f"p:{new_price}", line)
@@ -122,14 +130,14 @@ def update_html_prices(price_dict):
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
-        print(f"\n🎉 执行完成！成功更新 {update_count} 个配件价格")
+        print(f"\n🎉 更新完成！成功更新 {update_count} 个配件价格！")
 
     except Exception as e:
-        print(f"❌ 修改HTML失败：{str(e)}")
+        print(f"❌ 修改失败：{str(e)}")
 
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
-    print("===== 开始执行配件价格自动更新（优化匹配版） =====")
+    print("===== 硬件纯型号匹配版 - 价格自动更新 =====")
     prices = fetch_latest_prices()
     if prices:
         update_html_prices(prices)
