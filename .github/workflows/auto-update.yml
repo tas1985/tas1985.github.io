@@ -1,33 +1,34 @@
-name: 自动更新价格
+name: 自动更新配件价格
 on:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
-  run:
+  update-price:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # 强制使用 Node24，消除警告
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: 拉取代码
+        uses: actions/checkout@v4
 
-      - name: Set Python
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Install
+      - name: 安装依赖
         run: pip install -r requirements.txt
 
-      - name: Run
+      - name: 运行价格更新程序
         run: python update_prices.py
 
-      - name: Commit
+      - name: 提交更新
         uses: EndBug/add-and-commit@v9
         with:
-          message: "自动更新配件价格"
+          message: '自动更新配件价格'
           committer_name: GitHub Actions
           committer_email: actions@github.com
