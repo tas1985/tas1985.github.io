@@ -1,21 +1,19 @@
-name: 自动更新配件价格
+name: 强制更新价格
 on:
-  schedule:
-    - cron: '0 2 * * *'
   workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
 
 jobs:
-  update-price:
+  run:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: 安装依赖
-        run: pip install requests
-      - name: 运行价格更新
+      - name: Run script
         run: python update_prices.py
-      - name: 提交更新
+      - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
-          message: "自动更新 defaultData 价格"
+          message: "强制更新价格"
