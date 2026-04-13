@@ -2,7 +2,7 @@ name: 自动更新CPU价格
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 7 * * *'
 
 jobs:
   update:
