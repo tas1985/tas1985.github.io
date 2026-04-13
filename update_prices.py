@@ -46,7 +46,7 @@ def fetch_latest_prices():
     try:
         response = requests.get(SOURCE_URL, headers=HEADERS, timeout=10)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(response.text, "parser")
         text = soup.get_text(separator="\n").strip()
         price_dict = {}
         pattern = re.compile(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)")
@@ -142,18 +142,26 @@ def safe_update_gpu():
     except Exception as e:
         print(f"❌ 更新显卡失败：{str(e)}")
 
-# -------------------------- 6. 模糊匹配+R5-5600加价50 --------------------------
+# -------------------------- 6. 模糊匹配+双型号自动加价 --------------------------
 def fuzzy_match_price(target_name, price_dict):
     if not price_dict:
         return None
     target_model = extract_hardware_model(target_name)
     best_match, score = process.extractOne(target_model, price_dict.keys(), scorer=process.fuzz.token_set_ratio)
+    
     if score >= MATCH_THRESHOLD:
         original_price = price_dict[best_match]
+        # 规则1：锐龙 R5-5600 自动+50元
         if target_model == "r55600":
             new_price = str(float(original_price) + 50)
             print(f"💰 R5-5600 加价：{original_price} → {new_price}")
             return new_price
+        # 规则2：锐龙 R5-5500X3D 自动+39元（新增）
+        elif target_model == "r55500x3d":
+            new_price = str(float(original_price) + 39)
+            print(f"💰 R5-5500X3D 加价：{original_price} → {new_price}")
+            return new_price
+        # 其他配件原价返回
         return original_price
     return None
 
