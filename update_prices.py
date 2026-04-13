@@ -14,7 +14,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/532.36"
 }
 
-# 显卡专属标记（核心：仅靠这两个标记定位，与行号无关）
+# 显卡专属标记（纯标记定位，无行号依赖）
 GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
 GPU_END_MARK = "<!-- 显卡自动更新区域 结束 -->"
 # 12个空格缩进
@@ -82,7 +82,6 @@ def fetch_gpu_prices():
 
 # -------------------------- 3. 生成带12个空格的显卡数据 --------------------------
 def generate_gpu_content(gpu_list):
-    # 严格格式：开始标记 + 12空格显卡行 + 结束标记
     content = [f"{GPU_START_MARK}\n"]
     for gpu in gpu_list:
         content.append(f'{INDENT}{{n:"{gpu["name"]}",p:{gpu["price"]}}},\n')
@@ -116,67 +115,65 @@ def update_html_prices(price_dict):
         print(f"❌ 修改配件价格失败：{str(e)}")
         return 0
 
-# -------------------------- 5. 【纯标记驱动】显卡更新（无行号、零破坏） --------------------------
+# -------------------------- 5. 纯标记驱动更新显卡 --------------------------
 def update_gpu_by_mark():
-    """
-    核心修改：完全不依赖行号
-    仅识别 <!-- 显卡自动更新区域 开始 --> 标记，在其后添加/更新显卡
-    """
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # 获取最新显卡数据
         gpu_list = fetch_gpu_prices()
         new_content = generate_gpu_content(gpu_list)
 
-        # 正则匹配：精准替换两个标记之间的所有内容（无视行号）
         pattern = re.compile(
             re.escape(GPU_START_MARK) + r".*?" + re.escape(GPU_END_MARK),
             re.DOTALL
         )
-        # 替换标记区域内的内容
         final_content = pattern.sub(new_content.strip(), content)
 
-        # 保存文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.write(final_content)
 
-        print(f"🎉 显卡更新完成！基于注释标记更新，无任何行号依赖")
+        print(f"🎉 显卡更新完成！基于注释标记更新，12空格缩进")
 
     except Exception as e:
         print(f"❌ 更新显卡失败：{str(e)}")
 
-# -------------------------- 6. 双型号自动加价 --------------------------
+# -------------------------- 6. 【修复】双型号自动加价（100%生效） --------------------------
 def fuzzy_match_price(target_name, price_dict):
     if not price_dict:
         return None
+    
     target_model = extract_hardware_model(target_name)
+    # 调试日志：打印识别到的名称和型号
+    print(f"🔍 匹配CPU：{target_name} | 提取型号：{target_model}")
+    
     best_match, score = process.extractOne(target_model, price_dict.keys(), scorer=process.fuzz.token_set_ratio)
     
     if score >= MATCH_THRESHOLD:
         original_price = price_dict[best_match]
-        # 锐龙 R5-5600 +50元
+        
+        # 规则1：锐龙 R5-5600 +50元
         if target_model == "r55600":
             new_price = str(float(original_price) + 50)
             print(f"💰 R5-5600 加价：{original_price} → {new_price}")
             return new_price
-        # 锐龙 R5-5500X3D +39元
-        elif target_model == "r55500x3d":
+        
+        # 规则2：【修复强制生效】锐龙 R5-5500X3D 专属加价 +39元
+        elif "R5-5500X3D" in target_name or target_model == "r55500x3d":
             new_price = str(float(original_price) + 39)
-            print(f"💰 R5-5500X3D 加价：{original_price} → {new_price}")
+            print(f"💰 R5-5500X3D 加价成功：{original_price} → {new_price}")
             return new_price
+        
+        # 其他配件原价
         return original_price
     return None
 
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
     print("===== 纯标记定位版 - 全自动价格更新 =====")
-    # 更新CPU等配件价格
     prices = fetch_latest_prices()
     if prices:
         count = update_html_prices(prices)
         print(f"✅ 配件价格更新完成：{count} 个")
-    # 纯标记更新显卡（无行号）
     update_gpu_by_mark()
     print("===== 全部执行完成 =====")
