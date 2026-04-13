@@ -7,15 +7,15 @@ from datetime import datetime
 
 # ===================== 配置参数 ======================
 URL_SOURCE = "http://0532.name/cpu_list"
-URL_TARGET = "https://tas1985.github.io/"
-START_LINE = 763
-END_LINE = 953
-MATCH_SCORE = 70
+START_LINE = 763    # 开始行
+END_LINE = 953     # 结束行
+MATCH_SCORE = 70   # 匹配精度
 # ====================================================
 
 def get_source_prices():
+    """从 A 网站获取价格"""
     try:
-        print(f"[{datetime.now()}] 获取A网站价格...")
+        print(f"[{datetime.now()}] 正在获取配件价格...")
         resp = requests.get(URL_SOURCE, timeout=15)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -32,24 +32,15 @@ def get_source_prices():
                 if name and price_num:
                     price_dict[name] = price_num.group(1)
 
-        print(f"✅ 获取到 {len(price_dict)} 个价格")
+        print(f"✅ 成功获取 {len(price_dict)} 个配件价格")
         return price_dict
 
     except Exception as e:
         print(f"❌ 获取价格失败: {e}")
         return {}
 
-def download_target_html():
-    try:
-        print(f"[{datetime.now()}] 下载目标页面...")
-        resp = requests.get(URL_TARGET, timeout=20)
-        resp.raise_for_status()
-        return resp.text
-    except Exception as e:
-        print(f"❌ 下载页面失败: {e}")
-        return None
-
 def fuzzy_match_replace(lines, price_dict):
+    """只替换 763-953 行的价格数字"""
     updated_lines = lines.copy()
     match_count = 0
 
@@ -74,31 +65,40 @@ def fuzzy_match_replace(lines, price_dict):
             if new_line != line:
                 updated_lines[line_num] = new_line
                 match_count += 1
-                print(f"行 {line_num+1} | {best_match} → {new_price} 元")
+                print(f"行 {line_num+1} | 匹配成功: {best_match} → {new_price} 元")
 
-    print(f"✅ 共更新 {match_count} 个价格")
+    print(f"✅ 价格更新完成，共更新 {match_count} 个配件")
     return updated_lines
 
 def main():
-    print("=" * 50)
-    print("  GitHub 自动价格更新程序")
-    print("=" * 50)
+    print("=" * 60)
+    print(" GitHub 自动更新 index.html 价格程序")
+    print(" 作用：仅修改根目录 index.html 763~953 行价格")
+    print("=" * 60)
 
+    # 1. 获取价格
     source_prices = get_source_prices()
     if not source_prices:
+        print("❌ 未获取到价格，程序退出")
         return
 
-    target_html = download_target_html()
-    if not target_html:
+    # 2. 读取 仓库根目录的 index.html
+    html_path = "index.html"
+    if not os.path.exists(html_path):
+        print(f"❌ 未找到 {html_path}")
         return
 
-    original_lines = target_html.splitlines(keepends=True)
-    new_lines = fuzzy_match_replace(original_lines, source_prices)
+    with open(html_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
 
-    with open("index.html", "w", encoding="utf-8") as f:
+    # 3. 只修改 763~953 行
+    new_lines = fuzzy_match_replace(lines, source_prices)
+
+    # 4. 直接覆盖写回 index.html
+    with open(html_path, "w", encoding="utf-8") as f:
         f.writelines(new_lines)
 
-    print("\n🎉 index.html 已自动更新完成！")
+    print("\n🎉 成功！已直接更新仓库根目录的 index.html")
 
 if __name__ == "__main__":
     main()
