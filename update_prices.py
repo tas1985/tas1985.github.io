@@ -8,7 +8,7 @@ import re
 import os
 
 # 🔥 强制锁定你的文件路径
-HTML_FILE = "/home/runner/work/tas1985.github.io/tas1985.github.io/index.html"
+HTML_FILE = "tas1985.github.io/index.html"
 URL_SOURCE = "http://0532.name/cpu_list"
 START_LINE = 761
 END_LINE = 955
