@@ -760,61 +760,61 @@
     // 初始化数据：优先从localStorage加载，无则使用默认数据
     const defaultData = {
         cpu: [
-            {n:"i3-12100F 3.3G 四核",p:645.00},
-            {n:"i3-12100 3.3G 四核",p:925.00},
-            {n:"i5-12400F 2.5G 六核",p:895.00},
-            {n:"i5-12400 2.5G 六核",p:1215.00},
-            {n:"i5-12490F 3.0G 六核",p:930.00},
-            {n:"i5-12600KF 3.7G 十核",p:1145.00},
-            {n:"i7-12700KF 3.6G 十二核",p:1899.00},
-            {n:"i9-12900KF 3.2G 十六核",p:1899.00},
-            {n:"i9-12900K 3.2G 十六核",p:1899.00},
-            {n:"i3-13100F 3.4G 四核",p:645.00},
-            {n:"i3-13100 3.4G 四核",p:925.00},
-            {n:"i5-13400F 2.5G 十核",p:995.00},
-            {n:"i5-13400 2.5G 十核",p:1470.00},
-            {n:"i5-13600KF 3.5G 十四核",p:1345.00},
-            {n:"i5-13600K 3.5G 十四核",p:1345.00},
-            {n:"i7-13700KF 2.1G 十六核",p:2120.00}, 
-            {n:"i9-13900KF 3.0G 二十四核",p:1345.00},
-            {n:"i9-13900K 3.0G 二十四核",p:1345.00},
-            {n:"i3-14100F 3.5G 四核",p:645.00},
-            {n:"i3-14100 3.5G 四核",p:645.00},
-            {n:"i5-14400F 2.5G 十核",p:1015.00},
-            {n:"i5-14400 2.5G 十核",p:1015.00},
-            {n:"中文原盒i5-14490F 2.5G 十核",p:1099.00},
-            {n:"i5-14600KF 3.5G 十四核二十线程5.3G睿频",p:1499.00},
-            {n:"i5-14600K 3.5G 十四核",p:1499.00},
-            {n:"i7-14700KF 3.4G 二十核",p:2120.00},
-            {n:"i9-14900KF 3.2G 二十四核",p:2120.00},
-            {n:"i9-14900K 3.2G 二十四核",p:2120.00},
+            {n:"i3-12100F 3.3G 四核",p:645},
+            {n:"i3-12100 3.3G 四核",p:945},
+            {n:"i5-12400F 2.5G 六核",p:895},
+            {n:"i5-12400 2.5G 六核",p:1250},
+            {n:"i5-12490F 3.0G 六核",p:920},
+            {n:"i5-12600KF 3.7G 十核",p:1145},
+            {n:"i7-12700KF 3.6G 十二核",p:1950},
+            {n:"i9-12900KF 3.2G 十六核",p:1870},
+            {n:"i9-12900K 3.2G 十六核",p:2330},
+            {n:"i3-13100F 3.4G 四核",p:635},
+            {n:"i3-13100 3.4G 四核",p:990},
+            {n:"i5-13400F 2.5G 十核",p:1005},
+            {n:"i5-13400 2.5G 十核",p:1550},
+            {n:"i5-13600KF 3.5G 十四核",p:1345},
+            {n:"i5-13600K 3.5G 十四核",p:1300},
+            {n:"i7-13700KF 2.1G 十六核",p:1950}, 
+            {n:"i9-13900KF 3.0G 二十四核",p:2100},
+            {n:"i9-13900K 3.0G 二十四核",p:2230},
+            {n:"i3-14100F 3.5G 四核",p:699},
+            {n:"i3-14100 3.5G 四核",p:999},
+            {n:"i5-14400F 2.5G 十核",p:1050},
+            {n:"i5-14400 2.5G 十核",p:1599},
+            {n:"中文原盒i5-14490F 2.5G 十核",p:1080},
+            {n:"i5-14600KF 3.5G 十四核二十线程5.3G睿频",p:1499},
+            {n:"i5-14600K 3.5G 十四核",p:1549},
+            {n:"i7-14700KF 3.4G 二十核",p:2140},
+            {n:"i9-14900KF 3.2G 二十四核",p:2899},
+            {n:"i9-14900K 3.2G 二十四核",p:2950},
             {n:"Intel E5-2666V3 3.5G 10核20线程（到手10天质保）",p:219},
-            {n:"Ultra 5 225F 2.7G 十核",p:780.00},
+            {n:"Ultra 5 225F 2.7G 十核",p:810},
             {n:"Ultra 5 225 2.7G 十核",p:1030},
-            {n:"Ultra 5 230F 2.7G 十核",p:890.00},
+            {n:"Ultra 5 230F 2.7G 十核",p:890},
             {n:"Ultra 5 230 2.7G 十核",p:1050},
-            {n:"Ultra 5 245KF 3.6G 十四核",p:1180.00},
-            {n:"Ultra 5 245K 3.6G 十四核",p:1180.00},
-            {n:"Ultra 7 265KF 3.3G 二十核",p:1550.00},
-            {n:"Ultra 7 265K 3.3G 二十核",p:1699.00},
-            {n:"Ultra 9 285K 3.2G 二十四核",p:4400.00},
-            {n:"Ultra 7 270K PLUS 盒装 24核心24线程性能不输U9 285K",p:2199.00},
-            {n:"锐龙 R5-5500X3D 3.0G 6核12线程帧数超过i5-14600KF",p:1110.00},
-            {n:"锐龙 R5-5500 散 3.6G 6核12线程",p:520.00},
-            {n:"锐龙 R5-5600 盒 3.5G 6核12线程",p:785.0},
-            {n:"锐龙 R5-5600X 3.7G 6核12线程",p:855.00},
-            {n:"锐龙 R5-5600GT 3.6G 6核12线程 集显",p:900.00},
-            {n:"锐龙 R7-5700X 3.4G 8核16线程",p:970.00},
-            {n:"锐龙 R5-7500F 3.7G 6核12线程",p:730.00},
-            {n:"锐龙 R7-7800X3D 5.0G 8核16线程 集显",p:1860.00},
-            {n:"锐龙 R5-9500F 3.8G 6核12线程",p:730.00},
-            {n:"锐龙 R5-9600X 3.9G 6核12线程 集显",p:1080.00},
-            {n:"锐龙 R7-9700X 3.8G 8核16线程 集显",p:1499.00},
-            {n:"锐龙 R9-9900X 4.4G 12核24线程 集显",p:2880.00}, 
-            {n:"锐龙 R9-9950X 4.3G 16核32线程 集显",p:2880.00},
-            {n:"锐龙 R7-9800X3D 4.7G 8核16线程 集显",p:2750.00},
-            {n:"锐龙 R7-9850X3D 4.7G 8核16线程 集显",p:3150.00}, 
-            {n:"锐龙 R9-9950X3D 4.3G 16核32线程 集显",p:4099.00}
+            {n:"Ultra 5 245KF 3.6G 十四核",p:1180},
+            {n:"Ultra 5 245K 3.6G 十四核",p:1280},
+            {n:"Ultra 7 265KF 3.3G 二十核",p:1550},
+            {n:"Ultra 7 265K 3.3G 二十核",p:1699},
+            {n:"Ultra 9 285K 3.2G 二十四核",p:4459},
+            {n:"Ultra 7 270K PLUS 盒装 24核心24线程性能不输U9 285K",p:2199},
+            {n:"锐龙 R5-5500X3D 3.0G 6核12线程帧数超过i5-14600KF",p:1149},
+            {n:"锐龙 R5-5500 散 3.6G 6核12线程",p:520},
+            {n:"锐龙 R5-5600 盒 3.5G 6核12线程",p:785},
+            {n:"锐龙 R5-5600X 3.7G 6核12线程",p:850},
+            {n:"锐龙 R5-5600GT 3.6G 6核12线程 集显",p:845},
+            {n:"锐龙 R7-5700X 3.4G 8核16线程",p:970},
+            {n:"锐龙 R5-7500F 3.7G 6核12线程",p:730},
+            {n:"锐龙 R7-7800X3D 5.0G 8核16线程 集显",p:1875},
+            {n:"锐龙 R5-9500F 3.8G 6核12线程",p:999},
+            {n:"锐龙 R5-9600X 3.9G 6核12线程 集显",p:1070},
+            {n:"锐龙 R7-9700X 3.8G 8核16线程 集显",p:1515},
+            {n:"锐龙 R9-9900X 4.4G 12核24线程 集显",p:2520}, 
+            {n:"锐龙 R9-9950X 4.3G 16核32线程 集显",p:2899},
+            {n:"锐龙 R7-9800X3D 4.7G 8核16线程 集显",p:2775},
+            {n:"锐龙 R7-9850X3D 4.7G 8核16线程 集显",p:3180}, 
+            {n:"锐龙 R9-9950X3D 4.3G 16核32线程 集显",p:4230}
         ],
         ram: [
             {n:"金百达_银爵 16G 3200(8*2)套装",p:750},
@@ -904,133 +904,547 @@
             {n:"七彩虹 RTX5070TI 16G 战斧豪华版 SFF",p:7299},
             {n:"微星 RTX5080万图师3X OC PLUS",p:9449},
             {n:"七彩虹 RTX5090D Advanced银鲨OC 24GB",p:20499},
-{n:"蓝戟 Arc B580 Photon 12G OC 黑色三扇",p:1929.00},
-{n:"蓝戟 Arc B580 Photon 12G OC 白色三扇",p:1944.00},
-{n:"蓝戟 Arc B580 Index 12G 黑色双扇",p:1849.00},
-{n:"蓝戟 Arc A750 Index 8G 黑色双扇",p:1369.00},
-{n:"蓝戟 ARC A380 Photon 6G 黑色双扇 对标1650",p:799.00},
-{n:"蓝宝石 RX9070XT 16G 脉动 黑色三扇",p:5199.00},
-{n:"蓝宝石 RX9070XT 16G 氮动 银色三扇",p:5799.00},
-{n:"蓝宝石 RX9070XT 16G 极地 白色三扇",p:5450.00},
-{n:"蓝宝石 RX9070GRE 12G 脉动双扇 黑色",p:3799.00},
-{n:"蓝宝石 RX9060XT 8G 脉动 黑色双扇",p:2599.00},
-{n:"蓝宝石 RX9060XT 8G 极地 白色双扇",p:2599.00},
-{n:"蓝宝石 RX9060XT 16G 脉动 黑色双扇",p:3299.00},
-{n:"蓝宝石 RX9060XT 16G 氮动 银色三扇",p:3699.00},
-{n:"蓝宝石 RX9060XT 16G 极地 白色双扇",p:3299.00},
-{n:"蓝宝石 RX7650GRE 8G 黑钻三扇 黑色",p:2150.00},
-{n:"蓝宝石 RX7650GRE 8G 白金双扇 黑色",p:2099.00},
-{n:"蓝宝石 RX7650GRE 8G 极地双扇 白色",p:2099.00},
-{n:"磐镭 RX5500 8GD6 双风扇 （1660性能）",p:899.00},
-{n:"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲",p:1399.00},
-{n:"磐镭 RTX3050 6G 开天黑色 双扇",p:1299.00},
-{n:"磐镭 GTX1660S 6G 双扇 （三年质保）",p:999.00},
-{n:"磐镭 GTX1650 4G 黑色 双扇",p:899.00},
-{n:"磐镭 GT730 4G 4K办公电影（VGA+HDMI+DVI)",p:240.00},
-{n:"磐镭 GT 610 2G",p:130.00},
-{n:"盈通 RX7650GRE 8G 游戏高手 白色三扇",p:1869.00},
-{n:"技嘉 RX9070XT GAMING OC 16G 魔鹰",p:5099.00},
-{n:"技嘉 RX9070XT ELITE 16G 小雕",p:5999.00},
-{n:"技嘉 RX9060XT GAMING OC 8G 魔鹰 三扇",p:2550.00},
-{n:"技嘉 RX7650GRE GAMING OC 8G 魔鹰 三扇",p:1799.00},
-{n:"技嘉 RTX5080 WF3 OC 16G 风魔",p:8999.00},
-{n:"技嘉 RTX5080 MASTER ICE 16G 超级冰雕",p:10999.00},
-{n:"技嘉 RTX5080 MASTER 16G 超级雕",p:10700.00},
-{n:"技嘉 RTX5080 AERO OC 16G 雪鹰 SFF",p:9199.00},
-{n:"技嘉 RTX5070TI WF3 16G 风魔 SFF",p:6899.00},
-{n:"技嘉 RTX5070TI GAMING OC 16G 魔鹰",p:7499.00},
-{n:"技嘉 RTX5070TI Eagle OC 16G 猎鹰 三扇 SFF",p:7099.00},
-{n:"技嘉 RTX5070TI AERO 16G 雪鹰",p:7599.00},
-{n:"技嘉 RTX5070 WF3 OC 12G 风魔 三扇",p:4899.00},
-{n:"技嘉 RTX5070 GAMING OC 12G 魔鹰",p:5150.00},
-{n:"技嘉 RTX5070 Eagle OC ICE 12G 冰猎鹰 三扇",p:5050.00},
-{n:"技嘉 RTX5070 Eagle OC 12G 猎鹰 三扇",p:4999.00},
-{n:"技嘉 RTX5070 AORUS MASTER OC 12G 超级雕",p:5699.00},
-{n:"技嘉 RTX5070 AERO OC 12G 雪鹰",p:5299.00},
-{n:"技嘉 RTX5060TI WF2 OC 16G 风魔MAX 双扇",p:3850.00},
-{n:"技嘉 RTX5060TI WF2 MAX OC 8G 风魔MAX",p:2899.00},
-{n:"技嘉 RTX5060TI GAMING OC 8G 魔鹰",p:3199.00},
-{n:"技嘉 RTX5060TI EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:3150.00},
-{n:"技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇",p:3850.00},
-{n:"技嘉 RTX5060TI EAGLE MAX OC 8G 猎鹰MAX 黑色三扇",p:3150.00},
-{n:"技嘉 RTX5060TI AERO 8G 雪鹰",p:3250.00},
-{n:"技嘉 RTX5060 WF2 MAX OC 8G 风魔",p:2599.00},
-{n:"技嘉 RTX5060 GAMING OC 8G 魔鹰",p:2699.00},
-{n:"技嘉 RTX5060 EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:2650.00},
-{n:"技嘉 RTX5060 EAGLE OC 8G 猎鹰 黑色双扇",p:2650.00},
-{n:"技嘉 RTX5060 EAGLE MAX OC 8G 猎鹰 黑色三扇",p:2650.00},
-{n:"技嘉 RTX5060 AERO 8G 雪鹰",p:2750.00},
-{n:"技嘉 RTX5050 WF2 8G 风魔",p:2200.00},
-{n:"技嘉 RTX4070 WF3 OC 12G 风魔 三扇",p:3699.00},
-{n:"技嘉 RTX3060 WF2 12G 风魔EC 工包",p:1929.00},
-{n:"技嘉 RTX3050 WF2 6G 风魔",p:1550.00},
-{n:"微星 RTX5080 16G VENTUS 3X OC 万图师",p:8999.00},
-{n:"微星 RTX5070TI INSPIRE 3X 16G OC 硬派师",p:6999.00},
-{n:"微星 RTX5070 VENTUS 2X OC 12G 万图师 双扇",p:4799.00},
-{n:"微星 RTX5070 12G GAMING TRIO OC 魔龙黑色",p:5599.00},
-{n:"微星 RTX5070 12G GAMING TRIO OC WHITE 白魔龙",p:5450.00},
-{n:"微星 RTX5060TI GAMING DUKE 3X龙爵",p:2899.00},
-{n:"微星 RTX5060 VENTUS 2X 8G 万图师 双扇",p:2599.00},
-{n:"微星 RTX5050 VENTUS 2X 8G 万图师 双扇",p:2099.00},
-{n:"微星 RTX3050 6G 万图师 双扇",p:1450.00},
-{n:"影驰 RTX5080 16G 金属大师 OC 黑金版 黑色",p:9200.00},
-{n:"影驰 RTX5070TI 魔刃 OC 16G 黑色",p:6950.00},
-{n:"影驰 RTX5070TI 圣刃 OC 16G 白色",p:6999.00},
-{n:"影驰 RTX5070TI 16G 金属大师 黑金版 黑色",p:7199.00},
-{n:"影驰 RTX5070TI 16G 金属大师 白金版 白色",p:7250.00},
-{n:"影驰 RTX5070 星曜LUNA OC 三扇 12G 白色",p:5399.00},
-{n:"影驰 RTX5070 12G 魔刃 OC 黑色",p:4999.00},
-{n:"影驰 RTX5070 12G 圣刃 OC 白色",p:4999.00},
-{n:"影驰 RTX5060TI 魔刃 OC 8G 黑色 三扇",p:2899.00},
-{n:"影驰 RTX5060TI 圣刃 OC 8G 白色 三扇",p:2899.00},
-{n:"影驰 RTX5060TI FIRE MAX 16G 双扇黑色",p:3950.00},
-{n:"影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色",p:3099.00},
-{n:"影驰 RTX5060TI 8G 金属大师 OC 白金版 白色",p:3099.00},
-{n:"影驰 RTX5060 魔刃V2 OC 8G 黑色 三扇",p:2699.00},
-{n:"影驰 RTX5060 圣刃V2 OC 8G 白色 三扇",p:2699.00},
-{n:"华硕 RX7650GRE O8G GAMING ATS巨齿鲨 三扇",p:1780.00},
-{n:"华硕 RTX5080 O16G GAMING TUF 电竞特工",p:9999.00},
-{n:"华硕 RTX5080 O16G GAMING ROG ASTRAL 夜神 四风扇",p:13300.00},
-{n:"华硕 RTX5070TI O16G WHITE GAMING TUF电竞特工 白色",p:7599.00},
-{n:"华硕 RTX5070TI O16G PRIME 大师",p:7250.00},
-{n:"华硕 RTX5070TI O16G GAMING TUF 电竞特工",p:7599.00},
-{n:"华硕 RTX5070 O12G PRIME 大师",p:5099.00},
-{n:"华硕 RTX5070 O12G GAMING TX 天选白色",p:5250.00},
-{n:"华硕 RTX5070 O12G ATS 巨齿鲨 三扇",p:5150.00},
-{n:"华硕 RTX5070 12G DUAL 雪豹 黑色 双扇",p:4950.00},
-{n:"华硕 RTX5060TI O8G GAMING TX 天选白色",p:3150.00},
-{n:"华硕 RTX5060TI O8G ATS 巨齿鲨 三扇",p:3099.00},
-{n:"华硕 RTX5060TI 8G DUAL 雪豹 黑色",p:2899.00},
-{n:"华硕 RTX5060 O8G GAMING TX 天选白色",p:2799.00},
-{n:"华硕 RTX5060 O8G DUAL 雪豹 黑色",p:2599.00},
-{n:"华硕 RTX5060 O8G ATS 巨齿鲨 三扇",p:2699.00},
-{n:"华硕 RTX4070S 12G DUAL 雪豹 黑色 双扇",p:3999.00},
-{n:"华硕 PRIME RX9070XT O16G 大师",p:5150.00},
-{n:"七彩虹 RTX5080 16G Vulcan OC 黑火神",p:10669.00},
-{n:"七彩虹 RTX5080 16G Vulcan OC W 白火神",p:10999.00},
-{n:"七彩虹 RTX5080 16G ULTRA W OC 白色",p:8999.00},
-{n:"七彩虹 RTX5080 16G Advanced OC 16G 银鲨",p:9199.00},
-{n:"七彩虹 RTX5070TI 16G 战斧豪华版 SFF",p:7099.00},
-{n:"七彩虹 RTX5070TI 16G Vulcan OC 黑火神",p:7950.00},
-{n:"七彩虹 RTX5070TI 16G Vulcan OC W 白火神",p:8399.00},
-{n:"七彩虹 RTX5070TI 16G ULTRA W OC 白色",p:7350.00},
-{n:"七彩虹 RTX5070TI 16G Advanced OC 16G 银鲨",p:7599.00},
-{n:"七彩虹 RTX5070 12G 战斧豪华版",p:4899.00},
-{n:"七彩虹 RTX5070 12G Vulcan OC W 白火神",p:5699.00},
-{n:"七彩虹 RTX5070 12G Vulcan OC 黑火神",p:5699.00},
-{n:"七彩虹 RTX5070 12G ULTRA W OC 白色",p:5150.00},
-{n:"七彩虹 RTX5070 12G ULTRA OC 黑色",p:5150.00},
-{n:"七彩虹 RTX5070 12G Advanced OC 银鲨",p:5350.00},
-{n:"七彩虹 RTX5060TI 8G 战斧豪华版 三扇",p:2999.00},
-{n:"七彩虹 RTX5060TI 8G 战斧 DUO 双扇",p:2799.00},
-{n:"七彩虹 RTX5060TI 8G ULTRA W OC 白色三扇",p:3199.00},
-{n:"七彩虹 RTX5060TI 8G ULTRA W DUO OC 白色双扇",p:3099.00},
-{n:"七彩虹 RTX5060 8G 战斧豪华版 三扇",p:2699.00},
-{n:"七彩虹 RTX5060 8G 战斧 DUO 双扇",p:2599.00},
-{n:"七彩虹 RTX5060 8G ULTRA W OC 白色三扇",p:2799.00},
-{n:"七彩虹 RTX5060 8G ULTRA W DUO OC 白色双扇",p:2750.00},
-{n:"七彩虹 RTX5050 8G 战斧 DUO 双扇",p:2150.00},
-{n:"七彩虹 RTX5050 8G ULTRA W DUO 白色双扇",p:2180.00},
-{n:"Intel UHD 核显",p:0.00},
-{n:"AMD Vega 核显",p:0.00},
-{n:"AMD Radeon Graphics",p:0.00},
+            {n:"华硕RTX5090-32G TUF-OC非D",p:31999},
+            {n:"品牌GTX1060（到手10天质保）",p:499},
+            {n:"华硕 PRIME RX9070XT O16G 大师",p:5199}
+        ],
+        ssd: [
+            {n:"佰维 NV7400 512G TLC颗粒 读速7050MB/s",p:670},
+            {n:"佰维 NV3500 512G TLC颗粒",p:590},
+            {n:"佰维 NV3500 1T TLC颗粒",p:850},
+            {n:"佰维 NV7400 1T TLC颗粒 读速7400MB/s",p:999},
+            {n:"佰维 NV7400 2T TLC颗粒 读速7400MB/s",p:1700},
+            {n:"梵想S500PRO-1T TLC颗粒",p:1098},
+            {n:"梵想S500PRO-512GB TLC颗粒",p:649},
+            {n:"西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",p:1399},
+            {n:"致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",p:1199},
+            {n:"三星 990 PRO 1T PCIE 4.0 读7450写6900",p:1599},
+            {n:"雷克沙 雷神THOR 4T PCIE4.0 7000/6000",p:2899},
+            {n:"品牌SSD 512G（到手10天质保）",p:149},
+            {n:"宏碁 GM7 2T PCIE 4.0 读7200写6300",p:1699}
+        ],
+        hdd: [
+            {n:"东芝 2T 机械硬盘",p:899},
+            {n:"东芝 4T 机械硬盘",p:999}
+        ],
+        case: [
+            {n:"白色海景房",p:129},
+            {n:"黑色海景房",p:129},
+            {n:"幻境侧透",p:129},
+            {n:"航嘉 G63",p:139},
+            {n:"锐龙 360M 大海景房",p:169},
+            {n:"智界V1",p:139},
+            {n:"未知玩家 X100手提机箱",p:149},
+            {n:"乔思伯 Z20 粉白 手提机箱",p:379},
+            {n:"航嘉 GX760M 追梦 ",p:199},
+            {n:"先马 风致360",p:189},
+            {n:"先马 风致240",p:129},
+            {n:"瓦尔基里 VK03 全景房黑色 不带屏",p:289},
+            {n:"爱国者 星璨岚 黑/白",p:269},
+            {n:"华硕 TUF GT502 弹药库 黑色 无界版",p:899},
+            {n:"乔思伯 TK1 星舰仓",p:499},
+            {n:"品牌500W额定",p:50},
+            {n:"联力 包豪斯 vision 精致版 三面侧透玻璃",p:649}
+        ],
+        // 新增其他配件默认数据
+        other: [
+            {n:"不含显示器键盘鼠标耳机",p:0},{n:"赠送键鼠",p:0}
+        ]
+    };
+
+    // 中文类目映射表
+    const categoryMap = {
+        'cpu': 'CPU',
+        'ram': '内存',
+        'board': '主板',
+        'cooler': '散热器',
+        'fan': '风扇',
+        'power': '电源',
+        'other': '其他配件',
+        'vga': '显卡',
+        'ssd': '固态硬盘',
+        'hdd': '机械硬盘',
+        'case': '机箱',
+        // 反向映射（中文转英文）
+        'CPU': 'cpu',
+        '内存': 'ram',
+        '主板': 'board',
+        '散热器': 'cooler',
+        '风扇': 'fan',
+        '电源': 'power',
+        '其他配件': 'other',
+        '显卡': 'vga',
+        '固态硬盘': 'ssd',
+        '机械硬盘': 'hdd',
+        '机箱': 'case'
+    };
+
+    // 全局变量存储右键选中的配件信息
+    let selectedItem = {
+        type: '',
+        index: -1
+    };
+    
+    // 加载数据（合并默认数据和本地存储的自定义数据）
+    function loadData() {
+        const savedData = localStorage.getItem("productData");
+        if (savedData) {
+            try {
+                const loadedData = JSON.parse(savedData);
+                // 确保other类目存在
+                if (!loadedData.other) {
+                    loadedData.other = defaultData.other;
+                }
+                return loadedData;
+            } catch (e) {
+                console.error("加载本地数据失败，使用默认数据", e);
+                return JSON.parse(JSON.stringify(defaultData));
+            }
+        }
+        return JSON.parse(JSON.stringify(defaultData));
+    }
+
+    // 保存数据到localStorage
+    function saveData() {
+        localStorage.setItem("productData", JSON.stringify(data));
+    }
+
+    // 初始化数据
+    const data = loadData();
+
+    // 1. 点击输入框自动触发下拉列表 - 优化版：确保下拉框样式和显示正常
+    function match(key){
+        let val=document.getElementById(key).value.toLowerCase();
+        let box=document.getElementById(key+"-drop");
+        box.innerHTML="";
+        // 即使输入为空，点击也显示全部列表
+        let arr = val ? data[key].filter(i=>i.n.toLowerCase().includes(val)) : data[key];
+        if(arr.length===0){
+            box.style.display="none";
+            return;
+        }
+        arr.forEach((i, idx)=>{
+            let d=document.createElement("div");
+            // 配件名称和删除按钮布局
+            d.innerHTML = `
+                <span>${i.n}</span>
+                <span class="dropdown-delete" data-type="${key}" data-index="${idx}">×</span>
+            `;
+            // 左键点击选择配件
+            d.addEventListener('mousedown', function(e) {
+                // 阻止事件冒泡，避免触发删除按钮的点击
+                if (e.target.classList.contains('dropdown-delete')) return;
+                
+                e.preventDefault();
+                document.getElementById(key).value = i.n;
+                document.getElementById(key+"-p").value = i.p;
+                box.style.display = "none";
+                calc();
+                saveNow();
+            });
+            
+            // 下拉列表删除按钮点击事件
+            const deleteBtn = d.querySelector('.dropdown-delete');
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                const type = this.getAttribute('data-type');
+                const index = parseInt(this.getAttribute('data-index'));
+                deleteDropdownItem(type, index);
+            });
+
+            // 右键点击显示删除菜单（保留原有功能）
+            d.oncontextmenu=(e)=>{
+                e.preventDefault();
+                // 存储选中的配件信息
+                selectedItem.type = key;
+                selectedItem.index = idx;
+                // 显示右键菜单
+                const menu = document.getElementById('contextMenu');
+                menu.style.display = 'block';
+                menu.style.left = `${e.pageX}px`;
+                menu.style.top = `${e.pageY}px`;
+                // 隐藏下拉框
+                box.style.display="none";
+            };
+            box.appendChild(d);
+        });
+        box.style.display="block";
+        // 关键优化：确保下拉框能被正确显示（解决层级/显示问题）
+        box.style.zIndex = 100;
+        box.style.position = "absolute";
+        box.style.width = document.getElementById(key).offsetWidth + "px";
+    }
+
+    // 删除下拉列表中的配件项
+    function deleteDropdownItem(type, index) {
+        if (confirm(`确定删除【${data[type][index].n}】吗？`)) {
+            // 删除数组中的对应项
+            data[type].splice(index, 1);
+            // 保存数据
+            saveData();
+            // 重新渲染下拉列表
+            match(type);
+        }
+    }
+
+    // 删除选中的配件（原有右键菜单删除功能）
+    function deleteSelectedItem() {
+        if (selectedItem.type && selectedItem.index >= 0) {
+            if (confirm(`确定删除【${data[selectedItem.type][selectedItem.index].n}】吗？`)) {
+                // 删除数组中的对应项
+                data[selectedItem.type].splice(selectedItem.index, 1);
+                // 保存数据
+                saveData();
+                // 重新渲染下拉列表
+                match(selectedItem.type);
+                // 隐藏右键菜单
+                document.getElementById('contextMenu').style.display = 'none';
+                // 重置选中状态
+                selectedItem = {type: '', index: -1};
+            }
+        }
+        // 隐藏右键菜单
+        document.getElementById('contextMenu').style.display = 'none';
+    }
+
+    // 点击空白处关闭右键菜单
+    document.addEventListener('click', () => {
+        document.getElementById('contextMenu').style.display = 'none';
+        selectedItem = {type: '', index: -1};
+    });
+
+    function hideDrop(key){
+        setTimeout(()=>document.getElementById(key+"-drop").style.display="none",150)
+    }
+
+    function calc(){
+        let sum=0;
+        // 新增other字段到计算列表
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            sum+=parseFloat(document.getElementById(k+"-p").value)||0;
+        });
+        document.getElementById("total").innerText=sum.toFixed(2);
+        // 修改：最终报价四舍五入为整数，去掉小数点
+        const finalPrice = Math.round(sum / 0.934);
+        document.getElementById("final").innerText=`${finalPrice} 元`;
+    }
+
+    function saveNow(){
+        let o={user:document.getElementById("user").value};
+        // 新增other和remark字段到保存数据
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            o[k]=document.getElementById(k).value;
+            o[k+"p"]=document.getElementById(k+"-p").value;
+        });
+        o.remark = document.getElementById("remark").value; // 修改为value获取textarea内容
+        localStorage.setItem("last",JSON.stringify(o));
+    }
+
+    // 新增：更新实时日期时间
+    function updateDateTime() {
+        const now = new Date();
+        // 格式化日期时间：YYYY-MM-DD HH:MM:SS
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        document.getElementById("datetimeDisplay").textContent = formattedTime;
+    }
+
+    window.onload=()=>{
+        let d=localStorage.getItem("last");
+        if(d){
+            d=JSON.parse(d);
+            document.getElementById("user").value=d.user||"";
+            ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+                document.getElementById(k).value=d[k]||"";
+                document.getElementById(k+"-p").value=d[k+"p"]||"";
+            });
+            // 加载备注（修改为value赋值）
+            if (d.remark) {
+                document.getElementById("remark").value = d.remark;
+            }
+            calc();
+        }
+        // 初始化客户名称下拉列表
+        initUserDropdown();
+        
+        // 初始化并启动实时日期时间更新
+        updateDateTime();
+        setInterval(updateDateTime, 1000); // 每秒更新一次
+    }
+
+    function save(){
+        let u=document.getElementById("user").value.trim();
+        if(!u){alert("请输入客户名称");return}
+        let list=JSON.parse(localStorage.getItem("list"))||[];
+        let o={name:u,time:new Date().toLocaleString()};
+        // 新增other和remark字段到保存配置
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            o[k]=document.getElementById(k).value;
+            o[k+"p"]=document.getElementById(k+"-p").value;
+        });
+        o.remark = document.getElementById("remark").value; // 修改为value获取textarea内容
+        list.push(o);
+        localStorage.setItem("list",JSON.stringify(list));
+        // 更新客户名称下拉列表
+        initUserDropdown();
+        alert("保存成功");
+    }
+
+    function showLoad(){
+        let list=JSON.parse(localStorage.getItem("list"))||[];
+        let h="";
+        if(list.length===0)h="<div style='padding:10px;text-align:center;color:#000'>暂无保存</div>";
+        else list.forEach((i,j)=>{
+            h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#9900ff'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
+        });
+        document.getElementById("mlist").innerHTML=h;
+        document.getElementById("loadModal").style.display="flex";
+    }
+
+    function load(idx){
+        let list=JSON.parse(localStorage.getItem("list"))||[];
+        let d=list[idx];
+        document.getElementById("user").value=d.name;
+        // 加载other字段
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            document.getElementById(k).value=d[k]||"";
+            document.getElementById(k+"-p").value=d[k+"p"]||"";
+        });
+        // 加载备注（修改为value赋值）
+        if (d.remark) {
+            document.getElementById("remark").value = d.remark;
+        }
+        calc();
+        saveNow();
+        closeModal('loadModal');
+        alert("加载成功");
+    }
+
+    function closeModal(m){
+        document.getElementById(m).style.display="none";
+    }
+
+    function reset(){
+        if(!confirm("确定清空？"))return;
+        localStorage.removeItem("last");
+        location.reload();
+    }
+
+    function showUpdate(){
+        document.getElementById("updateModal").style.display="flex";
+    }
+
+    // 优化更新报价功能：支持中文类目 + 英文类目
+    function doUpdate(){
+        let t=document.getElementById("updateText").value.trim();
+        if(!t){alert("请输入更新内容");return}
+        let lines=t.split("\n");
+        let updateCount = 0;
+        let notFoundList = [];
+        
+        lines.forEach(line=>{
+            // 处理可能的空格问题
+            let parts = line.split(",").map(part => part.trim());
+            let [typeName,name,price] = parts;
+            
+            // 验证必要参数
+            if(!typeName || !name || !price) return;
+            
+            // 转换中文类目为英文key
+            let type = categoryMap[typeName] || typeName;
+            
+            // 检查品类是否存在
+            if(!data[type]) {
+                notFoundList.push(`品类不存在: ${typeName}`);
+                return;
+            }
+            
+            // 查找匹配的型号（精确匹配）
+            let targetIndex = data[type].findIndex(item => item.n.trim() === name.trim());
+            
+            if(targetIndex !== -1){
+                // 更新价格
+                data[type][targetIndex].p = parseFloat(price);
+                updateCount++;
+            } else {
+                notFoundList.push(`${typeName}: ${name} (型号未找到)`);
+            }
+        });
+        
+        // 更新后保存数据到本地
+        saveData();
+        closeModal('updateModal');
+        
+        // 提示更新结果
+        let message = `报价更新完成！\n成功更新 ${updateCount} 条数据`;
+        if(notFoundList.length > 0){
+            message += `\n\n未找到的项目：\n${notFoundList.join('\n')}`;
+        }
+        alert(message);
+        
+        // 重新计算当前配置总价（如果更新的型号正在使用）
+        calc();
+        
+        // 重新渲染所有下拉列表（更新当前显示的价格）
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k => {
+            const inputVal = document.getElementById(k).value;
+            if(inputVal) {
+                const item = data[k].find(i => i.n === inputVal);
+                if(item) {
+                    document.getElementById(k+"-p").value = item.p;
+                }
+            }
+        });
+    }
+
+    // 优化添加型号功能：添加到列表最前面并永久保存 + 修复添加后不显示问题
+    function showAdd(){
+        // 清空输入框
+        document.getElementById("addType").value = "";
+        document.getElementById("addName").value = "";
+        document.getElementById("addPrice").value = "";
+        document.getElementById("addModal").style.display = "flex";
+    }
+
+    function doAdd(){
+        const type = document.getElementById("addType").value;
+        const name = document.getElementById("addName").value.trim();
+        const price = parseFloat(document.getElementById("addPrice").value);
+
+        // 验证输入
+        if(!type){
+            alert("请选择品类！");
+            return;
+        }
+        if(!name){
+            alert("请输入型号名称！");
+            return;
+        }
+        if(isNaN(price) || price < 0){
+            alert("请输入有效的价格（非负数）！");
+            return;
+        }
+
+        // 检查是否已存在相同名称的型号（精确匹配）
+        const exists = data[type].some(item => item.n.trim() === name);
+        if(exists){
+            alert("该型号已存在！");
+            return;
+        }
+
+        // 添加新型号到列表最前面
+        data[type].unshift({n: name, p: price});
+        
+        // 保存到localStorage永久存储
+        saveData();
+        
+        closeModal('addModal');
+        
+        // 核心修复：添加完成后主动触发对应品类的下拉列表渲染
+        // 先清空对应输入框的内容（避免过滤影响），再触发匹配
+        const typeInput = document.getElementById(type);
+        const currentValue = typeInput.value;
+        typeInput.value = ""; // 清空输入框确保能显示所有选项
+        match(type); // 主动触发下拉列表渲染
+        typeInput.value = currentValue; // 恢复输入框原有内容
+        
+        alert("型号添加成功！");
+    }
+
+    // 新增清空单个配件栏目的功能
+    function clearItem(key) {
+        document.getElementById(key).value = "";
+        document.getElementById(key + "-p").value = "";
+        calc(); // 重新计算总价
+        saveNow(); // 保存当前状态
+        // 隐藏下拉框（如果显示的话）
+        document.getElementById(key + "-drop").style.display = "none";
+    }
+
+    // ========== 客户名称下拉列表功能 ==========
+    // 初始化客户名称下拉列表
+    function initUserDropdown() {
+        const list = JSON.parse(localStorage.getItem("list")) || [];
+        // 提取唯一的客户名称并去重
+        const userNames = Array.from(new Set(list.map(item => item.name).filter(name => name.trim())));
+        const dropdown = document.getElementById("userDropdown");
+        dropdown.innerHTML = "";
+        
+        userNames.forEach(name => {
+            const div = document.createElement("div");
+            div.innerText = name;
+            div.onmousedown = () => {
+                document.getElementById("user").value = name;
+                dropdown.style.display = "none";
+                // 自动加载对应的配置单
+                loadConfigByName(name);
+            };
+            dropdown.appendChild(div);
+        });
+    }
+
+    // 根据客户名称加载对应的配置单
+    function loadConfigByName(name) {
+        const list = JSON.parse(localStorage.getItem("list")) || [];
+        // 查找最新的同名配置（也可以改为查找第一个）
+        const config = list.find(item => item.name === name);
+        
+        if(config) {
+            document.getElementById("user").value = config.name;
+            ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+                document.getElementById(k).value = config[k] || "";
+                document.getElementById(k+"-p").value = config[k+"p"] || "";
+            });
+            // 加载备注（修改为value赋值）
+            if (config.remark) {
+                document.getElementById("remark").value = config.remark;
+            }
+            calc();
+            saveNow();
+            alert(`成功加载【${name}】的配置单`);
+        } else {
+            alert(`未找到【${name}】的配置单`);
+        }
+    }
+
+    // 显示客户名称下拉列表
+    function showUserDropdown() {
+        const dropdown = document.getElementById("userDropdown");
+        // 如果有选项才显示
+        if (dropdown.children.length > 0) {
+            dropdown.style.display = "block";
+            // 过滤匹配当前输入的内容
+            filterUserDropdown();
+        }
+    }
+
+    // 过滤客户名称下拉列表
+    function filterUserDropdown() {
+        const inputVal = document.getElementById("user").value.toLowerCase();
+        const dropdown = document.getElementById("userDropdown");
+        const items = dropdown.getElementsByTagName("div");
+        
+        Array.from(items).forEach(item => {
+            if (item.innerText.toLowerCase().includes(inputVal)) {
+                item.style.display = "block";
+            } else {
+                item.style.display = "none";
+            }
+        });
+    }
+
+    // 隐藏客户名称下拉列表
+    function hideUserDropdown() {
+        setTimeout(() => {
+            document.getElementById("userDropdown").style.display = "none";
+        }, 150);
+    }
+</script>
+</body>
+</html>
