@@ -11,11 +11,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: 安装依赖
+        run: pip install requests
+      - name: 运行价格更新
+        run: python update_prices.py
+      - name: 提交更新
+        uses: EndBug/add-and-commit@v9
         with:
-          python-version: '3.11'
-      - run: pip install requests fuzzywuzzy python-Levenshtein
-      - run: python update_prices.py
-      - uses: EndBug/add-and-commit@v9
-        with:
-          message: "自动更新 p: 价格"
+          message: "自动更新 defaultData 价格"
