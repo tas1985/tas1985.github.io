@@ -1,8 +1,8 @@
-name: 强制更新价格
+name: 自动更新配件价格
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: "0 5 * * *"
 
 jobs:
   update:
@@ -10,13 +10,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: 拉取仓库
-        uses: actions/checkout@v4
-
-      - name: 运行价格更新脚本
-        run: python update_prices.py
-
-      - name: 提交并推送
-        uses: EndBug/add-and-commit@v9
+      - uses: actions/checkout@v4
+      - run: python update_prices.py
+      - uses: EndBug/add-and-commit@v9
         with:
-          message: "自动更新价格"
+          message: "自动更新 p:价格"
