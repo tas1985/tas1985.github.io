@@ -1,17 +1,34 @@
-name: 自动更新CPU价格
+name: 每日自动更新价格
+
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 7 * * *'
+    - cron: "0 0 * * *"  # 每天 UTC 0点（北京时间 8点）运行
+  workflow_dispatch:     # 允许手动点一下运行
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - run: python update_prices.py
-      - uses: EndBug/add-and-commit@v9
+      - name: 拉取代码
+        uses: actions/checkout@v4
         with:
-          message: "自动更新CPU价格"
+          fetch-depth: 1
+
+      - name: 安装 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: pip install requests beautifulsoup4
+
+      - name: 执行更新脚本
+        run: python update-prices.py
+
+      - name: 提交并推送更新
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add index.html
+          git commit -m "自动更新硬件价格 $(date +'%Y-%m-%d')" || exit 0
+          git push
