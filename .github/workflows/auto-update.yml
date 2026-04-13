@@ -1,0 +1,25 @@
+name: 每日自动更新CPU价格
+on:
+  schedule:
+    - cron: "0 2 * * *"  # 每天北京时间10点
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+      - name: 运行爬虫更新价格
+        run: python main.py
+      - name: 提交并推送更新
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "自动更新CPU价格"
+          committer_name: GitHub Actions
+          committer_email: actions@github.com
