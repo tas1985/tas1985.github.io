@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>重庆塔斯电脑DIY配置报价单58508218</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei",Arial}
+        /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
+        body{
+            background: #e0e0e0; /* 参考图浅灰背景 */
+            background-image: 
+                linear-gradient(rgba(200,200,200,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200,200,200,0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            padding: 15px;
+            font-size: 14px;
+            color: #000; /* 基础文字黑色 */
+        }
+        .container{
+            max-width: 720px;
+            margin: 0 auto;
+            background: #e0e0e0; /* 容器浅灰背景 */
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 30px rgba(128,0,255,0.5);
+            border: 2px solid #9900ff; /* 外层紫色边框 */
+        }
+        .title{
+            text-align:center;
+            font-size: 20px;
+            font-weight:bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #000; /* 标题黑底 */
+            color: #00ff00; /* 标题绿色文字 */
+            border: 2px solid #9900ff; /* 标题紫色边框 */
+            box-shadow: 0 0 10px rgba(153,0,255,0.8), inset 0 0 8px #00ff00;
+        }
+        .user{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom: 12px;
+            position:relative;
+            padding: 5px;
+            background: #d0d0d0;
+            border: 1px solid #000;
+            border-radius: 6px;
+        }
+        .user label{
+            white-space:nowrap;
+            font-weight:bold;
+            font-size: 16px;
+            color: #000; /* 客户名称标签黑色 */
+        }
+        .user input{
+            flex:1;
+            padding: 8px;
+            border: 1px solid #9900ff; /* 输入框紫色边框 */
+            border-radius: 4px;
+            background: #000; /* 输入框黑底 */
+            color: #00ff00; /* 输入框绿色文字 */
+            font-size: 14px;
+        }
+        /* 日期时间样式 - 匹配参考图 */
+        .datetime-display{
+            padding: 8px 12px;
+            background: #000; /* 黑底 */
+            border-radius: 4px;
+            font-size: 14px;
+            color: #00ff00; /* 绿色文字 */
+            white-space:nowrap;
+            border: 1px solid #9900ff; /* 紫色边框 */
+            box-shadow: inset 0 0 5px #00ff00;
+        }
+
+        /* 客户名称下拉列表样式 */
+        .user-dropdown{
+            position:absolute;
+            left:70px;
+            top:100%;
+            width:calc(100% - 70px);
+            background: #000;
+            border: 2px solid #9900ff;
+            border-radius: 4px;
+            max-height:180px;
+            overflow-y:auto;
+            z-index:99;
+            display:none;
+        }
+        .user-dropdown div{
+            padding: 8px;
+            cursor:pointer;
+            color: #00ff00;
+        }
+        .user-dropdown div:hover{
+            background: #9900ff;
+            color: #000;
+        }
+
+        .item{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-bottom: 8px;
+            padding: 4px;
+            background: #d0d0d0;
+            border-radius: 4px;
+            border: 1px solid #000;
+        }
+        .item-label{
+            width:80px;
+            font-weight:bold;
+            color: #000; /* 硬件标签黑色 */
+            font-size: 18px;
+            text-align: center;
+            padding-right: 5px;
+        }
+        .item-input{
+            flex:1;
+            position:relative;
+        }
+        .item-price{
+            width:100px;
+            position: relative; /* 新增：用于¥符号定位 */
+        }
+        /* 新增：价格框¥符号样式 */
+        .item-price::before {
+            content: '¥';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000; /* 紫色¥符号，匹配价格文字颜色 */
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1;
+        }
+        /* 新增：备注栏价格框 - 取消¥符号 */
+.item-price.remark-price::before {
+    content: ''; /* 清空¥符号 */
+}
+
+/* 同步调整备注栏价格输入框的内边距（避免左侧空白） */
+.remark-price input.price {
+    padding: 8px 8px 8px 8px !important; /* 覆盖原20px的左侧内边距 */
+}
+        input.combo{
+            width:100%;
+            padding: 8px 25px 8px 8px;
+            border: 1px solid #9900ff; /* 配件输入框紫色边框 */
+            border-radius: 4px;
+            outline:none;
+            background: #e0e0e0; /* 输入框黑底 */
+            color: #000; /* 输入框绿色文字 */
+            font-size: 16px;
+        }
+        input.price{
+            width:100%;
+            padding: 8px 8px 8px 20px; /* 左侧留空给¥符号 */
+            text-align:right;
+            border: 1px solid #9900ff; /* 价格输入框绿色边框 */
+            border-radius: 4px;
+            outline:none;
+            background: #e0e0e0; /* 价格框黑底 */
+            color: #000; /* 价格紫色文字 */
+            font-size: 16px;
+        }
+        input.combo:focus,input.price:focus{
+            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+        }
+
+        /* 清空按钮样式 */
+        .clear-btn{
+            position:absolute;
+            right:12px;
+            top:50%;
+            transform:translateY(-50%);
+            width:18px;
+            height:18px;
+            line-height:18px;
+            text-align:center;
+            color: #ff0000;
+            font-weight:bold;
+            cursor:pointer;
+            display:none;
+        }
+        .item-input:hover .clear-btn{
+            display:block;
+        }
+
+        .dropdown{
+            position:absolute;
+            left:0;
+            top:100%;
+            width:100%;
+            background: #000;
+            border: 2px solid #9900ff;
+            border-radius: 4px;
+            max-height:180px;
+            overflow-y:auto;
+            z-index:99;
+            display:none;
+        }
+        .dropdown div{
+            padding: 8px;
+            cursor:pointer;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            color: #00ff00;
+        }
+        .dropdown div:hover{
+            background: #9900ff;
+            color: #000;
+        }
+        /* 下拉列表删除按钮样式 */
+        .dropdown-delete{
+            color: #ff0000;
+            font-weight:bold;
+            margin-left:8px;
+            font-size:14px;
+            opacity:0;
+            transition:opacity 0.2s;
+        }
+        .dropdown div:hover .dropdown-delete{
+            opacity:1;
+        }
+
+        .btn-bar{
+            display:flex;
+            gap:6px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .btn-bar button{
+            flex:1;
+            padding: 10px 6px;
+            border:none;
+            border-radius: 6px;
+            color:#00ff00; /* 按钮文字绿色 */
+            font-weight:bold;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid #9900ff; /* 按钮紫色边框 */
+            background: #000; /* 按钮黑底 */
+            min-width: 80px;
+            box-shadow: 0 0 6px rgba(153,0,255,0.6);
+        }
+        .btn-bar button:hover{
+            box-shadow: 0 0 10px rgba(0,255,0,0.8);
+            background: #330066;
+        }
+
+        /* 总价区域样式 - 核心匹配参考图 */
+        .total{
+            background: #000; /* 总价区域黑底 */
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 12px;
+            text-align:right;
+            border: 3px solid #9900ff; /* 外层紫色边框 */
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #9900ff;
+        }
+        .total::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,255,0,0.3), transparent);
+            animation: greenGlow 3s linear infinite;
+        }
+        @keyframes greenGlow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .total-line{
+            display:none;
+            color: #00ff00;
+        }
+        .total-final{
+            font-size: 28px;
+            font-weight:bold;
+            color: #00ff00; /* 最终报价绿色文字 */
+            margin:0;
+            padding:0;
+            border:none;
+            display:block !important;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 8px rgba(0,255,0,1);
+        }
+
+        .modal{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,0.9);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            padding:15px;
+            z-index:999;
+        }
+        .modal-box{
+            background: #e0e0e0;
+            border-radius: 8px;
+            width:100%;
+            max-width:340px;
+            padding: 18px;
+            border: 3px solid #9900ff;
+            box-shadow: 0 0 20px rgba(0,255,0,0.6);
+        }
+        .modal-list{
+            max-height:300px;
+            overflow-y:auto;
+            margin:12px 0;
+        }
+        .modal-item{
+            padding:8px;
+            border:1px solid #9900ff;
+            border-radius:6px;
+            margin-bottom:6px;
+            color: #000;
+            background: #d0d0d0;
+        }
+        .modal-item button{
+            width:100%;
+            padding:6px;
+            margin-top:6px;
+            background: #000;
+            color:#00ff00;
+            border:none;
+            border-radius:4px;
+            border: 1px solid #9900ff;
+        }
+        .update-area{
+            margin:12px 0;
+        }
+        .update-area textarea{
+            width:100%;
+            height:120px;
+            padding:8px;
+            border:2px solid #9900ff;
+            border-radius:6px;
+            margin-bottom:8px;
+            resize:none;
+            background: #000;
+            color: #00ff00;
+        }
+        
+        /* 添加型号弹窗样式 */
+        .add-area{
+            margin:12px 0;
+        }
+        .add-area select, .add-area input{
+            width:100%;
+            padding:8px;
+            border:2px solid #9900ff;
+            border-radius:6px;
+            margin-bottom:8px;
+            background: #000;
+            color: #00ff00;
+        }
+        .add-area button{
+            width:100%;
+            padding:8px;
+            border:none;
+            border-radius:6px;
+            background: #000;
+            color:#00ff00;
+            margin-top:6px;
+            border: 1px solid #9900ff;
+        }
+        
+        /* 右键菜单样式 */
+        .context-menu {
+            position: absolute;
+            width: 140px;
+            background: #000;
+            border: 2px solid #9900ff;
+            border-radius: 6px;
+            box-shadow: 0 2px 15px rgba(0,255,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+        .context-menu div {
+            padding: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #00ff00;
+        }
+        .context-menu div:hover {
+            background: #9900ff;
+            color: #000;
+        }
+
+        /* 备注栏样式 */
+        .remark-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            background: #e0e0e0;
+            font-size: 13px;
+            line-height: 1.4;
+            min-height: 80px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            outline: none;
+            resize: vertical;
+            color: #9900ff;
+        }
+
+        /* 密码验证弹窗样式 */
+        .password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .password-box {
+            background: #e0e0e0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 320px;
+            padding: 20px;
+            text-align: center;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 20px rgba(153,0,255,0.8);
+        }
+        .password-box h3{
+            color: #9900ff;
+            margin-bottom: 12px;
+        }
+        .password-box p {
+            margin-bottom: 12px;
+            color: #000;
+            line-height: 1.5;
+        }
+        .password-box .tips {
+            color: #ff0000;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        .password-box input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #9900ff;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 16px;
+            text-align: center;
+            background: #000;
+            color: #00ff00;
+        }
+        .password-box button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #000;
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 4px;
+            border: 1px solid #9900ff;
+        }
+        .password-box button:hover {
+            background: #330066;
+            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+        }
+    </style>
+</head>
+<body>
+<!-- 密码验证弹窗（默认隐藏，验证不通过时显示） -->
+<div id="passwordModal" class="password-modal" style="display: none;">
+    <div class="password-box">
+        <h3>请输入解锁密钥</h3>
+        <p>需联系作者微信58508218获取密钥</p>
+        <p class="tips">输入正确密钥后，当前设备3个月内无需重复验证</p>
+        <input type="password" id="passwordInput" placeholder="请输入密钥">
+        <button onclick="checkPassword()">解锁</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="title">重庆塔斯电脑DIY配置报价单58508218</div>
+
+    <div class="user">
+        <label>客户名称：</label>
+        <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
+        <!-- 新增实时日期时间显示 -->
+        <div class="datetime-display" id="datetimeDisplay"></div>
+        <!-- 客户名称下拉列表 -->
+        <div class="user-dropdown" id="userDropdown"></div>
+    </div>
+
+    <!-- 调整风扇位置：移到机箱下方、电源上方 -->
+    <div class="item">
+        <div class="item-label">CPU</div>
+        <div class="item-input">
+            <input class="combo" id="cpu" onclick="match('cpu')" oninput="match('cpu')" onblur="hideDrop('cpu')">
+            <div class="clear-btn" onclick="clearItem('cpu')">×</div>
+            <div class="dropdown" id="cpu-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="cpu-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">内存</div>
+        <div class="item-input">
+            <input class="combo" id="ram" onclick="match('ram')" oninput="match('ram')" onblur="hideDrop('ram')">
+            <div class="clear-btn" onclick="clearItem('ram')">×</div>
+            <div class="dropdown" id="ram-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="ram-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">主板</div>
+        <div class="item-input">
+            <input class="combo" id="board" onclick="match('board')" oninput="match('board')" onblur="hideDrop('board')">
+            <div class="clear-btn" onclick="clearItem('board')">×</div>
+            <div class="dropdown" id="board-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="board-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">散热器</div>
+        <div class="item-input">
+            <input class="combo" id="cooler" onclick="match('cooler')" oninput="match('cooler')" onblur="hideDrop('cooler')">
+            <div class="clear-btn" onclick="clearItem('cooler')">×</div>
+            <div class="dropdown" id="cooler-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="cooler-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">显卡</div>
+        <div class="item-input">
+            <input class="combo" id="vga" onclick="match('vga')" oninput="match('vga')" onblur="hideDrop('vga')">
+            <div class="clear-btn" onclick="clearItem('vga')">×</div>
+            <div class="dropdown" id="vga-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="vga-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">固态硬盘</div>
+        <div class="item-input">
+            <input class="combo" id="ssd" onclick="match('ssd')" oninput="match('ssd')" onblur="hideDrop('ssd')">
+            <div class="clear-btn" onclick="clearItem('ssd')">×</div>
+            <div class="dropdown" id="ssd-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="ssd-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">机械硬盘</div>
+        <div class="item-input">
+            <input class="combo" id="hdd" onclick="match('hdd')" oninput="match('hdd')" onblur="hideDrop('hdd')">
+            <div class="clear-btn" onclick="clearItem('hdd')">×</div>
+            <div class="dropdown" id="hdd-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="hdd-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">机箱</div>
+        <div class="item-input">
+            <input class="combo" id="case" onclick="match('case')" oninput="match('case')" onblur="hideDrop('case')">
+            <div class="clear-btn" onclick="clearItem('case')">×</div>
+            <div class="dropdown" id="case-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="case-p" oninput="calc()"></div>
+    </div>
+    <div class="item">
+        <div class="item-label">风扇</div>
+        <div class="item-input">
+            <input class="combo" id="fan" onclick="match('fan')" oninput="match('fan')" onblur="hideDrop('fan')">
+            <div class="clear-btn" onclick="clearItem('fan')">×</div>
+            <div class="dropdown" id="fan-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="fan-p" oninput="calc()"></div>
+    </div>
+    <!-- 电源调整到机箱之后、风扇之后 -->
+    <div class="item">
+        <div class="item-label">电源</div>
+        <div class="item-input">
+            <input class="combo" id="power" onclick="match('power')" oninput="match('power')" onblur="hideDrop('power')">
+            <div class="clear-btn" onclick="clearItem('power')">×</div>
+            <div class="dropdown" id="power-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="power-p" oninput="calc()"></div>
+    </div>
+    <!-- 新增其他配件栏目 -->
+    <div class="item">
+        <div class="item-label">其他配件</div>
+        <div class="item-input">
+            <input class="combo" id="other" value="不含显示器键盘鼠标耳机" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
+            <div class="clear-btn" onclick="clearItem('other')">×</div>
+            <div class="dropdown" id="other-drop"></div>
+        </div>
+        <div class="item-price"><input class="price" id="other-p" value="0" oninput="calc()"></div>
+    </div>
+    <!-- 新增备注栏目 -->
+    <div class="item">
+        <div class="item-label">备注</div>
+        <!-- 修改为可编辑的textarea -->
+        <textarea class="remark-input" id="remark" oninput="saveNow()">包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价</textarea>
+        <div class="item-price  remark-price"></div>
+    </div>
+
+    <!-- 最终报价区域移到按钮栏上方 -->
+    <div class="total">
+        <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
+        <div class="total-line"><span>利润率：</span><span>+6.6%（÷0.934）</span></div>
+        <div class="total-line total-final"><span>到手总价：</span><span id="final">0 元</span></div>
+    </div>
+
+    <div class="btn-bar">
+        <button class="btn-save" onclick="save()">保存配置</button>
+        <button class="btn-load" onclick="showLoad()">加载配置</button>
+        <button class="btn-update" onclick="showUpdate()">更新报价</button>
+        <button class="btn-add" onclick="showAdd()">添加型号</button> <!-- 新增添加型号按钮 -->
+        <button class="btn-reset" onclick="reset()">清空重置</button>
+    </div>
+
+</div>
+
+<!-- 加载配置弹窗 -->
+<div class="modal" id="loadModal">
+    <div class="modal-box">
+        <h4>已保存配置</h4>
+        <div class="modal-list" id="mlist"></div>
+        <button onclick="closeModal('loadModal')">关闭</button>
+    </div>
+</div>
+
+<!-- 更新报价弹窗 -->
+<div class="modal" id="updateModal">
+    <div class="modal-box">
+        <h4>更新产品报价</h4>
+        <div class="update-area">
+            <p style="font-size:13px;color:#9900ff;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
+            <p style="font-size:12px;color:#ff0000;margin-bottom:4px">示例：内存,金士顿 8G DDR4 3200,530 或 ram,金士顿 8G DDR4 3200,530</p>
+            <textarea id="updateText" placeholder="请按格式输入更新内容"></textarea>
+            <button onclick="doUpdate()">执行更新</button>
+        </div>
+        <button onclick="closeModal('updateModal')">取消</button>
+    </div>
+</div>
+
+<!-- 新增添加型号弹窗 -->
+<div class="modal" id="addModal">
+    <div class="modal-box">
+        <h4>添加自定义型号</h4>
+        <div class="add-area">
+            <select id="addType">
+                <option value="">请选择品类</option>
+                <option value="cpu">CPU</option>
+                <option value="ram">内存</option>
+                <option value="board">主板</option>
+                <option value="cooler">散热器</option>
+                <option value="fan">风扇</option>
+                <option value="power">电源</option>
+                <option value="other">其他配件</option>
+                <option value="vga">显卡</option>
+                <option value="ssd">固态硬盘</option>
+                <option value="hdd">机械硬盘</option>
+                <option value="case">机箱</option>
+            </select>
+            <input type="text" id="addName" placeholder="输入型号名称（如：I9-14900K 3.2G 二十核）">
+            <input type="number" id="addPrice" placeholder="输入价格（数字）" min="0" step="0.01">
+            <button onclick="doAdd()">添加型号</button>
+        </div>
+        <button onclick="closeModal('addModal')">取消</button>
+    </div>
+</div>
+
+<!-- 右键菜单 -->
+<div class="context-menu" id="contextMenu">
+    <div onclick="deleteSelectedItem()">删除该配件</div>
+</div>
+
+<script>
+    // ===================== 密码验证核心功能 =====================
+    // 验证密码是否有效（3个月有效期）
+    function checkPasswordValidity() {
+        const passwordRecord = JSON.parse(localStorage.getItem('passwordAuth')) || {};
+        const { expireTime, isValid } = passwordRecord;
+        
+        // 验证是否已授权且在有效期内
+        if (isValid && expireTime && new Date().getTime() < expireTime) {
+            return true;
+        }
+        return false;
+    }
+
+    // 显示密码弹窗
+    function showPasswordModal() {
+        document.getElementById('passwordModal').style.display = 'flex';
+        // 禁用页面交互
+        document.body.style.overflow = 'hidden';
+        document.querySelector('.container').style.pointerEvents = 'none';
+    }
+
+    // 隐藏密码弹窗
+    function hidePasswordModal() {
+        document.getElementById('passwordModal').style.display = 'none';
+        // 恢复页面交互
+        document.body.style.overflow = 'auto';
+        document.querySelector('.container').style.pointerEvents = 'auto';
+    }
+
+    // 验证密码
+    function checkPassword() {
+        const inputPassword = document.getElementById('passwordInput').value;
+        const correctPassword = '19851226'; // 正确密码
+        
+        if (inputPassword === correctPassword) {
+            // 计算3个月后的时间戳（按每月30天计算，实际可根据需求调整）
+            const now = new Date().getTime();
+            const threeMonthsLater = now + 3 * 30 * 24 * 60 * 60 * 1000;
+            
+            // 保存授权信息到本地存储
+            localStorage.setItem('passwordAuth', JSON.stringify({
+                isValid: true,
+                expireTime: threeMonthsLater,
+                authTime: now
+            }));
+            
+            hidePasswordModal();
+            alert('解锁成功！当前设备3个月内无需重复验证');
+        } else {
+            alert('密钥错误，请联系作者获取正确密钥');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+        }
+    }
+
+    // 页面加载时验证密码状态
+    window.addEventListener('DOMContentLoaded', function() {
+        if (!checkPasswordValidity()) {
+            showPasswordModal();
+        }
+    });
+
+    // ===================== 原有功能代码 =====================
+    // 初始化数据：优先从localStorage加载，无则使用默认数据
+    const defaultData = {
+        cpu: [
+            {n:"i3-12100F 3.3G 四核",p:645},
+            {n:"i3-12100 3.3G 四核",p:945},
+            {n:"i5-12400F 2.5G 六核",p:895},
+            {n:"i5-12400 2.5G 六核",p:1250},
+            {n:"i5-12490F 3.0G 六核",p:920},
+            {n:"i5-12600KF 3.7G 十核",p:1145},
+            {n:"i7-12700KF 3.6G 十二核",p:1950},
+            {n:"i9-12900KF 3.2G 十六核",p:1870},
+            {n:"i9-12900K 3.2G 十六核",p:2330},
+            {n:"i3-13100F 3.4G 四核",p:635},
+            {n:"i3-13100 3.4G 四核",p:990},
+            {n:"i5-13400F 2.5G 十核",p:1005},
+            {n:"i5-13400 2.5G 十核",p:1550},
+            {n:"i5-13600KF 3.5G 十四核",p:1345},
+            {n:"i5-13600K 3.5G 十四核",p:1300},
+            {n:"i7-13700KF 2.1G 十六核",p:1950}, 
+            {n:"i9-13900KF 3.0G 二十四核",p:2100},
+            {n:"i9-13900K 3.0G 二十四核",p:2230},
+            {n:"i3-14100F 3.5G 四核",p:699},
+            {n:"i3-14100 3.5G 四核",p:999},
+            {n:"i5-14400F 2.5G 十核",p:1050},
+            {n:"i5-14400 2.5G 十核",p:1599},
+            {n:"中文原盒i5-14490F 2.5G 十核",p:1080},
+            {n:"i5-14600KF 3.5G 十四核二十线程5.3G睿频",p:1499},
+            {n:"i5-14600K 3.5G 十四核",p:1549},
+            {n:"i7-14700KF 3.4G 二十核",p:2140},
+            {n:"i9-14900KF 3.2G 二十四核",p:2899},
+            {n:"i9-14900K 3.2G 二十四核",p:2950},
+            {n:"Intel E5-2666V3 3.5G 10核20线程（到手10天质保）",p:219},
+            {n:"Ultra 5 225F 2.7G 十核",p:810},
+            {n:"Ultra 5 225 2.7G 十核",p:1030},
+            {n:"Ultra 5 230F 2.7G 十核",p:890},
+            {n:"Ultra 5 230 2.7G 十核",p:1050},
+            {n:"Ultra 5 245KF 3.6G 十四核",p:1180},
+            {n:"Ultra 5 245K 3.6G 十四核",p:1280},
+            {n:"Ultra 7 265KF 3.3G 二十核",p:1550},
+            {n:"Ultra 7 265K 3.3G 二十核",p:1699},
+            {n:"Ultra 9 285K 3.2G 二十四核",p:4459},
+            {n:"Ultra 7 270K PLUS 盒装 24核心24线程性能不输U9 285K",p:2199},
+            {n:"锐龙 R5-5500X3D 3.0G 6核12线程帧数超过i5-14600KF",p:1149},
+            {n:"锐龙 R5-5500 散 3.6G 6核12线程",p:520},
+            {n:"锐龙 R5-5600 盒 3.5G 6核12线程",p:785},
+            {n:"锐龙 R5-5600X 3.7G 6核12线程",p:850},
+            {n:"锐龙 R5-5600GT 3.6G 6核12线程 集显",p:845},
+            {n:"锐龙 R7-5700X 3.4G 8核16线程",p:970},
+            {n:"锐龙 R5-7500F 3.7G 6核12线程",p:730},
+            {n:"锐龙 R7-7800X3D 5.0G 8核16线程 集显",p:1875},
+            {n:"锐龙 R5-9500F 3.8G 6核12线程",p:999},
+            {n:"锐龙 R5-9600X 3.9G 6核12线程 集显",p:1070},
+            {n:"锐龙 R7-9700X 3.8G 8核16线程 集显",p:1515},
+            {n:"锐龙 R9-9900X 4.4G 12核24线程 集显",p:2520}, 
+            {n:"锐龙 R9-9950X 4.3G 16核32线程 集显",p:2899},
+            {n:"锐龙 R7-9800X3D 4.7G 8核16线程 集显",p:2775},
+            {n:"锐龙 R7-9850X3D 4.7G 8核16线程 集显",p:3180}, 
+            {n:"锐龙 R9-9950X3D 4.3G 16核32线程 集显",p:4230}
+        ],
+        ram: [
+            {n:"金百达_银爵 16G 3200(8*2)套装",p:750},
+            {n:"金百达_银爵 32G 3200(16*2)套装",p:1340},
+            {n:"阿斯加特_女武神 32G 3600(16*2)套装灯条",p:1899},
+            {n:"阿斯加特 DDR4 64G（32X2）3200 ",p:3699},
+            {n:"金百达_银爵 32G 6000(16*2)套装 c30 m-die",p:2450},
+            {n:"金百达_银爵 16G 6000单根 c30 m-die",p:1300},
+            {n:"金百达_星刃 32G 6000 c28 海力士A-die 灯条",p:2700},
+            {n:"阿斯加特_女武神II代32G(16*2)套装6000 C28 ADIE 黑/白",p:3799},
+            {n:"佰维dw100 48G套 24x2 6000c28 m-die 灯条",p:3100},
+            {n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",p:7958},
+            {n:"三星 DDR3 16G（到手10天质保）",p:250},
+            {n:"雷克沙DDR5 64G(32X2) 6400灯条",p:5120}
+        ],
+        board: [
+            {n:"精粤 H610M-PLUS ARGB 纯白板WIFI蓝牙",p:469},
+            {n:"精粤 B450M-Ti  PRO  ARGB  白色",p:469},
+            {n:"精粤 B550M ARGB  白色",p:489},
+            {n:"微星 PRO B760M-A D4 II WIFI",p:840},
+            {n:"微星 B760M MORTAR 迫击炮 D5 WIFI III",p:1049},
+            {n:"华硕 PRIME B550M-K ARGB",p:549},
+            {n:"技嘉 B550M DS3H WIFI",p:554},
+            {n:"技嘉B760M-D2H D4神光同步",p:589},
+            {n:"华硕 TX GAMING B760M WIFI D4 天选 白色",p:999},
+            {n:"华硕 PRIME H610M-K ARGB",p:498},
+            {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:640},
+            {n:"华硕 PRIME A520M K",p:398},
+            {n:"微星 B850M GAMING PLUS WIFI6E D5白",p:1098},
+            {n:"微星 MAG B860M MORTAR 迫击炮 WIFI7 ",p:1149},
+            {n:"微星 MAG Z890 TOMAHAWK WIFI7战斧导弹",p:1759},
+            {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1390},
+            {n:"技嘉 Z890M A ELITE WIFI7 ICE 白色冰雕",p:1390},
+            {n:"微星 MAG B860M MORTAR 迫击炮 WIFI7 ",p:1120},
+            {n:"英特尔 X99M 至强（到手10天质保）",p:150},
+            {n:"华硕 PRIME Z790-P DDR4",p:1350},
+            {n:"微星 B850M GAMING WIFI ",p:898},
+            {n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},
+            {n:"微星 MAG B850M MORTAR 迫击炮 WIFI ",p:1210}
+        ],
+        cooler: [
+            {n:"乔思伯_CR1000 MAX ARGB 六热管",p:95},
+            {n:"乔思伯_CR3000 EVO ARGB 双塔六热管",p:189},
+            {n:"酷里奥A60双塔六热管",p:189},
+            {n:"乔思伯 TH360  ARGB 千层镜风扇 冷头数显",p:375},
+            {n:"钛钽 SJ-A080 360一体式水冷 六年质保",p:310},
+            {n:"钛钽 SJ-A090 360一体式水冷 六年质保",p:390},
+            {n:"瓦尔基里 B360GT-ARGB VK带屏幕",p:510},
+            {n:"瓦尔基里 A360 VK 一体式水冷散热器 ",p:359},
+            {n:"创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕",p:1549},
+            {n:"利民 雷神之锤 一体式水冷 3.5寸屏幕 ",p:550}
+        ],
+        fan: [
+            {n:"棱镜4 7把",p:140},{n:"棱镜4 6把",p:120},
+            {n:"棱镜4 3把",p:60},
+            {n:"乔思伯 ZA360 ARGB",p:169},
+            {n:"棱镜8积木白8个+图灵副屏+霓虹线两组",p:1198}
+        ],
+        power: [
+            {n:"先马朱雀光之神550W额定安规电容",p:209},
+            {n:"先马朱雀光之神650W额定安规电容",p:249},
+            {n:"先马朱雀光之神750W额定安规电容",p:369},
+            {n:"九州风神 PQ850G 850W 金牌全模组  ATX3.1 10年",p:519},
+            {n:"航嘉 GX650M 650W金牌全模组 ",p:355},
+            {n:"海韵 PRIME TX-1300 钛金全模组 ATX3.0 黑色 十二年质保",p:2799},
+            {n:"品牌500W额定（到手10天质保）",p:78},
+            {n:"追风者 BH650W铜牌 蟒纹线 白色",p:298},
+            {n:"追风者 AMP GH650 650W 金牌全模组 ATX3.1 蟒纹线 白色",p:480},
+            {n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:750},
+            {n:"海韵 FOCUS GX-850W 金牌 全模组 ATX3.1 V4",p:999}
+        ],
+        vga: [
+            {n:"双敏6500XT 暴雪白色",p:998},
+            {n:"双敏-RTX3050暴雪 6G白色",p:1499},
+            {n:"双敏RTX5050 8G白色",p:2199},
+            {n:"七彩虹 RTX5050 8G 战斧 DUO 双扇",p:2199},
+            {n:"七彩虹 RTX5060 8G 战斧 DUO 双扇",p:2699},
+            {n:"微星 RTX5060 8G 万图师白色",p:2750},
+            {n:"微星 RTX3050 6G 万图师",p:1549},
+            {n:"七彩虹 RTX5050 8G ULTRA W DUO 白色双扇 ",p:2280},
+            {n:"七彩虹 RTX5060 8G ULTRA W OC 白色三扇 ",p:2880},
+            {n:"七彩虹 RTX5060ti 8G 战斧 DUO 双扇",p:2998},
+            {n:"七彩虹 RTX5060ti 16G 战斧 DUO 双扇",p:3998},
+            {n:"七彩虹 RTX5060TI 16G ULTRA W DUO OC 白色双扇",p:4299},
+            {n:"微星 RTX5070 VENTUS 2X OC 12G 万图师",p:4998},
+            {n:"七彩虹 RTX5070 12G ULTRA W OC 白色",p:5299},
+            {n:"七彩虹 RTX5070TI 16G 战斧豪华版 SFF",p:7299},
+            {n:"微星 RTX5080万图师3X OC PLUS",p:9449},
+            {n:"七彩虹 RTX5090D Advanced银鲨OC 24GB",p:20499},
+            {n:"华硕RTX5090-32G TUF-OC非D",p:31999},
+            {n:"品牌GTX1060（到手10天质保）",p:499},
+            {n:"华硕 PRIME RX9070XT O16G 大师",p:5199}
+        ],
+        ssd: [
+            {n:"佰维 NV7400 512G TLC颗粒 读速7050MB/s",p:670},
+            {n:"佰维 NV3500 512G TLC颗粒",p:590},
+            {n:"佰维 NV3500 1T TLC颗粒",p:850},
+            {n:"佰维 NV7400 1T TLC颗粒 读速7400MB/s",p:999},
+            {n:"佰维 NV7400 2T TLC颗粒 读速7400MB/s",p:1700},
+            {n:"梵想S500PRO-1T TLC颗粒",p:1098},
+            {n:"梵想S500PRO-512GB TLC颗粒",p:649},
+            {n:"西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",p:1399},
+            {n:"致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",p:1199},
+            {n:"三星 990 PRO 1T PCIE 4.0 读7450写6900",p:1599},
+            {n:"雷克沙 雷神THOR 4T PCIE4.0 7000/6000",p:2899},
+            {n:"品牌SSD 512G（到手10天质保）",p:149},
+            {n:"宏碁 GM7 2T PCIE 4.0 读7200写6300",p:1699}
+        ],
+        hdd: [
+            {n:"东芝 2T 机械硬盘",p:899},
+            {n:"东芝 4T 机械硬盘",p:999}
+        ],
+        case: [
+            {n:"白色海景房",p:129},
+            {n:"黑色海景房",p:129},
+            {n:"幻境侧透",p:129},
+            {n:"航嘉 G63",p:139},
+            {n:"锐龙 360M 大海景房",p:169},
+            {n:"智界V1",p:139},
+            {n:"未知玩家 X100手提机箱",p:149},
+            {n:"乔思伯 Z20 粉白 手提机箱",p:379},
+            {n:"航嘉 GX760M 追梦 ",p:199},
+            {n:"先马 风致360",p:189},
+            {n:"先马 风致240",p:129},
+            {n:"瓦尔基里 VK03 全景房黑色 不带屏",p:289},
+            {n:"爱国者 星璨岚 黑/白",p:269},
+            {n:"华硕 TUF GT502 弹药库 黑色 无界版",p:899},
+            {n:"乔思伯 TK1 星舰仓",p:499},
+            {n:"品牌500W额定",p:50},
+            {n:"联力 包豪斯 vision 精致版 三面侧透玻璃",p:649}
+        ],
+        // 新增其他配件默认数据
+        other: [
+            {n:"不含显示器键盘鼠标耳机",p:0},{n:"赠送键鼠",p:0}
+        ]
+    };
+
+    // 中文类目映射表
+    const categoryMap = {
+        'cpu': 'CPU',
+        'ram': '内存',
+        'board': '主板',
+        'cooler': '散热器',
+        'fan': '风扇',
+        'power': '电源',
+        'other': '其他配件',
+        'vga': '显卡',
+        'ssd': '固态硬盘',
+        'hdd': '机械硬盘',
+        'case': '机箱',
+        // 反向映射（中文转英文）
+        'CPU': 'cpu',
+        '内存': 'ram',
+        '主板': 'board',
+        '散热器': 'cooler',
+        '风扇': 'fan',
+        '电源': 'power',
+        '其他配件': 'other',
+        '显卡': 'vga',
+        '固态硬盘': 'ssd',
+        '机械硬盘': 'hdd',
+        '机箱': 'case'
+    };
+
+    // 全局变量存储右键选中的配件信息
+    let selectedItem = {
+        type: '',
+        index: -1
+    };
+    
+    // 加载数据（合并默认数据和本地存储的自定义数据）
+    function loadData() {
+        const savedData = localStorage.getItem("productData");
+        if (savedData) {
+            try {
+                const loadedData = JSON.parse(savedData);
+                // 确保other类目存在
+                if (!loadedData.other) {
+                    loadedData.other = defaultData.other;
+                }
+                return loadedData;
+            } catch (e) {
+                console.error("加载本地数据失败，使用默认数据", e);
+                return JSON.parse(JSON.stringify(defaultData));
+            }
+        }
+        return JSON.parse(JSON.stringify(defaultData));
+    }
+
+    // 保存数据到localStorage
+    function saveData() {
+        localStorage.setItem("productData", JSON.stringify(data));
+    }
+
+    // 初始化数据
+    const data = loadData();
+
+    // 1. 点击输入框自动触发下拉列表 - 优化版：确保下拉框样式和显示正常
+    function match(key){
+        let val=document.getElementById(key).value.toLowerCase();
+        let box=document.getElementById(key+"-drop");
+        box.innerHTML="";
+        // 即使输入为空，点击也显示全部列表
+        let arr = val ? data[key].filter(i=>i.n.toLowerCase().includes(val)) : data[key];
+        if(arr.length===0){
+            box.style.display="none";
+            return;
+        }
+        arr.forEach((i, idx)=>{
+            let d=document.createElement("div");
+            // 配件名称和删除按钮布局
+            d.innerHTML = `
+                <span>${i.n}</span>
+                <span class="dropdown-delete" data-type="${key}" data-index="${idx}">×</span>
+            `;
+            // 左键点击选择配件
+            d.addEventListener('mousedown', function(e) {
+                // 阻止事件冒泡，避免触发删除按钮的点击
+                if (e.target.classList.contains('dropdown-delete')) return;
+                
+                e.preventDefault();
+                document.getElementById(key).value = i.n;
+                document.getElementById(key+"-p").value = i.p;
+                box.style.display = "none";
+                calc();
+                saveNow();
+            });
+            
+            // 下拉列表删除按钮点击事件
+            const deleteBtn = d.querySelector('.dropdown-delete');
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                const type = this.getAttribute('data-type');
+                const index = parseInt(this.getAttribute('data-index'));
+                deleteDropdownItem(type, index);
+            });
+
+            // 右键点击显示删除菜单（保留原有功能）
+            d.oncontextmenu=(e)=>{
+                e.preventDefault();
+                // 存储选中的配件信息
+                selectedItem.type = key;
+                selectedItem.index = idx;
+                // 显示右键菜单
+                const menu = document.getElementById('contextMenu');
+                menu.style.display = 'block';
+                menu.style.left = `${e.pageX}px`;
+                menu.style.top = `${e.pageY}px`;
+                // 隐藏下拉框
+                box.style.display="none";
+            };
+            box.appendChild(d);
+        });
+        box.style.display="block";
+        // 关键优化：确保下拉框能被正确显示（解决层级/显示问题）
+        box.style.zIndex = 100;
+        box.style.position = "absolute";
+        box.style.width = document.getElementById(key).offsetWidth + "px";
+    }
+
+    // 删除下拉列表中的配件项
+    function deleteDropdownItem(type, index) {
+        if (confirm(`确定删除【${data[type][index].n}】吗？`)) {
+            // 删除数组中的对应项
+            data[type].splice(index, 1);
+            // 保存数据
+            saveData();
+            // 重新渲染下拉列表
+            match(type);
+        }
+    }
+
+    // 删除选中的配件（原有右键菜单删除功能）
+    function deleteSelectedItem() {
+        if (selectedItem.type && selectedItem.index >= 0) {
+            if (confirm(`确定删除【${data[selectedItem.type][selectedItem.index].n}】吗？`)) {
+                // 删除数组中的对应项
+                data[selectedItem.type].splice(selectedItem.index, 1);
+                // 保存数据
+                saveData();
+                // 重新渲染下拉列表
+                match(selectedItem.type);
+                // 隐藏右键菜单
+                document.getElementById('contextMenu').style.display = 'none';
+                // 重置选中状态
+                selectedItem = {type: '', index: -1};
+            }
+        }
+        // 隐藏右键菜单
+        document.getElementById('contextMenu').style.display = 'none';
+    }
+
+    // 点击空白处关闭右键菜单
+    document.addEventListener('click', () => {
+        document.getElementById('contextMenu').style.display = 'none';
+        selectedItem = {type: '', index: -1};
+    });
+
+    function hideDrop(key){
+        setTimeout(()=>document.getElementById(key+"-drop").style.display="none",150)
+    }
+
+    function calc(){
+        let sum=0;
+        // 新增other字段到计算列表
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            sum+=parseFloat(document.getElementById(k+"-p").value)||0;
+        });
+        document.getElementById("total").innerText=sum.toFixed(2);
+        // 修改：最终报价四舍五入为整数，去掉小数点
+        const finalPrice = Math.round(sum / 0.934);
+        document.getElementById("final").innerText=`${finalPrice} 元`;
+    }
+
+    function saveNow(){
+        let o={user:document.getElementById("user").value};
+        // 新增other和remark字段到保存数据
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            o[k]=document.getElementById(k).value;
+            o[k+"p"]=document.getElementById(k+"-p").value;
+        });
+        o.remark = document.getElementById("remark").value; // 修改为value获取textarea内容
+        localStorage.setItem("last",JSON.stringify(o));
+    }
+
+    // 新增：更新实时日期时间
+    function updateDateTime() {
+        const now = new Date();
+        // 格式化日期时间：YYYY-MM-DD HH:MM:SS
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        document.getElementById("datetimeDisplay").textContent = formattedTime;
+    }
+
+    window.onload=()=>{
+        let d=localStorage.getItem("last");
+        if(d){
+            d=JSON.parse(d);
+            document.getElementById("user").value=d.user||"";
+            ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+                document.getElementById(k).value=d[k]||"";
+                document.getElementById(k+"-p").value=d[k+"p"]||"";
+            });
+            // 加载备注（修改为value赋值）
+            if (d.remark) {
+                document.getElementById("remark").value = d.remark;
+            }
+            calc();
+        }
+        // 初始化客户名称下拉列表
+        initUserDropdown();
+        
+        // 初始化并启动实时日期时间更新
+        updateDateTime();
+        setInterval(updateDateTime, 1000); // 每秒更新一次
+    }
+
+    function save(){
+        let u=document.getElementById("user").value.trim();
+        if(!u){alert("请输入客户名称");return}
+        let list=JSON.parse(localStorage.getItem("list"))||[];
+        let o={name:u,time:new Date().toLocaleString()};
+        // 新增other和remark字段到保存配置
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            o[k]=document.getElementById(k).value;
+            o[k+"p"]=document.getElementById(k+"-p").value;
+        });
+        o.remark = document.getElementById("remark").value; // 修改为value获取textarea内容
+        list.push(o);
+        localStorage.setItem("list",JSON.stringify(list));
+        // 更新客户名称下拉列表
+        initUserDropdown();
+        alert("保存成功");
+    }
+
+    function showLoad(){
+        let list=JSON.parse(localStorage.getItem("list"))||[];
+        let h="";
+        if(list.length===0)h="<div style='padding:10px;text-align:center;color:#000'>暂无保存</div>";
+        else list.forEach((i,j)=>{
+            h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#9900ff'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
+        });
+        document.getElementById("mlist").innerHTML=h;
+        document.getElementById("loadModal").style.display="flex";
+    }
+
+    function load(idx){
+        let list=JSON.parse(localStorage.getItem("list"))||[];
+        let d=list[idx];
+        document.getElementById("user").value=d.name;
+        // 加载other字段
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            document.getElementById(k).value=d[k]||"";
+            document.getElementById(k+"-p").value=d[k+"p"]||"";
+        });
+        // 加载备注（修改为value赋值）
+        if (d.remark) {
+            document.getElementById("remark").value = d.remark;
+        }
+        calc();
+        saveNow();
+        closeModal('loadModal');
+        alert("加载成功");
+    }
+
+    function closeModal(m){
+        document.getElementById(m).style.display="none";
+    }
+
+    function reset(){
+        if(!confirm("确定清空？"))return;
+        localStorage.removeItem("last");
+        location.reload();
+    }
+
+    function showUpdate(){
+        document.getElementById("updateModal").style.display="flex";
+    }
+
+    // 优化更新报价功能：支持中文类目 + 英文类目
+    function doUpdate(){
+        let t=document.getElementById("updateText").value.trim();
+        if(!t){alert("请输入更新内容");return}
+        let lines=t.split("\n");
+        let updateCount = 0;
+        let notFoundList = [];
+        
+        lines.forEach(line=>{
+            // 处理可能的空格问题
+            let parts = line.split(",").map(part => part.trim());
+            let [typeName,name,price] = parts;
+            
+            // 验证必要参数
+            if(!typeName || !name || !price) return;
+            
+            // 转换中文类目为英文key
+            let type = categoryMap[typeName] || typeName;
+            
+            // 检查品类是否存在
+            if(!data[type]) {
+                notFoundList.push(`品类不存在: ${typeName}`);
+                return;
+            }
+            
+            // 查找匹配的型号（精确匹配）
+            let targetIndex = data[type].findIndex(item => item.n.trim() === name.trim());
+            
+            if(targetIndex !== -1){
+                // 更新价格
+                data[type][targetIndex].p = parseFloat(price);
+                updateCount++;
+            } else {
+                notFoundList.push(`${typeName}: ${name} (型号未找到)`);
+            }
+        });
+        
+        // 更新后保存数据到本地
+        saveData();
+        closeModal('updateModal');
+        
+        // 提示更新结果
+        let message = `报价更新完成！\n成功更新 ${updateCount} 条数据`;
+        if(notFoundList.length > 0){
+            message += `\n\n未找到的项目：\n${notFoundList.join('\n')}`;
+        }
+        alert(message);
+        
+        // 重新计算当前配置总价（如果更新的型号正在使用）
+        calc();
+        
+        // 重新渲染所有下拉列表（更新当前显示的价格）
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k => {
+            const inputVal = document.getElementById(k).value;
+            if(inputVal) {
+                const item = data[k].find(i => i.n === inputVal);
+                if(item) {
+                    document.getElementById(k+"-p").value = item.p;
+                }
+            }
+        });
+    }
+
+    // 优化添加型号功能：添加到列表最前面并永久保存 + 修复添加后不显示问题
+    function showAdd(){
+        // 清空输入框
+        document.getElementById("addType").value = "";
+        document.getElementById("addName").value = "";
+        document.getElementById("addPrice").value = "";
+        document.getElementById("addModal").style.display = "flex";
+    }
+
+    function doAdd(){
+        const type = document.getElementById("addType").value;
+        const name = document.getElementById("addName").value.trim();
+        const price = parseFloat(document.getElementById("addPrice").value);
+
+        // 验证输入
+        if(!type){
+            alert("请选择品类！");
+            return;
+        }
+        if(!name){
+            alert("请输入型号名称！");
+            return;
+        }
+        if(isNaN(price) || price < 0){
+            alert("请输入有效的价格（非负数）！");
+            return;
+        }
+
+        // 检查是否已存在相同名称的型号（精确匹配）
+        const exists = data[type].some(item => item.n.trim() === name);
+        if(exists){
+            alert("该型号已存在！");
+            return;
+        }
+
+        // 添加新型号到列表最前面
+        data[type].unshift({n: name, p: price});
+        
+        // 保存到localStorage永久存储
+        saveData();
+        
+        closeModal('addModal');
+        
+        // 核心修复：添加完成后主动触发对应品类的下拉列表渲染
+        // 先清空对应输入框的内容（避免过滤影响），再触发匹配
+        const typeInput = document.getElementById(type);
+        const currentValue = typeInput.value;
+        typeInput.value = ""; // 清空输入框确保能显示所有选项
+        match(type); // 主动触发下拉列表渲染
+        typeInput.value = currentValue; // 恢复输入框原有内容
+        
+        alert("型号添加成功！");
+    }
+
+    // 新增清空单个配件栏目的功能
+    function clearItem(key) {
+        document.getElementById(key).value = "";
+        document.getElementById(key + "-p").value = "";
+        calc(); // 重新计算总价
+        saveNow(); // 保存当前状态
+        // 隐藏下拉框（如果显示的话）
+        document.getElementById(key + "-drop").style.display = "none";
+    }
+
+    // ========== 客户名称下拉列表功能 ==========
+    // 初始化客户名称下拉列表
+    function initUserDropdown() {
+        const list = JSON.parse(localStorage.getItem("list")) || [];
+        // 提取唯一的客户名称并去重
+        const userNames = Array.from(new Set(list.map(item => item.name).filter(name => name.trim())));
+        const dropdown = document.getElementById("userDropdown");
+        dropdown.innerHTML = "";
+        
+        userNames.forEach(name => {
+            const div = document.createElement("div");
+            div.innerText = name;
+            div.onmousedown = () => {
+                document.getElementById("user").value = name;
+                dropdown.style.display = "none";
+                // 自动加载对应的配置单
+                loadConfigByName(name);
+            };
+            dropdown.appendChild(div);
+        });
+    }
+
+    // 根据客户名称加载对应的配置单
+    function loadConfigByName(name) {
+        const list = JSON.parse(localStorage.getItem("list")) || [];
+        // 查找最新的同名配置（也可以改为查找第一个）
+        const config = list.find(item => item.name === name);
+        
+        if(config) {
+            document.getElementById("user").value = config.name;
+            ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+                document.getElementById(k).value = config[k] || "";
+                document.getElementById(k+"-p").value = config[k+"p"] || "";
+            });
+            // 加载备注（修改为value赋值）
+            if (config.remark) {
+                document.getElementById("remark").value = config.remark;
+            }
+            calc();
+            saveNow();
+            alert(`成功加载【${name}】的配置单`);
+        } else {
+            alert(`未找到【${name}】的配置单`);
+        }
+    }
+
+    // 显示客户名称下拉列表
+    function showUserDropdown() {
+        const dropdown = document.getElementById("userDropdown");
+        // 如果有选项才显示
+        if (dropdown.children.length > 0) {
+            dropdown.style.display = "block";
+            // 过滤匹配当前输入的内容
+            filterUserDropdown();
+        }
+    }
+
+    // 过滤客户名称下拉列表
+    function filterUserDropdown() {
+        const inputVal = document.getElementById("user").value.toLowerCase();
+        const dropdown = document.getElementById("userDropdown");
+        const items = dropdown.getElementsByTagName("div");
+        
+        Array.from(items).forEach(item => {
+            if (item.innerText.toLowerCase().includes(inputVal)) {
+                item.style.display = "block";
+            } else {
+                item.style.display = "none";
+            }
+        });
+    }
+
+    // 隐藏客户名称下拉列表
+    function hideUserDropdown() {
+        setTimeout(() => {
+            document.getElementById("userDropdown").style.display = "none";
+        }, 150);
+    }
+</script>
+</body>
+</html>
