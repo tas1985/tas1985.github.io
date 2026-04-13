@@ -1,8 +1,8 @@
-name: 自动更新配件价格
+name: 自动更新CPU价格
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 5 * * *"
+    - cron: '0 6 * * *'
 
 jobs:
   update:
@@ -14,4 +14,4 @@ jobs:
       - run: python update_prices.py
       - uses: EndBug/add-and-commit@v9
         with:
-          message: "自动更新 p:价格"
+          message: "自动更新CPU价格"
