@@ -1,32 +1,33 @@
-name: 每日自动更新配件价格
+name: 自动更新价格
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天北京时间 8 点自动运行
-  workflow_dispatch:     # 允许手动运行
+    - cron: "0 2 * * *"
+  workflow_dispatch:
 
 jobs:
-  update-price:
+  run:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: 拉取仓库代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: 设置 Python
+      - name: Set Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: 安装依赖
+      - name: Install
         run: pip install -r requirements.txt
 
-      - name: 运行更新程序（修改 index.html）
+      - name: Run
         run: python update_prices.py
 
-      - name: 提交更新到仓库
+      - name: Commit
         uses: EndBug/add-and-commit@v9
         with:
           message: "自动更新配件价格"
-          committer_name: Auto Bot
+          committer_name: GitHub Actions
           committer_email: actions@github.com
