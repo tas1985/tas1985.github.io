@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
-# -------------------------- 全局配置项（原有100%保留） --------------------------
+# -------------------------- 全局配置项（仅修改内存起止行） --------------------------
 SOURCE_URL = "http://0532.name/cpu_list"
 GPU_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%98%BE%E5%8D%A1"
 MB_SOURCE_URL = "http://0532.name/cpu_list?category=%E4%B8%BB%E6%9D%BF"
@@ -22,9 +22,9 @@ GPU_END_MARK = "<!-- 显卡自动更新区域 结束 -->"
 # 主板配置
 MB_TARGET_LINE = '{n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},'
 MB_EXCLUDE = "铭瑄"
-# 内存配置
-RAM_EXIST_START = '{n:"金百达_银爵 16G 3200(8*2)套装",p:750},'
-RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",p:7958},'
+# 【修正】内存更新范围：仅匹配名称，去掉价格后缀
+RAM_EXIST_START = '{n:"金百达_银爵 16G 3200(8*2)套装",'
+RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
 RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（到手10天质保）",p:250},'
 RAM_EXCLUDE_LIST = ["金百达", "金邦", "科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 50
@@ -107,7 +107,7 @@ def fetch_mb_prices():
         print(f"❌ 爬取主板失败：{str(e)}")
         return []
 
-# -------------------------- 【修复】4. 爬取【原始内存原价】（无过滤无加价，专用于更新现有内存） --------------------------
+# -------------------------- 4. 爬取【原始内存原价】（不变） --------------------------
 def fetch_raw_ram_prices():
     try:
         response = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
@@ -127,7 +127,7 @@ def fetch_raw_ram_prices():
         print(f"❌ 爬取原始内存失败：{str(e)}")
         return {}
 
-# -------------------------- 5. 爬取【处理后内存】（过滤+加价，专用于新增内存） --------------------------
+# -------------------------- 5. 爬取【处理后内存】（不变） --------------------------
 def fetch_processed_ram():
     try:
         response = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
@@ -185,14 +185,13 @@ def update_html_prices(price_dict):
         print(f"❌ 修改配件价格失败：{str(e)}")
         return 0
 
-# -------------------------- 【修复】7. 更新现有内存价格（用原始原价，价格100%准确） --------------------------
+# -------------------------- 7. 更新现有内存价格（不变） --------------------------
 def update_exist_ram_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        # 获取【原始内存原价】
         ram_dict = fetch_raw_ram_prices()
-        # 定位内存范围
+        # 定位内存范围（纯名称匹配）
         start_idx = end_idx = -1
         for i, line in enumerate(lines):
             if RAM_EXIST_START in line and start_idx == -1:
@@ -216,7 +215,6 @@ def update_exist_ram_prices():
             best_match, score = process.extractOne(target_model, ram_dict.keys(), scorer=process.fuzz.token_set_ratio)
             if score < MATCH_THRESHOLD: continue
 
-            # 原始价格 + 阿斯加特单独加价
             original_price = ram_dict[best_match]
             new_price = str(float(original_price) + RAM_ASC_TECH_ADD) if "阿斯加特" in item_name else original_price
             
@@ -232,7 +230,7 @@ def update_exist_ram_prices():
         print(f"❌ 修复内存价格失败：{str(e)}")
         return 0
 
-# -------------------------- 显卡/主板/内存 插入更新（全部不变） --------------------------
+# -------------------------- 显卡/主板/内存 插入更新（不变） --------------------------
 def update_gpu_by_mark():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -288,18 +286,14 @@ def fuzzy_match_price(target_name, price_dict):
         return original_price
     return None
 
-# -------------------------- 主函数（修复调用） --------------------------
+# -------------------------- 主函数（不变） --------------------------
 if __name__ == "__main__":
-    print("===== 全功能修复版 - 内存价格已校准 =====")
-    # 1. 更新CPU
+    print("===== 全功能修正版 - 内存范围已更新 =====")
     price_dict = fetch_latest_prices()
     if price_dict:
         update_html_prices(price_dict)
-    # 2. 【修复】更新现有内存（原价校准）
     update_exist_ram_prices()
-    # 3. 更新显卡+主板
     update_gpu_by_mark()
     update_mb_accurate()
-    # 4. 新增内存
     update_ram_accurate()
     print("===== 全部执行完成 =====")
