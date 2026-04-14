@@ -1,8 +1,10 @@
 name: 每日自动更新配件价格
 on:
-  # 定时触发：每天北京时间0点（UTC时间16点）
+  # 定时触发：每天北京时间7点、12点、20点（对应UTC时间23、4、12点）
   schedule:
-    - cron: "0 16 * * *"
+    - cron: "0 23 * * *"  # 北京时间早7点
+    - cron: "0 4 * * *"   # 北京时间中午12点
+    - cron: "0 12 * * *"  # 北京时间晚上8点
   # 支持手动触发测试
   workflow_dispatch:
 
@@ -16,25 +18,19 @@ jobs:
     steps:
       - name: 检出仓库代码
         uses: actions/checkout@v4
-        # 确保拉取完整历史（避免提交失败）
-        with:
-          fetch-depth: 0
 
       - name: 设置Python环境
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: 安装依赖库（国内源加速）
+      - name: 安装依赖库
         run: |
-          set -x  # 开启调试日志，方便排查安装问题
-          python -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple
-          pip install requests beautifulsoup4 fuzzywuzzy python-Levenshtein -i https://pypi.tuna.tsinghua.edu.cn/simple
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 fuzzywuzzy python-Levenshtein
 
-      - name: 运行价格更新脚本（打印日志）
-        run: |
-          set -x  # 打印脚本执行过程，方便定位错误
-          python update_prices.py
+      - name: 运行价格更新脚本
+        run: python update_prices.py
 
       - name: 提交并推送修改
         uses: EndBug/add-and-commit@v9
@@ -42,5 +38,3 @@ jobs:
           message: "自动更新配件实时价格"
           committer_name: GitHub Actions
           committer_email: actions@github.com
-          # 即使无修改也提交（可选，用于验证运行）
-          force: false
