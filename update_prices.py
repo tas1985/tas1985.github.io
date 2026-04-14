@@ -13,7 +13,7 @@ HTML_FILE = "index.html"
 START_LINE = 760
 END_LINE = 816
 MATCH_THRESHOLD = 60
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64 6.1; Win64; x64) AppleWebKit/537.36"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
 # 配置
 GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
@@ -100,6 +100,14 @@ def fetch_gpu_exact_dict():
     except Exception:
         return {}
 
+def fetch_gpu_prices():
+    try:
+        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        return [{"name": n, "price": p} for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text())]
+    except Exception:
+        return []
+
 def fetch_mb_prices():
     try:
         res = requests.get(MB_SOURCE_URL, headers=HEADERS, timeout=10)
@@ -153,13 +161,13 @@ def fetch_ssd_exact_data():
 
 # -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
-    return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
+    return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
 
 def generate_mb_content(mb_list):
-    return "".join([f'{INDENT}{n:"{m["name"]}",p:{m["price"]}}},\n' for m in mb_list])
+    return "".join([f'{INDENT}{{n:"{m["name"]}",p:{m["price"]}}},\n' for m in mb_list])
 
 def generate_ram_content(ram_list):
-    return "".join([f'{INDENT}{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
+    return "".join([f'{INDENT}{{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
 
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
@@ -208,7 +216,8 @@ def update_fixed_gpu_prices():
         ]
         for i in range(len(lines)):
             line = lines[i]
-            if not re.search(r'p:\d+', line): continue
+            if not re.search(r'p:\d+', line):
+                continue
             for gpu_name in target_gpus:
                 if gpu_name in line:
                     key = extract_gpu_exact_key(gpu_name)
@@ -257,7 +266,8 @@ def update_exist_ram_prices():
         cnt = 0
         for i in range(start, end + 1):
             line = lines[i]
-            if not re.search(r"p:\d+(?:\.\d+)?", line): continue
+            if not re.search(r"p:\d+(?:\.\d+)?", line):
+                continue
             ram_name = re.sub(r'<[^>]+>|p:\d+(?:\.\d+)?', "", line).strip()
             feat = extract_ram_feature(ram_name)
             base_price = float(ram_dict.get(feat, 0))
@@ -286,7 +296,7 @@ def update_exist_ram_prices():
         print(f"❌ 内存更新失败：{e}")
         return 0
 
-# -------------------------- 固态硬盘精准更新（1T = 2T × 0.53） --------------------------
+# -------------------------- 固态硬盘精准更新 --------------------------
 def update_ssd_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -294,9 +304,9 @@ def update_ssd_prices():
         ssd_map, ssd_list = fetch_ssd_exact_data()
         updated = 0
 
-        # 你的定制价格规则
+        # 定制规则：佰维 NV7400 1T = 2T 价格 × 0.53
         nv7400_2t_price = ssd_map.get("佰维NV74002T", 0)
-        nv7400_1t_custom_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
+        nv7400_1t_custom = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
 
         target_ssd = [
             "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
@@ -321,9 +331,9 @@ def update_ssd_prices():
             for ssd_name in target_ssd:
                 if ssd_name not in line:
                     continue
-                # 核心定制：佰维 NV7400 1T = 2T × 0.53
-                if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in ssd_name and nv7400_1t_custom_price > 0:
-                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_custom_price}', line)
+                # 应用定制价格
+                if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in ssd_name and nv7400_1t_custom > 0:
+                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_custom}', line)
                     updated += 1
                 else:
                     key = extract_ssd_exact_key(ssd_name)
@@ -332,7 +342,7 @@ def update_ssd_prices():
                         updated += 1
                 break
 
-        # 插入新硬盘
+        # 插入硬盘列表
         insert_idx = -1
         for i, line in enumerate(lines):
             if SSD_TARGET_LINE in line:
@@ -340,12 +350,12 @@ def update_ssd_prices():
                 break
         if insert_idx != -1:
             for ssd in ssd_list:
-                lines.insert(insert_idx, f'{SSD_APPEND_INDENT}{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
+                lines.insert(insert_idx, f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
                 insert_idx += 1
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"✅ 固态硬盘更新完成：{updated} 个 | 佰维1T价格 = 2T×0.53")
+        print(f"✅ 固态硬盘更新完成：{updated} 个 | 佰维1T价格=2T×0.53")
         return updated
     except Exception as e:
         print(f"❌ 硬盘更新失败：{e}")
@@ -357,7 +367,8 @@ def update_mb_accurate():
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         idx = next((i for i, l in enumerate(lines) if MB_TARGET_LINE in l), -1)
-        if idx == -1: return
+        if idx == -1:
+            return
         pos = idx + 1
         while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
             del lines[pos]
@@ -373,7 +384,8 @@ def update_ram_accurate():
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         idx = next((i for i, l in enumerate(lines) if RAM_INSERT_TARGET in l), -1)
-        if idx == -1: return
+        if idx == -1:
+            return
         pos = idx + 1
         while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
             del lines[pos]
@@ -403,13 +415,11 @@ def fuzzy_match_price(name, price_dict):
 if __name__ == "__main__":
     print("===== 硬件价格每日自动更新程序启动 =====")
     cpu_prices = fetch_latest_prices()
-    cpu_cnt = update_html_prices(cpu_prices)
-    print(f"✅ CPU价格已更新：{cpu_cnt} 个")
-
+    if cpu_prices:
+        update_html_prices(cpu_prices)
     update_fixed_gpu_prices()
     update_exist_ram_prices()
     update_ssd_prices()
     update_mb_accurate()
     update_ram_accurate()
-
-    print("===== ✅ 全部硬件价格更新完成 =====")
+    print("===== ✅ 全部执行完成 =====")
