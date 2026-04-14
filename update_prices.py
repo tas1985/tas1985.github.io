@@ -40,7 +40,7 @@ def extract_hardware_model(name):
         r'(\d+gb)|'
         r'(\d+[a-z]+\d*)'
     )
-    match = pattern.search(name)
+    match = pattern.search(name_clean)
     return match.group() if match else name
 
 def extract_ram_feature(name):
@@ -74,7 +74,7 @@ def fetch_mb_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         return [{"name": n, "price": p} for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()) if MB_EXCLUDE not in n]
     except Exception:
-        return {}
+        return []
 
 def fetch_raw_ram_prices():
     try:
@@ -135,24 +135,23 @@ def update_html_prices(price_dict):
     except Exception:
         return 0
 
-# -------------------------- 内存定制价格（100%正确版） --------------------------
+# -------------------------- 内存定制价格（最终100%正确版） --------------------------
 def update_exist_ram_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         ram_dict = fetch_raw_ram_prices()
 
-        # 全量内存价格
-        try:
-            res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
-            soup = BeautifulSoup(res.text, "html.parser")
-            ram_full_map = {}
-            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-                ram_full_map[n.strip()] = p.strip()
-        except:
-            ram_full_map = {}
+        # 先获取所有内存的原始价格
+        jbd_3200_price = 0
+        jbd_6000_fina_price = 0
 
-        # 定位内存区域
+        for name, price in ram_dict.items():
+            if "金百达_32G_3200" in name:
+                jbd_3200_price = float(price)
+            if "金百达_32G_6000" in name:
+                jbd_6000_fina_price = float(price) - 400
+
         start = end = -1
         for i, line in enumerate(lines):
             if start == -1 and RAM_EXIST_START in line:
@@ -163,47 +162,34 @@ def update_exist_ram_prices():
             print("❌ 未找到内存范围")
             return 0
 
-        # ==========================================
-        # 【强制预计算：金百达 32G 6000 套装价格】
-        # ==========================================
-        jbd_32g_6000_final = 0
-        for line in lines[start:end+1]:
-            if "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in line:
-                ram_name = re.sub(r'<[^>]+>|p:\d+(?:\.\d+)?', "", line).strip()
-                feat = extract_ram_feature(ram_name)
-                if feat in ram_dict:
-                    base = float(ram_dict[feat])
-                    jbd_32g_6000_final = base - 400
-                break
-
         cnt = 0
         for i in range(start, end + 1):
             line = lines[i]
             if not re.search(r"p:\d+(?:\.\d+)?", line):
                 continue
-
             ram_name = re.sub(r'<[^>]+>|p:\d+(?:\.\d+)?', "", line).strip()
             feat = extract_ram_feature(ram_name)
-            if feat not in ram_dict:
+            if feat not in ram_dict and "阿斯加特 DDR4 64G" not in ram_name:
                 continue
 
-            base_price = float(ram_dict[feat])
+            base_price = float(ram_dict.get(feat, 0))
             final_price = base_price
 
-            # ===================== 【最终正确规则】 =====================
+            # ===================== 【你指定的最终公式】 =====================
             if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
                 final_price = base_price + 150
 
-            # 🔥 修复 1：阿斯加特 64G 3200 → 直接固定 3599
+            # 64G 3200 = 金百达32G 3200套装价 ×2.6
             elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
-                final_price = base_price * 0.5
+                final_price = jbd_3200_price * 2.6
 
+            # 金百达 32G 6000 套装 = 原价-400
             elif "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
                 final_price = base_price - 400
 
-            # 🔥 修复 2：单根价格 = 套装价/2 +50
+            # 单根 16G 6000 = 套装价 ×0.55
             elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
-                final_price = base_price * 0.5
+                final_price = jbd_6000_fina_price * 0.55
 
             elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
                 final_price = base_price - 150
@@ -213,7 +199,7 @@ def update_exist_ram_prices():
 
             elif "阿斯加特" in ram_name and "女武神" not in ram_name:
                 final_price = base_price + 50
-            # ============================================================
+            # ==================================================================
 
             lines[i] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{int(final_price)}", line)
             cnt += 1
