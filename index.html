@@ -915,7 +915,7 @@
             {n:"微星 B850M GAMING WIFI ",p:898},
             {n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},
             {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1399.00},
-            {n:"技嘉 Z890M A ELITE WIFI7 ICE 冰雕",p:1399.00},
+            {n:"技嘉 Z890M A ELITE WIFI7 ICE 白色冰雕",p:1399.00},
             {n:"技嘉 Z890 UD WIFI6E DDR5",p:1250.00},
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
@@ -1032,7 +1032,7 @@
             {n:"华硕 TUF GAMING Z790-PLUS WIFI D5",p:2050.00},
             {n:"华硕 TUF GAMING X870E-PLUS WIFI D5",p:2399.00},
             {n:"华硕 TUF GAMING X870-PLUS WIFI D5",p:2140.00},
-            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1530.00},
+            {n:"华硕 TUF B850-E WIFI D5 大板",p:1530.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1270.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1220.00},
             {n:"华硕 TUF B850M-E GAMING WIFI",p:1120.00},
@@ -1113,7 +1113,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1159,7 +1159,7 @@
             {n:"艾湃电竞 GTR750M白色 750W金牌全模组 ATX3.0 十年质保",p:600},
             {n:"艾湃电竞 GTI850黑色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:440},
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
-            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
+            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 厨纹线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
             {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
@@ -1232,9 +1232,6 @@
             {n:"微星 RTX3050 6G 万图师",p:1450},
             {n:"七彩虹 RTX5050 8G ULTRA W DUO 白色双扇 ",p:2280},
             {n:"七彩虹 RTX5060 8G ULTRA W OC 白色三扇 ",p:2850},
-            {n:"七彩虹 RTX5060ti 8G 战斧 DUO 双扇",p:2799},
-            {n:"七彩虹 RTX5060ti 16G 战斧 DUO 双扇",p:3850},
-            {n:"七彩虹 RTX5060TI 16G ULTRA W DUO OC 白色双扇",p:4299},
             {n:"微星 RTX5070 VENTUS 2X OC 12G 万图师",p:4799},
             {n:"七彩虹 RTX5070 12G ULTRA W OC 白色",p:5250},
             {n:"七彩虹 RTX5070TI 16G 战斧豪华版 SFF",p:7099},
@@ -1647,7 +1644,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -1880,9 +1877,10 @@
         }
         arr.forEach((i, idx)=>{
             let d=document.createElement("div");
-            // 配件名称和删除按钮布局
+            // 配件名称和价格布局
             d.innerHTML = `
                 <span>${i.n}</span>
+                <span class="dropdown-price">¥${i.p}</span>
                 <span class="dropdown-delete" data-type="${key}" data-index="${idx}">×</span>
             `;
             // 左键点击选择配件
@@ -1986,12 +1984,12 @@
 
     function saveNow(){
         let o={user:document.getElementById("user").value};
-        // 新增other和remark字段到保存数据
+        // 新增other字段到保存数据
         ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
             o[k]=document.getElementById(k).value;
             o[k+"p"]=document.getElementById(k+"-p").value;
         });
-        o.remark = document.getElementById("remark").value; // 修改为value获取textarea内容
+        o.remark = document.getElementById("remark").value;
         localStorage.setItem("last",JSON.stringify(o));
     }
 
@@ -2019,7 +2017,7 @@
                 document.getElementById(k).value=d[k]||"";
                 document.getElementById(k+"-p").value=d[k+"p"]||"";
             });
-            // 加载备注（修改为value赋值）
+            // 加载备注
             if (d.remark) {
                 document.getElementById("remark").value = d.remark;
             }
@@ -2038,12 +2036,12 @@
         if(!u){alert("请输入客户名称");return}
         let list=JSON.parse(localStorage.getItem("list"))||[];
         let o={name:u,time:new Date().toLocaleString()};
-        // 新增other和remark字段到保存配置
+        // 新增other字段到保存配置
         ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
             o[k]=document.getElementById(k).value;
             o[k+"p"]=document.getElementById(k+"-p").value;
         });
-        o.remark = document.getElementById("remark").value; // 修改为value获取textarea内容
+        o.remark = document.getElementById("remark").value;
         list.push(o);
         localStorage.setItem("list",JSON.stringify(list));
         // 更新客户名称下拉列表
@@ -2071,7 +2069,7 @@
             document.getElementById(k).value=d[k]||"";
             document.getElementById(k+"-p").value=d[k+"p"]||"";
         });
-        // 加载备注（修改为value赋值）
+        // 加载备注
         if (d.remark) {
             document.getElementById("remark").value = d.remark;
         }
@@ -2256,7 +2254,7 @@
                 document.getElementById(k).value = config[k] || "";
                 document.getElementById(k+"-p").value = config[k+"p"] || "";
             });
-            // 加载备注（修改为value赋值）
+            // 加载备注
             if (config.remark) {
                 document.getElementById("remark").value = config.remark;
             }
@@ -2303,3 +2301,6 @@
 </script>
 </body>
 </html>
+
+
+
