@@ -25,11 +25,10 @@ RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
 RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（到手10天质保）",p:250},'
 RAM_EXCLUDE_LIST = ["金百达", "金邦", "科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 50
-# 硬盘排除品牌（你指定的）
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
 INDENT = "            "
-SSD_APPEND_INDENT = "            "  # 12个空格
+SSD_APPEND_INDENT = "            "
 
 # -------------------------- 核心工具函数 --------------------------
 def extract_hardware_model(name):
@@ -68,16 +67,17 @@ def extract_gpu_exact_key(name):
     if series: key_parts.append(series.group(1))
     return "|".join(key_parts)
 
-def extract_ssd_key(name):
-    name = name.strip().upper().replace(" ", "")
+# 【终极精准：品牌 + 型号 + 容量 完全匹配】
+def extract_ssd_exact_key(name):
+    name = name.strip().replace(" ", "").upper()
     brand = re.search(r"(佰维|梵想|西数|致态|三星|雷克沙|宏碁)", name)
     model = re.search(r"(NV7400|NV3500|S500PRO|SN7100|TIPLUS7100|990PRO|雷神THOR|GM7)", name)
     cap = re.search(r"(\d+G|\d+TB)", name)
-    key = []
-    if brand: key.append(brand.group(1))
-    if model: key.append(model.group(1))
-    if cap: key.append(cap.group(1))
-    return "".join(key) if key else name
+    key_parts = []
+    if brand: key_parts.append(brand.group(1))
+    if model: key_parts.append(model.group(1))
+    if cap: key_parts.append(cap.group(1))
+    return "".join(key_parts)
 
 # -------------------------- 爬取函数 --------------------------
 def fetch_latest_prices():
@@ -101,21 +101,13 @@ def fetch_gpu_exact_dict():
     except Exception:
         return {}
 
-def fetch_gpu_prices():
-    try:
-        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        return [{"name": n, "price": p} for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text())]
-    except Exception:
-        return []
-
 def fetch_mb_prices():
     try:
         res = requests.get(MB_SOURCE_URL, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         return [{"name": n, "price": p} for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()) if MB_EXCLUDE not in n]
     except Exception:
-        return {}
+        return []
 
 def fetch_raw_ram_prices():
     try:
@@ -144,17 +136,16 @@ def fetch_processed_ram():
     except Exception:
         return []
 
-def fetch_ssd_prices():
+def fetch_ssd_exact_data():
     try:
         res = requests.get(SSD_SOURCE_URL, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         ssd_map = {}
         ssd_list = []
         for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            # 自动排除指定硬盘品牌
-            if any(exclude in n for exclude in SSD_EXCLUDE_LIST):
+            if any(ex in n for ex in SSD_EXCLUDE_LIST):
                 continue
-            key = extract_ssd_key(n)
+            key = extract_ssd_exact_key(n)
             ssd_map[key] = int(float(p))
             ssd_list.append({"name": n, "price": int(float(p))})
         return ssd_map, ssd_list
@@ -296,13 +287,14 @@ def update_exist_ram_prices():
         print(f"❌ 内存更新失败：{e}")
         return 0
 
-# -------------------------- 【新增】固态硬盘价格自动更新 --------------------------
+# -------------------------- 固态硬盘精准更新（容量严格区分） --------------------------
 def update_ssd_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        ssd_map, ssd_list = fetch_ssd_prices()
+        ssd_map, ssd_list = fetch_ssd_exact_data()
         updated = 0
+
         target_ssd = [
             "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
             "佰维 NV3500 512G TLC颗粒",
@@ -311,23 +303,25 @@ def update_ssd_prices():
             "佰维 NV7400 2T TLC颗粒 读速7400MB/s",
             "梵想S500PRO-1T TLC颗粒",
             "梵想S500PRO-512GB TLC颗粒",
-            "西数 黑盘SN710 1T PCIE 4.0 读7250写6800",
+            "西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",
             "致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",
             "三星 990 PRO 1T PCIE 4.0 读7450写6900",
             "雷克沙 雷神THOR 4T PCIE4.0 7000/6000",
             "品牌SSD 512G（到手10天质保）",
             "宏碁 GM7 2T PCIE 4.0 读7200写6300"
         ]
+
         for i in range(len(lines)):
             line = lines[i]
             if not re.search(r'p:\d+', line): continue
             for ssd_name in target_ssd:
                 if ssd_name in line:
-                    key = extract_ssd_key(ssd_name)
+                    key = extract_ssd_exact_key(ssd_name)
                     if key in ssd_map:
                         lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
                         updated += 1
                     break
+
         insert_idx = -1
         for i, line in enumerate(lines):
             if SSD_TARGET_LINE in line:
@@ -337,10 +331,10 @@ def update_ssd_prices():
             for ssd in ssd_list:
                 lines.insert(insert_idx, f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
                 insert_idx += 1
+
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"✅ 固态硬盘价格更新完成：{updated} 个")
-        print(f"✅ 已插入过滤后的硬盘列表（已排除指定品牌）")
+        print(f"✅ 固态硬盘价格更新完成：{updated} 个（已严格区分容量）")
         return updated
     except Exception as e:
         print(f"❌ 硬盘更新失败：{e}")
@@ -401,10 +395,10 @@ if __name__ == "__main__":
     cpu_cnt = update_html_prices(cpu_prices)
     print(f"✅ CPU价格已更新：{cpu_cnt} 个")
 
-    update_fixed_gpu_prices()    # 显卡精准更新
-    update_exist_ram_prices()    # 内存定制更新
-    update_ssd_prices()          # 硬盘自动更新（已过滤品牌）
-    update_mb_accurate()         # 主板更新
-    update_ram_accurate()        # 内存列表更新
+    update_fixed_gpu_prices()
+    update_exist_ram_prices()
+    update_ssd_prices()
+    update_mb_accurate()
+    update_ram_accurate()
 
     print("===== ✅ 全部硬件价格更新完成 =====")
