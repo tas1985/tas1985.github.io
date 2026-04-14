@@ -66,31 +66,17 @@ def extract_ram_feature(name):
     return f"{brand}_{capacity}_{freq}".strip("_")
 
 def extract_gpu_exact_key(name):
-    """
-    修正显卡精确匹配逻辑，综合品牌+型号+数字+显存+品阶中文的逻辑来匹配
-    """
-    name = name.strip()
-    # 提取品牌
-    brand_match = re.search(r"(七彩虹|微星|英伟达|NVIDIA|华硕|技嘉|影驰|索泰|耕升|蓝戟|Intel|AMD)", name)
-    brand = brand_match.group(1) if brand_match else ""
-    
-    # 提取GPU系列和型号，比如RTX3060、RTX4070、RX6700等
-    series_match = re.search(r"((RTX|GTX|Radeon\s+RX|RX)\s*\d+[A-Z]*\d*)", name, re.IGNORECASE)
-    series = series_match.group(1).replace(" ", "") if series_match else ""
-    
-    # 提取显存容量，如12G、8G、16G
-    vram_match = re.search(r"(\d+G[B]?)", name)
-    vram = vram_match.group(1) if vram_match else ""
-    
-    # 提取品阶关键词，如战斧、万图师、超龙、豪华版、OC、白、黑、金、银等
-    grade_keywords = re.findall(r"(战斧|万图师|超龙|豪华版|OC|白|黑|金|银|Pro|Ti|Super|Ultra|Advanced|Index|Arc)", name)
-    grades = "".join(grade_keywords)
-    
-    # 组合为唯一标识
-    key_parts = [brand, series, vram, grades]
-    # 过滤空字符串并连接
-    key = "|".join([part for part in key_parts if part])
-    return key
+    name = name.strip().replace(" ", "").upper()
+    brand = re.search(r"(七彩虹|微星)", name)
+    model = re.search(r"(RTX\d+TI|RTX\d+)", name)
+    vram = re.search(r"(\d+G)", name)
+    series = re.search(r"(战斧|ULTRA|万图师|ADVANCED|银鲨)", name)
+    key_parts = []
+    if brand: key_parts.append(brand.group(1))
+    if model: key_parts.append(model.group(1))
+    if vram: key_parts.append(vram.group(1))
+    if series: key_parts.append(series.group(1))
+    return "|".join(key_parts)
 
 def extract_ssd_exact_key(name):
     name = name.strip().replace(" ", "").upper()
@@ -113,36 +99,20 @@ def fetch_latest_prices():
     except Exception:
         return {}
 
-def fetch_gpu_exact_dict():
-    try:
-        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        gpu_map = {}
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            k = extract_gpu_exact_key(n)
-            price = int(float(p))
-            # 🔥 新增规则：名称含「白」→ 价格 +100
-            if "白" in n:
-                price += 100
-            gpu_map[k] = price
-        return gpu_map
-    except Exception:
-        return {}
-
 def fetch_gpu_prices():
     try:
         res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
-        gpu_list = []
+        gpu_dict = {}  # 修改为字典存储，键为完整名称
         for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
             price = int(float(p))
             # 🔥 新增规则：名称含「白」→ 价格 +100
             if "白" in n:
                 price += 100
-            gpu_list.append({"name": n, "price": price})
-        return gpu_list
+            gpu_dict[n.strip()] = price  # 使用完整名称作为键
+        return gpu_dict
     except Exception:
-        return []
+        return {}
 
 def fetch_mb_prices():
     try:
@@ -303,7 +273,7 @@ def update_ssd_prices():
             "梵想S500PRO-512GB TLC颗粒",
             "西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",
             "致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",
-            "三星 990 PRO 1T PCIE 4.0 读7400写6900",
+            "三星 990 PRO 1T PCIE 4.0 读7450写6900",
             "雷克沙 雷神THOR 4T PCIE4.0 7000/6000",
             "品牌SSD 512G（到手10天质保）",
             "宏碁 GM7 2T PCIE 4.0 读7200写6300"
@@ -395,13 +365,16 @@ def update_html_prices(price_dict):
     except Exception:
         return 0
 
-# -------------------------- 固定显卡精准更新 --------------------------
+# -------------------------- 修正后的固态显卡精准更新 --------------------------
 def update_fixed_gpu_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        gpu_map = fetch_gpu_exact_dict()
+        
+        # 获取所有显卡的原始数据，使用完整名称作为键
+        gpu_dict = fetch_gpu_prices()
         updated = 0
+        
         target_gpus = [
             "七彩虹 RTX5050 8G 战斧 DUO 双扇",
             "七彩虹 RTX5060 8G 战斧 DUO 双扇",
@@ -416,23 +389,30 @@ def update_fixed_gpu_prices():
             "七彩虹 RTX5070 12G ULTRA W OC 白色",
             "七彩虹 RTX5070TI 16G 战斧豪华版 SFF",
             "微星 RTX5080万图师3X OC PLUS",
-            "七彩虹 RTX5090D Advanced银鲨OC 24GB"
+            "七彩虹 RTX5090D Advanced银鲨OC 24GB",
+            "七彩虹 RTX5070 12G 战斧豪华版"  # 添加这个型号
         ]
+        
         for i in range(len(lines)):
             line = lines[i]
             if not re.search(r'p:\d+', line):
                 continue
+            
+            # 检查每一行是否包含目标显卡名称
             for gpu_name in target_gpus:
                 if gpu_name in line:
-                    key = extract_gpu_exact_key(gpu_name)
-                    if key in gpu_map:
-                        price = gpu_map[key]
+                    # 直接使用完整名称查找价格
+                    if gpu_name in gpu_dict:
+                        price = gpu_dict[gpu_name]
                         lines[i] = re.sub(r'p:\d+', f'p:{price}', line)
                         updated += 1
-                    break
+                        print(f"✅ 更新显卡: {gpu_name} -> {price}元")
+                    break  # 找到匹配就退出内层循环
+
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"✅ 显卡价格自动更新完成：{updated} 个（白色显卡已+100）")
+        
+        print(f"✅ 显卡价格自动更新完成：{updated} 个")
         return updated
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
