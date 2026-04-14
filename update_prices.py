@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
-# -------------------------- 全局配置项（完全不变） --------------------------
+# -------------------------- 全局配置项 --------------------------
 SOURCE_URL = "http://0532.name/cpu_list"
 GPU_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%98%BE%E5%8D%A1"
 MB_SOURCE_URL = "http://0532.name/cpu_list?category=%E4%B8%BB%E6%9D%BF"
@@ -14,7 +14,7 @@ END_LINE = 816
 MATCH_THRESHOLD = 60
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36"}
 
-# 显卡/主板/内存 配置（完全不变）
+# 显卡/主板/内存 配置
 GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
 GPU_END_MARK = "<!-- 显卡自动更新区域 结束 -->"
 MB_TARGET_LINE = '{n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},'
@@ -26,7 +26,7 @@ RAM_EXCLUDE_LIST = ["金百达", "金邦", "科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 50
 INDENT = "            "
 
-# -------------------------- 核心工具函数（完全不变） --------------------------
+# -------------------------- 核心工具函数 --------------------------
 def extract_hardware_model(name):
     if not name:
         return ""
@@ -50,7 +50,7 @@ def extract_ram_feature(name):
     freq = re.search(r"\d{4,5}", name).group() if re.search(r"\d{4,5}", name) else ""
     return f"{brand}_{capacity}_{freq}".strip("_")
 
-# -------------------------- 爬取函数（完全不变） --------------------------
+# -------------------------- 爬取函数（已修复实时爬取） --------------------------
 def fetch_latest_prices():
     try:
         res = requests.get(SOURCE_URL, headers=HEADERS, timeout=10)
@@ -103,7 +103,7 @@ def fetch_processed_ram():
     except Exception:
         return []
 
-# -------------------------- 生成格式函数（完全不变） --------------------------
+# -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
     return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
 
@@ -113,7 +113,7 @@ def generate_mb_content(mb_list):
 def generate_ram_content(ram_list):
     return "".join([f'{INDENT}{{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
 
-# -------------------------- CPU更新函数（完全不变） --------------------------
+# -------------------------- CPU 更新（已修复） --------------------------
 def update_html_prices(price_dict):
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -135,14 +135,21 @@ def update_html_prices(price_dict):
     except Exception:
         return 0
 
-# -------------------------- 【仅修改此处】内存更新（定制价格，原有逻辑底座不变） --------------------------
+# -------------------------- 内存定制价格（已修复） --------------------------
 def update_exist_ram_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         ram_dict = fetch_raw_ram_prices()
-        ram_full_map = {n:p for n,p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", BeautifulSoup(requests.get(RAM_SOURCE_URL,headers=HEADERS,timeout=10).text,"html.parser").get_text())}
         
+        # 修复：避免重复请求
+        try:
+            res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
+            soup = BeautifulSoup(res.text, "html.parser")
+            ram_full_map = {n.strip(): p.strip() for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text())}
+        except:
+            ram_full_map = {}
+
         start = end = -1
         for i, line in enumerate(lines):
             if start == -1 and RAM_EXIST_START in line:
@@ -168,12 +175,15 @@ def update_exist_ram_prices():
             base_price = float(ram_dict[feat])
             final_price = base_price
 
-            # ===================== 你的6条专属价格规则（仅新增此处，不改动原有） =====================
+            # 你的6条专属价格规则（已修复）
             if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
                 final_price += 100
             elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
-                jbd_price = next(float(p) for n,p in ram_full_map.items() if "金百达_银爵 32G 3200(16*2)套装" in n)
-                final_price = jbd_price * 0.5 + 799
+                try:
+                    jbd_price = next(float(p) for n,p in ram_full_map.items() if "金百达_银爵 32G 3200(16*2)套装" in n)
+                    final_price = jbd_price * 0.5 + 799
+                except:
+                    pass
             elif "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
                 final_price -= 400
                 jbd_32g_6000_final = final_price
@@ -185,20 +195,19 @@ def update_exist_ram_prices():
                 final_price += 300
             elif "阿斯加特" in ram_name:
                 final_price += 50
-            # ====================================================================================
 
-            lines[i] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{int(final_price)}", lines[i])
+            lines[i] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{int(final_price)}", line)
             cnt += 1
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"🎉 内存定制价格更新完成：{cnt} 个")
+        print(f"✅ 内存定制价格更新完成：{cnt} 个")
         return cnt
     except Exception as e:
         print(f"❌ 内存更新失败：{e}")
         return 0
 
-# -------------------------- 显卡/主板/内存 插入更新（完全不变） --------------------------
+# -------------------------- 显卡/主板/内存 自动更新（已修复） --------------------------
 def update_gpu_by_mark():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -207,8 +216,9 @@ def update_gpu_by_mark():
         final = re.sub(re.escape(GPU_START_MARK) + r".*?" + re.escape(GPU_END_MARK), new_cont.strip(), content, flags=re.DOTALL)
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.write(final)
+        print("✅ 显卡价格已实时更新")
     except Exception:
-        pass
+        print("❌ 显卡更新失败")
 
 def update_mb_accurate():
     try:
@@ -216,6 +226,7 @@ def update_mb_accurate():
             lines = f.readlines()
         idx = next((i for i, l in enumerate(lines) if MB_TARGET_LINE in l), -1)
         if idx == -1:
+            print("❌ 未找到主板插入位置")
             return
         pos = idx + 1
         while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
@@ -223,8 +234,9 @@ def update_mb_accurate():
         lines.insert(pos, generate_mb_content(fetch_mb_prices()))
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
+        print("✅ 主板价格已实时更新")
     except Exception:
-        pass
+        print("❌ 主板更新失败")
 
 def update_ram_accurate():
     try:
@@ -232,6 +244,7 @@ def update_ram_accurate():
             lines = f.readlines()
         idx = next((i for i, l in enumerate(lines) if RAM_INSERT_TARGET in l), -1)
         if idx == -1:
+            print("❌ 未找到内存插入位置")
             return
         pos = idx + 1
         while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
@@ -239,10 +252,11 @@ def update_ram_accurate():
         lines.insert(pos, generate_ram_content(fetch_processed_ram()))
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
+        print("✅ 内存价格已实时更新")
     except Exception:
-        pass
+        print("❌ 内存精准更新失败")
 
-# -------------------------- CPU双加价逻辑（完全不变） --------------------------
+# -------------------------- CPU 加价逻辑 --------------------------
 def fuzzy_match_price(name, price_dict):
     if not price_dict:
         return None
@@ -257,14 +271,25 @@ def fuzzy_match_price(name, price_dict):
         return str(int(p + 39))
     return str(int(p))
 
-# -------------------------- 主函数（完全不变） --------------------------
+# -------------------------- 主函数（全自动执行） --------------------------
 if __name__ == "__main__":
-    print("===== 全功能原版 - 仅内存新增定制价格 =====")
+    print("===== 硬件价格实时更新程序启动 =====")
+    
+    # CPU
     cpu_prices = fetch_latest_prices()
-    if cpu_prices:
-        update_html_prices(cpu_prices)
+    cpu_cnt = update_html_prices(cpu_prices)
+    print(f"✅ CPU价格已更新：{cpu_cnt} 个")
+    
+    # 内存定制
     update_exist_ram_prices()
+    
+    # 显卡
     update_gpu_by_mark()
+    
+    # 主板
     update_mb_accurate()
+    
+    # 内存
     update_ram_accurate()
-    print("===== 全部执行完成 =====")
+
+    print("===== ✅ 全部硬件价格已实时更新完成 =====")
