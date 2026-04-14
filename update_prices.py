@@ -195,7 +195,7 @@ def update_exist_ram_prices():
                 final_price = base_price + 150
 
             # 🔥 修复 1：阿斯加特 64G 3200 → 直接固定 3599
-            elif "阿斯加特 DDR4 64G" in ram_name:
+            elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                 final_price = 3599
 
             elif "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
@@ -204,7 +204,7 @@ def update_exist_ram_prices():
             # 🔥 修复 2：单根价格 = 套装价/2 +50
             elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
                 if jbd_32g_6000_final > 0:
-                    final_price = (jbd_32g_6000_final / 2) + 50
+                    final_price = (jbd_32g_6000_final * 0.5) + 50
                 else:
                     final_price = 265
 
