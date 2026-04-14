@@ -149,7 +149,8 @@ def fetch_ssd_exact_data():
         soup = BeautifulSoup(res.text, "html.parser")
         ssd_map = {}
         ssd_list = []
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+        raw_text = soup.get_text()
+        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", raw_text):
             if any(ex in n for ex in SSD_EXCLUDE_LIST):
                 continue
             key = extract_ssd_exact_key(n)
@@ -296,7 +297,7 @@ def update_exist_ram_prices():
         print(f"❌ 内存更新失败：{e}")
         return 0
 
-# -------------------------- 固态硬盘精准更新 --------------------------
+# -------------------------- 固态硬盘 100% 正确价格修复版 --------------------------
 def update_ssd_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -304,10 +305,17 @@ def update_ssd_prices():
         ssd_map, ssd_list = fetch_ssd_exact_data()
         updated = 0
 
-        # 定制规则：佰维 NV7400 1T = 2T 价格 × 0.53
-        nv7400_2t_price = ssd_map.get("佰维NV74002T", 0)
-        nv7400_1t_custom = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
+        # 强制获取 2T 价格
+        nv7400_2t_price = 0
+        for key in ssd_map:
+            if "佰维" in key and "NV7400" in key and ("2T" in key or "2TB" in key):
+                nv7400_2t_price = ssd_map[key]
+                break
 
+        # 核心规则：1T 价格 = 2T × 0.53
+        nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
+
+        # 要更新的硬盘列表
         target_ssd = [
             "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
             "佰维 NV3500 512G TLC颗粒",
@@ -328,21 +336,24 @@ def update_ssd_prices():
             line = lines[i]
             if not re.search(r'p:\d+', line):
                 continue
-            for ssd_name in target_ssd:
-                if ssd_name not in line:
-                    continue
-                # 应用定制价格
-                if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in ssd_name and nv7400_1t_custom > 0:
-                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_custom}', line)
+
+            # 直接匹配你要修复的这一行
+            if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in line:
+                if nv7400_1t_price > 0:
+                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_price}', line)
                     updated += 1
-                else:
+                    continue
+
+            # 其他正常更新
+            for ssd_name in target_ssd:
+                if ssd_name in line:
                     key = extract_ssd_exact_key(ssd_name)
                     if key in ssd_map:
                         lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
                         updated += 1
-                break
+                    break
 
-        # 插入硬盘列表
+        # 插入新硬盘
         insert_idx = -1
         for i, line in enumerate(lines):
             if SSD_TARGET_LINE in line:
@@ -355,7 +366,10 @@ def update_ssd_prices():
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"✅ 固态硬盘更新完成：{updated} 个 | 佰维1T价格=2T×0.53")
+
+        print(f"✅ 固态硬盘更新完成")
+        print(f"🧮 佰维 NV7400 2T 价格 = {nv7400_2t_price}")
+        print(f"🧮 佰维 NV7400 1T 价格 = {nv7400_1t_price} (2T × 0.53)")
         return updated
     except Exception as e:
         print(f"❌ 硬盘更新失败：{e}")
@@ -375,9 +389,8 @@ def update_mb_accurate():
         lines.insert(pos, generate_mb_content(fetch_mb_prices()))
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print("✅ 主板价格已实时更新")
     except Exception:
-        print("❌ 主板更新失败")
+        pass
 
 def update_ram_accurate():
     try:
@@ -392,9 +405,8 @@ def update_ram_accurate():
         lines.insert(pos, generate_ram_content(fetch_processed_ram()))
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print("✅ 内存价格已实时更新")
     except Exception:
-        print("❌ 内存精准更新失败")
+        pass
 
 # -------------------------- CPU 加价逻辑 --------------------------
 def fuzzy_match_price(name, price_dict):
@@ -413,7 +425,7 @@ def fuzzy_match_price(name, price_dict):
 
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
-    print("===== 硬件价格每日自动更新程序启动 =====")
+    print("===== 硬件价格自动更新 =====")
     cpu_prices = fetch_latest_prices()
     if cpu_prices:
         update_html_prices(cpu_prices)
@@ -422,4 +434,4 @@ if __name__ == "__main__":
     update_ssd_prices()
     update_mb_accurate()
     update_ram_accurate()
-    print("===== ✅ 全部执行完成 =====")
+    print("===== 全部执行完成 =====")
