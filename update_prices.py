@@ -104,7 +104,14 @@ def fetch_gpu_prices():
     try:
         res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
-        return [{"name": n, "price": p} for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text())]
+        gpu_list = []
+        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+            price = int(float(p))
+            # 🔥 新增规则：名称含「白」→ 价格 +100
+            if "白" in n:
+                price += 100
+            gpu_list.append({"name": n, "price": price})
+        return gpu_list
     except Exception:
         return []
 
@@ -223,12 +230,16 @@ def update_fixed_gpu_prices():
                 if gpu_name in line:
                     key = extract_gpu_exact_key(gpu_name)
                     if key in gpu_map:
-                        lines[i] = re.sub(r'p:\d+', f'p:{gpu_map[key]}', line)
+                        price = gpu_map[key]
+                        # 🔥 白色显卡 +100
+                        if "白" in gpu_name:
+                            price += 100
+                        lines[i] = re.sub(r'p:\d+', f'p:{price}', line)
                         updated += 1
                     break
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"✅ 显卡价格自动更新完成：{updated} 个")
+        print(f"✅ 显卡价格自动更新完成：{updated} 个（白色显卡已+100）")
         return updated
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
@@ -297,7 +308,7 @@ def update_exist_ram_prices():
         print(f"❌ 内存更新失败：{e}")
         return 0
 
-# -------------------------- 固态硬盘 100% 正确价格修复版 --------------------------
+# -------------------------- 固态硬盘精准更新 --------------------------
 def update_ssd_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -305,17 +316,14 @@ def update_ssd_prices():
         ssd_map, ssd_list = fetch_ssd_exact_data()
         updated = 0
 
-        # 强制获取 2T 价格
         nv7400_2t_price = 0
         for key in ssd_map:
             if "佰维" in key and "NV7400" in key and ("2T" in key or "2TB" in key):
                 nv7400_2t_price = ssd_map[key]
                 break
 
-        # 核心规则：1T 价格 = 2T × 0.53
         nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
 
-        # 要更新的硬盘列表
         target_ssd = [
             "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
             "佰维 NV3500 512G TLC颗粒",
@@ -337,14 +345,12 @@ def update_ssd_prices():
             if not re.search(r'p:\d+', line):
                 continue
 
-            # 直接匹配你要修复的这一行
             if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in line:
                 if nv7400_1t_price > 0:
                     lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_price}', line)
                     updated += 1
                     continue
 
-            # 其他正常更新
             for ssd_name in target_ssd:
                 if ssd_name in line:
                     key = extract_ssd_exact_key(ssd_name)
@@ -353,7 +359,6 @@ def update_ssd_prices():
                         updated += 1
                     break
 
-        # 插入新硬盘
         insert_idx = -1
         for i, line in enumerate(lines):
             if SSD_TARGET_LINE in line:
