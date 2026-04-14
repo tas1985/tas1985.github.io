@@ -9,6 +9,8 @@ GPU_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%98%BE%E5%8D%A1"
 MB_SOURCE_URL = "http://0532.name/cpu_list?category=%E4%B8%BB%E6%9D%BF"
 RAM_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%86%85%E5%AD%98"
 SSD_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%9B%BA%E6%80%81%E7%9B%98"
+# 新增机箱URL配置
+CASE_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%9C%BA%E7%AE%B1"
 HTML_FILE = "index.html"
 START_LINE = 760
 END_LINE = 816
@@ -23,10 +25,13 @@ MB_EXCLUDE = "铭瑄"
 RAM_EXIST_START = '{n:"金百达_银爵 16G 3200(8*2)套装",'
 RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
 RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（到手10天质保）",p:250},'
-RAM_EXCLUDE_LIST = ["金邦", "科摩思", "现代", "梵想"]
+RAM_EXCLUDE_LIST = ["金百达", "金邦", "科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 50
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
+# 新增机箱配置
+CASE_TARGET_LINE = '{n:"乔思伯 TK1 星舰仓",p:499},'
+CASE_INDENT = "            "  # 12个空格
 INDENT = "            "
 SSD_APPEND_INDENT = "            "
 
@@ -167,6 +172,21 @@ def fetch_ssd_exact_data():
     except Exception:
         return {}, []
 
+# 新增机箱爬取函数
+def fetch_case_prices():
+    try:
+        res = requests.get(CASE_SOURCE_URL, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        case_list = []
+        # 提取机箱名称和价格，格式和其他硬件保持一致
+        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+            # 价格转为整数，保持和其他硬件统一格式
+            case_list.append({"name": n.strip(), "price": int(float(p))})
+        return case_list
+    except Exception as e:
+        print(f"❌ 机箱数据爬取失败：{e}")
+        return []
+
 # -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
     return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
@@ -176,6 +196,10 @@ def generate_mb_content(mb_list):
 
 def generate_ram_content(ram_list):
     return "".join([f'{INDENT}{{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
+
+# 新增机箱内容生成函数
+def generate_case_content(case_list):
+    return "".join([f'{CASE_INDENT}{{n:"{c["name"]}",p:{c["price"]}}},\n' for c in case_list])
 
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
@@ -413,6 +437,32 @@ def update_ram_accurate():
     except Exception:
         pass
 
+# 新增机箱自动更新函数
+def update_case_accurate():
+    try:
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        # 找到目标行（乔思伯 TK1 星舰仓）
+        idx = next((i for i, l in enumerate(lines) if CASE_TARGET_LINE in l), -1)
+        if idx == -1:
+            print("❌ 未找到机箱目标行：{n:\"乔思伯 TK1 星舰仓\",p:499},")
+            return
+        # 目标行的下一行开始插入
+        pos = idx + 1
+        # 先删除原有机箱数据（避免重复）
+        while pos < len(lines) and lines[pos].startswith(CASE_INDENT) and '{n:"' in lines[pos]:
+            del lines[pos]
+        # 插入新的机箱数据
+        case_content = generate_case_content(fetch_case_prices())
+        if case_content:
+            lines.insert(pos, case_content)
+        # 写入文件
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+        print("✅ 机箱价格自动更新完成")
+    except Exception as e:
+        print(f"❌ 机箱更新失败：{e}")
+
 # -------------------------- CPU 加价逻辑 --------------------------
 def fuzzy_match_price(name, price_dict):
     if not price_dict:
@@ -439,4 +489,6 @@ if __name__ == "__main__":
     update_ssd_prices()
     update_mb_accurate()
     update_ram_accurate()
+    # 新增执行机箱更新
+    update_case_accurate()
     print("===== 全部执行完成 =====")
