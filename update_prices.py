@@ -67,29 +67,30 @@ def extract_ram_feature(name):
 
 def extract_gpu_exact_key(name):
     """
-    修复显卡匹配逻辑 - 不仅匹配品牌、型号、显存，还要保留系列名称等详细信息
+    修正显卡精确匹配逻辑，综合品牌+型号+数字+显存+品阶中文的逻辑来匹配
     """
-    name = name.strip().replace(" ", "").upper()
+    name = name.strip()
     # 提取品牌
-    brand_match = re.search(r"(七彩虹|微星|英伟达|华硕|技嘉|影驰|索泰|蓝戟|耕升|撼讯|盈通|铭瑄|昂达|双敏|速雷|小影霸|华擎|梅捷|精英|磐正|翔升|北影|铭鑫|万丽|映众|同德|盈佳|优电子|昂达|盈通|双敏|速雷|小影霸|华擎|梅捷|精英|磐正|翔升|北影|铭鑫|万丽|映众|同德|盈佳|优电子|intel|AMD|NVIDIA|英特尔|超威|英伟达)", name)
-    # 提取型号
-    model_match = re.search(r"(RTX\d+TI|RTX\d+|GTX\d+|GT\d+|GTX\d+TI|RTX\d+ADA|RTX\d+SUPER|GTX\d+SUPER|GTX\d+OC|RTX\d+OC|RTX\d+V2|RTX\d+V3|RTX\d+VARIANT|RTX\d+FOUNDERS|RTX\d+MINI|RTX\d+WHITE|RTX\d+BLACK|RTX\d+GREEN|RTX\d+BLUE|RTX\d+RED|RTX\d+YELLOW|RTX\d+GOLD|RTX\d+SLIM|RTX\d+SLIMM|RTX\d+SLIMMM|RTX\d+SLIMMMM|RTX\d+LITE|RTX\d+PRO|RTX\d+MAX-Q|RTX\d+MAXQ|RTX\d+E|RTX\d+FE|RTX\d+FOUNDERS|RTX\d+ST|RTX\d+XTREME|RTX\d+TRINITY|RTX\d+DUKE|RTX\d+GAMING|RTX\d+GAMINGX|RTX\d+GAMINGZ|RTX\d+VENTUS|RTX\d+VENTUSTRIX|RTX\d+TUF|RTX\d+TUF-GAMING|RTX\d+DUAL|RTX\d+DUALOC|RTX\d+TRIO|RTX\d+QUADRO|RTX\d+QUADROC|RTX\d+TURING|RTX\d+AMP|RTX\d+AMP-H|RTX\d+K|RTX\d+KINGPIN|RTX\d+KINGPIN-OC|RTX\d+KINGPIN-TRIPLE|RTX\d+KINGPIN-DUAL|RTX\d+KINGPIN-SINGLE|RTX\d+KINGPIN-PRO|RTX\d+KINGPIN-ELITE|RTX\d+KINGPIN-ULTRA|RTX\d+KINGPIN-MASTER|RTX\d+KINGPIN-LEGEND|RTX\d+KINGPIN-HERO|RTX\d+KINGPIN-CHAMPION|RTX\d+KINGPIN-ACE|RTX\d+KINGPIN-ELITE-OC|RTX\d+KINGPIN-ULTRA-OC|RTX\d+KINGPIN-MASTER-OC|RTX\d+KINGPIN-LEGEND-OC|RTX\d+KINGPIN-HERO-OC|RTX\d+KINGPIN-CHAMPION-OC|RTX\d+KINGPIN-ACE-OC)", name)
-    # 提取显存
-    vram_match = re.search(r"(\d+G|\d+GB)", name)
-    # 提取系列名称（如GAMING、TRIO、VENTUS、TUF等）
-    series_match = re.search(r"(GAMING|GAMINGX|GAMINGZ|VENTUS|TRIO|TUF|TUF-GAMING|DUAL|DUALOC|QUADRO|QUADROC|TURING|AMP|AMP-H|K|KINGPIN|KINGPIN-OC|KINGPIN-TRIPLE|KINGPIN-DUAL|KINGPIN-SINGLE|KINGPIN-PRO|KINGPIN-ELITE|KINGPIN-ULTRA|KINGPIN-MASTER|KINGPIN-LEGEND|KINGPIN-HERO|KINGPIN-CHAMPION|KINGPIN-ACE|KINGPIN-ELITE-OC|KINGPIN-ULTRA-OC|KINGPIN-MASTER-OC|KINGPIN-LEGEND-OC|KINGPIN-HERO-OC|KINGPIN-CHAMPION-OC|KINGPIN-ACE-OC|MINI|LITE|PRO|MAX-Q|MAXQ|E|FE|FOUNDERS|ST|XTREME|TRINITY|DUKE|WHITE|BLACK|GREEN|BLUE|RED|YELLOW|GOLD|SLIM|SLIMM|SLIMMM|SLIMMMM|INDEX|PHANTOM|STRIX|ROG|TUF|EKWB|LIQUID|SUPRIM|SUPRIM-L|SUPRIM-X|GDDR6X|GDDR6|GDDR5X|GDDR5|HBM2|HBM2E|HBM3|FANLESS|OC|OC-EDITION|OVERCLOCKED|SUPER|ADA|LHR|NON-LHR|NVIDIA|REF|REFERENCE|FOUNDERS|FOUNDERS-EDITION)", name)
-    # 提取版本信息（如OC、WHITE、BLACK等）
-    version_match = re.search(r"(WHITE|BLACK|GREEN|BLUE|RED|YELLOW|GOLD|SLIM|LITE|PRO|OC|OC-EDITION|OVERCLOCKED|ADA|LHR|NON-LHR|INDEX|PHANTOM)", name)
+    brand_match = re.search(r"(七彩虹|微星|英伟达|NVIDIA|华硕|技嘉|影驰|索泰|耕升|蓝戟|Intel|AMD)", name)
+    brand = brand_match.group(1) if brand_match else ""
     
-    key_parts = []
-    if brand_match: key_parts.append(brand_match.group(1))
-    if model_match: key_parts.append(model_match.group(1))
-    if vram_match: key_parts.append(vram_match.group(1))
-    if series_match and series_match.group(1) not in ['GAMING', 'GAMINGX', 'GAMINGZ', 'VENTUS', 'TRIO', 'TUF', 'TUF-GAMING', 'DUAL', 'DUALOC', 'QUADRO', 'QUADROC', 'TURING', 'AMP', 'AMP-H', 'K', 'KINGPIN', 'KINGPIN-OC', 'KINGPIN-TRIPLE', 'KINGPIN-DUAL', 'KINGPIN-SINGLE', 'KINGPIN-PRO', 'KINGPIN-ELITE', 'KINGPIN-ULTRA', 'KINGPIN-MASTER', 'KINGPIN-LEGEND', 'KINGPIN-HERO', 'KINGPIN-CHAMPION', 'KINGPIN-ACE', 'KINGPIN-ELITE-OC', 'KINGPIN-ULTRA-OC', 'KINGPIN-MASTER-OC', 'KINGPIN-LEGEND-OC', 'KINGPIN-HERO-OC', 'KINGPIN-CHAMPION-OC', 'KINGPIN-ACE-OC', 'MINI', 'LITE', 'PRO', 'MAX-Q', 'MAXQ', 'E', 'FE', 'FOUNDERS', 'ST', 'XTREME', 'TRINITY', 'DUKE', 'WHITE', 'BLACK', 'GREEN', 'BLUE', 'RED', 'YELLOW', 'GOLD', 'SLIM', 'SLIMM', 'SLIMMM', 'SLIMMMM', 'INDEX', 'PHANTOM', 'STRIX', 'ROG', 'TUF', 'EKWB', 'LIQUID', 'SUPRIM', 'SUPRIM-L', 'SUPRIM-X', 'GDDR6X', 'GDDR6', 'GDDR5X', 'GDDR5', 'HBM2', 'HBM2E', 'HBM3', 'FANLESS', 'OC', 'OC-EDITION', 'OVERCLOCKED', 'SUPER', 'ADA', 'LHR', 'NON-LHR', 'NVIDIA', 'REF', 'REFERENCE', 'FOUNDERS', 'FOUNDERS-EDITION']:
-        key_parts.append(series_match.group(1))
-    if version_match: key_parts.append(version_match.group(1))
+    # 提取GPU系列和型号，比如RTX3060、RTX4070、RX6700等
+    series_match = re.search(r"((RTX|GTX|Radeon\s+RX|RX)\s*\d+[A-Z]*\d*)", name, re.IGNORECASE)
+    series = series_match.group(1).replace(" ", "") if series_match else ""
     
-    return "|".join(key_parts)
+    # 提取显存容量，如12G、8G、16G
+    vram_match = re.search(r"(\d+G[B]?)", name)
+    vram = vram_match.group(1) if vram_match else ""
+    
+    # 提取品阶关键词，如战斧、万图师、超龙、豪华版、OC、白、黑、金、银等
+    grade_keywords = re.findall(r"(战斧|万图师|超龙|豪华版|OC|白|黑|金|银|Pro|Ti|Super|Ultra|Advanced|Index|Arc)", name)
+    grades = "".join(grade_keywords)
+    
+    # 组合为唯一标识
+    key_parts = [brand, series, vram, grades]
+    # 过滤空字符串并连接
+    key = "|".join([part for part in key_parts if part])
+    return key
 
 def extract_ssd_exact_key(name):
     name = name.strip().replace(" ", "").upper()
@@ -113,17 +114,17 @@ def fetch_latest_prices():
         return {}
 
 def fetch_gpu_exact_dict():
-    """
-    获取显卡精确匹配字典 - 改进算法，使用更精确的匹配
-    """
     try:
         res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         gpu_map = {}
         for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            # 使用原始名称作为key，而不是简化后的key
-            full_key = n.strip()
-            gpu_map[full_key] = int(float(p))
+            k = extract_gpu_exact_key(n)
+            price = int(float(p))
+            # 🔥 新增规则：名称含「白」→ 价格 +100
+            if "白" in n:
+                price += 100
+            gpu_map[k] = price
         return gpu_map
     except Exception:
         return {}
@@ -302,7 +303,7 @@ def update_ssd_prices():
             "梵想S500PRO-512GB TLC颗粒",
             "西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",
             "致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",
-            "三星 990 PRO 1T PCIE 4.0 读7450写6900",
+            "三星 990 PRO 1T PCIE 4.0 读7400写6900",
             "雷克沙 雷神THOR 4T PCIE4.0 7000/6000",
             "品牌SSD 512G（到手10天质保）",
             "宏碁 GM7 2T PCIE 4.0 读7200写6300"
@@ -396,20 +397,10 @@ def update_html_prices(price_dict):
 
 # -------------------------- 固定显卡精准更新 --------------------------
 def update_fixed_gpu_prices():
-    """
-    修复显卡价格更新逻辑 - 使用精确匹配，避免错误覆盖
-    """
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        
-        # 获取显卡价格数据，现在使用完整名称作为key
-        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        gpu_price_map = {}
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            gpu_price_map[n.strip()] = int(float(p))
-        
+        gpu_map = fetch_gpu_exact_dict()
         updated = 0
         target_gpus = [
             "七彩虹 RTX5050 8G 战斧 DUO 双扇",
@@ -427,35 +418,20 @@ def update_fixed_gpu_prices():
             "微星 RTX5080万图师3X OC PLUS",
             "七彩虹 RTX5090D Advanced银鲨OC 24GB"
         ]
-        
         for i in range(len(lines)):
             line = lines[i]
             if not re.search(r'p:\d+', line):
                 continue
-            
-            # 遍历所有目标显卡
             for gpu_name in target_gpus:
                 if gpu_name in line:
-                    # 直接在抓取的数据中寻找完全匹配的显卡名称
-                    matched_price = None
-                    for scraped_name, price in gpu_price_map.items():
-                        # 检查抓取的名称是否包含目标显卡名的关键部分
-                        if gpu_name.replace(" ", "") in scraped_name.replace(" ", "") or \
-                           scraped_name.replace(" ", "") in gpu_name.replace(" ", ""):
-                            matched_price = price
-                            break
-                    
-                    if matched_price is not None:
-                        # 🔥 白色显卡 +100
-                        if "白" in gpu_name:
-                            matched_price += 100
-                        lines[i] = re.sub(r'p:\d+', f'p:{matched_price}', line)
+                    key = extract_gpu_exact_key(gpu_name)
+                    if key in gpu_map:
+                        price = gpu_map[key]
+                        lines[i] = re.sub(r'p:\d+', f'p:{price}', line)
                         updated += 1
                     break
-        
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        
         print(f"✅ 显卡价格自动更新完成：{updated} 个（白色显卡已+100）")
         return updated
     except Exception as e:
