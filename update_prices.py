@@ -27,7 +27,7 @@ MB_EXCLUDE = "铭瑄"
 RAM_EXIST_START = '{n:"金百达_银爵 16G 3200(8*2)套装",'
 RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
 RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（到手10天质保）",p:250},'
-RAM_EXCLUDE_LIST = ["金百达", "金邦", "科摩思", "现代", "梵想"]
+RAM_EXCLUDE_LIST = ["金百达", "金士顿", "科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 50
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
@@ -229,6 +229,132 @@ def generate_case_content(case_list):
 def generate_power_content(power_list):
     return "".join([f'{POWER_INDENT}{{n:"{p["name"]}",p:{p["price"]}}},\n' for p in power_list])
 
+def find_ssd_target_position(lines, target_line):
+    """查找SSD目标位置"""
+    for i, line in enumerate(lines):
+        if target_line in line:
+            return i
+    return -1
+
+def find_next_non_ssd_line(lines, start_pos):
+    """查找下一个非SSD行的位置"""
+    pos = start_pos + 1
+    while pos < len(lines):
+        line = lines[pos]
+        # 检查是否是SSD数据行
+        if line.strip().startswith('{n:"') and '"p:' in line and line.rstrip().endswith('},'):
+            pos += 1
+        else:
+            # 检查缩进是否与SSD行一致
+            stripped = line.lstrip()
+            if stripped:  # 非空行
+                leading_spaces = len(line) - len(stripped)
+                if leading_spaces == len(SSD_APPEND_INDENT):  # 与SSD缩进相同
+                    pos += 1
+                else:
+                    break
+            else:  # 空行也认为不是SSD数据行
+                break
+    return pos
+
+def update_ssd_prices():
+    """修复后的SSD价格更新函数"""
+    try:
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        
+        ssd_map, ssd_list = fetch_ssd_exact_data()
+        updated = 0
+
+        # 计算特定硬盘价格
+        nv7400_2t_price = 0
+        for key in ssd_map:
+            if "佰维" in key and "NV7400" in key and ("2T" in key or "2TB" in key):
+                nv7400_2t_price = ssd_map[key]
+                break
+
+        nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
+
+        target_ssd = [
+            "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
+            "佰维 NV3500 512G TLC颗粒",
+            "佰维 NV3500 1T TLC颗粒",
+            "佰维 NV7400 1T TLC颗粒 读速7400MB/s",
+            "佰维 NV7400 2T TLC颗粒 读速7400MB/s",
+            "梵想S500PRO-1T TLC颗粒",
+            "梵想S500PRO-512GB TLC颗粒",
+            "西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",
+            "致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",
+            "三星 990 PRO 1T PCIE 4.0 读7450写6900",
+            "雷克沙 雷神THOR 4T PCIE4.0 7000/6000",
+            "品牌SSD 512G（到手10天质保）",
+            "宏碁 GM7 2T PCIE 4.0 读7200写6300"
+        ]
+
+        # 更新特定SSD价格
+        for i in range(len(lines)):
+            line = lines[i]
+            if not re.search(r'p:\d+', line):
+                continue
+
+            if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in line:
+                if nv7400_1t_price > 0:
+                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_price}', line)
+                    updated += 1
+                    continue
+
+            for ssd_name in target_ssd:
+                if ssd_name in line:
+                    key = extract_ssd_exact_key(ssd_name)
+                    if key in ssd_map:
+                        lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
+                        updated += 1
+                    break
+
+        # 查找SSD目标位置和范围
+        target_idx = find_ssd_target_position(lines, SSD_TARGET_LINE)
+        if target_idx != -1:
+            # 找到目标行之后的所有SSD行，删除它们
+            start_pos = target_idx + 1
+            end_pos = find_next_non_ssd_line(lines, target_idx)
+            
+            # 删除现有的SSD数据行
+            del lines[start_pos:end_pos]
+            
+            # 准备新SSD数据（只包含不在目标列表中的新硬盘）
+            existing_names = set(target_ssd)  # 已经处理过的SSD名称
+            new_ssd_lines = []
+            
+            for ssd in ssd_list:
+                # 检查这个SSD是否已经在目标列表中（即是否已更新价格）
+                found_in_targets = False
+                for target_name in target_ssd:
+                    if target_name in ssd["name"]:
+                        found_in_targets = True
+                        break
+                
+                # 只添加不在目标列表中的新SSD
+                if not found_in_targets:
+                    new_ssd_lines.append(f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
+            
+            # 在目标位置后插入新的SSD数据
+            if new_ssd_lines:
+                for i, new_line in enumerate(new_ssd_lines):
+                    lines.insert(start_pos + i, new_line)
+
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+
+        print(f"✅ 固态硬盘更新完成")
+        print(f"🧮 佰维 NV7400 2T 价格 = {nv7400_2t_price}")
+        print(f"🧮 佰维 NV7400 1T 价格 = {nv7400_1t_price} (2T × 0.53)")
+        print(f"🧮 更新了 {updated} 个已知SSD价格")
+        print(f"🧮 添加了 {len(new_ssd_lines)} 个新SSD型号")
+        return updated
+    except Exception as e:
+        print(f"❌ 硬盘更新失败：{e}")
+        return 0
+
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
     try:
@@ -358,78 +484,6 @@ def update_exist_ram_prices():
         return cnt
     except Exception as e:
         print(f"❌ 内存更新失败：{e}")
-        return 0
-
-# -------------------------- 固态硬盘精准更新 --------------------------
-def update_ssd_prices():
-    try:
-        with open(HTML_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        ssd_map, ssd_list = fetch_ssd_exact_data()
-        updated = 0
-
-        nv7400_2t_price = 0
-        for key in ssd_map:
-            if "佰维" in key and "NV7400" in key and ("2T" in key or "2TB" in key):
-                nv7400_2t_price = ssd_map[key]
-                break
-
-        nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
-
-        target_ssd = [
-            "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
-            "佰维 NV3500 512G TLC颗粒",
-            "佰维 NV3500 1T TLC颗粒",
-            "佰维 NV7400 1T TLC颗粒 读速7400MB/s",
-            "佰维 NV7400 2T TLC颗粒 读速7400MB/s",
-            "梵想S500PRO-1T TLC颗粒",
-            "梵想S500PRO-512GB TLC颗粒",
-            "西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",
-            "致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",
-            "三星 990 PRO 1T PCIE 4.0 读7450写6900",
-            "雷克沙 雷神THOR 4T PCIE4.0 7000/6000",
-            "品牌SSD 512G（到手10天质保）",
-            "宏碁 GM7 2T PCIE 4.0 读7200写6300"
-        ]
-
-        for i in range(len(lines)):
-            line = lines[i]
-            if not re.search(r'p:\d+', line):
-                continue
-
-            if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in line:
-                if nv7400_1t_price > 0:
-                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_price}', line)
-                    updated += 1
-                    continue
-
-            for ssd_name in target_ssd:
-                if ssd_name in line:
-                    key = extract_ssd_exact_key(ssd_name)
-                    if key in ssd_map:
-                        lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
-                        updated += 1
-                    break
-
-        insert_idx = -1
-        for i, line in enumerate(lines):
-            if SSD_TARGET_LINE in line:
-                insert_idx = i + 1
-                break
-        if insert_idx != -1:
-            for ssd in ssd_list:
-                lines.insert(insert_idx, f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
-                insert_idx += 1
-
-        with open(HTML_FILE, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-
-        print(f"✅ 固态硬盘更新完成")
-        print(f"🧮 佰维 NV7400 2T 价格 = {nv7400_2t_price}")
-        print(f"🧮 佰维 NV7400 1T 价格 = {nv7400_1t_price} (2T × 0.53)")
-        return updated
-    except Exception as e:
-        print(f"❌ 硬盘更新失败：{e}")
         return 0
 
 # -------------------------- 主板/内存 自动更新 --------------------------
