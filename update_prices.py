@@ -11,6 +11,8 @@ RAM_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%86%85%E5%AD%98"
 SSD_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%9B%BA%E6%80%81%E7%9B%98"
 # 新增机箱URL配置
 CASE_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%9C%BA%E7%AE%B1"
+# 新增电源URL配置
+POWER_SOURCE_URL = "http://0532.name/cpu_list?category=%E7%94%B5%E6%BA%90"
 HTML_FILE = "index.html"
 START_LINE = 760
 END_LINE = 816
@@ -32,6 +34,10 @@ SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
 # 新增机箱配置
 CASE_TARGET_LINE = '{n:"乔思伯 TK1 星舰仓",p:499},'
 CASE_INDENT = "            "  # 12个空格
+# 新增电源配置
+POWER_TARGET_LINE = '{n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:750},'
+POWER_EXCLUDE_LIST = ["玄武", "Tt"]
+POWER_INDENT = "            "  # 12个空格
 INDENT = "            "
 SSD_APPEND_INDENT = "            "
 
@@ -187,6 +193,24 @@ def fetch_case_prices():
         print(f"❌ 机箱数据爬取失败：{e}")
         return []
 
+# 新增电源爬取函数
+def fetch_power_prices():
+    try:
+        res = requests.get(POWER_SOURCE_URL, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        power_list = []
+        # 提取电源名称和价格，排除玄武、Tt
+        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+            # 排除包含玄武、Tt的电源
+            if any(ex in n for ex in POWER_EXCLUDE_LIST):
+                continue
+            # 价格转为整数，保持格式统一
+            power_list.append({"name": n.strip(), "price": int(float(p))})
+        return power_list
+    except Exception as e:
+        print(f"❌ 电源数据爬取失败：{e}")
+        return []
+
 # -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
     return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
@@ -200,6 +224,10 @@ def generate_ram_content(ram_list):
 # 新增机箱内容生成函数
 def generate_case_content(case_list):
     return "".join([f'{CASE_INDENT}{{n:"{c["name"]}",p:{c["price"]}}},\n' for c in case_list])
+
+# 新增电源内容生成函数
+def generate_power_content(power_list):
+    return "".join([f'{POWER_INDENT}{{n:"{p["name"]}",p:{p["price"]}}},\n' for p in power_list])
 
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
@@ -463,6 +491,32 @@ def update_case_accurate():
     except Exception as e:
         print(f"❌ 机箱更新失败：{e}")
 
+# 新增电源自动更新函数
+def update_power_accurate():
+    try:
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        # 找到目标行（追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色）
+        idx = next((i for i, l in enumerate(lines) if POWER_TARGET_LINE in l), -1)
+        if idx == -1:
+            print(f"❌ 未找到电源目标行：{POWER_TARGET_LINE}")
+            return
+        # 目标行的下一行开始插入
+        pos = idx + 1
+        # 先删除原有电源数据（避免重复）
+        while pos < len(lines) and lines[pos].startswith(POWER_INDENT) and '{n:"' in lines[pos]:
+            del lines[pos]
+        # 插入新的电源数据
+        power_content = generate_power_content(fetch_power_prices())
+        if power_content:
+            lines.insert(pos, power_content)
+        # 写入文件
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+        print("✅ 电源价格自动更新完成")
+    except Exception as e:
+        print(f"❌ 电源更新失败：{e}")
+
 # -------------------------- CPU 加价逻辑 --------------------------
 def fuzzy_match_price(name, price_dict):
     if not price_dict:
@@ -491,4 +545,6 @@ if __name__ == "__main__":
     update_ram_accurate()
     # 新增执行机箱更新
     update_case_accurate()
+    # 新增执行电源更新
+    update_power_accurate()
     print("===== 全部执行完成 =====")
