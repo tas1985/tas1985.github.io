@@ -172,23 +172,20 @@
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
 
-        /* 清空按钮样式 - 增大尺寸适应手机 */
+        /* 清空按钮样式 */
         .clear-btn{
             position:absolute;
             right:12px;
             top:50%;
             transform:translateY(-50%);
-            width:24px;
-            height:24px;
-            line-height:24px;
+            width:18px;
+            height:18px;
+            line-height:18px;
             text-align:center;
             color: #ff0000;
             font-weight:bold;
             cursor:pointer;
             display:none;
-            font-size: 18px; /* 增大字体 */
-            border-radius: 50%; /* 圆形按钮 */
-            background: rgba(255,255,255,0.2); /* 半透明背景 */
         }
         .item-input:hover .clear-btn{
             display:block;
@@ -233,7 +230,7 @@
             color: #ff0000;
             font-weight:bold;
             margin-left:8px;
-            font-size:18px; /* 增大字体适应手机 */
+            font-size:14px;
             opacity:0;
             transition:opacity 0.2s;
         }
@@ -516,10 +513,7 @@
 
     <div class="user">
         <label>客户名称：</label>
-        <div style="position: relative; flex: 1;">
-            <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
-            <div class="clear-btn" onclick="clearUser()" style="right: 8px; z-index: 10;">×</div>
-        </div>
+        <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
         <!-- 新增实时日期时间显示 -->
         <div class="datetime-display" id="datetimeDisplay"></div>
         <!-- 客户名称下拉列表 -->
@@ -2237,14 +2231,6 @@
         document.getElementById(key + "-drop").style.display = "none";
     }
 
-    // 新增清空客户名称的功能
-    function clearUser() {
-        document.getElementById("user").value = "";
-        saveNow(); // 保存当前状态
-        // 隐藏下拉框（如果显示的话）
-        document.getElementById("userDropdown").style.display = "none";
-    }
-
     // ========== 客户名称下拉列表功能 ==========
     // 初始化客户名称下拉列表
     function initUserDropdown() {
@@ -2326,6 +2312,3 @@
 </script>
 </body>
 </html>
-
-
-
