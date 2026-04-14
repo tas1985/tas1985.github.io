@@ -13,7 +13,7 @@ HTML_FILE = "index.html"
 START_LINE = 760
 END_LINE = 816
 MATCH_THRESHOLD = 60
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64 6.1; Win64; x64) AppleWebKit/537.36"}
 
 # 配置
 GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
@@ -67,12 +67,11 @@ def extract_gpu_exact_key(name):
     if series: key_parts.append(series.group(1))
     return "|".join(key_parts)
 
-# 【终极精准：品牌 + 型号 + 容量 完全匹配】
 def extract_ssd_exact_key(name):
     name = name.strip().replace(" ", "").upper()
     brand = re.search(r"(佰维|梵想|西数|致态|三星|雷克沙|宏碁)", name)
     model = re.search(r"(NV7400|NV3500|S500PRO|SN7100|TIPLUS7100|990PRO|雷神THOR|GM7)", name)
-    cap = re.search(r"(\d+G|\d+TB)", name)
+    cap = re.search(r"(\d+G|\d+TB|\d+T)", name)
     key_parts = []
     if brand: key_parts.append(brand.group(1))
     if model: key_parts.append(model.group(1))
@@ -154,13 +153,13 @@ def fetch_ssd_exact_data():
 
 # -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
-    return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
+    return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
 
 def generate_mb_content(mb_list):
-    return "".join([f'{INDENT}{{n:"{m["name"]}",p:{m["price"]}}},\n' for m in mb_list])
+    return "".join([f'{INDENT}{n:"{m["name"]}",p:{m["price"]}}},\n' for m in mb_list])
 
 def generate_ram_content(ram_list):
-    return "".join([f'{INDENT}{{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
+    return "".join([f'{INDENT}{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
 
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
@@ -287,13 +286,17 @@ def update_exist_ram_prices():
         print(f"❌ 内存更新失败：{e}")
         return 0
 
-# -------------------------- 固态硬盘精准更新（容量严格区分） --------------------------
+# -------------------------- 固态硬盘精准更新（1T = 2T × 0.53） --------------------------
 def update_ssd_prices():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         ssd_map, ssd_list = fetch_ssd_exact_data()
         updated = 0
+
+        # 你的定制价格规则
+        nv7400_2t_price = ssd_map.get("佰维NV74002T", 0)
+        nv7400_1t_custom_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
 
         target_ssd = [
             "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
@@ -313,15 +316,23 @@ def update_ssd_prices():
 
         for i in range(len(lines)):
             line = lines[i]
-            if not re.search(r'p:\d+', line): continue
+            if not re.search(r'p:\d+', line):
+                continue
             for ssd_name in target_ssd:
-                if ssd_name in line:
+                if ssd_name not in line:
+                    continue
+                # 核心定制：佰维 NV7400 1T = 2T × 0.53
+                if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in ssd_name and nv7400_1t_custom_price > 0:
+                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_custom_price}', line)
+                    updated += 1
+                else:
                     key = extract_ssd_exact_key(ssd_name)
                     if key in ssd_map:
                         lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
                         updated += 1
-                    break
+                break
 
+        # 插入新硬盘
         insert_idx = -1
         for i, line in enumerate(lines):
             if SSD_TARGET_LINE in line:
@@ -329,12 +340,12 @@ def update_ssd_prices():
                 break
         if insert_idx != -1:
             for ssd in ssd_list:
-                lines.insert(insert_idx, f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
+                lines.insert(insert_idx, f'{SSD_APPEND_INDENT}{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
                 insert_idx += 1
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print(f"✅ 固态硬盘价格更新完成：{updated} 个（已严格区分容量）")
+        print(f"✅ 固态硬盘更新完成：{updated} 个 | 佰维1T价格 = 2T×0.53")
         return updated
     except Exception as e:
         print(f"❌ 硬盘更新失败：{e}")
