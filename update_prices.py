@@ -12,7 +12,7 @@ HTML_FILE = "index.html"
 START_LINE = 760
 END_LINE = 816
 MATCH_THRESHOLD = 60
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64 6.2; rv:109.0) Gecko/20100101 Firefox/115.0"}
 
 # 显卡/主板/内存 配置
 GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
@@ -50,6 +50,35 @@ def extract_ram_feature(name):
     freq = re.search(r"\d{4,5}", name).group() if re.search(r"\d{4,5}", name) else ""
     return f"{brand}_{capacity}_{freq}".strip("_")
 
+# 【新增】显卡精准匹配关键词提取（品牌+型号+显存+系列）
+def extract_gpu_match_key(name):
+    if not name:
+        return ""
+    name = name.strip()
+    brand = ""
+    model = ""
+    vram = ""
+    series = ""
+
+    brand_p = re.search(r"(七彩虹|华硕|微星|影驰|索泰|映众|铭瑄|撼讯|蓝宝石|迪兰|盈通|技嘉)", name)
+    if brand_p:
+        brand = brand_p.group(1)
+
+    model_p = re.search(r"(RTX\d+|GTX\d+|RX\d+|Arc\d+)", name, re.I)
+    if model_p:
+        model = model_p.group(1)
+
+    vram_p = re.search(r"(\d+G)", name)
+    if vram_p:
+        vram = vram_p.group(1)
+
+    series_p = re.search(r"(战斧|Ultra|Adoc|AD|火神|水神|天选|星曜|金属大师|黑将|大将|魔龙|超龙|追风|暗黑犬)", name, re.I)
+    if series_p:
+        series = series_p.group(1)
+
+    final = f"{brand}{model}{vram}{series}".strip()
+    return final if final else name
+
 # -------------------------- 爬取函数 --------------------------
 def fetch_latest_prices():
     try:
@@ -57,6 +86,19 @@ def fetch_latest_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         price_dict = {extract_hardware_model(n): p for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text())}
         return price_dict
+    except Exception:
+        return {}
+
+def fetch_gpu_full_price_map():
+    try:
+        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        gpu_map = {}
+        for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+            key = extract_gpu_match_key(name)
+            if key:
+                gpu_map[key] = price
+        return gpu_map
     except Exception:
         return {}
 
@@ -105,13 +147,13 @@ def fetch_processed_ram():
 
 # -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
-    return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{n:"{g["name"]}",p:{g["price"]}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
+    return "".join([f"{GPU_START_MARK}\n", *[f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list], f"{GPU_END_MARK}\n"])
 
 def generate_mb_content(mb_list):
-    return "".join([f'{INDENT}{n:"{m["name"]}",p:{m["price"]}},\n' for m in mb_list])
+    return "".join([f'{INDENT}{{n:"{m["name"]}",p:{m["price"]}}},\n' for m in mb_list])
 
 def generate_ram_content(ram_list):
-    return "".join([f'{INDENT}{n:"{r["name"]}",p:{r["price"]}},\n' for r in ram_list])
+    return "".join([f'{INDENT}{{n:"{r["name"]}",p:{r["price"]}}},\n' for r in ram_list])
 
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
@@ -135,6 +177,62 @@ def update_html_prices(price_dict):
     except Exception:
         return 0
 
+# -------------------------- 【新增】显卡现有价格精准更新（和内存一样逻辑） --------------------------
+def update_exist_gpu_prices():
+    try:
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        match = re.search(re.escape(GPU_START_MARK) + r"(.*?)" + re.escape(GPU_END_MARK), content, re.DOTALL)
+        if not match:
+            print("❌ 未找到显卡区域")
+            return 0
+        
+        gpu_block = match.group(1)
+        gpu_lines = gpu_block.splitlines()
+        gpu_map = fetch_gpu_full_price_map()
+        updated = 0
+        new_lines = []
+
+        for line in gpu_lines:
+            if not re.search(r'p:\d+', line):
+                new_lines.append(line)
+                continue
+            
+            gpu_name = re.sub(r'<[^>]+>|p:\d+(?:\.\d+)?|[{n:",} ]', "", line).strip()
+            key = extract_gpu_match_key(gpu_name)
+            new_p = None
+
+            if key in gpu_map:
+                new_p = gpu_map[key]
+            else:
+                best, score = process.extractOne(key, gpu_map.keys())
+                if score >= 65:
+                    new_p = gpu_map[best]
+
+            if new_p:
+                line = re.sub(r"p:\d+(?:\.\d+)?", f"p:{int(float(new_p))}", line)
+                updated += 1
+            
+            new_lines.append(line)
+        
+        new_block = "\n".join(new_lines)
+        final_content = re.sub(
+            re.escape(GPU_START_MARK) + r".*?" + re.escape(GPU_END_MARK),
+            GPU_START_MARK + new_block + GPU_END_MARK,
+            content,
+            flags=re.DOTALL
+        )
+
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.write(final_content)
+        
+        print(f"✅ 现有显卡价格精准更新完成：{updated} 个")
+        return updated
+    except Exception as e:
+        print(f"❌ 显卡更新失败：{e}")
+        return 0
+
 # -------------------------- 内存定制价格（100%正确版） --------------------------
 def update_exist_ram_prices():
     try:
@@ -142,11 +240,8 @@ def update_exist_ram_prices():
             lines = f.readlines()
         ram_dict = fetch_raw_ram_prices()
 
-        # ==============================================
-        # 第一步：先把所有基础价格全部算出来
-        # ==============================================
-        jbd_32g_6000_final = 0  # 金百达 32G 6000 套装最终价
-        jbd_32g_3200_final = 0  # 金百达 32G 3200 套装最终价
+        jbd_32g_6000_final = 0
+        jbd_32g_3200_final = 0
 
         for i in range(len(lines)):
             line = lines[i]
@@ -162,9 +257,6 @@ def update_exist_ram_prices():
                 if feat in ram_dict:
                     jbd_32g_3200_final = float(ram_dict[feat])
 
-        # ==============================================
-        # 第二步：统一更新所有价格（绝对不会乱序）
-        # ==============================================
         start = end = -1
         for i, line in enumerate(lines):
             if start == -1 and RAM_EXIST_START in line:
@@ -186,28 +278,20 @@ def update_exist_ram_prices():
             base_price = float(ram_dict.get(feat, 0))
             final_price = base_price
 
-            # ===================== 正确规则 =====================
             if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
                 final_price = base_price + 150
-
             elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                 final_price = jbd_32g_3200_final * 2.6
-
             elif "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
                 final_price = jbd_32g_6000_final
-
             elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
                 final_price = jbd_32g_6000_final * 0.55
-
             elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
                 final_price = base_price - 150
-
             elif "宏碁掠夺者" in ram_name:
                 final_price = base_price + 300
-
             elif "阿斯加特" in ram_name and "女武神" not in ram_name:
                 final_price = base_price + 50
-            # ======================================================
 
             lines[i] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{int(final_price)}", line)
             cnt += 1
@@ -215,8 +299,6 @@ def update_exist_ram_prices():
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         print(f"✅ 内存定制价格更新完成：{cnt} 个")
-        print(f"✅ 金百达32G 6000套装价：{jbd_32g_6000_final}")
-        print(f"✅ 金百达16G单根价（×0.55）：{jbd_32g_6000_final * 0.55}")
         return cnt
     except Exception as e:
         print(f"❌ 内存更新失败：{e}")
@@ -231,7 +313,7 @@ def update_gpu_by_mark():
         final = re.sub(re.escape(GPU_START_MARK) + r".*?" + re.escape(GPU_END_MARK), new_cont.strip(), content, flags=re.DOTALL)
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.write(final)
-        print("✅ 显卡价格已实时更新")
+        print("✅ 显卡列表已重新生成")
     except Exception:
         print("❌ 显卡更新失败")
 
@@ -292,8 +374,10 @@ if __name__ == "__main__":
     cpu_prices = fetch_latest_prices()
     cpu_cnt = update_html_prices(cpu_prices)
     print(f"✅ CPU价格已更新：{cpu_cnt} 个")
+    
+    update_exist_gpu_prices()   # 新增：显卡现有价格精准更新
     update_exist_ram_prices()
-    update_gpu_by_mark()
     update_mb_accurate()
     update_ram_accurate()
+    
     print("===== ✅ 全部硬件价格已实时更新完成 =====")
