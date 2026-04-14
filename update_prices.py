@@ -173,12 +173,12 @@ def update_exist_ram_prices():
                 final_price += 100
             elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                 jbd_price = next(float(p) for n,p in ram_full_map.items() if "金百达_银爵 32G 3200(16*2)套装" in n)
-                final_price = jbd_price * 2 + 799
+                final_price = jbd_price * 0.5 + 799
             elif "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
                 final_price -= 400
                 jbd_32g_6000_final = final_price
             elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name and jbd_32g_6000_final > 0:
-                final_price = (jbd_32g_6000_final / 2) + 50
+                final_price = (jbd_32g_6000_final * 0.5) + 50
             elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
                 final_price -= 150
             elif "宏碁掠夺者" in ram_name:
