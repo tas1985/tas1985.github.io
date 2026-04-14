@@ -191,6 +191,25 @@
             display:block;
         }
 
+        /* 客户名称输入框清空按钮样式 */
+        .user-clear-btn{
+            position:absolute;
+            right:12px;
+            top:50%;
+            transform:translateY(-50%);
+            width:18px;
+            height:18px;
+            line-height:18px;
+            text-align:center;
+            color: #ff0000;
+            font-weight:bold;
+            cursor:pointer;
+            display:none;
+        }
+        .user:hover .user-clear-btn{
+            display:block;
+        }
+
         .dropdown{
             position:absolute;
             left:0;
@@ -514,6 +533,8 @@
     <div class="user">
         <label>客户名称：</label>
         <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
+        <!-- 新增客户名称清空按钮 -->
+        <div class="user-clear-btn" onclick="clearUser()">×</div>
         <!-- 新增实时日期时间显示 -->
         <div class="datetime-display" id="datetimeDisplay"></div>
         <!-- 客户名称下拉列表 -->
@@ -700,6 +721,7 @@
 <!-- 右键菜单 -->
 <div class="context-menu" id="contextMenu">
     <div onclick="deleteSelectedItem()">删除该配件</div>
+    <div onclick="clearUser()">清除客户名称</div>
 </div>
 
 <script>
@@ -853,7 +875,7 @@
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3000.0},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 C22 intel专用",p:1300.0},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 intel专用",p:1300.0},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 intel专用",p:760.0},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:3949.0},
@@ -871,7 +893,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金士顿 野兽 32G 6000 16x2 D5 黑色马甲 C36",p:2699.00},
@@ -2309,6 +2331,17 @@
             document.getElementById("userDropdown").style.display = "none";
         }, 150);
     }
+
+    // 新增：清空客户名称功能
+    function clearUser() {
+        document.getElementById("user").value = "";
+        saveNow(); // 保存当前状态
+        // 隐藏下拉框（如果显示的话）
+        document.getElementById("userDropdown").style.display = "none";
+    }
 </script>
 </body>
 </html>
+
+
+
