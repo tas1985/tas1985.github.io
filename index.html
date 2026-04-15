@@ -5,19 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei",Arial}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", Arial;
+        }
+
         /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
-        body{
+        body {
             background: #e0e0e0; /* 参考图浅灰背景 */
             background-image: 
                 linear-gradient(rgba(200,200,200,0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(200,200,200,0.1) 1px, transparent 1px);
             background-size: 40px 40px;
             padding: 15px;
-            font-size: 14px;
+            font-size: 16px; /* 增大字体 */
             color: #000; /* 基础文字黑色 */
         }
-        .container{
+
+        .container {
             max-width: 720px;
             margin: 0 auto;
             background: #e0e0e0; /* 容器浅灰背景 */
@@ -26,57 +33,64 @@
             box-shadow: 0 0 30px rgba(128,0,255,0.5);
             border: 2px solid #9900ff; /* 外层紫色边框 */
         }
-        .title{
-            text-align:center;
-            font-size: 20px;
-            font-weight:bold;
+
+        .title {
+            text-align: center;
+            font-size: 24px; /* 增大标题字体 */
+            font-weight: bold;
             margin-bottom: 15px;
-            padding: 10px;
+            padding: 15px; /* 增大内边距 */
             border-radius: 6px;
             background: #000; /* 标题黑底 */
             color: #00ff00; /* 标题绿色文字 */
             border: 2px solid #9900ff; /* 标题紫色边框 */
             box-shadow: 0 0 10px rgba(153,0,255,0.8), inset 0 0 8px #00ff00;
         }
-        .user{
-            display:flex;
-            align-items:center;
-            gap:10px;
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 12px;
-            position:relative;
-            padding: 5px;
+            position: relative;
+            padding: 8px; /* 增大内边距 */
             background: #d0d0d0;
             border: 1px solid #000;
             border-radius: 6px;
         }
-        .user label{
-            white-space:nowrap;
-            font-weight:bold;
-            font-size: 16px;
+
+        .user label {
+            white-space: nowrap;
+            font-weight: bold;
+            font-size: 18px; /* 增大标签字体 */
             color: #000; /* 客户名称标签黑色 */
         }
+
         .user-input-container {
             position: relative;
             flex: 1;
         }
-        .user input{
+
+        .user input {
             width: 100%;
-            padding: 8px 25px 8px 8px; /* 增加左侧内边距，右侧为X按钮预留空间 */
+            padding: 12px 30px 12px 12px; /* 增大内边距，增加左侧内边距，右侧为X按钮预留空间 */
             border: 1px solid #9900ff; /* 输入框紫色边框 */
             border-radius: 4px;
             background: #000; /* 输入框黑底 */
             color: #00ff00; /* 输入框绿色文字 */
-            font-size: 14px;
+            font-size: 16px; /* 增大字体 */
+            min-height: 44px; /* 增加最小高度 */
         }
+
         /* 新增：客户名称输入框内的X按钮 */
-        .user-clear-btn{
+        .user-clear-btn {
             position: absolute;
-            right: 12px;
+            right: 15px; /* 调整位置 */
             top: 50%;
             transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            line-height: 18px;
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
             text-align: center;
             color: #ff0000;
             font-weight: bold;
@@ -84,161 +98,182 @@
             display: none;
             z-index: 2;
         }
-        .user:hover .user-clear-btn{
+
+        .user:hover .user-clear-btn {
             display: block;
         }
+
         /* 日期时间样式 - 匹配参考图 */
-        .datetime-display{
-            padding: 8px 12px;
+        .datetime-display {
+            padding: 10px 15px; /* 增大内边距 */
             background: #000; /* 黑底 */
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 16px; /* 增大字体 */
             color: #00ff00; /* 绿色文字 */
-            white-space:nowrap;
+            white-space: nowrap;
             border: 1px solid #9900ff; /* 紫色边框 */
             box-shadow: inset 0 0 5px #00ff00;
+            min-height: 44px; /* 增加最小高度 */
         }
 
         /* 客户名称下拉列表样式 */
-        .user-dropdown{
-            position:absolute;
-            left:70px;
-            top:100%;
-            width:calc(100% - 70px);
+        .user-dropdown {
+            position: absolute;
+            left: 70px;
+            top: 100%;
+            width: calc(100% - 70px);
             background: #000;
             border: 2px solid #9900ff;
             border-radius: 4px;
-            max-height:180px;
-            overflow-y:auto;
-            z-index:99;
-            display:none;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 99;
+            display: none;
         }
-        .user-dropdown div{
-            padding: 8px;
-            cursor:pointer;
+
+        .user-dropdown div {
+            padding: 12px; /* 增大内边距 */
+            cursor: pointer;
             color: #00ff00;
+            font-size: 16px; /* 增大字体 */
         }
-        .user-dropdown div:hover{
+
+        .user-dropdown div:hover {
             background: #9900ff;
             color: #000;
         }
 
-        .item{
-            display:flex;
-            align-items:center;
-            gap:8px;
-            margin-bottom: 8px;
-            padding: 4px;
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px; /* 增大间距 */
+            padding: 6px; /* 增大内边距 */
             background: #d0d0d0;
             border-radius: 4px;
             border: 1px solid #000;
         }
-        .item-label{
-            width:80px;
-            font-weight:bold;
+
+        .item-label {
+            width: 100px; /* 调整宽度 */
+            font-weight: bold;
             color: #000; /* 硬件标签黑色 */
-            font-size: 18px;
+            font-size: 18px; /* 增大字体 */
             text-align: center;
             padding-right: 5px;
         }
-        .item-input{
-            flex:1;
-            position:relative;
+
+        .item-input {
+            flex: 1;
+            position: relative;
         }
-        .item-price{
-            width:100px;
+
+        .item-price {
+            width: 120px; /* 调整宽度 */
             position: relative; /* 新增：用于¥符号定位 */
         }
+
         /* 新增：价格框¥符号样式 */
         .item-price::before {
             content: '¥';
             position: absolute;
-            left: 8px;
+            left: 10px; /* 调整位置 */
             top: 50%;
             transform: translateY(-50%);
             color: #000; /* 紫色¥符号，匹配价格文字颜色 */
-            font-size: 14px;
+            font-size: 16px; /* 增大字体 */
             font-weight: bold;
             z-index: 1;
         }
-        /* 新增：备注栏价格框 - 取消¥符号 */
-.item-price.remark-price::before {
-    content: ''; /* 清空¥符号 */
-}
 
-/* 同步调整备注栏价格输入框的内边距（避免左侧空白） */
-.remark-price input.price {
-    padding: 8px 8px 8px 8px !important; /* 覆盖原20px的左侧内边距 */
-}
-        input.combo{
-            width:100%;
-            padding: 8px 25px 8px 8px;
+        /* 新增：备注栏价格框 - 取消¥符号 */
+        .item-price.remark-price::before {
+            content: ''; /* 清空¥符号 */
+        }
+
+        /* 同步调整备注栏价格输入框的内边距（避免左侧空白） */
+        .remark-price input.price {
+            padding: 12px 12px 12px 12px !important; /* 覆盖原20px的左侧内边距 */
+        }
+
+        input.combo {
+            width: 100%;
+            padding: 12px 30px 12px 12px; /* 增大内边距 */
             border: 1px solid #9900ff; /* 配件输入框紫色边框 */
             border-radius: 4px;
-            outline:none;
+            outline: none;
             background: #e0e0e0; /* 输入框黑底 */
             color: #000; /* 输入框绿色文字 */
-            font-size: 16px;
+            font-size: 18px; /* 增大字体 */
+            min-height: 48px; /* 增加最小高度 */
         }
-        input.price{
-            width:100%;
-            padding: 8px 8px 8px 20px; /* 左侧留空给¥符号 */
-            text-align:right;
+
+        input.price {
+            width: 100%;
+            padding: 12px 12px 12px 24px; /* 左侧留空给¥符号，增大内边距 */
+            text-align: right;
             border: 1px solid #9900ff; /* 价格输入框绿色边框 */
             border-radius: 4px;
-            outline:none;
+            outline: none;
             background: #e0e0e0; /* 价格框黑底 */
             color: #000; /* 价格紫色文字 */
-            font-size: 16px;
+            font-size: 18px; /* 增大字体 */
+            min-height: 48px; /* 增加最小高度 */
         }
-        input.combo:focus,input.price:focus{
+
+        input.combo:focus, input.price:focus {
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
 
         /* 清空按钮样式 */
-        .clear-btn{
-            position:absolute;
-            right:12px;
-            top:50%;
-            transform:translateY(-50%);
-            width:18px;
-            height:18px;
-            line-height:18px;
-            text-align:center;
+        .clear-btn {
+            position: absolute;
+            right: 15px; /* 调整位置 */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            text-align: center;
             color: #ff0000;
-            font-weight:bold;
-            cursor:pointer;
-            display:none;
-        }
-        .item-input:hover .clear-btn{
-            display:block;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
         }
 
-        .dropdown{
-            position:absolute;
-            left:0;
-            top:100%;
-            width:100%;
+        .item-input:hover .clear-btn {
+            display: block;
+        }
+
+        .dropdown {
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 100%;
             background: #000;
             border: 2px solid #9900ff;
             border-radius: 4px;
-            max-height:180px;
-            overflow-y:auto;
-            z-index:99;
-            display:none;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 99;
+            display: none;
         }
-        .dropdown div{
-            padding: 8px;
-            cursor:pointer;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
+
+        .dropdown div {
+            padding: 12px; /* 增大内边距 */
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             color: #00ff00;
+            font-size: 16px; /* 增大字体 */
         }
-        .dropdown div:hover{
+
+        .dropdown div:hover {
             background: #9900ff;
             color: #000;
         }
+
         /* 下拉列表价格样式 - 顶到右端对齐 */
         .dropdown-price {
             margin-left: auto; /* 推到右边 */
@@ -248,56 +283,62 @@
             text-align: right; /* 文字右对齐 */
             padding-left: 8px; /* 与左侧内容保持间距 */
         }
+
         /* 下拉列表删除按钮样式 */
-        .dropdown-delete{
+        .dropdown-delete {
             color: #ff0000;
-            font-weight:bold;
-            margin-left:8px;
-            font-size:14px;
-            opacity:0;
-            transition:opacity 0.2s;
-        }
-        .dropdown div:hover .dropdown-delete{
-            opacity:1;
+            font-weight: bold;
+            margin-left: 8px;
+            font-size: 16px; /* 增大字体 */
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .btn-bar{
-            display:flex;
-            gap:6px;
+        .dropdown div:hover .dropdown-delete {
+            opacity: 1;
+        }
+
+        .btn-bar {
+            display: flex;
+            gap: 8px; /* 增大间距 */
             margin: 15px 0;
             flex-wrap: wrap;
         }
-        .btn-bar button{
-            flex:1;
-            padding: 10px 6px;
-            border:none;
+
+        .btn-bar button {
+            flex: 1;
+            padding: 14px 8px; /* 增大内边距 */
+            border: none;
             border-radius: 6px;
-            color:#00ff00; /* 按钮文字绿色 */
-            font-weight:bold;
-            font-size: 14px;
+            color: #00ff00; /* 按钮文字绿色 */
+            font-weight: bold;
+            font-size: 16px; /* 增大字体 */
             cursor: pointer;
             border: 2px solid #9900ff; /* 按钮紫色边框 */
             background: #000; /* 按钮黑底 */
-            min-width: 80px;
+            min-width: 100px; /* 增大最小宽度 */
+            min-height: 50px; /* 增加最小高度 */
             box-shadow: 0 0 6px rgba(153,0,255,0.6);
         }
-        .btn-bar button:hover{
+
+        .btn-bar button:hover {
             box-shadow: 0 0 10px rgba(0,255,0,0.8);
             background: #330066;
         }
 
         /* 总价区域样式 - 核心匹配参考图 */
-        .total{
+        .total {
             background: #000; /* 总价区域黑底 */
-            padding: 15px;
+            padding: 20px; /* 增大内边距 */
             border-radius: 8px;
-            margin-top: 12px;
-            text-align:right;
+            margin-top: 15px; /* 增大上边距 */
+            text-align: right;
             border: 3px solid #9900ff; /* 外层紫色边框 */
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #9900ff;
         }
+
         .total::before {
             content: '';
             position: absolute;
@@ -308,115 +349,127 @@
             background: linear-gradient(90deg, transparent, rgba(0,255,0,0.3), transparent);
             animation: greenGlow 3s linear infinite;
         }
+
         @keyframes greenGlow {
             0% { left: -100%; }
             100% { left: 100%; }
         }
-        .total-line{
-            display:none;
+
+        .total-line {
+            display: none;
             color: #00ff00;
+            font-size: 18px; /* 增大字体 */
         }
-        .total-final{
-            font-size: 28px;
-            font-weight:bold;
+
+        .total-final {
+            font-size: 32px; /* 增大最终报价字体 */
+            font-weight: bold;
             color: #00ff00; /* 最终报价绿色文字 */
-            margin:0;
-            padding:0;
-            border:none;
-            display:block !important;
+            margin: 0;
+            padding: 0;
+            border: none;
+            display: block !important;
             position: relative;
             z-index: 1;
             text-shadow: 0 0 8px rgba(0,255,0,1);
         }
 
-        .modal{
-            position:fixed;
-            top:0;
-            left:0;
-            width:100%;
-            height:100%;
-            background:rgba(0,0,0,0.9);
-            display:none;
-            align-items:center;
-            justify-content:center;
-            padding:15px;
-            z-index:999;
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            z-index: 999;
         }
-        .modal-box{
+
+        .modal-box {
             background: #e0e0e0;
             border-radius: 8px;
-            width:100%;
-            max-width:340px;
-            padding: 18px;
+            width: 100%;
+            max-width: 360px; /* 增大最大宽度 */
+            padding: 20px; /* 增大内边距 */
             border: 3px solid #9900ff;
             box-shadow: 0 0 20px rgba(0,255,0,0.6);
         }
-        .modal-list{
-            max-height:300px;
-            overflow-y:auto;
-            margin:12px 0;
+
+        .modal-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0; /* 增大间距 */
         }
-        .modal-item{
-            padding:8px;
-            border:1px solid #9900ff;
-            border-radius:6px;
-            margin-bottom:6px;
+
+        .modal-item {
+            padding: 12px; /* 增大内边距 */
+            border: 1px solid #9900ff;
+            border-radius: 6px;
+            margin-bottom: 8px; /* 增大间距 */
             color: #000;
             background: #d0d0d0;
+            font-size: 16px; /* 增大字体 */
         }
-        .modal-item button{
-            width:100%;
-            padding:6px;
-            margin-top:6px;
-            background: #000;
-            color:#00ff00;
-            border:none;
-            border-radius:4px;
-            border: 1px solid #9900ff;
-        }
-        .update-area{
-            margin:12px 0;
-        }
-        .update-area textarea{
-            width:100%;
-            height:120px;
-            padding:8px;
-            border:2px solid #9900ff;
-            border-radius:6px;
-            margin-bottom:8px;
-            resize:none;
+
+        .modal-item button {
+            width: 100%;
+            padding: 10px; /* 增大内边距 */
+            margin-top: 8px; /* 增大间距 */
             background: #000;
             color: #00ff00;
+            border: none;
+            border-radius: 4px;
+            border: 1px solid #9900ff;
+            font-size: 16px; /* 增大字体 */
+            min-height: 44px; /* 增加最小高度 */
         }
-        
+
+        .update-area textarea {
+            width: 100%;
+            height: 150px; /* 增大高度 */
+            padding: 12px; /* 增大内边距 */
+            border: 2px solid #9900ff;
+            border-radius: 6px;
+            margin-bottom: 10px; /* 增大间距 */
+            resize: none;
+            background: #000;
+            color: #00ff00;
+            font-size: 16px; /* 增大字体 */
+        }
+
         /* 添加型号弹窗样式 */
-        .add-area{
-            margin:12px 0;
-        }
-        .add-area select, .add-area input{
-            width:100%;
-            padding:8px;
-            border:2px solid #9900ff;
-            border-radius:6px;
-            margin-bottom:8px;
+        .add-area select, .add-area input {
+            width: 100%;
+            padding: 12px; /* 增大内边距 */
+            border: 2px solid #9900ff;
+            border-radius: 6px;
+            margin-bottom: 10px; /* 增大间距 */
             background: #000;
             color: #00ff00;
+            font-size: 16px; /* 增大字体 */
+            min-height: 44px; /* 增加最小高度 */
         }
-        .add-area button{
-            width:100%;
-            padding:8px;
-            border:none;
-            border-radius:6px;
+
+        .add-area button {
+            width: 100%;
+            padding: 12px; /* 增大内边距 */
+            border: none;
+            border-radius: 6px;
             background: #000;
-            color:#00ff00;
-            margin-top:6px;
+            color: #00ff00;
+            margin-top: 8px; /* 增大间距 */
             border: 1px solid #9900ff;
+            font-size: 16px; /* 增大字体 */
+            min-height: 44px; /* 增加最小高度 */
         }
-        
+
         /* 右键菜单样式 */
         .context-menu {
             position: absolute;
-            width: 140px;
+            width: 160px; /* 增大宽度 */
             background: #000;
             border: 2px solid #9900ff;
             border-radius: 6px;
@@ -424,12 +477,14 @@
             z-index: 1000;
             display: none;
         }
+
         .context-menu div {
-            padding: 8px;
+            padding: 12px; /* 增大内边距 */
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px; /* 增大字体 */
             color: #00ff00;
         }
+
         .context-menu div:hover {
             background: #9900ff;
             color: #000;
@@ -438,13 +493,13 @@
         /* 备注栏样式 */
         .remark-input {
             flex: 1;
-            padding: 8px;
+            padding: 12px; /* 增大内边距 */
             border: 1px solid #9900ff;
             border-radius: 4px;
             background: #e0e0e0;
-            font-size: 13px;
-            line-height: 1.4;
-            min-height: 80px;
+            font-size: 16px; /* 增大字体 */
+            line-height: 1.5; /* 增大行高 */
+            min-height: 100px; /* 增大最小高度 */
             white-space: pre-wrap;
             word-wrap: break-word;
             outline: none;
@@ -465,54 +520,66 @@
             justify-content: center;
             z-index: 9999;
         }
+
         .password-box {
             background: #e0e0e0;
             border-radius: 8px;
             width: 90%;
-            max-width: 320px;
-            padding: 20px;
+            max-width: 340px; /* 增大最大宽度 */
+            padding: 25px; /* 增大内边距 */
             text-align: center;
             border: 3px solid #00ff00;
             box-shadow: 0 0 20px rgba(153,0,255,0.8);
         }
-        .password-box h3{
+
+        .password-box h3 {
             color: #9900ff;
-            margin-bottom: 12px;
+            margin-bottom: 15px; /* 增大间距 */
+            font-size: 18px; /* 增大字体 */
         }
+
         .password-box p {
-            margin-bottom: 12px;
+            margin-bottom: 15px; /* 增大间距 */
             color: #000;
-            line-height: 1.5;
+            line-height: 1.6; /* 增大行高 */
+            font-size: 16px; /* 增大字体 */
         }
+
         .password-box .tips {
             color: #ff0000;
             font-weight: bold;
-            margin: 8px 0;
+            margin: 10px 0; /* 增大间距 */
+            font-size: 16px; /* 增大字体 */
         }
+
         .password-box input {
             width: 100%;
-            padding: 10px;
+            padding: 14px; /* 增大内边距 */
             border: 2px solid #9900ff;
             border-radius: 6px;
-            margin: 8px 0;
-            font-size: 16px;
+            margin: 10px 0; /* 增大间距 */
+            font-size: 18px; /* 增大字体 */
             text-align: center;
             background: #000;
             color: #00ff00;
+            min-height: 48px; /* 增加最小高度 */
         }
+
         .password-box button {
             width: 100%;
-            padding: 10px;
+            padding: 14px; /* 增大内边距 */
             border: none;
             border-radius: 6px;
             background: #000;
             color: #00ff00;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px; /* 增大字体 */
             cursor: pointer;
-            margin-top: 4px;
+            margin-top: 6px; /* 增大间距 */
             border: 1px solid #9900ff;
+            min-height: 48px; /* 增加最小高度 */
         }
+
         .password-box button:hover {
             background: #330066;
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
@@ -688,8 +755,8 @@
     <div class="modal-box">
         <h4>更新产品报价</h4>
         <div class="update-area">
-            <p style="font-size:13px;color:#9900ff;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
-            <p style="font-size:12px;color:#ff0000;margin-bottom:4px">示例：内存,金士顿 8G DDR4 3200,530 或 ram,金士顿 8G DDR4 3200,530</p>
+            <p style="font-size:14px;color:#9900ff;margin-bottom:6px">格式：品类,型号,新价格（每行一个）</p>
+            <p style="font-size:13px;color:#ff0000;margin-bottom:6px">示例：内存,金士顿 8G DDR4 3200,530 或 ram,金士顿 8G DDR4 3200,530</p>
             <textarea id="updateText" placeholder="请按格式输入更新内容"></textarea>
             <button onclick="doUpdate()">执行更新</button>
         </div>
@@ -727,7 +794,7 @@
 <!-- 右键菜单 -->
 <div class="context-menu" id="contextMenu">
     <div onclick="deleteSelectedItem()">删除该配件</div>
-    </div>
+</div>
 
 <script>
     // ===================== 密码验证核心功能 =====================
@@ -735,7 +802,7 @@
     function checkPasswordValidity() {
         const passwordRecord = JSON.parse(localStorage.getItem('passwordAuth')) || {};
         const { expireTime, isValid } = passwordRecord;
-        
+
         // 验证是否已授权且在有效期内
         if (isValid && expireTime && new Date().getTime() < expireTime) {
             return true;
@@ -763,19 +830,19 @@
     function checkPassword() {
         const inputPassword = document.getElementById('passwordInput').value;
         const correctPassword = '19851226'; // 正确密码
-        
+
         if (inputPassword === correctPassword) {
             // 计算3个月后的时间戳（按每月30天计算，实际可根据需求调整）
             const now = new Date().getTime();
             const threeMonthsLater = now + 3 * 30 * 24 * 60 * 60 * 1000;
-            
+
             // 保存授权信息到本地存储
             localStorage.setItem('passwordAuth', JSON.stringify({
                 isValid: true,
                 expireTime: threeMonthsLater,
                 authTime: now
             }));
-            
+
             hidePasswordModal();
             alert('解锁成功！当前设备3个月内无需重复验证');
         } else {
@@ -869,18 +936,18 @@
             {n:"阿斯加特 雷神 32G 16*2 7200 C34 黑色风道马甲",p:3149.0},
             {n:"阿斯加特 雷神 32G 16*2 6400 C30 黑色风道马甲",p:2900.0},
             {n:"阿斯加特 海拉 32G 16*2 6400 C32 钛银甲",p:3100.0},
-            {n:"阿斯加特 海拉 32G 16*2 5600 C46 钛银甲 镁光",p:2350.0},
+            {n:"阿斯加特 海拉 32G 16*2 5600 C46 钛银甲",p:2350.0},
             {n:"阿斯加特 海拉 24G 6000 C42 极夜黑",p:1509.0},
             {n:"阿斯加特 海拉 24G 6000 C42 极地白",p:1549.0},
             {n:"阿斯加特 海拉 16G 8*2 6000 C28 黑甲",p:1800.0},
             {n:"阿斯加特 海姆达尔 64G 32*2 6000 C30 黑色马甲",p:5149.0},
             {n:"阿斯加特 海姆达尔 48G 24*2 6000 C28 黑色马甲",p:3949.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6800 C32 黑色马甲",p:2900.0},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6400 C38 黑色马甲 镁光颗粒",p:2550.0},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:2500.0},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:2500.0},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6400 C38 黑色马甲 镁光",p:2550.0},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星",p:2500.0},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3000.0},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 C22 intel专用",p:1300.0},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 intel专用",p:1300.0},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 intel专用",p:760.0},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:3949.0},
@@ -951,7 +1018,7 @@
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE ICE WIFI7 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 冰雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1063,7 +1130,7 @@
             {n:"华硕 TUF GAMING Z790-PLUS WIFI D5",p:2050.00},
             {n:"华硕 TUF GAMING X870E-PLUS WIFI D5",p:2399.00},
             {n:"华硕 TUF GAMING X870-PLUS WIFI D5",p:2140.00},
-            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1530.00},
+            {n:"华硕 TUF B850-E WIFI D5 大板",p:1530.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1270.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1220.00},
             {n:"华硕 TUF B850M-E GAMING WIFI",p:1120.00},
@@ -1144,7 +1211,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1192,7 +1259,7 @@
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
             {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
-            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
+            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 厢纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
             {n:"艾湃电竞 A-650 650W铜牌直出 五年质保",p:249},
             {n:"艾湃电竞 A-550 550W铜牌直出 五年质保",p:225},
@@ -1217,7 +1284,7 @@
             {n:"海韵 Vertex PX-2200W 旗舰白金全模组 黑色",p:3699},
             {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 黑色",p:1650},
             {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 白色",p:1799},
-            {n:"海韵 PRIME TX-1600 钛金全模组 猫头鹰联名 ATX3.0 黑色 十二年质保",p:4799},
+            {n:"海韵 PRIME TX-1600 钛金全模组 ATX3.0 黑色 十二年质保",p:4799},
             {n:"海韵 PRIME TX-1300 钛金全模组 ATX3.0 黑色 十二年质保",p:2799},
             {n:"海韵 FOCUS GX-850W 金牌全模组 ATX3.1 V4 白色",p:999},
             {n:"海韵 FOCUS GX-850W 金牌 全模组 ATX3.1 V4 黑色",p:950},
@@ -1561,7 +1628,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -2231,7 +2298,6 @@
 </script>
 </body>
 </html>
-
 
 
 
