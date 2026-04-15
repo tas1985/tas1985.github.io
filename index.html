@@ -82,6 +82,7 @@
             font-weight: bold;
             cursor: pointer;
             display: none;
+            z-index: 2;
         }
         .user:hover .user-clear-btn{
             display: block;
@@ -516,33 +517,6 @@
             background: #330066;
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
-        
-        /* 同步状态指示器 */
-        .sync-status {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            font-size: 12px;
-            color: #00ff00;
-        }
-        
-        /* 云端同步操作按钮样式 */
-        .cloud-sync-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .cloud-sync-actions button {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 4px;
-            background: #000;
-            color: #00ff00;
-            cursor: pointer;
-            border: 1px solid #9900ff;
-            font-size: 12px;
-        }
     </style>
 </head>
 <body>
@@ -571,8 +545,6 @@
         <div class="datetime-display" id="datetimeDisplay"></div>
         <!-- 客户名称下拉列表 -->
         <div class="user-dropdown" id="userDropdown"></div>
-        <!-- 同步状态指示器 -->
-        <div class="sync-status" id="syncStatus">同步状态: 本地</div>
     </div>
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
@@ -695,7 +667,6 @@
     <div class="btn-bar">
         <button class="btn-save" onclick="save()">保存配置</button>
         <button class="btn-load" onclick="showLoad()">加载配置</button>
-        <button class="btn-sync" onclick="showCloudSync()">云端同步</button>
         <button class="btn-update" onclick="showUpdate()">更新报价</button>
         <button class="btn-add" onclick="showAdd()">添加型号</button> <!-- 新增添加型号按钮 -->
         <button class="btn-reset" onclick="reset()">清空重置</button>
@@ -750,20 +721,6 @@
             <button onclick="doAdd()">添加型号</button>
         </div>
         <button onclick="closeModal('addModal')">取消</button>
-    </div>
-</div>
-
-<!-- 云端同步弹窗 -->
-<div class="modal" id="cloudSyncModal">
-    <div class="modal-box">
-        <h4>云端数据同步</h4>
-        <p style="font-size:13px;color:#000;margin-bottom:12px">云端数据将存储在仓库根目录的config_data.json文件中</p>
-        <div class="cloud-sync-actions">
-            <button onclick="loadFromCloud()">从云端加载</button>
-            <button onclick="saveToCloud()">保存到云端</button>
-        </div>
-        <p style="font-size:12px;color:#9900ff;margin-top:12px">注意：保存到云端需要手动上传文件到GitHub仓库</p>
-        <button onclick="closeModal('cloudSyncModal')">关闭</button>
     </div>
 </div>
 
@@ -835,100 +792,6 @@
         }
     });
 
-    // ===================== 云端同步功能 =====================
-    // 云端数据存储URL（指向GitHub Pages上的仓库）
-    const CLOUD_DATA_URL = 'https://tas1985.github.io/config_data.json';
-    const LOCAL_DATA_KEY = 'pc_config_data';
-    
-    // 同步状态更新函数
-    function updateSyncStatus(status) {
-        const statusElement = document.getElementById('syncStatus');
-        if (statusElement) {
-            statusElement.textContent = `同步状态: ${status}`;
-        }
-    }
-    
-    // 从云端加载数据
-    async function loadFromCloud() {
-        try {
-            updateSyncStatus('正在加载云端数据...');
-            const response = await fetch(CLOUD_DATA_URL);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const cloudData = await response.json();
-            localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(cloudData));
-            updateSyncStatus('云端数据已加载');
-            // 重新初始化本地数据
-            initializeLocalData();
-            // 如果当前有客户名称，尝试加载对应的配置
-            const currentUserName = document.getElementById('user').value;
-            if(currentUserName) {
-                loadConfigByName(currentUserName);
-            }
-            alert('云端数据加载成功！');
-        } catch (error) {
-            console.error('从云端加载数据失败:', error);
-            updateSyncStatus('云端加载失败');
-            alert('云端数据加载失败，将继续使用本地数据');
-        }
-    }
-    
-    // 保存数据到云端（通过下载文件的方式提示用户手动上传）
-    function saveToCloud() {
-        try {
-            const localData = JSON.parse(localStorage.getItem(LOCAL_DATA_KEY) || '{}');
-            const configList = JSON.parse(localStorage.getItem("list") || "[]");
-            const productData = JSON.parse(localStorage.getItem("productData") || JSON.stringify(defaultData));
-            
-            // 创建完整的云端数据对象
-            const cloudData = {
-                configList: configList,
-                productData: productData,
-                timestamp: new Date().toISOString()
-            };
-            
-            // 创建下载链接
-            const blob = new Blob([JSON.stringify(cloudData, null, 2)]);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'config_data.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            updateSyncStatus('已准备云端文件');
-            alert('云端数据文件已生成，请将其上传到您的GitHub仓库（tas1985.github.io）以完成同步');
-        } catch (error) {
-            console.error('生成云端数据文件失败:', error);
-            updateSyncStatus('云端保存失败');
-            alert('生成云端数据文件失败');
-        }
-    }
-    
-    // 同步到云端（保存当前数据到云端）
-    function syncToCloud() {
-        saveToCloud();
-    }
-    
-    // 显示云端同步弹窗
-    function showCloudSync() {
-        document.getElementById("cloudSyncModal").style.display = "flex";
-    }
-    
-    // 初始化本地数据
-    function initializeLocalData() {
-        const localData = JSON.parse(localStorage.getItem(LOCAL_DATA_KEY) || '{}');
-        if(localData.configList) {
-            localStorage.setItem("list", JSON.stringify(localData.configList));
-        }
-        if(localData.productData) {
-            localStorage.setItem("productData", JSON.stringify(localData.productData));
-        }
-    }
-    
     // ===================== 原有功能代码 =====================
     // 初始化数据：优先从localStorage加载，无则使用默认数据
     const defaultData = {
@@ -2063,9 +1926,6 @@
     }
 
     window.onload=()=>{
-        // 初始化本地数据
-        initializeLocalData();
-        
         let d=localStorage.getItem("last");
         if(d){
             d=JSON.parse(d);
@@ -2086,9 +1946,6 @@
         // 初始化并启动实时日期时间更新
         updateDateTime();
         setInterval(updateDateTime, 1000); // 每秒更新一次
-        
-        // 尝试从云端加载最新数据
-        loadFromCloud();
     }
 
     function save(){
@@ -2146,7 +2003,6 @@
     function reset(){
         if(!confirm("确定清空？"))return;
         localStorage.removeItem("last");
-        localStorage.removeItem("list");
         location.reload();
     }
 
@@ -2375,6 +2231,7 @@
 </script>
 </body>
 </html>
+
 
 
 
