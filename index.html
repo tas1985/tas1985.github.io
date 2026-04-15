@@ -517,6 +517,42 @@
             background: #330066;
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
+        
+        /* 配置分享链接样式 */
+        .share-link-container {
+            margin-top: 10px;
+            padding: 10px;
+            background: #d0d0d0;
+            border-radius: 6px;
+            border: 1px solid #000;
+        }
+        .share-link-container label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #000;
+        }
+        .share-link {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            background: #000;
+            color: #00ff00;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .copy-btn {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            background: #000;
+            color: #00ff00;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #9900ff;
+        }
     </style>
 </head>
 <body>
@@ -670,6 +706,13 @@
         <button class="btn-update" onclick="showUpdate()">更新报价</button>
         <button class="btn-add" onclick="showAdd()">添加型号</button> <!-- 新增添加型号按钮 -->
         <button class="btn-reset" onclick="reset()">清空重置</button>
+    </div>
+
+    <!-- 分享链接区域 -->
+    <div class="share-link-container">
+        <label>配置分享链接：</label>
+        <input type="text" class="share-link" id="shareLink" readonly>
+        <button class="copy-btn" onclick="copyShareLink()">复制链接</button>
     </div>
 
 </div>
@@ -880,7 +923,7 @@
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3000.0},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 C22 intel专用",p:1300.0},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 intel专用",p:1300.0},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 intel专用",p:760.0},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:3949.0},
@@ -898,7 +941,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -946,12 +989,12 @@
             {n:"微星 B850M GAMING WIFI ",p:898},
             {n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},
             {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1399.00},
-            {n:"技嘉 Z890M A ELITE WIFI7 ICE 冰雕",p:1399.00},
+            {n:"技嘉 Z890M A ELITE WIFI7 ICE 白色冰雕",p:1399.00},
             {n:"技嘉 Z890 UD WIFI6E DDR5",p:1250.00},
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE ICE WIFI7 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 冰雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1063,7 +1106,7 @@
             {n:"华硕 TUF GAMING Z790-PLUS WIFI D5",p:2050.00},
             {n:"华硕 TUF GAMING X870E-PLUS WIFI D5",p:2399.00},
             {n:"华硕 TUF GAMING X870-PLUS WIFI D5",p:2140.00},
-            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1530.00},
+            {n:"华硕 TUF B850-E WIFI D5 大板",p:1530.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1270.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1220.00},
             {n:"华硕 TUF B850M-E GAMING WIFI",p:1120.00},
@@ -1144,7 +1187,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1362,7 +1405,7 @@
             {n:"华硕 RTX5060 O8G GAMING TX 天选白色",p:2899},
             {n:"华硕 RTX5060 O8G DUAL 雪豹 黑色",p:2599},
             {n:"华硕 RTX5060 O8G ATS 巨齿鲨 三扇",p:2699},
-            {n:"华硕 RTX4070S 12G DUAL 雪豹 黑色 双扇",p:3999},
+            {n:"华硕 RT4070S 12G DUAL 雪豹 黑色 双扇",p:3999},
             {n:"华硕 PRIME RX9070XT O16G 大师",p:5150},
             {n:"七彩虹 RTX5080 16G Vulcan OC 黑火神",p:10669},
             {n:"七彩虹 RTX5080 16G Vulcan OC W 白火神",p:11099},
@@ -1561,7 +1604,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -1908,6 +1951,9 @@
         });
         o.remark = document.getElementById("remark").value;
         localStorage.setItem("last",JSON.stringify(o));
+        
+        // 更新分享链接
+        updateShareLink();
     }
 
     // 新增：更新实时日期时间
@@ -1925,9 +1971,108 @@
         document.getElementById("datetimeDisplay").textContent = formattedTime;
     }
 
+    // 生成分享链接
+    function generateShareLink() {
+        const config = {
+            user: document.getElementById("user").value,
+            cpu: document.getElementById("cpu").value,
+            cpu_p: document.getElementById("cpu-p").value,
+            ram: document.getElementById("ram").value,
+            ram_p: document.getElementById("ram-p").value,
+            board: document.getElementById("board").value,
+            board_p: document.getElementById("board-p").value,
+            cooler: document.getElementById("cooler").value,
+            cooler_p: document.getElementById("cooler-p").value,
+            vga: document.getElementById("vga").value,
+            vga_p: document.getElementById("vga-p").value,
+            ssd: document.getElementById("ssd").value,
+            ssd_p: document.getElementById("ssd-p").value,
+            hdd: document.getElementById("hdd").value,
+            hdd_p: document.getElementById("hdd-p").value,
+            case: document.getElementById("case").value,
+            case_p: document.getElementById("case-p").value,
+            fan: document.getElementById("fan").value,
+            fan_p: document.getElementById("fan-p").value,
+            power: document.getElementById("power").value,
+            power_p: document.getElementById("power-p").value,
+            other: document.getElementById("other").value,
+            other_p: document.getElementById("other-p").value,
+            remark: document.getElementById("remark").value
+        };
+        
+        const jsonString = JSON.stringify(config);
+        const encoded = btoa(unescape(encodeURIComponent(jsonString)));
+        const currentUrl = window.location.href.split('?')[0];
+        return `${currentUrl}?config=${encoded}`;
+    }
+
+    // 更新分享链接显示
+    function updateShareLink() {
+        const link = generateShareLink();
+        document.getElementById("shareLink").value = link;
+    }
+
+    // 复制分享链接
+    function copyShareLink() {
+        const shareLinkElement = document.getElementById("shareLink");
+        shareLinkElement.select();
+        document.execCommand("copy");
+        alert("分享链接已复制到剪贴板！");
+    }
+
+    // 从URL参数加载配置
+    function loadFromUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const configParam = urlParams.get('config');
+        
+        if (configParam) {
+            try {
+                const decoded = decodeURIComponent(escape(atob(configParam)));
+                const config = JSON.parse(decoded);
+                
+                // 填充表单数据
+                document.getElementById("user").value = config.user || "";
+                document.getElementById("cpu").value = config.cpu || "";
+                document.getElementById("cpu-p").value = config.cpu_p || "";
+                document.getElementById("ram").value = config.ram || "";
+                document.getElementById("ram-p").value = config.ram_p || "";
+                document.getElementById("board").value = config.board || "";
+                document.getElementById("board-p").value = config.board_p || "";
+                document.getElementById("cooler").value = config.cooler || "";
+                document.getElementById("cooler-p").value = config.cooler_p || "";
+                document.getElementById("vga").value = config.vga || "";
+                document.getElementById("vga-p").value = config.vga_p || "";
+                document.getElementById("ssd").value = config.ssd || "";
+                document.getElementById("ssd-p").value = config.ssd_p || "";
+                document.getElementById("hdd").value = config.hdd || "";
+                document.getElementById("hdd-p").value = config.hdd_p || "";
+                document.getElementById("case").value = config.case || "";
+                document.getElementById("case-p").value = config.case_p || "";
+                document.getElementById("fan").value = config.fan || "";
+                document.getElementById("fan-p").value = config.fan_p || "";
+                document.getElementById("power").value = config.power || "";
+                document.getElementById("power-p").value = config.power_p || "";
+                document.getElementById("other").value = config.other || "";
+                document.getElementById("other-p").value = config.other_p || "";
+                document.getElementById("remark").value = config.remark || "包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价";
+                
+                calc(); // 重新计算总价
+                saveNow(); // 保存到本地存储
+                
+                console.log("从URL参数成功加载配置");
+            } catch (e) {
+                console.error("从URL参数加载配置失败:", e);
+            }
+        }
+    }
+
     window.onload=()=>{
+        // 从URL参数加载配置
+        loadFromUrlParams();
+        
+        // 如果没有从URL加载，则从本地存储加载
         let d=localStorage.getItem("last");
-        if(d){
+        if(d && !new URLSearchParams(window.location.search).get('config')){
             d=JSON.parse(d);
             document.getElementById("user").value=d.user||"";
             ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
@@ -1946,6 +2091,9 @@
         // 初始化并启动实时日期时间更新
         updateDateTime();
         setInterval(updateDateTime, 1000); // 每秒更新一次
+        
+        // 初始化分享链接
+        updateShareLink();
     }
 
     function save(){
@@ -1963,6 +2111,10 @@
         localStorage.setItem("list",JSON.stringify(list));
         // 更新客户名称下拉列表
         initUserDropdown();
+        
+        // 更新分享链接
+        updateShareLink();
+        
         alert("保存成功");
     }
 
@@ -2231,7 +2383,6 @@
 </script>
 </body>
 </html>
-
 
 
 
