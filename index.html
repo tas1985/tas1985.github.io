@@ -82,7 +82,6 @@
             font-weight: bold;
             cursor: pointer;
             display: none;
-            z-index: 2;
         }
         .user:hover .user-clear-btn{
             display: block;
@@ -517,6 +516,15 @@
             background: #330066;
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
+        
+        /* 同步状态指示器 */
+        .sync-status {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 12px;
+            color: #00ff00;
+        }
     </style>
 </head>
 <body>
@@ -545,6 +553,8 @@
         <div class="datetime-display" id="datetimeDisplay"></div>
         <!-- 客户名称下拉列表 -->
         <div class="user-dropdown" id="userDropdown"></div>
+        <!-- 同步状态指示器 -->
+        <div class="sync-status" id="syncStatus">同步状态: 本地</div>
     </div>
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
@@ -667,6 +677,7 @@
     <div class="btn-bar">
         <button class="btn-save" onclick="save()">保存配置</button>
         <button class="btn-load" onclick="showLoad()">加载配置</button>
+        <button class="btn-sync" onclick="syncToCloud()">同步到云端</button>
         <button class="btn-update" onclick="showUpdate()">更新报价</button>
         <button class="btn-add" onclick="showAdd()">添加型号</button> <!-- 新增添加型号按钮 -->
         <button class="btn-reset" onclick="reset()">清空重置</button>
@@ -792,6 +803,162 @@
         }
     });
 
+    // ===================== 云端同步功能 =====================
+    // 云端数据存储URL（指向GitHub Pages上的仓库）
+    const CLOUD_DATA_URL = 'https://tas1985.github.io/config_data.json';
+    const LOCAL_DATA_KEY = 'pc_config_data';
+    const REPO_OWNER = 'tas1985';
+    const REPO_NAME = 'tas1985.github.io';
+    const FILE_PATH = 'config_data.json';
+    
+    // 获取GitHub token（从localStorage中获取，需要用户手动设置）
+    function getGitHubToken() {
+        return localStorage.getItem('github_token');
+    }
+    
+    // 设置GitHub token
+    function setGitHubToken(token) {
+        localStorage.setItem('github_token', token);
+    }
+    
+    // 同步状态更新函数
+    function updateSyncStatus(status) {
+        const statusElement = document.getElementById('syncStatus');
+        if (statusElement) {
+            statusElement.textContent = `同步状态: ${status}`;
+        }
+    }
+    
+    // 从云端加载数据
+    async function loadFromCloud() {
+        try {
+            updateSyncStatus('正在加载云端数据...');
+            const response = await fetch(CLOUD_DATA_URL);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const cloudData = await response.json();
+            localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(cloudData));
+            updateSyncStatus('云端数据已加载');
+            // 重新初始化本地数据
+            initializeLocalData();
+            // 如果当前有客户名称，尝试加载对应的配置
+            const currentUserName = document.getElementById('user').value;
+            if(currentUserName) {
+                loadConfigByName(currentUserName);
+            }
+            alert('云端数据加载成功！');
+        } catch (error) {
+            console.error('从云端加载数据失败:', error);
+            updateSyncStatus('云端加载失败');
+            alert('云端数据加载失败，将继续使用本地数据');
+        }
+    }
+    
+    // 获取文件SHA（用于更新文件）
+    async function getFileSha() {
+        const token = getGitHubToken();
+        if (!token) {
+            throw new Error('请先设置GitHub Token');
+        }
+        
+        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`获取文件信息失败: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.sha;
+    }
+    
+    // 保存数据到云端（通过GitHub API直接更新文件）
+    async function saveToCloud() {
+        try {
+            const token = getGitHubToken();
+            if (!token) {
+                alert('请先设置GitHub Token才能同步到云端。\n请在控制台执行以下命令设置：\nsetGitHubToken("your_github_token_here")');
+                return;
+            }
+            
+            updateSyncStatus('正在同步到云端...');
+            
+            const localData = JSON.parse(localStorage.getItem(LOCAL_DATA_KEY) || '{}');
+            const configList = JSON.parse(localStorage.getItem("list") || "[]");
+            const productData = JSON.parse(localStorage.getItem("productData") || JSON.stringify(defaultData));
+            
+            // 创建完整的云端数据对象
+            const cloudData = {
+                configList: configList,
+                productData: productData,
+                timestamp: new Date().toISOString()
+            };
+            
+            // 获取当前文件的SHA
+            let sha = null;
+            try {
+                sha = await getFileSha();
+            } catch (error) {
+                console.log('文件不存在，将创建新文件');
+            }
+            
+            // 发送API请求更新文件
+            const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: `自动同步配置数据 - ${new Date().toISOString()}`,
+                    content: btoa(unescape(encodeURIComponent(JSON.stringify(cloudData, null, 2)))),
+                    sha: sha // 如果文件存在，则包含sha值
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`同步失败: ${errorData.message || response.status}`);
+            }
+            
+            const result = await response.json();
+            updateSyncStatus('云端同步成功');
+            alert(`云端同步成功！\n提交SHA: ${result.commit.sha.substring(0, 7)}`);
+        } catch (error) {
+            console.error('同步到云端失败:', error);
+            updateSyncStatus('云端同步失败');
+            alert(`同步失败: ${error.message}`);
+        }
+    }
+    
+    // 同步到云端（保存当前数据到云端）
+    function syncToCloud() {
+        saveToCloud();
+    }
+    
+    // 初始化本地数据
+    function initializeLocalData() {
+        const localData = JSON.parse(localStorage.getItem(LOCAL_DATA_KEY) || '{}');
+        if(localData.configList) {
+            localStorage.setItem("list", JSON.stringify(localData.configList));
+        }
+        if(localData.productData) {
+            localStorage.setItem("productData", JSON.stringify(localData.productData));
+        }
+    }
+    
+    // 设置GitHub Token的全局函数
+    window.setGitHubToken = function(token) {
+        setGitHubToken(token);
+        alert('GitHub Token设置成功！');
+    };
+    
     // ===================== 原有功能代码 =====================
     // 初始化数据：优先从localStorage加载，无则使用默认数据
     const defaultData = {
@@ -869,19 +1036,19 @@
             {n:"阿斯加特 雷神 32G 16*2 7200 C34 黑色风道马甲",p:3149.0},
             {n:"阿斯加特 雷神 32G 16*2 6400 C30 黑色风道马甲",p:2900.0},
             {n:"阿斯加特 海拉 32G 16*2 6400 C32 钛银甲",p:3100.0},
-            {n:"阿斯加特 海拉 32G 16*2 5600 C46 钛银甲 镁光",p:2350.0},
+            {n:"阿斯加特 海拉 32G 16*2 5600 C46 钛银甲",p:2350.0},
             {n:"阿斯加特 海拉 24G 6000 C42 极夜黑",p:1509.0},
             {n:"阿斯加特 海拉 24G 6000 C42 极地白",p:1549.0},
             {n:"阿斯加特 海拉 16G 8*2 6000 C28 黑甲",p:1800.0},
             {n:"阿斯加特 海姆达尔 64G 32*2 6000 C30 黑色马甲",p:5149.0},
             {n:"阿斯加特 海姆达尔 48G 24*2 6000 C28 黑色马甲",p:3949.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6800 C32 黑色马甲",p:2900.0},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6400 C38 黑色马甲 镁光颗粒",p:2550.0},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:2500.0},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:2500.0},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6400 C38 黑色马甲 镁光",p:2550.0},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星",p:2500.0},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3000.0},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 C22 intel专用",p:1300.0},
-            {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 intel专用",p:760.0},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 Intel专用",p:1300.0},
+            {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 Intel专用",p:760.0},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6000 C36 镁光 黑/白",p:3600.0},
@@ -898,7 +1065,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -951,7 +1118,7 @@
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE ICE WIFI7 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 冰雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1043,7 +1210,7 @@
             {n:"微星 B760M MORTAR 迫击炮 D5 WIFI II",p:1010.00},
             {n:"微星 B760M GAMING WIFI D5 PLUS",p:860.00},
             {n:"微星 B760M GAMING WIFI D4 PLUS",p:830.00},
-            {n:"微星 B760M EDGE TI WIFI 刀锋 DDR5",p:1120.00},
+            {n:"微星 B760I EDGE TI WIFI 刀锋 DDR5",p:1120.00},
             {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:640.00},
             {n:"微星 B760I EDGE TI WIFI 迷你刀锋 DDR5",p:1199.00},
             {n:"微星 B650M GAMING WIFI D5 双槽",p:780.00},
@@ -1063,7 +1230,7 @@
             {n:"华硕 TUF GAMING Z790-PLUS WIFI D5",p:2050.00},
             {n:"华硕 TUF GAMING X870E-PLUS WIFI D5",p:2399.00},
             {n:"华硕 TUF GAMING X870-PLUS WIFI D5",p:2140.00},
-            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1530.00},
+            {n:"华硕 TUF B850-E WIFI D5 大板",p:1530.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1270.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1220.00},
             {n:"华硕 TUF B850M-E GAMING WIFI",p:1120.00},
@@ -1144,7 +1311,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1190,7 +1357,7 @@
             {n:"艾湃电竞 GTR750M白色 750W金牌全模组 ATX3.0 十年质保",p:600},
             {n:"艾湃电竞 GTI850黑色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:440},
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
-            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
+            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 原线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
             {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
@@ -1217,7 +1384,7 @@
             {n:"海韵 Vertex PX-2200W 旗舰白金全模组 黑色",p:3699},
             {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 黑色",p:1650},
             {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 白色",p:1799},
-            {n:"海韵 PRIME TX-1600 钛金全模组 猫头鹰联名 ATX3.0 黑色 十二年质保",p:4799},
+            {n:"海韵 PRIME TX-1600 钛金全模组 ATX3.0 黑色 十二年质保",p:4799},
             {n:"海韵 PRIME TX-1300 钛金全模组 ATX3.0 黑色 十二年质保",p:2799},
             {n:"海韵 FOCUS GX-850W 金牌全模组 ATX3.1 V4 白色",p:999},
             {n:"海韵 FOCUS GX-850W 金牌 全模组 ATX3.1 V4 黑色",p:950},
@@ -1409,7 +1576,7 @@
             {n:"三星 990 PRO 1T PCIE 4.0 读7450写6900",p:1599},
             {n:"雷克沙 雷神THOR 4T PCIE4.0 7000/6000",p:2899},
             {n:"品牌SSD 512G（到手10天质保）",p:149},
-            {n:"雷克沙 雷神THOR 2T PCIE4.0 7000/5000",p:1699},
+            {n:"雷克沙 雷神THOR 2T PCIE4.0 7000/6000",p:1699},
             {n:"雷克沙 雷神THOR 1T PCIE4.0 6500/3000",p:1030},
             {n:"雷克沙 战神ARES PRO 1T 读14000 PCIE 5.0",p:1199},
             {n:"雷克沙 战神ARES 4T 读7400 PCIE 4.0",p:3099},
@@ -1561,7 +1728,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -1926,6 +2093,9 @@
     }
 
     window.onload=()=>{
+        // 初始化本地数据
+        initializeLocalData();
+        
         let d=localStorage.getItem("last");
         if(d){
             d=JSON.parse(d);
@@ -1946,6 +2116,9 @@
         // 初始化并启动实时日期时间更新
         updateDateTime();
         setInterval(updateDateTime, 1000); // 每秒更新一次
+        
+        // 尝试从云端加载最新数据
+        loadFromCloud();
     }
 
     function save(){
@@ -2003,6 +2176,7 @@
     function reset(){
         if(!confirm("确定清空？"))return;
         localStorage.removeItem("last");
+        localStorage.removeItem("list");
         location.reload();
     }
 
@@ -2231,7 +2405,6 @@
 </script>
 </body>
 </html>
-
 
 
 
