@@ -792,8 +792,8 @@
         }
     });
 
-    // ===================== 配件数据：最新Index.html数据 =====================
-    // 初始化数据：直接使用最新的Index.html中的数据
+    // ===================== 修改后的数据加载逻辑 =====================
+    // 初始化数据：强制使用当前HTML中的最新数据，不再从localStorage加载
     const defaultData = {
         cpu: [
             {n:"i3-12100F 3.3G 四核",p:645},
@@ -880,7 +880,7 @@
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3000.0},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 C22 intel专用",p:1300.0},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 intel专用",p:1300.0},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 intel专用",p:749.0},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:3949.0},
@@ -898,7 +898,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -1192,7 +1192,7 @@
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
             {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
-            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
+            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 厯纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
             {n:"艾湃电竞 A-650 650W铜牌直出 五年质保",p:249},
             {n:"艾湃电竞 A-550 550W铜牌直出 五年质保",p:225},
@@ -1756,28 +1756,10 @@
         index: -1
     };
     
-    // 加载数据：直接使用最新Index.html的数据，不再从localStorage加载
+    // 强制加载最新数据（不从localStorage加载）
     function loadData() {
-        // 优先从localStorage加载自定义数据，然后合并到默认数据中
-        const savedData = localStorage.getItem("productData");
-        if (savedData) {
-            try {
-                const loadedData = JSON.parse(savedData);
-                // 将自定义数据合并到默认数据中
-                const mergedData = {...defaultData};
-                for(const key in loadedData) {
-                    if(mergedData.hasOwnProperty(key)) {
-                        // 合并自定义数据到对应类别
-                        mergedData[key] = [...loadedData[key], ...defaultData[key]];
-                    }
-                }
-                return mergedData;
-            } catch (e) {
-                console.error("加载本地数据失败，使用默认数据", e);
-                return defaultData;
-            }
-        }
-        return defaultData;
+        // 直接返回当前HTML中定义的defaultData
+        return JSON.parse(JSON.stringify(defaultData));
     }
 
     // 保存数据到localStorage
@@ -1785,8 +1767,10 @@
         localStorage.setItem("productData", JSON.stringify(data));
     }
 
-    // 初始化数据
+    // 初始化数据 - 使用最新的HTML数据覆盖本地存储
     const data = loadData();
+    // 强制更新本地存储的数据
+    localStorage.setItem("productData", JSON.stringify(data));
 
     // 1. 点击输入框自动触发下拉列表 - 优化版：确保下拉框样式和显示正常
     function match(key){
@@ -2238,6 +2222,7 @@
 </script>
 </body>
 </html>
+
 
 
 
