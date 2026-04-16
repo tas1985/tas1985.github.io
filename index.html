@@ -82,7 +82,6 @@
             font-weight: bold;
             cursor: pointer;
             display: none;
-            z-index: 2;
         }
         .user:hover .user-clear-btn{
             display: block;
@@ -329,21 +328,6 @@
             text-shadow: 0 0 8px rgba(0,255,0,1);
         }
 
-        /* 机箱图片样式 */
-        .case-image {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            border: 1px solid #9900ff;
-            border-radius: 4px;
-            background: #000;
-            box-shadow: 0 0 8px rgba(0,255,0,0.5);
-        }
-
         .modal{
             position:fixed;
             top:0;
@@ -532,6 +516,53 @@
             background: #330066;
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
+        
+        /* 机箱图片展示样式 */
+        .case-image-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #000;
+            border-radius: 8px;
+            border: 2px solid #9900ff;
+            box-shadow: 0 0 10px rgba(0,255,0,0.6);
+        }
+        .case-image {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            background: #333;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+        }
+        .case-image-placeholder {
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #333;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            color: #9900ff;
+            font-size: 12px;
+            text-align: center;
+        }
+        .case-image-label {
+            color: #00ff00;
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 60px;
+        }
+        .case-image-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -560,6 +591,16 @@
         <div class="datetime-display" id="datetimeDisplay"></div>
         <!-- 客户名称下拉列表 -->
         <div class="user-dropdown" id="userDropdown"></div>
+    </div>
+
+    <!-- 机箱图片展示区域 -->
+    <div class="case-image-container">
+        <div class="case-image-label">机箱图：</div>
+        <div class="case-image-wrapper">
+            <div id="caseImageContainer">
+                <div class="case-image-placeholder">请选择机箱查看图片</div>
+            </div>
+        </div>
     </div>
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
@@ -674,8 +715,6 @@
 
     <!-- 最终报价区域移到按钮栏上方 -->
     <div class="total">
-        <!-- 机箱图片显示区域 -->
-        <img id="caseImage" class="case-image" src="" alt="机箱图片" onerror="handleImageError(this)">
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
         <div class="total-line"><span>利润率：</span><span>+6.6%（÷0.934）</span></div>
         <div class="total-line total-final"><span>到手总价：</span><span id="final">0 元</span></div>
@@ -747,6 +786,34 @@
     </div>
 
 <script>
+    // 机箱图片映射表
+    const caseImageMap = {
+        "玩嘉 孤勇者MINI 白色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
+        "玩嘉 孤勇者MINI 黑色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
+        "玩嘉 孤勇者 白色 无立柱 MATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_360_W.png",
+        "玩嘉 孤勇者 PLUS 白色 ATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_PLUS_W.png",
+        "航嘉 GX760M 追梦 黑色": "https://tas1985.github.io/PNG/hangjia_GX760M_b.png",
+        "航嘉 G63 黑色": "https://tas1985.github.io/PNG/hangjia_G63.png",
+        "航嘉 G63MINI 黑色": "https://tas1985.github.io/PNG/hangjia_G63_MINI.png",
+        "联力 包豪斯 vision 白色精致版 三面侧透玻璃": "https://tas1985.github.io/PNG/lianli_baohaosi_SW.png",
+        "瓦尔基里 VK03 全景房白色 不带屏": "https://tas1985.github.io/PNG/wejl_VK03_W_N.png",
+        "爱国者 星璨岚 白色": "https://tas1985.github.io/PNG/aiguo_xingcanlan_w.png",
+        "爱国者 V60 黑 小全景房": "https://tas1985.github.io/PNG/aiguo_V60_b.png",
+        "未知玩家 X100 黑色 手提机箱": "https://tas1985.github.io/PNG/wzwj_X100_b.png",
+        "先马 风致 360 黑色": "https://tas1985.github.io/PNG/xm_fz_360_b.png",
+        "先马 风致 240 黑": "https://tas1985.github.io/PNG/xm_fz_240_b.png",
+        "乔思伯 TK1 星舰仓 白": "https://tas1985.github.io/PNG/qsb_TK1_W.png",
+        "乔思伯 D300 黑色": "https://tas1985.github.io/PNG/qsb_D300_b.png"
+    };
+
+    // 预加载机箱图片以提高响应速度
+    const preloadedImages = {};
+    Object.keys(caseImageMap).forEach(modelName => {
+        const img = new Image();
+        img.src = caseImageMap[modelName];
+        preloadedImages[modelName] = img;
+    });
+
     // ===================== 密码验证核心功能 =====================
     // 验证密码是否有效（3个月有效期）
     function checkPasswordValidity() {
@@ -897,7 +964,7 @@
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:2500.0},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3000.0},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 intel专用",p:1300.0},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲 C22 intel专用",p:1300.0},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲 intel专用",p:749.0},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:3949.0},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:3949.0},
@@ -913,9 +980,9 @@
             {n:"阿斯加特 博拉琪 32G 16*2 6000 C30 镜面黑色灯条",p:2849.0},
             {n:"阿斯加特 TUF联名RGB 32G 16*2 3200 C18 黑色灯条",p:1549.0},
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -953,7 +1020,6 @@
             {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:640},
             {n:"华硕 PRIME A520M K",p:398},
             {n:"微星 B850M GAMING PLUS WIFI6E D5白",p:1098},
-            {n:"微星 B860M GAMING PLUS WIFI",p:1120},
             {n:"微星 MAG B860M MORTAR 迫击炮 WIFI7 ",p:1149},
             {n:"微星 MAG Z890 TOMAHAWK WIFI7战斧导弹",p:1759},
             {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1390},
@@ -969,7 +1035,7 @@
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE WIFI7 ICE 小雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 冰雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1081,7 +1147,7 @@
             {n:"华硕 TUF GAMING Z790-PLUS WIFI D5",p:2050.00},
             {n:"华硕 TUF GAMING X870E-PLUS WIFI D5",p:2399.00},
             {n:"华硕 TUF GAMING X870-PLUS WIFI D5",p:2140.00},
-            {n:"华硕 TUF B850-E WIFI D5 大板",p:1530.00},
+            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1530.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1270.00},
             {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1220.00},
             {n:"华硕 TUF B850M-E GAMING WIFI",p:1120.00},
@@ -1184,7 +1250,7 @@
             {n:"鑫谷 无界M 冰山版 850W金牌全模组 ATX3.1 白色 压纹线",p:400},
             {n:"鑫谷 无界M 冰山版 750W金牌全模组 ATX3.1 白色 压纹线",p:360},
             {n:"鑫谷 无界M 850W金牌全模组 ATX3.1 黑色 压纹线",p:380},
-            {n:"鑫谷 无界M 750W金牌全模组 ATX3.1 黑色 厷纹线",p:350},
+            {n:"鑫谷 无界M 750W金牌全模组 ATX3.1 黑色 压纹线",p:350},
             {n:"鑫谷 无界M 650W 金牌全模组 黑色",p:335},
             {n:"鑫谷 无界M 1250W金牌全模组 ATX3.1 黑色 压纹线",p:540},
             {n:"鑫谷 数智DM-850G 850W 双金牌全模组数字电源 黑色 ATX3.1 十年质保",p:449},
@@ -1208,9 +1274,9 @@
             {n:"艾湃电竞 GTR750M白色 750W金牌全模组 ATX3.0 十年质保",p:600},
             {n:"艾湃电竞 GTI850黑色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:440},
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
-            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
+            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 去纹线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
-            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 厢纹线",p:370},
+            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
             {n:"艾湃电竞 A-650 650W铜牌直出 五年质保",p:249},
             {n:"艾湃电竞 A-550 550W铜牌直出 五年质保",p:225},
@@ -1235,7 +1301,7 @@
             {n:"海韵 Vertex PX-2200W 旗舰白金全模组 黑色",p:3699},
             {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 黑色",p:1650},
             {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 白色",p:1799},
-            {n:"海韵 PRIME TX-1600 钛金全模组 ATX3.0 黑色 十二年质保",p:4799},
+            {n:"海韵 PRIME TX-1600 钛金全模组 猫头鹰联名 ATX3.0 黑色 十二年质保",p:4799},
             {n:"海韵 PRIME TX-1300 钛金全模组 ATX3.0 黑色 十二年质保",p:2799},
             {n:"海韵 FOCUS GX-850W 金牌全模组 ATX3.1 V4 白色",p:999},
             {n:"海韵 FOCUS GX-850W 金牌 全模组 ATX3.1 V4 黑色",p:950},
@@ -1579,10 +1645,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
-            {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
-            {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -1861,63 +1924,6 @@
         fixAndSortData();
     }
 
-    // 机箱图片映射表 - 精确匹配特定机箱型号，其他按黑白模糊匹配
-    const caseImageMap = {
-        // 精确匹配的机箱型号
-        "玩嘉 孤勇者MINI 白色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
-        "玩嘉 孤勇者MINI 黑色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
-        "玩嘉 孤勇者 白色 无立柱 MATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_360_W.png",
-        "玩嘉 孤勇者 PLUS 白色 ATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_PLUS_W.png",
-        "航嘉 GX760M 追梦 黑色": "https://tas1985.github.io/PNG/hangjia_GX760M_b.png",
-        "航嘉 G63 黑色": "https://tas1985.github.io/PNG/hangjia_G63.png",
-        "航嘉 G63MINI 黑色": "https://tas1985.github.io/PNG/hangjia_G63_MINI.png",
-        "联力 包豪斯 vision 白色精致版 三面侧透玻璃": "https://tas1985.github.io/PNG/lianli_baohaosi_SW.png",
-        "瓦尔基里 VK03 全景房白色 不带屏": "https://tas1985.github.io/PNG/wejl_VK03_W_N.png",
-        "爱国者 星璨岚 白色": "https://tas1985.github.io/PNG/aiguo_xingcanlan_w.png",
-        "爱国者 V60 黑 小全景房": "https://tas1985.github.io/PNG/aiguo_V60_b.png",
-        "未知玩家 X100 黑色 手提机箱": "https://tas1985.github.io/PNG/wzwj_X100_b.png",
-        "先马 风致 360 黑色": "https://tas1985.github.io/PNG/xm_fz_360_b.png",
-        "先马 风致 240 黑": "https://tas1985.github.io/PNG/xm_fz_240_b.png",
-        "乔思伯 TK1 星舰仓 白": "https://tas1985.github.io/PNG/qsb_TK1_W.png",
-        "乔思伯 D300 黑色": "https://tas1985.github.io/PNG/qsb_D300_b.png",
-        // 模糊匹配黑白机箱的通用图片
-        "_white_generic": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png", // 通用白色机箱图片
-        "_black_generic": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",  // 通用黑色机箱图片
-        "_default": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png"       // 默认机箱图片
-    };
-
-    // 显示机箱图片 - 改进逻辑：优先精确匹配，然后模糊匹配
-    function showCaseImage(caseName) {
-        const imgElement = document.getElementById('caseImage');
-        
-        // 1. 首先检查是否有精确匹配的名称
-        if (caseImageMap[caseName]) {
-            imgElement.src = caseImageMap[caseName];
-            return;
-        }
-        
-        // 2. 如果没有精确匹配，尝试模糊匹配（根据黑白特征）
-        let matchedImage = null;
-        if (caseName.includes('白')) {
-            matchedImage = caseImageMap['_white_generic'];
-        } else if (caseName.includes('黑')) {
-            matchedImage = caseImageMap['_black_generic'];
-        }
-        
-        if (matchedImage) {
-            imgElement.src = matchedImage;
-        } else {
-            // 3. 如果都没有匹配，使用默认图片
-            imgElement.src = caseImageMap['_default'];
-        }
-    }
-
-    // 图片加载失败时的处理
-    function handleImageError(img) {
-        // 创建一个简单的SVG作为占位符
-        img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><rect width="60" height="60" fill="%23000"/><text x="30" y="35" font-family="Arial" font-size="10" fill="%2300ff00" text-anchor="middle">无图片</text></svg>';
-    }
-
     // 1. 点击输入框自动触发下拉列表 - 优化版：确保下拉框样式和显示正常
     function match(key){
         let val=document.getElementById(key).value.toLowerCase();
@@ -1949,9 +1955,9 @@
                 calc();
                 saveNow();
                 
-                // 如果是机箱，显示对应的图片
+                // 如果是机箱，更新图片
                 if(key === 'case') {
-                    showCaseImage(i.n);
+                    updateCaseImage(i.n);
                 }
             });
             
@@ -1985,6 +1991,34 @@
         box.style.zIndex = 100;
         box.style.position = "absolute";
         box.style.width = document.getElementById(key).offsetWidth + "px";
+    }
+
+    // 更新机箱图片
+    function updateCaseImage(caseName) {
+        const container = document.getElementById('caseImageContainer');
+        const imageUrl = caseImageMap[caseName];
+        
+        if(imageUrl) {
+            // 创建新的图片元素
+            const img = new Image();
+            img.src = imageUrl;
+            img.alt = caseName;
+            img.className = 'case-image';
+            
+            // 图片加载完成后替换容器内容
+            img.onload = function() {
+                container.innerHTML = '';
+                container.appendChild(img);
+            };
+            
+            // 错误处理
+            img.onerror = function() {
+                container.innerHTML = '<div class="case-image-placeholder">图片加载失败</div>';
+            };
+        } else {
+            // 如果没有匹配的图片，显示占位符
+            container.innerHTML = '<div class="case-image-placeholder">暂无图片</div>';
+        }
     }
 
     // 删除下拉列表中的配件项
@@ -2082,10 +2116,10 @@
             }
             calc();
             
-            // 如果有选择机箱，加载对应的图片
+            // 如果选择了机箱，加载对应的图片
             const selectedCase = document.getElementById("case").value;
-            if (selectedCase) {
-                showCaseImage(selectedCase);
+            if(selectedCase) {
+                updateCaseImage(selectedCase);
             }
         }
         // 初始化客户名称下拉列表
@@ -2129,6 +2163,7 @@
         let list=JSON.parse(localStorage.getItem("list"))||[];
         let d=list[idx];
         document.getElementById("user").value=d.name;
+        // 加载other字段
         ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
             document.getElementById(k).value=d[k]||"";
             document.getElementById(k+"-p").value=d[k+"p"]||"";
@@ -2142,10 +2177,10 @@
         closeModal('loadModal');
         alert("加载成功");
         
-        // 如果有选择机箱，加载对应的图片
+        // 加载机箱图片
         const selectedCase = document.getElementById("case").value;
-        if (selectedCase) {
-            showCaseImage(selectedCase);
+        if(selectedCase) {
+            updateCaseImage(selectedCase);
         }
     }
 
@@ -2195,6 +2230,11 @@
                 // 更新价格
                 data[type][targetIndex].p = parseFloat(price);
                 updateCount++;
+                
+                // 如果是机箱，检查是否是当前选中的型号，如果是则更新图片
+                if(type === 'case' && document.getElementById('case').value === name) {
+                    updateCaseImage(name);
+                }
             } else {
                 notFoundList.push(`${typeName}: ${name} (型号未找到)`);
             }
@@ -2296,6 +2336,11 @@
         saveNow(); // 保存当前状态
         // 隐藏下拉框（如果显示的话）
         document.getElementById(key + "-drop").style.display = "none";
+        
+        // 如果是机箱，清空图片
+        if(key === 'case') {
+            updateCaseImage('');
+        }
     }
 
     // ========== 客户名称下拉列表功能 ==========
@@ -2338,13 +2383,14 @@
             }
             calc();
             saveNow();
-            alert(`成功加载【${name}】的配置单`);
             
-            // 如果有选择机箱，加载对应的图片
+            // 加载机箱图片
             const selectedCase = document.getElementById("case").value;
-            if (selectedCase) {
-                showCaseImage(selectedCase);
+            if(selectedCase) {
+                updateCaseImage(selectedCase);
             }
+            
+            alert(`成功加载【${name}】的配置单`);
         } else {
             alert(`未找到【${name}】的配置单`);
         }
@@ -2392,15 +2438,15 @@
             document.getElementById(k+"-p").value = "";
         });
         document.getElementById("remark").value = "包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价。视频验货直播装机，主要配件包装盒一起发货（主板、显卡、内存、固态等）";
-        // 清空机箱图片
-        document.getElementById('caseImage').src = '';
         calc(); // 重新计算总价
         saveNow(); // 保存当前状态
+        
+        // 清空机箱图片
+        updateCaseImage('');
     }
 </script>
 </body>
 </html>
-
 
 
 
