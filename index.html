@@ -969,7 +969,7 @@
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE WIFI7 ICE 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 小雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1184,7 +1184,7 @@
             {n:"鑫谷 无界M 冰山版 850W金牌全模组 ATX3.1 白色 压纹线",p:400},
             {n:"鑫谷 无界M 冰山版 750W金牌全模组 ATX3.1 白色 压纹线",p:360},
             {n:"鑫谷 无界M 850W金牌全模组 ATX3.1 黑色 压纹线",p:380},
-            {n:"鑫谷 无界M 750W金牌全模组 ATX3.1 黑色 压纹线",p:350},
+            {n:"鑫谷 无界M 750W金牌全模组 ATX3.1 黑色 厷纹线",p:350},
             {n:"鑫谷 无界M 650W 金牌全模组 黑色",p:335},
             {n:"鑫谷 无界M 1250W金牌全模组 ATX3.1 黑色 压纹线",p:540},
             {n:"鑫谷 数智DM-850G 850W 双金牌全模组数字电源 黑色 ATX3.1 十年质保",p:449},
@@ -1863,38 +1863,29 @@
 
     // 修改后的机箱图片映射表
     const caseImageMap = {
-        "白色海景房": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_白色_无立柱.png",
-        "黑色海景房": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_黑色_无立柱.png",
-        "幻境侧透": "https://tas1985.github.io/PNG/爱国者_V60_黑_小全景房.png",
-        "航嘉 G63": "https://tas1985.github.io/PNG/航嘉_G63_黑色.png",
-        "锐龙 360M 大海景房": "https://tas1985.github.io/PNG/玩嘉_孤勇者_白色_无立柱_MATX主板.png",
-        "智界V1": "https://tas1985.github.io/PNG/航嘉_G63MINI_黑色.png",
-        "未知玩家 X100手提机箱": "https://tas1985.github.io/PNG/未知玩家_X100_黑色_手提机箱.png",
-        "航嘉 GX760M 追梦 ": "https://tas1985.github.io/PNG/航嘉_GX760M_追梦_黑色.png",
-        "先马 风致360": "https://tas1985.github.io/PNG/先马_风致_360_黑色.png",
-        "瓦尔基里 VK03 全景房黑色 不带屏": "https://tas1985.github.io/PNG/瓦尔基里_VK03_全景房白色_不带屏.png",
-        "先马 风致240": "https://tas1985.github.io/PNG/先马_风致_240_黑.png",
-        "爱国者 星璨岚 黑/白": "https://tas1985.github.io/PNG/爱国者_星璨岚_白色.png",
-        "乔思伯 TK1 星舰仓": "https://tas1985.github.io/PNG/乔思伯_TK1_星舰仓_白.png",
+        "玩嘉 孤勇者MINI 白色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
+        "玩嘉 孤勇者MINI 黑色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
+        "玩嘉 孤勇者 白色 无立柱 MATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_360_W.png",
+        "玩嘉 孤勇者 PLUS 白色 ATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_PLUS_W.png",
+        "航嘉 GX760M 追梦 黑色": "https://tas1985.github.io/PNG/hangjia_GX760M_b.png",
+        "航嘉 G63 黑色": "https://tas1985.github.io/PNG/hangjia_G63.png",
+        "航嘉 G63MINI 黑色": "https://tas1985.github.io/PNG/hangjia_G63_MINI.png",
+        "联力 包豪斯 vision 白色精致版 三面侧透玻璃": "https://tas1985.github.io/PNG/lianli_baohaosi_SW.png",
+        "瓦尔基里 VK03 全景房白色 不带屏": "https://tas1985.github.io/PNG/wejl_VK03_W_N.png",
+        "爱国者 星璨岚 白色": "https://tas1985.github.io/PNG/aiguo_xingcanlan_w.png",
+        "爱国者 V60 黑 小全景房": "https://tas1985.github.io/PNG/aiguo_V60_b.png",
+        "未知玩家 X100 黑色 手提机箱": "https://tas1985.github.io/PNG/wzwj_X100_b.png",
+        "先马 风致 360 黑色": "https://tas1985.github.io/PNG/xm_fz_360_b.png",
+        "先马 风致 240 黑": "https://tas1985.github.io/PNG/xm_fz_240_b.png",
+        "乔思伯 TK1 星舰仓 白": "https://tas1985.github.io/PNG/qsb_TK1_W.png",
+        "乔思伯 D300 黑色": "https://tas1985.github.io/PNG/qsb_D300_b.png",
         // 其他机箱根据黑白特征匹配
-        "白色": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_白色_无立柱.png",
-        "黑色": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_黑色_无立柱.png",
-        "白": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_白色_无立柱.png",
-        "黑": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_黑色_无立柱.png",
-        // 为所有其他机箱提供默认匹配
-        "玩嘉 孤勇者MINI 白色 无立柱": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_白色_无立柱.png",
-        "玩嘉 孤勇者MINI 黑色 无立柱": "https://tas1985.github.io/PNG/玩嘉_孤勇者MINI_黑色_无立柱.png",
-        "爱国者 V60 黑 小全景房": "https://tas1985.github.io/PNG/爱国者_V60_黑_小全景房.png",
-        "航嘉 G63 黑色": "https://tas1985.github.io/PNG/航嘉_G63_黑色.png",
-        "玩嘉 孤勇者 白色 无立柱 MATX主板": "https://tas1985.github.io/PNG/玩嘉_孤勇者_白色_无立柱_MATX主板.png",
-        "航嘉 G63MINI 黑色": "https://tas1985.github.io/PNG/航嘉_G63MINI_黑色.png",
-        "未知玩家 X100 黑色 手提机箱": "https://tas1985.github.io/PNG/未知玩家_X100_黑色_手提机箱.png",
-        "航嘉 GX760M 追梦 黑色": "https://tas1985.github.io/PNG/航嘉_GX760M_追梦_黑色.png",
-        "先马 风致 360 黑色": "https://tas1985.github.io/PNG/先马_风致_360_黑色.png",
-        "瓦尔基里 VK03 全景房白色 不带屏": "https://tas1985.github.io/PNG/瓦尔基里_VK03_全景房白色_不带屏.png",
-        "先马 风致 240 黑": "https://tas1985.github.io/PNG/先马_风致_240_黑.png",
-        "爱国者 星璨岚 白色": "https://tas1985.github.io/PNG/爱国者_星璨岚_白色.png",
-        "乔思伯 TK1 星舰仓 白": "https://tas1985.github.io/PNG/乔思伯_TK1_星舰仓_白.png"
+        "白色": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
+        "黑色": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
+        "白": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
+        "黑": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
+        // 默认图片
+        "默认": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png"
     };
 
     // 显示机箱图片
@@ -1917,7 +1908,7 @@
                 imgElement.src = matchedImage;
             } else {
                 // 如果都没有匹配，使用默认图片
-                imgElement.src = caseImageMap['玩嘉 孤勇者MINI 黑色 无立柱'];
+                imgElement.src = caseImageMap['默认'];
             }
         }
     }
@@ -2410,6 +2401,7 @@
 </script>
 </body>
 </html>
+
 
 
 
