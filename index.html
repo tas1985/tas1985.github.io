@@ -1210,7 +1210,7 @@
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
             {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
-            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
+            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 厢纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
             {n:"艾湃电竞 A-650 650W铜牌直出 五年质保",p:249},
             {n:"艾湃电竞 A-550 550W铜牌直出 五年质保",p:225},
@@ -1861,8 +1861,9 @@
         fixAndSortData();
     }
 
-    // 修改后的机箱图片映射表
+    // 机箱图片映射表 - 精确匹配特定机箱型号，其他按黑白模糊匹配
     const caseImageMap = {
+        // 精确匹配的机箱型号
         "玩嘉 孤勇者MINI 白色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
         "玩嘉 孤勇者MINI 黑色 无立柱": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
         "玩嘉 孤勇者 白色 无立柱 MATX主板": "https://tas1985.github.io/PNG/wanjia_gyz_360_W.png",
@@ -1879,37 +1880,35 @@
         "先马 风致 240 黑": "https://tas1985.github.io/PNG/xm_fz_240_b.png",
         "乔思伯 TK1 星舰仓 白": "https://tas1985.github.io/PNG/qsb_TK1_W.png",
         "乔思伯 D300 黑色": "https://tas1985.github.io/PNG/qsb_D300_b.png",
-        // 其他机箱根据黑白特征匹配
-        "白色": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
-        "黑色": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
-        "白": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
-        "黑": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
-        // 默认图片
-        "默认": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png"
+        // 模糊匹配黑白机箱的通用图片
+        "_white_generic": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png", // 通用白色机箱图片
+        "_black_generic": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",  // 通用黑色机箱图片
+        "_default": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png"       // 默认机箱图片
     };
 
-    // 显示机箱图片
+    // 显示机箱图片 - 改进逻辑：优先精确匹配，然后模糊匹配
     function showCaseImage(caseName) {
         const imgElement = document.getElementById('caseImage');
         
-        // 检查是否有精确匹配的名称
+        // 1. 首先检查是否有精确匹配的名称
         if (caseImageMap[caseName]) {
             imgElement.src = caseImageMap[caseName];
+            return;
+        }
+        
+        // 2. 如果没有精确匹配，尝试模糊匹配（根据黑白特征）
+        let matchedImage = null;
+        if (caseName.includes('白')) {
+            matchedImage = caseImageMap['_white_generic'];
+        } else if (caseName.includes('黑')) {
+            matchedImage = caseImageMap['_black_generic'];
+        }
+        
+        if (matchedImage) {
+            imgElement.src = matchedImage;
         } else {
-            // 尝试模糊匹配（根据黑白特征）
-            let matchedImage = null;
-            if (caseName.includes('白')) {
-                matchedImage = caseImageMap['白色'] || caseImageMap['白'];
-            } else if (caseName.includes('黑')) {
-                matchedImage = caseImageMap['黑色'] || caseImageMap['黑'];
-            }
-            
-            if (matchedImage) {
-                imgElement.src = matchedImage;
-            } else {
-                // 如果都没有匹配，使用默认图片
-                imgElement.src = caseImageMap['默认'];
-            }
+            // 3. 如果都没有匹配，使用默认图片
+            imgElement.src = caseImageMap['_default'];
         }
     }
 
