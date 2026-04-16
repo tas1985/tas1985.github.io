@@ -1879,40 +1879,14 @@
         "先马 风致 240 黑": "https://tas1985.github.io/PNG/xm_fz_240_b.png",
         "乔思伯 TK1 星舰仓 白": "https://tas1985.github.io/PNG/qsb_TK1_W.png",
         "乔思伯 D300 黑色": "https://tas1985.github.io/PNG/qsb_D300_b.png",
-        // 特定的机箱型号（这些不会按黑白特征匹配）
-        "白色海景房": "https://tas1985.github.io/PNG/bai_se_hai_jing_fang.png",
-        "黑色海景房": "https://tas1985.github.io/PNG/hei_se_hai_jing_fang.png",
-        "幻境侧透": "https://tas1985.github.io/PNG/huan_jing_ce_tou.png",
-        "航嘉 G63": "https://tas1985.github.io/PNG/hangjia_G63.png",
-        "锐龙 360M 大海景房": "https://tas1985.github.io/PNG/ruilong_da_hai_jing_fang.png",
-        "智界V1": "https://tas1985.github.io/PNG/zhijie_V1.png",
-        "未知玩家 X100手提机箱": "https://tas1985.github.io/PNG/wzwj_X100_b.png",
-        "航嘉 GX760M 追梦 ": "https://tas1985.github.io/PNG/hangjia_GX760M_b.png",
-        "先马 风致360": "https://tas1985.github.io/PNG/xm_fz_360_b.png",
-        "先马 风致240": "https://tas1985.github.io/PNG/xm_fz_240_b.png",
-        "瓦尔基里 VK03 全景房黑色 不带屏": "https://tas1985.github.io/PNG/wejl_VK03_B_N.png",
-        "爱国者 星璨岚 黑/白": "https://tas1985.github.io/PNG/aiguo_xingcanlan_b_w.png",
-        "乔思伯 TK1 星舰仓": "https://tas1985.github.io/PNG/qsb_TK1_B.png",
+        // 其他机箱根据黑白特征匹配
+        "白色": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
+        "黑色": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
+        "白": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_W.png",
+        "黑": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png",
         // 默认图片
         "默认": "https://tas1985.github.io/PNG/wanjia_gyz_MINI_b.png"
     };
-
-    // 定义特殊处理的机箱型号列表
-    const specialCaseNames = [
-        "白色海景房",
-        "黑色海景房",
-        "幻境侧透",
-        "航嘉 G63",
-        "锐龙 360M 大海景房",
-        "智界V1",
-        "未知玩家 X100手提机箱",
-        "航嘉 GX760M 追梦 ",
-        "先马 风致360",
-        "先马 风致240",
-        "瓦尔基里 VK03 全景房黑色 不带屏",
-        "爱国者 星璨岚 黑/白",
-        "乔思伯 TK1 星舰仓"
-    ];
 
     // 显示机箱图片
     function showCaseImage(caseName) {
@@ -1922,25 +1896,19 @@
         if (caseImageMap[caseName]) {
             imgElement.src = caseImageMap[caseName];
         } else {
-            // 检查是否在特殊处理列表中
-            if (specialCaseNames.includes(caseName)) {
-                // 特殊处理的机箱不按黑白特征匹配，使用默认图片
-                imgElement.src = caseImageMap['默认'];
+            // 尝试模糊匹配（根据黑白特征）
+            let matchedImage = null;
+            if (caseName.includes('白')) {
+                matchedImage = caseImageMap['白色'] || caseImageMap['白'];
+            } else if (caseName.includes('黑')) {
+                matchedImage = caseImageMap['黑色'] || caseImageMap['黑'];
+            }
+            
+            if (matchedImage) {
+                imgElement.src = matchedImage;
             } else {
-                // 尝试模糊匹配（根据黑白特征）
-                let matchedImage = null;
-                if (caseName.includes('白')) {
-                    matchedImage = caseImageMap['白色'] || caseImageMap['白'];
-                } else if (caseName.includes('黑')) {
-                    matchedImage = caseImageMap['黑色'] || caseImageMap['黑'];
-                }
-                
-                if (matchedImage) {
-                    imgElement.src = matchedImage;
-                } else {
-                    // 如果都没有匹配，使用默认图片
-                    imgElement.src = caseImageMap['默认'];
-                }
+                // 如果都没有匹配，使用默认图片
+                imgElement.src = caseImageMap['默认'];
             }
         }
     }
@@ -2433,6 +2401,7 @@
 </script>
 </body>
 </html>
+
 
 
 
