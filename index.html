@@ -294,8 +294,9 @@
             text-align:right;
             border: 3px solid #9900ff; /* 外层紫色边框 */
             position: relative;
-            overflow: hidden;
+            overflow: visible; /* 修改为visible，允许机箱图片显示在边界外 */
             box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #9900ff;
+            min-height: 240px; /* 增加最小高度以容纳机箱图片 */
         }
         .total::before {
             content: '';
@@ -517,12 +518,11 @@
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
         }
         
-        /* 机箱图片容器样式 */
+        /* 机箱图片容器样式 - 调整位置到总价区域内上方 */
         .case-image-container {
             position: absolute;
             left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: 10px; /* 调整到总价区域上方 */
             width: 198px;
             height: 198px;
             background: #000;
@@ -927,7 +927,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -975,12 +975,12 @@
             {n:"微星 B850M GAMING WIFI ",p:898},
             {n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},
             {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1399.00},
-            {n:"技嘉 Z890M A ELITE WIFI7 ICE 冰雕",p:1399.00},
+            {n:"技嘉 Z890M A ELITE WIFI7 ICE 白色冰雕",p:1399.00},
             {n:"技嘉 Z890 UD WIFI6E DDR5",p:1250.00},
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE ICE WIFI7 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 冰雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1072,7 +1072,7 @@
             {n:"微星 B760M MORTAR 迫击炮 D5 WIFI II",p:1010.00},
             {n:"微星 B760M GAMING WIFI D5 PLUS",p:860.00},
             {n:"微星 B760M GAMING WIFI D4 PLUS",p:830.00},
-            {n:"微星 B760M EDGE TI WIFI 刀锋 DDR5",p:1120.00},
+            {n:"微星 B760I EDGE TI WIFI 刀锋 DDR5",p:1120.00},
             {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:640.00},
             {n:"微星 B760I EDGE TI WIFI 迷你刀锋 DDR5",p:1199.00},
             {n:"微星 B650M GAMING WIFI D5 双槽",p:780.00},
@@ -1173,7 +1173,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1221,7 +1221,7 @@
             {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
             {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
             {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
-            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
+            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 厯纹线",p:370},
             {n:"艾湃电竞 A-650 650W铜牌直出白色 五年质保",p:269},
             {n:"艾湃电竞 A-650 650W铜牌直出 五年质保",p:249},
             {n:"艾湃电竞 A-550 550W铜牌直出 五年质保",p:225},
@@ -1590,7 +1590,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -2443,6 +2443,7 @@
 </script>
 </body>
 </html>
+
 
 
 
