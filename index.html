@@ -868,14 +868,31 @@
 
     // 验证密码是否有效（3个月有效期）
     function checkPasswordValidity() {
-        const passwordRecord = JSON.parse(localStorage.getItem('passwordAuth')) || {};
-        const { expireTime, isValid, machineCode } = passwordRecord;
-        
-        // 验证是否已授权且在有效期内
-        if (isValid && expireTime && new Date().getTime() < expireTime) {
-            return true;
+        try {
+            const passwordRecord = JSON.parse(localStorage.getItem('passwordAuth')) || {};
+            const { expireTime, isValid, machineCode } = passwordRecord;
+            
+            // 严格验证：确保所有字段都存在且有效
+            if (isValid === true && typeof expireTime === 'number' && new Date().getTime() < expireTime && machineCode) {
+                // 额外验证：确保机器码与当前设备匹配
+                const currentMachineCode = generateMachineCode();
+                const storedMachinePrefix = machineCode.substring(0, 8);
+                const currentMachinePrefix = currentMachineCode.substring(0, 8);
+                
+                // 验证机器码前缀是否匹配（前8位）
+                return storedMachinePrefix === currentMachinePrefix;
+            }
+        } catch (error) {
+            // 如果localStorage操作失败，返回false
+            console.error('localStorage error:', error);
         }
         return false;
+    }
+
+    // 检查是否在微信浏览器中
+    function isWeChatBrowser() {
+        const ua = navigator.userAgent.toLowerCase();
+        return ua.includes('micromessenger');
     }
 
     // 显示密码弹窗
@@ -907,12 +924,16 @@
             const threeMonthsLater = now + 3 * 30 * 24 * 60 * 60 * 1000;
             
             // 保存授权信息到本地存储
-            localStorage.setItem('passwordAuth', JSON.stringify({
-                isValid: true,
-                expireTime: threeMonthsLater,
-                authTime: now,
-                machineCode: machineCode
-            }));
+            try {
+                localStorage.setItem('passwordAuth', JSON.stringify({
+                    isValid: true,
+                    expireTime: threeMonthsLater,
+                    authTime: now,
+                    machineCode: machineCode
+                }));
+            } catch (error) {
+                console.error('localStorage error:', error);
+            }
             
             hidePasswordModal();
             alert('解锁成功！当前设备3个月内无需重复验证');
@@ -925,7 +946,8 @@
 
     // 页面加载时验证密码状态
     window.addEventListener('DOMContentLoaded', function() {
-        if (!checkPasswordValidity()) {
+        // 在微信浏览器中强制验证（因为微信浏览器的localStorage可能不可靠）
+        if (isWeChatBrowser() || !checkPasswordValidity()) {
             showPasswordModal();
         }
     });
@@ -1036,7 +1058,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -1084,12 +1106,12 @@
             {n:"微星 B850M GAMING WIFI ",p:898},
             {n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},
             {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1399.00},
-            {n:"技嘉 Z890M A ELITE WIFI7 ICE 冰雕",p:1399.00},
+            {n:"技嘉 Z890M A ELITE WIFI7 ICE 白色冰雕",p:1399.00},
             {n:"技嘉 Z890 UD WIFI6E DDR5",p:1250.00},
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE ICE WIFI7 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 小雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1181,7 +1203,7 @@
             {n:"微星 B760M MORTAR 迫击炮 D5 WIFI II",p:1010.00},
             {n:"微星 B760M GAMING WIFI D5 PLUS",p:860.00},
             {n:"微星 B760M GAMING WIFI D4 PLUS",p:830.00},
-            {n:"微星 B760M EDGE TI WIFI 刀锋 DDR5",p:1120.00},
+            {n:"微星 B760I EDGE TI WIFI 刀锋 DDR5",p:1120.00},
             {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:640.00},
             {n:"微星 B760I EDGE TI WIFI 迷你刀锋 DDR5",p:1199.00},
             {n:"微星 B650M GAMING WIFI D5 双槽",p:780.00},
@@ -1282,7 +1304,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1699,7 +1721,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
