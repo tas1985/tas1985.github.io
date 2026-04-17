@@ -586,14 +586,10 @@
 <!-- 密码验证弹窗（默认隐藏，验证不通过时显示） -->
 <div id="passwordModal" class="password-modal" style="display: none;">
     <div class="password-box">
-        <h3>请输入序列号</h3>
-        <p>需使用算号器生成序列号</p>
-        <p class="tips">输入正确序列号后，当前设备3个月内无需重复验证</p>
-        <div class="machine-code" style="margin: 15px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
-            <span style="font-weight: bold;">机器码：</span>
-            <span id="machineCodeDisplay" style="font-family: monospace; font-size: 14px; word-break: break-all;"></span>
-        </div>
-        <input type="text" id="passwordInput" placeholder="请输入序列号 (格式：XXXX-XXXX-XXXX-XXXX)">
+        <h3>请输入解锁密钥</h3>
+        <p>需联系作者微信58508218获取密钥</p>
+        <p class="tips">输入正确密钥后，当前设备3个月内无需重复验证</p>
+        <input type="password" id="passwordInput" placeholder="请输入密钥">
         <button onclick="checkPassword()">解锁</button>
     </div>
 </div>
@@ -816,63 +812,10 @@
 
 <script>
     // ===================== 密码验证核心功能 =====================
-    // 生成机器码（基于浏览器信息和当前时间）
-    function generateMachineCode() {
-        // 获取浏览器信息
-        const userAgent = navigator.userAgent;
-        const platform = navigator.platform;
-        const language = navigator.language;
-        
-        // 获取当前时间的年月（用于生成不同时间的机器码）
-        const now = new Date();
-        const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-        
-        // 生成机器码（简单的哈希算法）
-        const combined = userAgent + platform + language + yearMonth;
-        let hash = 0;
-        for (let i = 0; i < combined.length; i++) {
-            const char = combined.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        
-        // 转换为16进制并取前16位
-        const machineCode = Math.abs(hash).toString(16).padStart(16, '0').slice(0, 16).toUpperCase();
-        return machineCode;
-    }
-
-    // 验证序列号是否有效
-    function validateSerialNumber(serialNumber, machineCode) {
-        // 序列号验证算法
-        // 序列号格式：XXXX-XXXX-XXXX-XXXX
-        const serialParts = serialNumber.split('-');
-        if (serialParts.length !== 4) return false;
-        
-        // 重新组合序列号
-        const serialCombined = serialParts.join('').toUpperCase();
-        if (serialCombined.length !== 16) return false;
-        
-        // 简单的验证算法：序列号的每个字符的ASCII码之和应该等于机器码每个字符的ASCII码之和
-        let serialSum = 0;
-        let machineSum = 0;
-        
-        for (let i = 0; i < 16; i++) {
-            serialSum += serialCombined.charCodeAt(i);
-            machineSum += machineCode.charCodeAt(i);
-        }
-        
-        // 验证条件：和相等，且序列号包含月份信息
-        const now = new Date();
-        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-        const currentYearLastTwo = String(now.getFullYear()).slice(2);
-        
-        return serialSum === machineSum && serialCombined.includes(currentMonth) && serialCombined.includes(currentYearLastTwo);
-    }
-
     // 验证密码是否有效（3个月有效期）
     function checkPasswordValidity() {
         const passwordRecord = JSON.parse(localStorage.getItem('passwordAuth')) || {};
-        const { expireTime, isValid, machineCode } = passwordRecord;
+        const { expireTime, isValid } = passwordRecord;
         
         // 验证是否已授权且在有效期内
         if (isValid && expireTime && new Date().getTime() < expireTime) {
@@ -883,8 +826,6 @@
 
     // 显示密码弹窗
     function showPasswordModal() {
-        const machineCode = generateMachineCode();
-        document.getElementById('machineCodeDisplay').textContent = machineCode;
         document.getElementById('passwordModal').style.display = 'flex';
         // 禁用页面交互
         document.body.style.overflow = 'hidden';
@@ -902,10 +843,10 @@
     // 验证密码
     function checkPassword() {
         const inputPassword = document.getElementById('passwordInput').value;
-        const machineCode = generateMachineCode();
+        const correctPassword = '19851226'; // 正确密码
         
-        if (validateSerialNumber(inputPassword, machineCode)) {
-            // 计算3个月后的时间戳
+        if (inputPassword === correctPassword) {
+            // 计算3个月后的时间戳（按每月30天计算，实际可根据需求调整）
             const now = new Date().getTime();
             const threeMonthsLater = now + 3 * 30 * 24 * 60 * 60 * 1000;
             
@@ -913,14 +854,13 @@
             localStorage.setItem('passwordAuth', JSON.stringify({
                 isValid: true,
                 expireTime: threeMonthsLater,
-                authTime: now,
-                machineCode: machineCode
+                authTime: now
             }));
             
             hidePasswordModal();
             alert('解锁成功！当前设备3个月内无需重复验证');
         } else {
-            alert('序列号错误，请使用算号器生成正确的序列号');
+            alert('密钥错误，请联系作者获取正确密钥');
             document.getElementById('passwordInput').value = '';
             document.getElementById('passwordInput').focus();
         }
