@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>序列号算号器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: monospace;
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        .result h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .serial-number {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #0066cc;
+            word-break: break-all;
+        }
+        
+        .copy-button {
+            background-color: #0066cc;
+            margin-top: 10px;
+        }
+        
+        .copy-button:hover {
+            background-color: #0052a3;
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #2196F3;
+            border-radius: 5px;
+        }
+        
+        .info p {
+            margin: 5px 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>序列号算号器</h1>
+        
+        <div class="form-group">
+            <label for="machineCode">输入机器码：</label>
+            <textarea id="machineCode" placeholder="请输入从主程序获取的机器码"></textarea>
+        </div>
+        
+        <button onclick="generateSerial()">生成序列号</button>
+        
+        <div class="result" id="result" style="display: none;">
+            <h2>生成的序列号</h2>
+            <div class="serial-number" id="serialNumber"></div>
+            <button class="copy-button" onclick="copySerial()">复制序列号</button>
+        </div>
+        
+        <div class="info">
+            <p><strong>使用说明：</strong></p>
+            <p>1. 从主程序获取机器码</p>
+            <p>2. 将机器码粘贴到上方文本框</p>
+            <p>3. 点击"生成序列号"按钮</p>
+            <p>4. 复制生成的序列号到主程序</p>
+            <p>5. 序列号有效期为3个月</p>
+        </div>
+    </div>
+    
+    <script>
+        // 生成序列号
+        function generateSerial() {
+            const machineCode = document.getElementById('machineCode').value.trim();
+            
+            if (!machineCode) {
+                alert('请输入机器码');
+                return;
+            }
+            
+            // 验证机器码格式
+            if (machineCode.length !== 16) {
+                alert('机器码格式错误，长度应为16位');
+                return;
+            }
+            
+            // 生成序列号
+            const serialNumber = createSerialFromMachineCode(machineCode);
+            
+            // 显示结果
+            document.getElementById('serialNumber').textContent = serialNumber;
+            document.getElementById('result').style.display = 'block';
+        }
+        
+        // 根据机器码生成序列号
+        function createSerialFromMachineCode(machineCode) {
+            // 获取当前时间信息
+            const now = new Date();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentYearLastTwo = String(now.getFullYear()).slice(2);
+
+            // 取机器码的前8位
+            const machinePrefix = machineCode.substring(0, 8);
+
+            // 生成序列号：前8位机器码前缀 + 当前月份 + 当前年份后2位 + 4位随机字符
+            let serial = machinePrefix + currentMonth + currentYearLastTwo;
+
+            // 添加4位随机字符（A-Z）
+            const randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < 4; i++) {
+                serial += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
+            }
+
+            // 格式化为 XXXX-XXXX-XXXX-XXXX
+            const formattedSerial = serial.match(/.{4}/g).join('-').toUpperCase();
+
+            return formattedSerial;
+        }
+        
+        // 复制序列号
+        function copySerial() {
+            const serialNumber = document.getElementById('serialNumber').textContent;
+            navigator.clipboard.writeText(serialNumber).then(() => {
+                alert('序列号已复制到剪贴板');
+            }).catch(err => {
+                alert('复制失败，请手动复制');
+                console.error('复制失败:', err);
+            });
+        }
+    </script>
+</body>
+</html>
