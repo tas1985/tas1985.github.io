@@ -533,10 +533,17 @@
         }
         
         /* 机箱图片容器样式 - 调整位置到总价区域内上方 */
-        .case-image-container {
+        .product-images-container {
             position: absolute;
             left: 10px;
-            top: 10px; /* 调整到总价区域上方 */
+            top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 2;
+        }
+
+        .case-image-container {
             width: 128px;
             height: 128px;
             background: #000;
@@ -546,10 +553,28 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            z-index: 2;
         }
-        
-        .case-image {
+
+        .cooler-image-container {
+            width: 128px;
+            height: 128px;
+            background: #000;
+            border: 2px solid #00ff00;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .image-separator {
+            font-size: 32px;
+            color: #9900ff;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(153,0,255,0.8);
+        }
+
+        .case-image, .cooler-image {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
@@ -697,10 +722,22 @@
 
     <!-- 最终报价区域移到按钮栏上方 -->
     <div class="total">
-        <!-- 新增：机箱图片容器 -->
-        <div class="case-image-container" id="caseImageContainer">
-            <img src="" alt="机箱图片" class="case-image" id="caseImage">
-            <div id="caseImagePlaceholder" style="color: #00ff00; text-align: center;">请选择机箱<br>查看图片</div>
+        <!-- 新增：产品和散热器图片容器 -->
+        <div class="product-images-container">
+            <!-- 机箱图片容器 -->
+            <div class="case-image-container" id="caseImageContainer">
+                <img src="" alt="机箱图片" class="case-image" id="caseImage">
+                <div id="caseImagePlaceholder" style="color: #00ff00; text-align: center;">请选择机箱<br>查看图片</div>
+            </div>
+
+            <!-- 分隔符 -->
+            <div class="image-separator">+</div>
+
+            <!-- 散热器图片容器 -->
+            <div class="cooler-image-container" id="coolerImageContainer">
+                <img src="" alt="散热器图片" class="cooler-image" id="coolerImage">
+                <div id="coolerImagePlaceholder" style="color: #00ff00; text-align: center;">请选择散热器<br>查看图片</div>
+            </div>
         </div>
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
         <div class="total-line"><span>利润率：</span><span>+6.6%（÷0.934）</span></div>
@@ -1800,6 +1837,20 @@
         '乔思伯 D300 黑色': 'qsb_D300_b'
     };
 
+    // 散热器图片映射表
+    const coolerImageMap = {
+        '创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕': 'ckxx_360se_w',
+        '酷里奥A60双塔六热管': 'kla_a60_b',
+        '利民 雷神之锤 一体式水冷 3.5寸屏幕': 'lm_lszc_w',
+        '乔思伯_CR1000 MAX ARGB 六热管': 'qsb_cr1000_w',
+        '乔思伯_CR3000 EVO ARGB 双塔六热管': 'qsb_cr3000_b',
+        '乔思伯TH360  ARGB 千层镜风扇 冷头数显': 'qsb_th360_b',
+        '钛钽SJ-A080 360一体式水冷 六年质保': 'tait_a080_b',
+        '钛钽SJ-A090 360一体式水冷 六年质保': 'tait_a090_b',
+        '瓦尔基里 A360 VK 一体式水冷散热器': 'wrjl_a360_w',
+        '瓦尔基里B360GT-ARGB VK带屏幕': 'wrjl_b360gt_w'
+    };
+
     // 图片缓存对象
     const imageCache = {};
 
@@ -1809,6 +1860,11 @@
             const img = new Image();
             img.src = `./PNG/${imageName}.png`;
             imageCache[imageName] = img;
+        }
+        for (const [coolertName, imageName] of Object.entries(coolerImageMap)) {
+            const img = new Image();
+            img.src = `./PNG_SR/${imageName}.png`;
+            imageCache['cooler_' + imageName] = img;
         }
     }
 
@@ -1847,6 +1903,41 @@
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
             placeholder.innerHTML = '请选择机箱<br>查看图片';
+        }
+    }
+
+    // 显示散热器图片
+    function showCoolerImage(coolerName) {
+        const imageElement = document.getElementById('coolerImage');
+        const placeholder = document.getElementById('coolerImagePlaceholder');
+
+        if (coolerName && coolerImageMap[coolerName]) {
+            const imageName = coolerImageMap[coolerName];
+            const cacheKey = 'cooler_' + imageName;
+
+            if (imageCache[cacheKey]) {
+                imageElement.src = imageCache[cacheKey].src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+            } else {
+                const img = new Image();
+                img.onload = function() {
+                    imageElement.src = img.src;
+                    imageElement.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    imageCache[cacheKey] = img;
+                };
+                img.onerror = function() {
+                    imageElement.style.display = 'none';
+                    placeholder.style.display = 'block';
+                    placeholder.innerHTML = '图片<br>未找到';
+                };
+                img.src = `./PNG_SR/${imageName}.png`;
+            }
+        } else {
+            imageElement.style.display = 'none';
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = '请选择散热器<br>查看图片';
         }
     }
 
@@ -2112,10 +2203,15 @@
                 box.style.display = "none";
                 calc();
                 saveNow();
-                
+
                 // 如果是机箱，显示对应的图片
                 if(key === 'case') {
                     showCaseImage(i.n);
+                }
+
+                // 如果是散热器，显示对应的图片
+                if(key === 'cooler') {
+                    showCoolerImage(i.n);
                 }
             });
             
@@ -2312,6 +2408,12 @@
             if(selectedCase) {
                 showCaseImage(selectedCase);
             }
+
+            // 如果选择了散热器，显示对应的图片
+            const selectedCooler = document.getElementById("cooler").value;
+            if(selectedCooler) {
+                showCoolerImage(selectedCooler);
+            }
         }
         // 初始化客户名称下拉列表
         initUserDropdown();
@@ -2371,7 +2473,12 @@
         if(d.case) {
             showCaseImage(d.case);
         }
-        
+
+        // 如果加载了散热器，显示对应的图片
+        if(d.cooler) {
+            showCoolerImage(d.cooler);
+        }
+
         saveNow();
         closeModal('loadModal');
         alert("加载成功");
@@ -2524,10 +2631,15 @@
         saveNow(); // 保存当前状态
         // 隐藏下拉框（如果显示的话）
         document.getElementById(key + "-drop").style.display = "none";
-        
+
         // 如果是机箱，清空图片
         if(key === 'case') {
             showCaseImage(null);
+        }
+
+        // 如果是散热器，清空图片
+        if(key === 'cooler') {
+            showCoolerImage(null);
         }
     }
 
@@ -2576,7 +2688,12 @@
             if(config.case) {
                 showCaseImage(config.case);
             }
-            
+
+            // 如果加载了散热器，显示对应的图片
+            if(config.cooler) {
+                showCoolerImage(config.cooler);
+            }
+
             alert(`成功加载【${name}】的配置单`);
         } else {
             alert(`未找到【${name}】的配置单`);
@@ -2627,9 +2744,12 @@
         document.getElementById("remark").value = "包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价。视频验货直播装机，主要配件包装盒一起发货（主板、显卡、内存、固态等）";
         calc(); // 重新计算总价
         saveNow(); // 保存当前状态
-        
+
         // 清空机箱图片
         showCaseImage(null);
+
+        // 清空散热器图片
+        showCoolerImage(null);
     }
 </script>
 </body>
