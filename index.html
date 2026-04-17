@@ -329,6 +329,20 @@
             text-shadow: 0 0 8px rgba(0,255,0,1);
         }
 
+        /* 鲁大师跑分样式 */
+        .ludashi-score{
+            font-size: 18px;
+            font-weight:bold;
+            color: #ff9900; /* 橙色文字，突出显示 */
+            margin: 8px 0 0 0;
+            padding:0;
+            border:none;
+            display:block !important;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 6px rgba(255,153,0,0.8);
+        }
+
         .modal{
             position:fixed;
             top:0;
@@ -691,6 +705,7 @@
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
         <div class="total-line"><span>利润率：</span><span>+6.6%（÷0.934）</span></div>
         <div class="total-line total-final"><span>到手总价：</span><span id="final">0 元</span></div>
+        <div class="total-line ludashi-score"><span>鲁大师跑分：</span><span id="ludashiScore">0 分</span></div>
     </div>
 
     <div class="btn-bar">
@@ -927,7 +942,7 @@
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:2900.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1449.0},
             {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1549.0},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1400.0},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑橙甲",p:1400.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:900.0},
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:800.0},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:2350.00},
@@ -975,12 +990,12 @@
             {n:"微星 B850M GAMING WIFI ",p:898},
             {n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},
             {n:"技嘉 Z890M AORUS ELITE WIFI7 小雕",p:1399.00},
-            {n:"技嘉 Z890M A ELITE WIFI7 ICE 冰雕",p:1399.00},
+            {n:"技嘉 Z890M A ELITE WIFI7 ICE 白色冰雕",p:1399.00},
             {n:"技嘉 Z890 UD WIFI6E DDR5",p:1250.00},
             {n:"技嘉 Z890 UD DDR5",p:1150.00},
             {n:"技嘉 Z890 GAMING X WIFI7 魔鹰X",p:1550.00},
             {n:"技嘉 Z890 A ELITE WIFI7 小雕",p:1900.00},
-            {n:"技嘉 Z890 A ELITE ICE WIFI7 冰雕",p:1900.00},
+            {n:"技嘉 Z890 A ELITE WIFI7 ICE 小雕",p:1900.00},
             {n:"技嘉 Z790M AORUS ELITE D5 小雕",p:1190.00},
             {n:"技嘉 Z790M AORUS ELITE AX D5 小雕AX WIFI6",p:1290.00},
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1290.00},
@@ -1072,7 +1087,7 @@
             {n:"微星 B760M MORTAR 迫击炮 D5 WIFI II",p:1010.00},
             {n:"微星 B760M GAMING WIFI D5 PLUS",p:860.00},
             {n:"微星 B760M GAMING WIFI D4 PLUS",p:830.00},
-            {n:"微星 B760M EDGE TI WIFI 刀锋 DDR5",p:1120.00},
+            {n:"微星 B760I EDGE TI WIFI 刀锋 DDR5",p:1120.00},
             {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:640.00},
             {n:"微星 B760I EDGE TI WIFI 迷你刀锋 DDR5",p:1199.00},
             {n:"微星 B650M GAMING WIFI D5 双槽",p:780.00},
@@ -1173,7 +1188,7 @@
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
             {n:"骨伽 ST300 额定300W",p:100},
-            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
+            {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线",p:650},
             {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
             {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:289},
             {n:"长城 P7 750W 白牌直出 黑色",p:279},
@@ -1590,7 +1605,7 @@
             {n:"玩嘉 阿尔法S1 手提机箱黑色 可装240",p:165},
             {n:"玩嘉 阿尔法S1 手提机箱白色 可装240",p:175},
             {n:"玩嘉 绝尘玩家 黑色",p:120},
-            {n:"玩嘉 绝尘玩家 高达版",p:120},
+            {n:"玩嘉 阿尔法S1 手提机箱高达版",p:120},
             {n:"玩嘉 玄武PRO 黑色 270°海景房",p:125},
             {n:"玩嘉 玄武PRO 白色 270°海景房",p:135},
             {n:"玩嘉 无限玩家 黑色",p:100},
@@ -1884,6 +1899,129 @@
     // 强制更新本地存储的数据
     localStorage.setItem("productData", JSON.stringify(data));
 
+    // 鲁大师跑分字典
+    const ludashiScores = {
+        cpu: {
+            "i3-12100F": 65000,
+            "i3-12100": 66000,
+            "i5-12400F": 85000,
+            "i5-12400": 86000,
+            "i5-12490F": 88000,
+            "i5-12600KF": 110000,
+            "i7-12700KF": 145000,
+            "i9-12900KF": 185000,
+            "i9-12900K": 190000,
+            "i3-13100F": 68000,
+            "i3-13100": 69000,
+            "i5-13400F": 95000,
+            "i5-13400": 96000,
+            "i5-13600KF": 125000,
+            "i5-13600K": 128000,
+            "i7-13700KF": 155000,
+            "i9-13900KF": 195000,
+            "i9-13900K": 200000,
+            "i3-14100F": 72000,
+            "i3-14100": 73000,
+            "i5-14400F": 98000,
+            "i5-14400": 99000,
+            "i5-14490F": 102000,
+            "i5-14600KF": 135000,
+            "i5-14600K": 138000,
+            "i7-14700KF": 165000,
+            "i9-14900KF": 210000,
+            "i9-14900K": 215000,
+            "Ultra 5 225F": 80000,
+            "Ultra 5 225": 82000,
+            "Ultra 5 230F": 85000,
+            "Ultra 5 230": 87000,
+            "Ultra 5 245KF": 120000,
+            "Ultra 5 245K": 123000,
+            "Ultra 7 265KF": 150000,
+            "Ultra 7 265K": 155000,
+            "Ultra 9 285K": 205000,
+            "Ultra 7 270K": 195000,
+            "R5-5500X3D": 115000,
+            "R5-5500": 60000,
+            "R5-5600": 75000,
+            "R5-5600X": 80000,
+            "R5-5600GT": 82000,
+            "R7-5700X": 95000,
+            "R5-7500F": 90000,
+            "R7-7800X3D": 160000,
+            "R5-9500F": 92000,
+            "R5-9600X": 100000,
+            "R7-9700X": 130000,
+            "R9-9900X": 175000,
+            "R9-9950X": 220000,
+            "R7-9800X3D": 190000,
+            "R7-9850X3D": 200000,
+            "R9-9950X3D": 230000,
+            "E5-2666V3": 45000
+        },
+        vga: {
+            "RTX5090": 650000,
+            "RTX5080": 520000,
+            "RTX5070TI": 420000,
+            "RTX5070": 350000,
+            "RTX5060TI": 280000,
+            "RTX5060": 230000,
+            "RTX5050": 180000,
+            "RTX4090": 600000,
+            "RTX4080": 480000,
+            "RTX4070": 320000,
+            "RTX4060TI": 260000,
+            "RTX4060": 210000,
+            "RTX3050": 140000,
+            "RTX3060": 190000,
+            "RTX3070": 280000,
+            "RTX3080": 380000,
+            "RTX3090": 500000,
+            "RX9070XT": 450000,
+            "RX9070GRE": 350000,
+            "RX9060XT": 300000,
+            "RX7650GRE": 250000,
+            "RX7600": 200000,
+            "RX7500": 180000,
+            "Arc B580": 220000,
+            "Arc A750": 180000,
+            "Arc A380": 120000,
+            "GTX1660S": 110000,
+            "GTX1660": 100000,
+            "GTX1650": 80000,
+            "GTX1060": 70000,
+            "GT730": 30000,
+            "GT610": 20000
+        },
+        ram: {
+            "3200": 40000,
+            "3600": 50000,
+            "5600": 60000,
+            "6000": 70000,
+            "6400": 75000,
+            "6800": 80000,
+            "7200": 85000,
+            "8000": 95000,
+            "DDR3": 20000,
+            "DDR4": 35000,
+            "DDR5": 65000
+        },
+        ssd: {
+            "7050": 80000,
+            "7250": 85000,
+            "7400": 90000,
+            "7000": 88000,
+            "7200": 87000,
+            "6700": 82000,
+            "6800": 83000,
+            "6300": 75000,
+            "6000": 70000,
+            "5000": 60000,
+            "PCIE 4.0": 80000,
+            "PCIE 3.0": 50000,
+            "PCIE 5.0": 100000
+        }
+    };
+
     // 显卡常用型号排序功能 - 在数据初始化后立即执行
     function sortPopularVgaModels() {
         const vgaList = data.vga;
@@ -2073,6 +2211,67 @@
         // 修改：最终报价四舍五入为整数，去掉小数点
         const finalPrice = Math.round(sum / 0.934);
         document.getElementById("final").innerText=`${finalPrice} 元`;
+        
+        // 计算鲁大师跑分
+        calculateLudashiScore();
+    }
+
+    // 计算鲁大师跑分
+    function calculateLudashiScore() {
+        let totalScore = 0;
+        
+        // CPU跑分 - 精确匹配型号
+        const cpuValue = document.getElementById("cpu").value;
+        if (cpuValue) {
+            for (let cpuModel in ludashiScores.cpu) {
+                if (cpuValue.includes(cpuModel)) {
+                    totalScore += ludashiScores.cpu[cpuModel];
+                    break;
+                }
+            }
+        }
+        
+        // 显卡跑分 - 匹配英文数字型号
+        const vgaValue = document.getElementById("vga").value;
+        if (vgaValue) {
+            for (let vgaModel in ludashiScores.vga) {
+                if (vgaValue.includes(vgaModel)) {
+                    totalScore += ludashiScores.vga[vgaModel];
+                    break;
+                }
+            }
+        }
+        
+        // 内存跑分 - 匹配频率
+        const ramValue = document.getElementById("ram").value;
+        if (ramValue) {
+            for (let ramFreq in ludashiScores.ram) {
+                if (ramValue.includes(ramFreq)) {
+                    totalScore += ludashiScores.ram[ramFreq];
+                    break;
+                }
+            }
+        }
+        
+        // 固态硬盘跑分 - 匹配速度
+        const ssdValue = document.getElementById("ssd").value;
+        if (ssdValue) {
+            for (let ssdSpeed in ludashiScores.ssd) {
+                if (ssdValue.includes(ssdSpeed)) {
+                    totalScore += ludashiScores.ssd[ssdSpeed];
+                    break;
+                }
+            }
+        }
+        
+        // 机械硬盘跑分 - 固定分数
+        const hddValue = document.getElementById("hdd").value;
+        if (hddValue && hddValue.trim() !== "") {
+            totalScore += 30000; // 机械硬盘固定30000分
+        }
+        
+        // 显示鲁大师跑分
+        document.getElementById("ludashiScore").innerText = `${totalScore.toLocaleString()} 分`;
     }
 
     function saveNow(){
