@@ -14,8 +14,8 @@ CASE_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%9C%BA%E7%AE%B1"
 # 新增电源URL配置
 POWER_SOURCE_URL = "http://0532.name/cpu_list?category=%E7%94%B5%E6%BA%90"
 HTML_FILE = "index.html"
-START_LINE = 760
-END_LINE = 816
+START_LINE = 958
+END_LINE = 1014
 MATCH_THRESHOLD = 60
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
