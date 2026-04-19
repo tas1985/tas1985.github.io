@@ -1937,12 +1937,12 @@
     function preloadImages() {
         for (const [caseName, imageName] of Object.entries(caseImageMap)) {
             const img = new Image();
-            img.src = `https://tas1985.github.io/PNG_SR/${imageName}.png`;
+            img.src = `./PNG/${imageName}.png`;
             imageCache[imageName] = img;
         }
         for (const [coolertName, imageName] of Object.entries(coolerImageMap)) {
             const img = new Image();
-            img.src = `https://tas1985.github.io/PNG_SR/${imageName}.png`;
+            img.src = `./PNG/${imageName}.png`;
             imageCache['cooler_' + imageName] = img;
         }
     }
@@ -1976,7 +1976,7 @@
                     placeholder.style.display = 'block';
                     placeholder.innerHTML = '图片<br>未找到';
                 };
-                img.src = `https://tas1985.github.io/PNG_SR/${imageName}.png`;
+                img.src = `./PNG/${imageName}.png`;
             }
         } else {
             imageElement.style.display = 'none';
