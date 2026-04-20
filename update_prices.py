@@ -13,6 +13,8 @@ SSD_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%9B%BA%E6%80%81%E7%9B%98
 CASE_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%9C%BA%E7%AE%B1"
 # 新增电源URL配置
 POWER_SOURCE_URL = "http://0532.name/cpu_list?category=%E7%94%B5%E6%BA%90"
+# 新增散热器URL配置
+COOLER_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%95%A3%E7%83%AD%E5%99%A8"
 HTML_FILE = "index.html"
 START_LINE = 958
 END_LINE = 1014
@@ -38,6 +40,10 @@ CASE_INDENT = "            "  # 12个空格
 POWER_TARGET_LINE = '{n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:750},'
 POWER_EXCLUDE_LIST = ["玄武", "Tt"]
 POWER_INDENT = "            "  # 12个空格
+# 新增散热器配置
+COOLER_TARGET_LINE = '{n:"创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕",p:1549},'
+COOLER_BRANDS = ["钛钽", "瓦尔基里", "华硕", "利民", "九州风神", "乔思伯"]
+COOLER_INDENT = "            "  # 12个空格
 INDENT = "            "
 SSD_APPEND_INDENT = "            "
 
@@ -211,6 +217,23 @@ def fetch_power_prices():
         print(f"❌ 电源数据爬取失败：{e}")
         return []
 
+# 新增散热器爬取函数
+def fetch_cooler_prices():
+    try:
+        res = requests.get(COOLER_SOURCE_URL, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        cooler_list = []
+        # 提取散热器名称和价格，只包含指定品牌
+        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+            # 只包含指定品牌的散热器
+            if any(brand in n for brand in COOLER_BRANDS):
+                # 价格转为整数，保持格式统一
+                cooler_list.append({"name": n.strip(), "price": int(float(p))})
+        return cooler_list
+    except Exception as e:
+        print(f"❌ 散热器数据爬取失败：{e}")
+        return []
+
 # -------------------------- 生成格式函数 --------------------------
 def generate_gpu_content(gpu_list):
     return "".join([f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list])
@@ -228,6 +251,10 @@ def generate_case_content(case_list):
 # 新增电源内容生成函数
 def generate_power_content(power_list):
     return "".join([f'{POWER_INDENT}{{n:"{p["name"]}",p:{p["price"]}}},\n' for p in power_list])
+
+# 新增散热器内容生成函数
+def generate_cooler_content(cooler_list):
+    return "".join([f'{COOLER_INDENT}{{n:"{c["name"]}",p:{c["price"]}}},\n' for c in cooler_list])
 
 def find_ssd_target_position(lines, target_line):
     """查找SSD目标位置"""
@@ -608,6 +635,32 @@ def update_power_accurate():
     except Exception as e:
         print(f"❌ 电源更新失败：{e}")
 
+# 新增散热器自动更新函数
+def update_cooler_accurate():
+    try:
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        # 找到目标行（创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕）
+        idx = next((i for i, l in enumerate(lines) if COOLER_TARGET_LINE in l), -1)
+        if idx == -1:
+            print(f"❌ 未找到散热器目标行：{COOLER_TARGET_LINE}")
+            return
+        # 目标行的下一行开始插入
+        pos = idx + 1
+        # 先删除原有散热器数据（避免重复）
+        while pos < len(lines) and lines[pos].startswith(COOLER_INDENT) and '{n:"' in lines[pos]:
+            del lines[pos]
+        # 插入新的散热器数据
+        cooler_content = generate_cooler_content(fetch_cooler_prices())
+        if cooler_content:
+            lines.insert(pos, cooler_content)
+        # 写入文件
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+        print("✅ 散热器价格自动更新完成")
+    except Exception as e:
+        print(f"❌ 散热器更新失败：{e}")
+
 # -------------------------- CPU 加价逻辑 --------------------------
 def fuzzy_match_price(name, price_dict):
     if not price_dict:
@@ -641,4 +694,6 @@ if __name__ == "__main__":
     update_case_accurate()
     # 新增执行电源更新
     update_power_accurate()
+    # 新增执行散热器更新
+    update_cooler_accurate()
     print("===== 全部执行完成 =====")
