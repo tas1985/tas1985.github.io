@@ -588,24 +588,62 @@ def update_case_accurate():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        # 找到目标行（乔思伯 TK1 星舰仓）
+        # 爬取机箱数据，创建型号到价格的映射
+        case_list = fetch_case_prices()
+        case_map = {}
+        for case in case_list:
+            name = case["name"]
+            # 使用完整名称作为键
+            case_map[name] = case["price"]
+            # 提取型号部分作为键，提高匹配成功率
+            # 尝试提取品牌后的型号部分
+            parts = name.split(" ")
+            if len(parts) > 1:
+                # 尝试不同的型号提取方式
+                for i in range(1, len(parts)):
+                    model = " ".join(parts[i:])
+                    case_map[model] = case["price"]
+        
+        # 找到机箱区域的开始位置
         idx = next((i for i, l in enumerate(lines) if CASE_TARGET_LINE in l), -1)
         if idx == -1:
             print("❌ 未找到机箱目标行：{n:\"乔思伯 TK1 星舰仓\",p:499},")
             return
-        # 目标行的下一行开始插入
+        
+        # 从目标行的下一行开始，查找机箱数据行
         pos = idx + 1
-        # 先删除原有机箱数据（避免重复）
+        updated = 0
+        
+        # 遍历机箱数据行
         while pos < len(lines) and lines[pos].startswith(CASE_INDENT) and '{n:"' in lines[pos]:
-            del lines[pos]
-        # 插入新的机箱数据
-        case_content = generate_case_content(fetch_case_prices())
-        if case_content:
-            lines.insert(pos, case_content)
+            line = lines[pos]
+            # 提取机箱名称
+            match = re.search(r'{n:"([^"]+)"', line)
+            if match:
+                name = match.group(1)
+                # 尝试匹配型号
+                matched = False
+                # 首先尝试完整名称匹配
+                if name in case_map:
+                    new_price = case_map[name]
+                    lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    updated += 1
+                    matched = True
+                else:
+                    # 尝试型号关键字匹配
+                    for model in case_map:
+                        if model in name:
+                            new_price = case_map[model]
+                            lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            updated += 1
+                            matched = True
+                            break
+            pos += 1
+        
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print("✅ 机箱价格自动更新完成")
+        print(f"✅ 机箱价格自动更新完成，共更新 {updated} 个型号")
     except Exception as e:
         print(f"❌ 机箱更新失败：{e}")
 
@@ -640,24 +678,62 @@ def update_cooler_accurate():
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        # 找到目标行（创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕）
+        # 爬取散热器数据，创建型号到价格的映射
+        cooler_list = fetch_cooler_prices()
+        cooler_map = {}
+        for cooler in cooler_list:
+            # 提取型号关键字，用于匹配
+            name = cooler["name"]
+            # 移除品牌名称，只保留型号部分
+            for brand in COOLER_BRANDS:
+                if brand in name:
+                    model = name.replace(brand, "").strip()
+                    # 创建映射，使用型号关键字作为键
+                    cooler_map[model] = cooler["price"]
+                    # 同时使用完整名称作为键，提高匹配成功率
+                    cooler_map[name] = cooler["price"]
+                    break
+        
+        # 找到散热器区域的开始位置
         idx = next((i for i, l in enumerate(lines) if COOLER_TARGET_LINE in l), -1)
         if idx == -1:
             print(f"❌ 未找到散热器目标行：{COOLER_TARGET_LINE}")
             return
-        # 目标行的下一行开始插入
+        
+        # 从目标行的下一行开始，查找散热器数据行
         pos = idx + 1
-        # 先删除原有散热器数据（避免重复）
+        updated = 0
+        
+        # 遍历散热器数据行
         while pos < len(lines) and lines[pos].startswith(COOLER_INDENT) and '{n:"' in lines[pos]:
-            del lines[pos]
-        # 插入新的散热器数据
-        cooler_content = generate_cooler_content(fetch_cooler_prices())
-        if cooler_content:
-            lines.insert(pos, cooler_content)
+            line = lines[pos]
+            # 提取散热器名称
+            match = re.search(r'{n:"([^"]+)"', line)
+            if match:
+                name = match.group(1)
+                # 尝试匹配型号
+                matched = False
+                # 首先尝试完整名称匹配
+                if name in cooler_map:
+                    new_price = cooler_map[name]
+                    lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    updated += 1
+                    matched = True
+                else:
+                    # 尝试型号关键字匹配
+                    for model in cooler_map:
+                        if model in name:
+                            new_price = cooler_map[model]
+                            lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            updated += 1
+                            matched = True
+                            break
+            pos += 1
+        
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print("✅ 散热器价格自动更新完成")
+        print(f"✅ 散热器价格自动更新完成，共更新 {updated} 个型号")
     except Exception as e:
         print(f"❌ 散热器更新失败：{e}")
 
