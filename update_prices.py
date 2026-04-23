@@ -665,6 +665,15 @@ def update_cooler_accurate():
 def fuzzy_match_price(name, price_dict):
     if not price_dict:
         return None
+    
+    # 特殊处理i5-14490F
+    if "i5-14490F" in name or "i5 14490F" in name:
+        # 查找i5-14400F的价格
+        for key in price_dict:
+            if "i514400" in key:
+                p = float(price_dict[key])
+                return str(int(p + 225))
+    
     model = extract_hardware_model(name)
     best, score = process.extractOne(model, price_dict.keys())
     if score < MATCH_THRESHOLD:
