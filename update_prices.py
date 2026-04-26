@@ -326,7 +326,17 @@ def update_ssd_prices():
 
             if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in line:
                 if nv7400_1t_price > 0:
-                    lines[i] = re.sub(r'p:\d+', f'p:{nv7400_1t_price}', line)
+                    # 价格按更新后再减去90
+                    final_price = nv7400_1t_price - 90
+                    lines[i] = re.sub(r'p:\d+', f'p:{final_price}', line)
+                    updated += 1
+                    continue
+
+            if "佰维 NV7400 2T TLC颗粒 读速7400MB/s" in line:
+                if nv7400_2t_price > 0:
+                    # 价格按更新后再减去300
+                    final_price = nv7400_2t_price - 300
+                    lines[i] = re.sub(r'p:\d+', f'p:{final_price}', line)
                     updated += 1
                     continue
 
@@ -334,7 +344,13 @@ def update_ssd_prices():
                 if ssd_name in line:
                     key = extract_ssd_exact_key(ssd_name)
                     if key in ssd_map:
-                        lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
+                        # 检查是否是需要特殊处理的型号
+                        if ssd_name == "佰维 NV7400 2T TLC颗粒 读速7400MB/s" and nv7400_2t_price > 0:
+                            # 价格按更新后再减去300
+                            final_price = nv7400_2t_price - 300
+                            lines[i] = re.sub(r'p:\d+', f'p:{final_price}', line)
+                        else:
+                            lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
                         updated += 1
                     break
 
@@ -372,9 +388,15 @@ def update_ssd_prices():
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
+        # 计算调整后的价格
+        adjusted_2t_price = nv7400_2t_price - 300 if nv7400_2t_price > 0 else 0
+        adjusted_1t_price = nv7400_1t_price - 90 if nv7400_1t_price > 0 else 0
+        
         print(f"✅ 固态硬盘更新完成")
-        print(f"🧮 佰维 NV7400 2T 价格 = {nv7400_2t_price}")
-        print(f"🧮 佰维 NV7400 1T 价格 = {nv7400_1t_price} (2T × 0.53)")
+        print(f"🧮 佰维 NV7400 2T 原始价格 = {nv7400_2t_price}")
+        print(f"🧮 佰维 NV7400 2T 调整后价格 = {adjusted_2t_price} (-300)")
+        print(f"🧮 佰维 NV7400 1T 原始价格 = {nv7400_1t_price} (2T × 0.53)")
+        print(f"🧮 佰维 NV7400 1T 调整后价格 = {adjusted_1t_price} (-90)")
         print(f"🧮 更新了 {updated} 个已知SSD价格")
         print(f"🧮 添加了 {len(new_ssd_lines)} 个新SSD型号")
         return updated
