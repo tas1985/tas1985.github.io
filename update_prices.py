@@ -594,18 +594,21 @@ def update_exist_ram_prices():
                 if not special_handled:
                     print(f"  ⚠ 未找到金百达 银爵 32G 16x2 6000 D5 C30，跳过更新")
                     special_handled = True
-            elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
-                print(f"  🔍 查找: 宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB")
+            if "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
+                print(f"  🔍 查找: 宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB 黑/白")
+                found = False
                 for ram_item in ram_list:
                     item_name = ram_item['name']
                     if "宏碁掠夺者" in item_name and "冰刃" in item_name and "6000" in item_name and "C28" in item_name:
                         final_price = float(ram_item['price'])
                         special_handled = True
+                        found = True
                         print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
                         break
-                if not special_handled:
+                if not found:
                     print(f"  ⚠ 未找到宏碁掠夺者 冰刃 6000 C28，跳过更新")
                     special_handled = True
+                continue
 
             if not special_handled:
                 target_brand, target_series, target_cas, target_capacity, target_freq = extract_ram_four_key(ram_name)
