@@ -515,11 +515,13 @@ def update_fixed_gpu_prices():
 def extract_ram_four_key(name):
     brand_pattern = r"(金百达|宏碁掠夺者|阿斯加特|芝奇|海盗船|金士顿|威刚|三星|科赋|光威|英睿达|十铨|宇瞻|影驰|海力士|镁光)"
     series_pattern = r"(银爵|星刃|女武神|皇家戟|复仇者|铂胜|Ballistix|Trident|Vengeance|FURY|XPG|DDR4|DDR5|马甲条|灯条)"
+    cas_pattern = r"(C\d+)"
     brand = re.search(brand_pattern, name).group() if re.search(brand_pattern, name) else ""
     series = re.search(series_pattern, name).group() if re.search(series_pattern, name) else ""
+    cas = re.search(cas_pattern, name).group() if re.search(cas_pattern, name) else ""
     capacity = re.search(r"\d+G", name).group() if re.search(r"\d+G", name) else ""
     freq = re.search(r"\d{4,5}", name).group() if re.search(r"\d{4,5}", name) else ""
-    return brand, series, capacity, freq
+    return brand, series, cas, capacity, freq
 
 def update_exist_ram_prices():
     try:
@@ -555,47 +557,45 @@ def update_exist_ram_prices():
                 continue
             
             ram_name = match.group(1)
-            target_brand, target_series, target_capacity, target_freq = extract_ram_four_key(ram_name)
-            
+            target_brand, target_series, target_cas, target_capacity, target_freq = extract_ram_four_key(ram_name)
+
             matched_price = None
             best_score = 0
-            
+
             for ram_item in ram_list:
-                source_brand, source_series, source_capacity, source_freq = ram_item['key']
+                source_brand, source_series, source_cas, source_capacity, source_freq = ram_item['key']
                 price = ram_item['price']
-                
+
                 score = 0
                 if target_brand and source_brand and target_brand == source_brand:
-                    score += 25
+                    score += 20
                 if target_series and source_series and target_series == source_series:
-                    score += 25
+                    score += 20
+                if target_cas and source_cas and target_cas == source_cas:
+                    score += 20
                 if target_capacity and source_capacity and target_capacity == source_capacity:
-                    score += 25
+                    score += 20
                 if target_freq and source_freq and target_freq == source_freq:
-                    score += 25
-                
+                    score += 20
+
                 if score > best_score:
                     best_score = score
                     matched_price = price
-            
-            if matched_price is not None and best_score >= 50:
+
+            if matched_price is not None and best_score >= 60:
                 base_price = float(matched_price)
                 final_price = base_price
-                
+
                 if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
                     final_price = base_price + 150
                 elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                     final_price = jbd_32g_3200_final * 2.6
-                elif "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
+                elif "金百达" in ram_name and "银爵" in ram_name and "6000" in ram_name and "16*2" in ram_name:
                     for ram_item in ram_list:
-                        if "阿斯加特 海姆达尔" in ram_item['name'] and "6400" in ram_item['name'] and "镁光颗粒" in ram_item['name']:
+                        if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "6000" in ram_item['name'] and target_cas in ram_item['name']:
                             final_price = float(ram_item['price'])
-                            jbd_32g_6000_final = final_price
-                            break
-                elif "金百达_银爵 32G 6000(16*2)套装 c36" in ram_name:
-                    for ram_item in ram_list:
-                        if "阿斯加特 海姆达尔" in ram_item['name'] and "6000" in ram_item['name'] and "三星颗粒" in ram_item['name']:
-                            final_price = float(ram_item['price'])
+                            if target_cas == "C30":
+                                jbd_32g_6000_final = final_price
                             break
                 elif "金百达_银爵 32G 3200(16*2)套装" in ram_name:
                     jbd_32g_3200_final = base_price
@@ -615,7 +615,7 @@ def update_exist_ram_prices():
                 cnt += 1
                 print(f"  ✓ 匹配成功 [{best_score}分]: {ram_name} -> 价格 {int(final_price)}")
             else:
-                print(f"  ✗ 未匹配到: {ram_name} (品牌:{target_brand}, 系列:{target_series}, 容量:{target_capacity}, 频率:{target_freq})")
+                print(f"  ✗ 未匹配到: {ram_name} (品牌:{target_brand}, 系列:{target_series}, 时序:{target_cas}, 容量:{target_capacity}, 频率:{target_freq})")
         
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
@@ -633,11 +633,11 @@ def fetch_raw_ram_prices_with_details():
         soup = BeautifulSoup(res.text, "html.parser")
         ram_list = []
         for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            brand, series, capacity, freq = extract_ram_four_key(name)
-            if brand or series or capacity or freq:
+            brand, series, cas, capacity, freq = extract_ram_four_key(name)
+            if brand or series or cas or capacity or freq:
                 ram_list.append({
                     'name': name,
-                    'key': (brand, series, capacity, freq),
+                    'key': (brand, series, cas, capacity, freq),
                     'price': price
                 })
         return ram_list
