@@ -586,26 +586,33 @@ def update_exist_ram_prices():
                 base_price = float(matched_price)
                 final_price = base_price
 
-                if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
+                if "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
+                    for ram_item in ram_list:
+                        if "金百达 银爵 32G 16x2 6000 D5 C30" in ram_item['name']:
+                            final_price = float(ram_item['price'])
+                            jbd_32g_6000_final = final_price
+                            break
+                elif "金百达_银爵 32G 6000(16*2)套装 c36" in ram_name:
+                    for ram_item in ram_list:
+                        if "金百达 银爵 32G 16x2 6000 D5 C36 长鑫" in ram_item['name']:
+                            final_price = float(ram_item['price'])
+                            break
+                elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
+                    for ram_item in ram_list:
+                        if "金百达 银爵 32G 16x2 6000 D5 C30" in ram_item['name']:
+                            final_price = float(ram_item['price']) / 2
+                            break
+                elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
+                    for ram_item in ram_list:
+                        if "宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB" in ram_item['name']:
+                            final_price = float(ram_item['price'])
+                            break
+                elif "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
                     final_price = base_price + 150
                 elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                     final_price = jbd_32g_3200_final * 2.6
-                elif "金百达" in ram_name and "银爵" in ram_name and "6000" in ram_name and "16*2" in ram_name:
-                    for ram_item in ram_list:
-                        if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "6000" in ram_item['name'] and target_cas in ram_item['name']:
-                            final_price = float(ram_item['price'])
-                            if target_cas == "C30":
-                                jbd_32g_6000_final = final_price
-                            break
                 elif "金百达_银爵 32G 3200(16*2)套装" in ram_name:
                     jbd_32g_3200_final = base_price
-                elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
-                    final_price = jbd_32g_6000_final * 0.55
-                elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
-                    for ram_item in ram_list:
-                        if "宏碁掠夺者" in ram_item['name'] and "冰刃" in ram_item['name'] and "6000" in ram_item['name'] and "C28" in ram_item['name']:
-                            final_price = float(ram_item['price'])
-                            break
                 elif "宏碁掠夺者" in ram_name:
                     final_price = base_price + 300
                 elif "阿斯加特" in ram_name and "女武神" not in ram_name:
