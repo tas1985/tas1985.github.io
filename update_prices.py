@@ -546,83 +546,98 @@ def update_exist_ram_prices():
         cnt = 0
         jbd_32g_6000_final = 0
         jbd_32g_3200_final = 0
-        
+
         for i in range(start, end + 1):
             line = lines[i]
             if not re.search(r"p:\d+(?:\.\d+)?", line):
                 continue
-            
+
             match = re.search(r'{n:"([^"]+)"', line)
             if not match:
                 continue
-            
+
             ram_name = match.group(1)
-            target_brand, target_series, target_cas, target_capacity, target_freq = extract_ram_four_key(ram_name)
+            final_price = None
+            special_handled = False
 
-            matched_price = None
-            best_score = 0
+            if "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
+                for ram_item in ram_list:
+                    if "金百达 银爵 32G 16x2 6000 D5 C30" in ram_item['name']:
+                        final_price = float(ram_item['price'])
+                        jbd_32g_6000_final = final_price
+                        special_handled = True
+                        print(f"  ★ 特殊匹配: {ram_name} -> 金百达 银爵 32G 16x2 6000 D5 C30 -> 价格 {int(final_price)}")
+                        break
+            elif "金百达_银爵 32G 6000(16*2)套装 c36" in ram_name:
+                for ram_item in ram_list:
+                    if "金百达 银爵 32G 16x2 6000 D5 C36 长鑫" in ram_item['name']:
+                        final_price = float(ram_item['price'])
+                        special_handled = True
+                        print(f"  ★ 特殊匹配: {ram_name} -> 金百达 银爵 32G 16x2 6000 D5 C36 长鑫 -> 价格 {int(final_price)}")
+                        break
+            elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
+                for ram_item in ram_list:
+                    if "金百达 银爵 32G 16x2 6000 D5 C30" in ram_item['name']:
+                        final_price = float(ram_item['price']) / 2
+                        special_handled = True
+                        print(f"  ★ 特殊匹配: {ram_name} -> 金百达 银爵 32G 16x2 6000 D5 C30 的一半 -> 价格 {int(final_price)}")
+                        break
+            elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
+                for ram_item in ram_list:
+                    if "宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB" in ram_item['name']:
+                        final_price = float(ram_item['price'])
+                        special_handled = True
+                        print(f"  ★ 特殊匹配: {ram_name} -> 宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB -> 价格 {int(final_price)}")
+                        break
 
-            for ram_item in ram_list:
-                source_brand, source_series, source_cas, source_capacity, source_freq = ram_item['key']
-                price = ram_item['price']
+            if not special_handled:
+                target_brand, target_series, target_cas, target_capacity, target_freq = extract_ram_four_key(ram_name)
 
-                score = 0
-                if target_brand and source_brand and target_brand == source_brand:
-                    score += 20
-                if target_series and source_series and target_series == source_series:
-                    score += 20
-                if target_cas and source_cas and target_cas == source_cas:
-                    score += 20
-                if target_capacity and source_capacity and target_capacity == source_capacity:
-                    score += 20
-                if target_freq and source_freq and target_freq == source_freq:
-                    score += 20
+                matched_price = None
+                best_score = 0
 
-                if score > best_score:
-                    best_score = score
-                    matched_price = price
+                for ram_item in ram_list:
+                    source_brand, source_series, source_cas, source_capacity, source_freq = ram_item['key']
+                    price = ram_item['price']
 
-            if matched_price is not None and best_score >= 60:
-                base_price = float(matched_price)
-                final_price = base_price
+                    score = 0
+                    if target_brand and source_brand and target_brand == source_brand:
+                        score += 20
+                    if target_series and source_series and target_series == source_series:
+                        score += 20
+                    if target_cas and source_cas and target_cas == source_cas:
+                        score += 20
+                    if target_capacity and source_capacity and target_capacity == source_capacity:
+                        score += 20
+                    if target_freq and source_freq and target_freq == source_freq:
+                        score += 20
 
-                if "金百达_银爵 32G 6000(16*2)套装 c30 m-die" in ram_name:
-                    for ram_item in ram_list:
-                        if "金百达 银爵 32G 16x2 6000 D5 C30" in ram_item['name']:
-                            final_price = float(ram_item['price'])
-                            jbd_32g_6000_final = final_price
-                            break
-                elif "金百达_银爵 32G 6000(16*2)套装 c36" in ram_name:
-                    for ram_item in ram_list:
-                        if "金百达 银爵 32G 16x2 6000 D5 C36 长鑫" in ram_item['name']:
-                            final_price = float(ram_item['price'])
-                            break
-                elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
-                    for ram_item in ram_list:
-                        if "金百达 银爵 32G 16x2 6000 D5 C30" in ram_item['name']:
-                            final_price = float(ram_item['price']) / 2
-                            break
-                elif "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
-                    for ram_item in ram_list:
-                        if "宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB" in ram_item['name']:
-                            final_price = float(ram_item['price'])
-                            break
-                elif "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
-                    final_price = base_price + 150
-                elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
-                    final_price = jbd_32g_3200_final * 2.6
-                elif "金百达_银爵 32G 3200(16*2)套装" in ram_name:
-                    jbd_32g_3200_final = base_price
-                elif "宏碁掠夺者" in ram_name:
-                    final_price = base_price + 300
-                elif "阿斯加特" in ram_name and "女武神" not in ram_name:
-                    final_price = base_price + 50
-                
+                    if score > best_score:
+                        best_score = score
+                        matched_price = price
+
+                if matched_price is not None and best_score >= 60:
+                    base_price = float(matched_price)
+                    final_price = base_price
+
+                    if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
+                        final_price = base_price + 150
+                    elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
+                        final_price = jbd_32g_3200_final * 2.6
+                    elif "金百达_银爵 32G 3200(16*2)套装" in ram_name:
+                        jbd_32g_3200_final = base_price
+                    elif "宏碁掠夺者" in ram_name:
+                        final_price = base_price + 300
+                    elif "阿斯加特" in ram_name and "女武神" not in ram_name:
+                        final_price = base_price + 50
+
+                    print(f"  ✓ 匹配成功 [{best_score}分]: {ram_name} -> 价格 {int(final_price)}")
+                else:
+                    print(f"  ✗ 未匹配到: {ram_name} (品牌:{target_brand}, 系列:{target_series}, 时序:{target_cas}, 容量:{target_capacity}, 频率:{target_freq})")
+
+            if final_price is not None:
                 lines[i] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{int(final_price)}", line)
                 cnt += 1
-                print(f"  ✓ 匹配成功 [{best_score}分]: {ram_name} -> 价格 {int(final_price)}")
-            else:
-                print(f"  ✗ 未匹配到: {ram_name} (品牌:{target_brand}, 系列:{target_series}, 时序:{target_cas}, 容量:{target_capacity}, 频率:{target_freq})")
         
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
