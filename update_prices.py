@@ -901,7 +901,7 @@ def fuzzy_match_price(name, price_dict):
         return None
     p = float(price_dict[best])
     if model == "r55600":
-        return str(int(p + 80))
+        return str(int(p + 50))
     if "R5-5500X3D" in name or model == "r55500x3d":
         return str(int(p + 69))
     return str(int(p))
