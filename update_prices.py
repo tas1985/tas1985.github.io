@@ -889,11 +889,27 @@ def fuzzy_match_price(name, price_dict):
     
     # 特殊处理i5-14490F
     if "i5-14490F" in name or "i5 14490F" in name:
-        # 查找i5-14400F的价格
         for key in price_dict:
             if "i514400" in key:
                 p = float(price_dict[key])
                 return str(int(p + 225))
+    
+    # 特殊处理i9-14900KF和i9-14900K，精确匹配，没有就跳过
+    if "i9-14900KF" in name or "i9 14900KF" in name or "i9-14900K" in name or "i9 14900K" in name:
+        exact_key = None
+        if "i9-14900KF" in name or "i9 14900KF" in name:
+            for key in price_dict:
+                if "i914900kf" in key.lower().replace(" ", "").replace("-", ""):
+                    exact_key = key
+                    break
+        elif "i9-14900K" in name or "i9 14900K" in name:
+            for key in price_dict:
+                if "i914900k" in key.lower().replace(" ", "").replace("-", "") and "f" not in key.lower():
+                    exact_key = key
+                    break
+        if exact_key:
+            return str(int(float(price_dict[exact_key])))
+        return None
     
     model = extract_hardware_model(name)
     best, score = process.extractOne(model, price_dict.keys())
