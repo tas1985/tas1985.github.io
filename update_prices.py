@@ -431,6 +431,15 @@ def update_html_prices(price_dict):
 # -------------------------- 修改后的显卡更新逻辑 --------------------------
 def update_gpu_accurate():
     try:
+        # 先获取新的显卡数据，只有获取成功才进行更新
+        gpu_list = fetch_gpu_prices()
+        
+        # 如果获取失败或返回空列表，不删除原有数据，直接返回
+        if not gpu_list:
+            print("⚠️ 显卡数据获取失败或为空，保留原有显卡数据")
+            return
+        
+        # 获取成功后再打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         # 找到GPU_START_MARK的位置
@@ -447,9 +456,6 @@ def update_gpu_accurate():
         
         # 删除开始标记和结束标记之间的所有内容（不包括这两个标记本身）
         del lines[start_idx + 1:end_idx]
-        
-        # 获取新的显卡数据
-        gpu_list = fetch_gpu_prices()
         
         # 生成显卡内容（注意这里不需要包含开始和结束标记）
         gpu_content = generate_gpu_content(gpu_list)
