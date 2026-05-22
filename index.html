@@ -2626,11 +2626,20 @@
                         clonedRemark.style.wordWrap = 'break-word';
                         clonedRemark.style.overflow = 'visible';
                         clonedRemark.style.height = 'auto';
-                        clonedRemark.style.minHeight = '60px';
+                        clonedRemark.style.minHeight = '80px';
                         clonedRemark.style.maxWidth = '100%';
                         clonedRemark.style.width = '100%';
                         clonedRemark.style.display = 'block';
                         clonedRemark.style.resize = 'none';
+                        // 确保备注栏高度能够显示所有内容
+                        const remarkText = clonedRemark.value || clonedRemark.innerText;
+                        const lineHeight = 18;
+                        const padding = 16;
+                        const lines = (remarkText || '').split('\n').length;
+                        const charsPerLine = 40;
+                        const totalLines = Math.max(lines, Math.ceil(remarkText.length / charsPerLine));
+                        const requiredHeight = totalLines * lineHeight + padding;
+                        clonedRemark.style.height = Math.max(80, requiredHeight) + 'px';
                     }
                     
                     // 移除所有动画效果和边框，修复布局问题
@@ -2656,7 +2665,7 @@
                             margin: 0 auto !important;
                             box-shadow: none !important;
                             border: 2px solid #9900ff !important;
-                            overflow: hidden !important;
+                            overflow: visible !important;
                         }
                         .item {
                             display: flex !important;
@@ -2731,7 +2740,7 @@
                         textarea.remark-input {
                             width: 100% !important;
                             max-width: 100% !important;
-                            min-height: 60px !important;
+                            min-height: 80px !important;
                             height: auto !important;
                             white-space: pre-wrap !important;
                             word-wrap: break-word !important;
@@ -2739,10 +2748,30 @@
                             resize: none !important;
                             flex: 1 !important;
                             align-self: flex-start !important;
+                            line-height: 18px !important;
+                            padding: 8px !important;
                         }
                         .item:has(.remark-input) {
-                            align-items: flex-start !important;
+                            display: flex !important;
+                            flex-direction: row !important;
                             flex-wrap: wrap !important;
+                            align-items: flex-start !important;
+                            width: 100% !important;
+                            overflow: visible !important;
+                        }
+                        .item:has(.remark-input) .item-label {
+                            width: 80px !important;
+                            flex-shrink: 0 !important;
+                        }
+                        .item:has(.remark-input) .remark-input {
+                            flex: 1 !important;
+                            width: calc(100% - 100px) !important;
+                            min-height: 80px !important;
+                        }
+                        .item:has(.remark-input) .btn-screenshot {
+                            width: 100px !important;
+                            flex-shrink: 0 !important;
+                            align-self: flex-start !important;
                         }
                         .btn-screenshot {
                             display: none !important;
