@@ -544,6 +544,7 @@
             min-height: 80px;
             white-space: pre-wrap;
             word-wrap: break-word;
+            overflow: visible;
             outline: none;
             resize: vertical;
             color: #9900ff;
@@ -803,9 +804,7 @@
     <div class="item">
         <div class="item-label">备注</div>
         <!-- 修改为可编辑的textarea -->
-        <textarea class="remark-input" id="remark" oninput="saveNow()">包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。
-            运费德邦到付80左右含保价。
-            视频验货直播装机，主要配件包装盒一起发货（主板、显卡、内存、固态等）</textarea>
+        <textarea class="remark-input" id="remark" oninput="saveNow()">包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价。视频验货直播装机，主要配件包装盒一起发货（主板、显卡、内存、固态等）</textarea>
         <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
     </div>
 
@@ -2627,7 +2626,11 @@
                         clonedRemark.style.wordWrap = 'break-word';
                         clonedRemark.style.overflow = 'visible';
                         clonedRemark.style.height = 'auto';
+                        clonedRemark.style.minHeight = '60px';
                         clonedRemark.style.maxWidth = '100%';
+                        clonedRemark.style.width = '100%';
+                        clonedRemark.style.display = 'block';
+                        clonedRemark.style.resize = 'none';
                     }
                     
                     // 移除所有动画效果和边框，修复布局问题
@@ -2724,6 +2727,25 @@
                         select {
                             width: 100% !important;
                             max-width: 100% !important;
+                        }
+                        textarea.remark-input {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            min-height: 60px !important;
+                            height: auto !important;
+                            white-space: pre-wrap !important;
+                            word-wrap: break-word !important;
+                            overflow: visible !important;
+                            resize: none !important;
+                            flex: 1 !important;
+                            align-self: flex-start !important;
+                        }
+                        .item:has(.remark-input) {
+                            align-items: flex-start !important;
+                            flex-wrap: wrap !important;
+                        }
+                        .btn-screenshot {
+                            display: none !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
