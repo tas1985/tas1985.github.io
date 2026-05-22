@@ -735,19 +735,8 @@ def update_case_accurate():
             lines = f.readlines()
         # 爬取机箱数据，创建型号到价格的映射
         case_list = fetch_case_prices()
-        case_map = {}
-        for case in case_list:
-            name = case["name"]
-            # 使用完整名称作为键
-            case_map[name] = case["price"]
-            # 提取型号部分作为键，提高匹配成功率
-            # 尝试提取品牌后的型号部分
-            parts = name.split(" ")
-            if len(parts) > 1:
-                # 尝试不同的型号提取方式
-                for i in range(1, len(parts)):
-                    model = " ".join(parts[i:])
-                    case_map[model] = case["price"]
+        # 只使用完整名称进行精确匹配，避免错误匹配
+        case_map = {case["name"]: case["price"] for case in case_list}
         
         # 找到机箱区域的开始位置
         idx = next((i for i, l in enumerate(lines) if CASE_TARGET_LINE in l), -1)
@@ -766,23 +755,11 @@ def update_case_accurate():
             match = re.search(r'{n:"([^"]+)"', line)
             if match:
                 name = match.group(1)
-                # 尝试匹配型号
-                matched = False
-                # 首先尝试完整名称匹配
+                # 只使用完整名称精确匹配
                 if name in case_map:
                     new_price = case_map[name]
                     lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
                     updated += 1
-                    matched = True
-                else:
-                    # 尝试型号关键字匹配
-                    for model in case_map:
-                        if model in name:
-                            new_price = case_map[model]
-                            lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
-                            updated += 1
-                            matched = True
-                            break
             pos += 1
         
         # 写入文件
