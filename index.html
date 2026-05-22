@@ -4,8 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
-    <!-- html2canvas库用于截图功能 -->
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- html2canvas库用于截图功能 - 本地引用 -->
+    <script src="html2canvas.min.js"></script>
+    <!-- 备用CDN引用 -->
+    <script>
+        // 检查html2canvas是否加载成功，如果失败则从CDN加载
+        if (typeof html2canvas === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            script.onerror = function() {
+                console.error('html2canvas库加载失败，截图功能不可用');
+            };
+            document.head.appendChild(script);
+        }
+    </script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei",Arial}
         /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
@@ -2555,136 +2567,150 @@
 
     // 保存截图功能
     function saveScreenshot() {
+        // 检查html2canvas是否加载成功
+        if (typeof html2canvas === 'undefined') {
+            alert('截图功能暂时不可用，请刷新页面重试。如果问题持续，请检查网络连接。');
+            return;
+        }
+
         // 显示提示信息
         const btn = document.querySelector('.btn-screenshot');
         const originalText = btn.innerText;
         btn.innerText = '正在生成...';
         btn.disabled = true;
 
-        // 获取要截图的容器
-        const container = document.querySelector('.container');
-        
-        // 临时隐藏按钮栏和截图按钮
-        const btnBar = document.querySelector('.btn-bar');
-        const btnBarDisplay = btnBar.style.display;
-        btnBar.style.display = 'none';
-        
-        // 隐藏截图按钮
-        const screenshotBtn = document.querySelector('.btn-screenshot');
-        const screenshotBtnDisplay = screenshotBtn.style.display;
-        screenshotBtn.style.display = 'none';
-
-        // 使用html2canvas生成截图
-        html2canvas(container, {
-            backgroundColor: '#e0e0e0',
-            scale: 2, // 提高清晰度
-            useCORS: true, // 允许跨域图片
-            logging: false, // 关闭日志
-            allowTaint: true, // 允许跨域图片污染canvas
-            foreignObjectRendering: false, // 使用html2canvas的渲染方式
-            removeContainer: true, // 自动移除临时容器
-            imageTimeout: 0, // 图片加载超时时间
-            onclone: function(clonedDoc) {
-                // 在克隆的文档中调整样式
-                const clonedContainer = clonedDoc.querySelector('.container');
-                const clonedRemark = clonedDoc.querySelector('.remark-input');
-                
-                // 确保备注栏样式正确
-                if (clonedRemark) {
-                    clonedRemark.style.whiteSpace = 'pre-wrap';
-                    clonedRemark.style.wordWrap = 'break-word';
-                    clonedRemark.style.overflow = 'visible';
-                    clonedRemark.style.height = 'auto';
-                }
-                
-                // 移除所有动画效果和边框
-                const style = clonedDoc.createElement('style');
-                style.textContent = `
-                    * {
-                        animation: none !important;
-                        transition: none !important;
-                    }
-                    .total::before {
-                        display: none !important;
-                    }
-                    .dropdown {
-                        display: none !important;
-                    }
-                    .clear-btn {
-                        display: none !important;
-                    }
-                    .user-clear-btn {
-                        display: none !important;
-                    }
-                    .dropdown-delete {
-                        display: none !important;
-                    }
-                    .btn-screenshot {
-                        display: none !important;
-                    }
-                    .title {
-                        box-shadow: none !important;
-                        border: 2px solid #9900ff !important;
-                    }
-                    .datetime-display {
-                        box-shadow: none !important;
-                        border: 1px solid #9900ff !important;
-                    }
-                    .total {
-                        box-shadow: none !important;
-                        border: 3px solid #9900ff !important;
-                    }
-                    .container {
-                        box-shadow: none !important;
-                        border: 2px solid #9900ff !important;
-                    }
-                `;
-                clonedDoc.head.appendChild(style);
-            }
-        }).then(canvas => {
-            // 恢复按钮栏显示
-            btnBar.style.display = btnBarDisplay;
-            screenshotBtn.style.display = screenshotBtnDisplay;
-
-            // 生成文件名（使用当前日期时间）
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
-
-            // 转换为图片并下载
-            canvas.toBlob(function(blob) {
-                // 创建下载链接
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                // 恢复按钮状态
-                btn.innerText = originalText;
-                btn.disabled = false;
-                
-                // 显示成功提示
-                alert(`截图已保存：${fileName}`);
-            }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
-        }).catch(error => {
-            // 恢复按钮栏显示
-            btnBar.style.display = btnBarDisplay;
-            screenshotBtn.style.display = screenshotBtnDisplay;
+        try {
+            // 获取要截图的容器
+            const container = document.querySelector('.container');
             
+            // 临时隐藏按钮栏和截图按钮
+            const btnBar = document.querySelector('.btn-bar');
+            const btnBarDisplay = btnBar.style.display;
+            btnBar.style.display = 'none';
+            
+            // 隐藏截图按钮
+            const screenshotBtn = document.querySelector('.btn-screenshot');
+            const screenshotBtnDisplay = screenshotBtn.style.display;
+            screenshotBtn.style.display = 'none';
+
+            // 使用html2canvas生成截图
+            html2canvas(container, {
+                backgroundColor: '#e0e0e0',
+                scale: 2, // 提高清晰度
+                useCORS: true, // 允许跨域图片
+                logging: false, // 关闭日志
+                allowTaint: true, // 允许跨域图片污染canvas
+                foreignObjectRendering: false, // 使用html2canvas的渲染方式
+                removeContainer: true, // 自动移除临时容器
+                imageTimeout: 15000, // 图片加载超时时间（15秒）
+                onclone: function(clonedDoc) {
+                    // 在克隆的文档中调整样式
+                    const clonedContainer = clonedDoc.querySelector('.container');
+                    const clonedRemark = clonedDoc.querySelector('.remark-input');
+                    
+                    // 确保备注栏样式正确
+                    if (clonedRemark) {
+                        clonedRemark.style.whiteSpace = 'pre-wrap';
+                        clonedRemark.style.wordWrap = 'break-word';
+                        clonedRemark.style.overflow = 'visible';
+                        clonedRemark.style.height = 'auto';
+                    }
+                    
+                    // 移除所有动画效果和边框
+                    const style = clonedDoc.createElement('style');
+                    style.textContent = `
+                        * {
+                            animation: none !important;
+                            transition: none !important;
+                        }
+                        .total::before {
+                            display: none !important;
+                        }
+                        .dropdown {
+                            display: none !important;
+                        }
+                        .clear-btn {
+                            display: none !important;
+                        }
+                        .user-clear-btn {
+                            display: none !important;
+                        }
+                        .dropdown-delete {
+                            display: none !important;
+                        }
+                        .btn-screenshot {
+                            display: none !important;
+                        }
+                        .title {
+                            box-shadow: none !important;
+                            border: 2px solid #9900ff !important;
+                        }
+                        .datetime-display {
+                            box-shadow: none !important;
+                            border: 1px solid #9900ff !important;
+                        }
+                        .total {
+                            box-shadow: none !important;
+                            border: 3px solid #9900ff !important;
+                        }
+                        .container {
+                            box-shadow: none !important;
+                            border: 2px solid #9900ff !important;
+                        }
+                    `;
+                    clonedDoc.head.appendChild(style);
+                }
+            }).then(canvas => {
+                // 恢复按钮栏显示
+                btnBar.style.display = btnBarDisplay;
+                screenshotBtn.style.display = screenshotBtnDisplay;
+
+                // 生成文件名（使用当前日期时间）
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
+
+                // 转换为图片并下载
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        throw new Error('图片生成失败');
+                    }
+                    
+                    // 创建下载链接
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    // 恢复按钮状态
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    
+                    // 显示成功提示
+                    alert(`截图已保存：${fileName}`);
+                }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
+            }).catch(error => {
+                // 恢复按钮栏显示
+                btnBar.style.display = btnBarDisplay;
+                screenshotBtn.style.display = screenshotBtnDisplay;
+                
+                throw error;
+            });
+        } catch (error) {
             console.error('截图失败:', error);
             btn.innerText = originalText;
             btn.disabled = false;
-            alert('截图失败，请重试');
-        });
+            alert('截图失败：' + error.message + '\n请刷新页面重试');
+        }
     }
 
     function calc(){
