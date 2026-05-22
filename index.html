@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
+    <!-- html2canvas库用于截图功能 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei",Arial}
         /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
@@ -331,6 +333,26 @@
         }
         .btn-cost-toggle:hover {
             box-shadow: 0 0 10px rgba(255,153,0,0.8);
+            background: #330066;
+        }
+
+        /* 保存截图按钮样式 */
+        .btn-screenshot {
+            width: 100px;
+            padding: 8px;
+            border: 2px solid #00ff00;
+            border-radius: 6px;
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            background: #000;
+            margin-left: 8px;
+            box-shadow: 0 0 6px rgba(0,255,0,0.6);
+            white-space: nowrap;
+        }
+        .btn-screenshot:hover {
+            box-shadow: 0 0 10px rgba(0,255,0,0.8);
             background: #330066;
         }
 
@@ -770,7 +792,7 @@
         <div class="item-label">备注</div>
         <!-- 修改为可编辑的textarea -->
         <textarea class="remark-input" id="remark" oninput="saveNow()">包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价。视频验货直播装机，主要配件包装盒一起发货（主板、显卡、内存、固态等）</textarea>
-        <div class="item-price  remark-price"></div>
+        <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
     </div>
 
     <!-- 最终报价区域移到按钮栏上方 -->
@@ -2529,6 +2551,140 @@
     function toggleCostDisplay() {
         const costDisplay = document.querySelector('.cost-display');
         costDisplay.classList.toggle('show');
+    }
+
+    // 保存截图功能
+    function saveScreenshot() {
+        // 显示提示信息
+        const btn = document.querySelector('.btn-screenshot');
+        const originalText = btn.innerText;
+        btn.innerText = '正在生成...';
+        btn.disabled = true;
+
+        // 获取要截图的容器
+        const container = document.querySelector('.container');
+        
+        // 临时隐藏按钮栏和截图按钮
+        const btnBar = document.querySelector('.btn-bar');
+        const btnBarDisplay = btnBar.style.display;
+        btnBar.style.display = 'none';
+        
+        // 隐藏截图按钮
+        const screenshotBtn = document.querySelector('.btn-screenshot');
+        const screenshotBtnDisplay = screenshotBtn.style.display;
+        screenshotBtn.style.display = 'none';
+
+        // 使用html2canvas生成截图
+        html2canvas(container, {
+            backgroundColor: '#e0e0e0',
+            scale: 2, // 提高清晰度
+            useCORS: true, // 允许跨域图片
+            logging: false, // 关闭日志
+            allowTaint: true, // 允许跨域图片污染canvas
+            foreignObjectRendering: false, // 使用html2canvas的渲染方式
+            removeContainer: true, // 自动移除临时容器
+            imageTimeout: 0, // 图片加载超时时间
+            onclone: function(clonedDoc) {
+                // 在克隆的文档中调整样式
+                const clonedContainer = clonedDoc.querySelector('.container');
+                const clonedRemark = clonedDoc.querySelector('.remark-input');
+                
+                // 确保备注栏样式正确
+                if (clonedRemark) {
+                    clonedRemark.style.whiteSpace = 'pre-wrap';
+                    clonedRemark.style.wordWrap = 'break-word';
+                    clonedRemark.style.overflow = 'visible';
+                    clonedRemark.style.height = 'auto';
+                }
+                
+                // 移除所有动画效果和边框
+                const style = clonedDoc.createElement('style');
+                style.textContent = `
+                    * {
+                        animation: none !important;
+                        transition: none !important;
+                    }
+                    .total::before {
+                        display: none !important;
+                    }
+                    .dropdown {
+                        display: none !important;
+                    }
+                    .clear-btn {
+                        display: none !important;
+                    }
+                    .user-clear-btn {
+                        display: none !important;
+                    }
+                    .dropdown-delete {
+                        display: none !important;
+                    }
+                    .btn-screenshot {
+                        display: none !important;
+                    }
+                    .title {
+                        box-shadow: none !important;
+                        border: 2px solid #9900ff !important;
+                    }
+                    .datetime-display {
+                        box-shadow: none !important;
+                        border: 1px solid #9900ff !important;
+                    }
+                    .total {
+                        box-shadow: none !important;
+                        border: 3px solid #9900ff !important;
+                    }
+                    .container {
+                        box-shadow: none !important;
+                        border: 2px solid #9900ff !important;
+                    }
+                `;
+                clonedDoc.head.appendChild(style);
+            }
+        }).then(canvas => {
+            // 恢复按钮栏显示
+            btnBar.style.display = btnBarDisplay;
+            screenshotBtn.style.display = screenshotBtnDisplay;
+
+            // 生成文件名（使用当前日期时间）
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
+
+            // 转换为图片并下载
+            canvas.toBlob(function(blob) {
+                // 创建下载链接
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 恢复按钮状态
+                btn.innerText = originalText;
+                btn.disabled = false;
+                
+                // 显示成功提示
+                alert(`截图已保存：${fileName}`);
+            }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
+        }).catch(error => {
+            // 恢复按钮栏显示
+            btnBar.style.display = btnBarDisplay;
+            screenshotBtn.style.display = screenshotBtnDisplay;
+            
+            console.error('截图失败:', error);
+            btn.innerText = originalText;
+            btn.disabled = false;
+            alert('截图失败，请重试');
+        });
     }
 
     function calc(){
