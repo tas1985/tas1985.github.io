@@ -2603,10 +2603,21 @@
                 foreignObjectRendering: false, // 使用html2canvas的渲染方式
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
+                width: container.offsetWidth, // 设置截图宽度
+                height: container.offsetHeight, // 设置截图高度
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
+                    
+                    // 确保容器宽度正确
+                    if (clonedContainer) {
+                        clonedContainer.style.width = '100%';
+                        clonedContainer.style.maxWidth = '720px';
+                        clonedContainer.style.minWidth = '320px';
+                        clonedContainer.style.display = 'block';
+                        clonedContainer.style.margin = '0 auto';
+                    }
                     
                     // 确保备注栏样式正确
                     if (clonedRemark) {
@@ -2614,14 +2625,68 @@
                         clonedRemark.style.wordWrap = 'break-word';
                         clonedRemark.style.overflow = 'visible';
                         clonedRemark.style.height = 'auto';
+                        clonedRemark.style.maxWidth = '100%';
                     }
                     
-                    // 移除所有动画效果和边框
+                    // 移除所有动画效果和边框，修复布局问题
                     const style = clonedDoc.createElement('style');
                     style.textContent = `
                         * {
                             animation: none !important;
                             transition: none !important;
+                            flex-wrap: nowrap !important;
+                            float: none !important;
+                        }
+                        html, body {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            min-width: 320px !important;
+                            display: block !important;
+                        }
+                        .container {
+                            width: 100% !important;
+                            max-width: 720px !important;
+                            min-width: 320px !important;
+                            display: block !important;
+                            margin: 0 auto !important;
+                            box-shadow: none !important;
+                            border: 2px solid #9900ff !important;
+                            overflow: hidden !important;
+                        }
+                        .item {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            flex-wrap: nowrap !important;
+                            align-items: center !important;
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            margin-bottom: 8px !important;
+                            padding: 4px !important;
+                            background: #d0d0d0 !important;
+                            border-radius: 4px !important;
+                            border: 1px solid #000 !important;
+                        }
+                        .item-label {
+                            width: 80px !important;
+                            flex-shrink: 0 !important;
+                            font-weight: bold !important;
+                            font-size: 18px !important;
+                            text-align: center !important;
+                            padding-right: 5px !important;
+                        }
+                        .item-input {
+                            flex: 1 !important;
+                            position: relative !important;
+                            min-width: 0 !important;
+                        }
+                        .item-price {
+                            width: 100px !important;
+                            flex-shrink: 0 !important;
+                            position: relative !important;
+                        }
+                        .total {
+                            box-shadow: none !important;
+                            border: 3px solid #9900ff !important;
                         }
                         .total::before {
                             display: none !important;
@@ -2649,13 +2714,14 @@
                             box-shadow: none !important;
                             border: 1px solid #9900ff !important;
                         }
-                        .total {
-                            box-shadow: none !important;
-                            border: 3px solid #9900ff !important;
+                        input.combo, input.price {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            box-sizing: border-box !important;
                         }
-                        .container {
-                            box-shadow: none !important;
-                            border: 2px solid #9900ff !important;
+                        select {
+                            width: 100% !important;
+                            max-width: 100% !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
