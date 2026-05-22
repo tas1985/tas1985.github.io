@@ -2648,7 +2648,6 @@
                         * {
                             animation: none !important;
                             transition: none !important;
-                            flex-wrap: nowrap !important;
                             float: none !important;
                         }
                         html, body {
@@ -2670,7 +2669,6 @@
                         .item {
                             display: flex !important;
                             flex-direction: row !important;
-                            flex-wrap: nowrap !important;
                             align-items: center !important;
                             width: 100% !important;
                             max-width: 100% !important;
@@ -2739,17 +2737,20 @@
                         }
                         textarea.remark-input {
                             width: 100% !important;
-                            max-width: 100% !important;
+                            max-width: calc(100% - 90px) !important;
                             min-height: 80px !important;
                             height: auto !important;
                             white-space: pre-wrap !important;
-                            word-wrap: break-word !important;
+                            word-break: break-all !important;
                             overflow: visible !important;
                             resize: none !important;
                             flex: 1 !important;
                             align-self: flex-start !important;
                             line-height: 18px !important;
                             padding: 8px !important;
+                            box-sizing: border-box !important;
+                            font-family: "Microsoft YaHei", Arial !important;
+                            font-size: 13px !important;
                         }
                         .item:has(.remark-input) {
                             display: flex !important;
