@@ -4,17 +4,17 @@ from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
 # -------------------------- 全局配置项 --------------------------
-SOURCE_URL = "http://0532.name/cpu_list"
-GPU_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%98%BE%E5%8D%A1"
-MB_SOURCE_URL = "http://0532.name/cpu_list?category=%E4%B8%BB%E6%9D%BF"
-RAM_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%86%85%E5%AD%98"
-SSD_SOURCE_URL = "http://0532.name/cpu_list?category=%E5%9B%BA%E6%80%81%E7%9B%98"
+SOURCE_URL = "http://0532.name/diy_pjhq?zd2=CPU"
+GPU_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%98%BE%E5%8D%A1"
+MB_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E4%B8%BB%E6%9D%BF"
+RAM_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E5%86%85%E5%AD%98"
+SSD_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E5%9B%BA%E6%80%81%E7%9B%98"
 # 新增机箱URL配置
-CASE_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%9C%BA%E7%AE%B1"
+CASE_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%9C%BA%E7%AE%B1"
 # 新增电源URL配置
-POWER_SOURCE_URL = "http://0532.name/cpu_list?category=%E7%94%B5%E6%BA%90"
+POWER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E7%94%B5%E6%BA%90"
 # 新增散热器URL配置
-COOLER_SOURCE_URL = "http://0532.name/cpu_list?category=%E6%95%A3%E7%83%AD%E5%99%A8"
+COOLER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%95%A3%E7%83%AD%E5%99%A8"
 HTML_FILE = "index.html"
 START_LINE = 958
 END_LINE = 1014
