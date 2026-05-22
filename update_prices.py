@@ -704,6 +704,14 @@ def fetch_raw_ram_prices_with_details():
 # -------------------------- 主板/内存 自动更新 --------------------------
 def update_mb_accurate():
     try:
+        # 先获取新的主板数据，只有获取成功才进行更新
+        mb_list = fetch_mb_prices()
+        
+        # 如果获取失败或返回空列表，不删除原有数据，直接返回
+        if not mb_list:
+            print("⚠️ 主板数据获取失败或为空，保留原有主板数据")
+            return
+        
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         idx = next((i for i, l in enumerate(lines) if MB_TARGET_LINE in l), -1)
@@ -712,11 +720,12 @@ def update_mb_accurate():
         pos = idx + 1
         while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
             del lines[pos]
-        lines.insert(pos, generate_mb_content(fetch_mb_prices()))
+        lines.insert(pos, generate_mb_content(mb_list))
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-    except Exception:
-        pass
+        print(f"✅ 主板价格自动更新完成，共更新 {len(mb_list)} 个主板型号")
+    except Exception as e:
+        print(f"❌ 主板更新失败：{e}")
 
 def update_ram_accurate():
     try:
@@ -778,6 +787,14 @@ def update_case_accurate():
 # 新增电源自动更新函数
 def update_power_accurate():
     try:
+        # 先获取新的电源数据，只有获取成功才进行更新
+        power_list = fetch_power_prices()
+        
+        # 如果获取失败或返回空列表，不删除原有数据，直接返回
+        if not power_list:
+            print("⚠️ 电源数据获取失败或为空，保留原有电源数据")
+            return
+        
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         # 找到目标行（追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色）
@@ -791,13 +808,13 @@ def update_power_accurate():
         while pos < len(lines) and lines[pos].startswith(POWER_INDENT) and '{n:"' in lines[pos]:
             del lines[pos]
         # 插入新的电源数据
-        power_content = generate_power_content(fetch_power_prices())
+        power_content = generate_power_content(power_list)
         if power_content:
             lines.insert(pos, power_content)
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        print("✅ 电源价格自动更新完成")
+        print(f"✅ 电源价格自动更新完成，共更新 {len(power_list)} 个电源型号")
     except Exception as e:
         print(f"❌ 电源更新失败：{e}")
 
