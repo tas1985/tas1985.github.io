@@ -804,7 +804,7 @@
     <div class="item">
         <div class="item-label">备注</div>
         <!-- 修改为可编辑的textarea -->
-        <textarea class="remark-input" id="remark" oninput="saveNow()">含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价，直播验机，主板显卡等配件原盒随发。
+        <textarea class="remark-input" id="remark" oninput="saveNow()">含装机布线系统调试，三年一对一售后免费装系统。\n德邦到付约80含保价，视频验货直播装机。\n主板显卡等配件原盒随发。
 </textarea>
         <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
     </div>
@@ -3287,7 +3287,7 @@
             document.getElementById(k).value = "";
             document.getElementById(k+"-p").value = "";
         });
-        document.getElementById("remark").value = "含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价，直播验机，主板显卡等配件原盒随发。";
+        document.getElementById("remark").value = "含装机布线系统调试，三年一对一售后免费装系统。\n德邦到付约80含保价，视频验货直播装机。\n主板显卡等配件原盒随发。";
         calc(); // 重新计算总价
         saveNow(); // 保存当前状态
 
