@@ -532,7 +532,33 @@
             color: #000;
         }
 
-        /* 备注栏样式 */
+        /* 备注栏容器样式 */
+        .remark-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            background: #e0e0e0;
+            min-height: 80px;
+        }
+
+        /* 备注行样式 */
+        .remark-row {
+            font-size: 13px;
+            line-height: 20px;
+            padding: 4px 0;
+            color: #9900ff;
+        }
+
+        /* 虚线分割线 */
+        .remark-divider {
+            border-bottom: 1px dashed #9900ff;
+            margin: 4px 0;
+        }
+
+        /* 备注栏样式（保留旧样式兼容） */
         .remark-input {
             flex: 1;
             padding: 8px;
@@ -803,11 +829,12 @@
     <!-- 新增备注栏目 -->
     <div class="item">
         <div class="item-label">备注</div>
-        <!-- 修改为可编辑的textarea -->
-        <textarea class="remark-input" id="remark" oninput="saveNow()">含装机布线系统调试，三年一对一售后免费装系统。
-德邦到付约80含保价，视频验货直播装机。
-主板显卡等配件原盒随发。
-</textarea>
+        <!-- 修改为上下两行显示，中间虚线分割 -->
+        <div class="remark-container">
+            <div class="remark-row remark-row-1">含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价。</div>
+            <div class="remark-divider"></div>
+            <div class="remark-row remark-row-2">视频验货直播装机，主板显卡等配件原盒随发。</div>
+        </div>
         <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
     </div>
 
@@ -1670,7 +1697,7 @@
             {n:"技嘉 RTX5070 Eagle OC 12G 猎鹰 三扇",p:4900},
             {n:"技嘉 RTX5070 AORUS MASTER OC 12G 超级雕",p:5560},
             {n:"技嘉 RTX5070 AERO OC 12G 雪鹰",p:5260},
-            {n:"技嘉 RTX5060TI WF2 OC 16G 风魔MAX 双扇",p:3699},
+            {n:"技嘉 RTX5060TI WF2 OC 16G 风魔MAX 双扇",p:3899},
             {n:"技嘉 RTX5060TI WF2 MAX OC 8G 风魔MAX",p:2699},
             {n:"技嘉 RTX5060TI GAMING OC 8G 魔鹰",p:3090},
             {n:"技嘉 RTX5060TI EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:3100},
@@ -1698,11 +1725,10 @@
             {n:"微星 RTX5050 VENTUS 2X 8G 万图师 双扇",p:2099},
             {n:"微星 RTX3050 6G 万图师 双扇",p:1450},
             {n:"影驰 RTX5080 16G 金属大师 OC 黑金版 黑色",p:9150},
-            {n:"影驰 RTX5070 星曜LUNA OC 三扇 12G 白色",p:5450},
-            {n:"影驰 RTX5070 12G 魔刃 OC 黑色",p:4799},
+            {n:"影驰 RTX5070 12G 魔刃 OC 黑色",p:4850},
             {n:"影驰 RTX5070 12G 金属大师 白金版 白色",p:5099},
             {n:"影驰 RTX5070 12G 圣刃 OC 白色",p:4950},
-            {n:"影驰 RTX5060TI 魔刃 OC 8G 黑色 三扇",p:2750},
+            {n:"影驰 RTX5060TI 魔刃 OC 8G 黑色 三扇",p:2900},
             {n:"影驰 RTX5060TI FIRE MAX 16G 双扇黑色",p:3850},
             {n:"影驰 RTX5060TI 8G 金属大师 OC 白金版 白色",p:3150},
             {n:"影驰 RTX5060 魔刃V2 OC 8G 黑色 三扇",p:2550},
@@ -2608,177 +2634,36 @@
                 foreignObjectRendering: false, // 使用html2canvas的渲染方式
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
-                width: container.offsetWidth, // 设置截图宽度
-                height: container.offsetHeight, // 设置截图高度
                 onclone: function(clonedDoc) {
-                    // 在克隆的文档中调整样式
-                    const clonedContainer = clonedDoc.querySelector('.container');
-                    const clonedRemark = clonedDoc.querySelector('.remark-input');
-                    
-                    // 确保容器宽度正确
-                    if (clonedContainer) {
-                        clonedContainer.style.width = '100%';
-                        clonedContainer.style.maxWidth = '720px';
-                        clonedContainer.style.minWidth = '320px';
-                        clonedContainer.style.display = 'block';
-                        clonedContainer.style.margin = '0 auto';
-                    }
-                    
-                    // 确保备注栏样式正确
-                    if (clonedRemark) {
-                        clonedRemark.style.whiteSpace = 'pre-wrap';
-                        clonedRemark.style.wordWrap = 'break-word';
-                        clonedRemark.style.overflow = 'visible';
-                        clonedRemark.style.height = 'auto';
-                        clonedRemark.style.minHeight = '80px';
-                        clonedRemark.style.maxWidth = '100%';
-                        clonedRemark.style.width = '100%';
-                        clonedRemark.style.display = 'block';
-                        clonedRemark.style.resize = 'none';
-                        // 确保备注栏高度能够显示所有内容
-                        const remarkText = clonedRemark.value || clonedRemark.innerText;
-                        const lineHeight = 20;
-                        const padding = 16;
-                        const lines = (remarkText || '').split('\n').length;
-                        const totalLines = Math.max(lines, 4); // 至少显示4行
-                        const requiredHeight = totalLines * lineHeight + padding;
-                        clonedRemark.style.height = Math.max(96, requiredHeight) + 'px'; // 4行 * 20px + 16px = 96px
-                    }
-                    
-                    // 移除所有动画效果和边框，修复布局问题
+                    // 备注栏已改为div结构，不需要额外处理
+                    // 添加修复样式的style标签
                     const style = clonedDoc.createElement('style');
+                    style.id = 'screenshot-fix-style';
                     style.textContent = `
                         * {
                             animation: none !important;
                             transition: none !important;
                             float: none !important;
                         }
-                        html, body {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            min-width: 320px !important;
-                            display: block !important;
-                        }
                         .container {
-                            width: 100% !important;
-                            max-width: 720px !important;
-                            min-width: 320px !important;
-                            display: block !important;
-                            margin: 0 auto !important;
-                            box-shadow: none !important;
-                            border: 2px solid #9900ff !important;
                             overflow: visible !important;
-                        }
-                        .item {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            align-items: center !important;
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border-radius: 4px !important;
-                            border: 1px solid #000 !important;
-                        }
-                        .item-label {
-                            width: 80px !important;
-                            flex-shrink: 0 !important;
-                            font-weight: bold !important;
-                            font-size: 18px !important;
-                            text-align: center !important;
-                            padding-right: 5px !important;
-                        }
-                        .item-input {
-                            flex: 1 !important;
-                            position: relative !important;
-                            min-width: 0 !important;
-                        }
-                        .item-price {
-                            width: 100px !important;
-                            flex-shrink: 0 !important;
-                            position: relative !important;
-                        }
-                        .total {
-                            box-shadow: none !important;
-                            border: 3px solid #9900ff !important;
                         }
                         .total::before {
                             display: none !important;
                         }
-                        .dropdown {
+                        .dropdown, .clear-btn, .user-clear-btn, .dropdown-delete, .btn-screenshot {
                             display: none !important;
                         }
-                        .clear-btn {
-                            display: none !important;
-                        }
-                        .user-clear-btn {
-                            display: none !important;
-                        }
-                        .dropdown-delete {
-                            display: none !important;
-                        }
-                        .btn-screenshot {
-                            display: none !important;
-                        }
+                        /* 移除inset阴影，避免截图出现色块 */
                         .title {
-                            box-shadow: none !important;
-                            border: 2px solid #9900ff !important;
+                            box-shadow: 0 0 10px rgba(153,0,255,0.8) !important;
                         }
                         .datetime-display {
-                            box-shadow: none !important;
-                            border: 1px solid #9900ff !important;
+                            box-shadow: 0 0 5px rgba(0,255,0,0.5) !important;
                         }
-                        input.combo, input.price {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            box-sizing: border-box !important;
-                        }
-                        select {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                        }
-                        textarea.remark-input {
-                            width: 100% !important;
-                            max-width: calc(100% - 90px) !important;
-                            min-height: 96px !important;
-                            height: auto !important;
-                            white-space: pre-wrap !important;
-                            word-break: break-all !important;
+                        .total {
+                            box-shadow: 0 0 15px rgba(0,255,0,0.7) !important;
                             overflow: visible !important;
-                            resize: none !important;
-                            flex: 1 !important;
-                            align-self: flex-start !important;
-                            line-height: 20px !important;
-                            padding: 8px !important;
-                            box-sizing: border-box !important;
-                            font-family: "Microsoft YaHei", Arial !important;
-                            font-size: 13px !important;
-                        }
-                        .item:has(.remark-input) {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            flex-wrap: wrap !important;
-                            align-items: flex-start !important;
-                            width: 100% !important;
-                            overflow: visible !important;
-                        }
-                        .item:has(.remark-input) .item-label {
-                            width: 80px !important;
-                            flex-shrink: 0 !important;
-                        }
-                        .item:has(.remark-input) .remark-input {
-                            flex: 1 !important;
-                            width: calc(100% - 100px) !important;
-                            min-height: 80px !important;
-                        }
-                        .item:has(.remark-input) .btn-screenshot {
-                            width: 100px !important;
-                            flex-shrink: 0 !important;
-                            align-self: flex-start !important;
-                        }
-                        .btn-screenshot {
-                            display: none !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
@@ -3290,7 +3175,7 @@
             document.getElementById(k).value = "";
             document.getElementById(k+"-p").value = "";
         });
-        document.getElementById("remark").value = "含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价，视频验货直播装机。主板显卡等配件原盒随发。";
+        document.getElementById("remark").value = "包含：调货组装走线装系统调试打包、三年一对一售后免费重装系统。运费德邦到付80左右含保价。视频验货直播装机，主要配件包装盒一起发货（主板、显卡、内存、固态等）";
         calc(); // 重新计算总价
         saveNow(); // 保存当前状态
 
