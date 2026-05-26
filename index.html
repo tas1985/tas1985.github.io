@@ -547,12 +547,14 @@
             background: #e0e0e0;
             font-size: 12px;
             line-height: 18px;
-            height: 36px;
+            min-height: 36px;
+            max-height: 100px;
+            height: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
-            overflow: hidden;
+            overflow: auto;
             outline: none;
-            resize: none;
+            resize: vertical;
             color: #9900ff;
         }
 
@@ -2740,11 +2742,13 @@
                         textarea.remark-input {
                             width: 100% !important;
                             max-width: calc(100% - 90px) !important;
-                            height: 36px !important;
+                            min-height: 36px !important;
+                            max-height: 100px !important;
+                            height: auto !important;
                             white-space: pre-wrap !important;
                             word-break: break-all !important;
-                            overflow: hidden !important;
-                            resize: none !important;
+                            overflow: auto !important;
+                            resize: vertical !important;
                             flex: none !important;
                             align-self: flex-start !important;
                             line-height: 18px !important;
@@ -2768,11 +2772,14 @@
                         .item:has(.remark-input) .remark-input {
                             flex: none !important;
                             width: calc(100% - 100px) !important;
-                            height: 36px !important;
+                            min-height: 36px !important;
+                            max-height: 100px !important;
+                            height: auto !important;
                             line-height: 18px !important;
                             white-space: pre-wrap !important;
                             word-wrap: break-word !important;
-                            overflow: hidden !important;
+                            overflow: auto !important;
+                            resize: vertical !important;
                             padding: 4px 8px !important;
                             box-sizing: border-box !important;
                         }
