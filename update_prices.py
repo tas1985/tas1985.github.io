@@ -474,15 +474,18 @@ def update_ssd_prices():
 CPU_TARGET_LINE = '{n:"i3-12100F 3.3G 四核",p:599},'
 
 def update_cpu_accurate():
-    """仿照显卡更新逻辑，爬取CPU数据并插入到指定位置"""
+    """CPU更新逻辑：保留现有型号，只更新价格，不删除"""
     try:
-        # 先获取CPU数据
+        # 先获取源网站的CPU数据
         cpu_list = fetch_cpu_prices()
         
         # 如果获取失败或为空，保留原有数据
         if not cpu_list:
             print("⚠️ CPU数据获取失败或为空，保留原有CPU数据")
             return
+        
+        # 将列表转换为字典，方便查找
+        cpu_dict = {cpu["name"]: cpu["price"] for cpu in cpu_list}
         
         # 获取成功后打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -494,30 +497,45 @@ def update_cpu_accurate():
             print(f"❌ 未找到CPU目标行：{CPU_TARGET_LINE}")
             return
         
-        # 目标行的下一行开始插入
-        pos = idx + 1
+        update_count = 0
+        same_count = 0
+        no_match_count = 0
         
-        # 删除原有CPU数据（直到遇到下一个不以12个空格开头的行或非CPU行）
+        # 更新现有CPU型号的价格
+        pos = idx + 1
         while pos < len(lines):
             line = lines[pos]
-            # 检查是否是CPU数据行（以12个空格开头且包含{n:"和p:）
             if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
-                del lines[pos]
+                # 提取型号名称和当前价格
+                match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if match:
+                    model_name = match.group(1)
+                    old_price = int(match.group(2))
+                    
+                    # 在源网站查找匹配的价格
+                    if model_name in cpu_dict:
+                        new_price = cpu_dict[model_name]
+                        if new_price != old_price:
+                            # 更新价格
+                            new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            lines[pos] = new_line
+                            update_count += 1
+                            print(f"  ✓ 更新价格: {model_name[:30]}... ￥{old_price} -> ￥{new_price}")
+                        else:
+                            same_count += 1
+                            print(f"  ≡ 价格不变: {model_name[:30]}... ￥{old_price}")
+                    else:
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配: {model_name[:30]}...")
+                pos += 1
             else:
                 break
-        
-        # 生成CPU内容
-        cpu_content = generate_cpu_content(cpu_list)
-        
-        # 在目标行下一行插入新的CPU数据
-        if cpu_content:
-            lines.insert(pos, cpu_content)
         
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"✅ CPU价格自动更新完成，共更新 {len(cpu_list)} 个CPU型号")
+        print(f"✅ CPU更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配 {no_match_count} 个")
     except Exception as e:
         print(f"❌ CPU更新失败：{e}")
         import traceback
