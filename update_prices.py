@@ -56,6 +56,7 @@ def extract_hardware_model(name):
         r'(i[3579]\d+[a-z0-9kf]*)|'
         r'(r[3579]\d+[a-z0-9kf]*)|'
         r'(r[3579]\-\d+[a-z0-9kf]*)|'
+        r'(ultra\s*\d+[a-z]*)|'
         r'(rtx\d+[a-z0-9]*)|'
         r'(gtx\d+[a-z0-9]*)|'
         r'(amd\d+[a-z0-9]*)|'
@@ -994,9 +995,45 @@ def fuzzy_match_price(name, price_dict):
         return None
     
     model = extract_hardware_model(name)
-    best, score = process.extractOne(model, price_dict.keys())
-    if score < MATCH_THRESHOLD:
+    
+    # 如果提取的型号为空，尝试其他方式提取
+    if not model:
+        # 尝试提取AMD型号
+        amd_match = re.search(r'(r[3579]?\d+\w*)', name.lower().replace(" ", "").replace("-", ""))
+        if amd_match:
+            model = amd_match.group(1)
+        # 尝试提取Intel型号
+        intel_match = re.search(r'(i[3579]?\d+\w*)', name.lower().replace(" ", "").replace("-", ""))
+        if intel_match:
+            model = intel_match.group(1)
+        # 尝试提取Ultra型号
+        ultra_match = re.search(r'(ultra\s*\d+\s*[a-z]*)', name.lower().replace(" ", ""))
+        if ultra_match:
+            model = ultra_match.group(1).replace(" ", "")
+    
+    if not model:
+        print(f"  ⚠️ 无法提取型号：{name[:40]}")
         return None
+    
+    try:
+        best, score = process.extractOne(model, price_dict.keys())
+    except Exception as e:
+        print(f"  ⚠️ 匹配出错：{name[:40]} - {e}")
+        return None
+    
+    if score < MATCH_THRESHOLD:
+        # 打印前3个最佳匹配供调试
+        try:
+            all_matches = process.extract(model, price_dict.keys(), limit=3)
+            print(f"  ⚠️ 分数低于阈值 {MATCH_THRESHOLD}：{name[:40]}")
+            print(f"     提取型号：{model}")
+            print(f"     最佳匹配：{best} (分数：{score})")
+            if all_matches:
+                print(f"     其他候选：{[f'{m[0]}({m[1]})' for m in all_matches[1:]]}")
+        except:
+            print(f"  ⚠️ 分数低于阈值：{name[:40]} -> {model} -> {best}({score})")
+        return None
+    
     p = float(price_dict[best])
     if model == "r55600":
         return str(int(p + 50))
