@@ -124,9 +124,9 @@ def fetch_latest_prices():
         res = requests.get(SOURCE_URL, headers=HEADERS, timeout=15)
         res.encoding = res.apparent_encoding  # 自动检测编码
         soup = BeautifulSoup(res.text, "html.parser")
-
+        
         price_dict = {}
-
+        
         # 尝试从表格中提取数据
         tables = soup.find_all('table')
         for table in tables:
@@ -138,10 +138,11 @@ def fetch_latest_prices():
                     price_text = cells[-1].get_text(strip=True)
                     # 提取价格
                     price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
-                    if price_match and name and len(name) > 3:
-                        # 直接使用原始名称作为键，保留完整信息（包括"AMD"、"盒"、"散"等关键字）
-                        price_dict[name] = price_match.group(1)
-
+                    if price_match and name:
+                        model = extract_hardware_model(name)
+                        if model:
+                            price_dict[model] = price_match.group(1)
+        
         # 如果表格提取失败，尝试使用正则从文本中提取
         if not price_dict:
             text = soup.get_text()
@@ -150,18 +151,21 @@ def fetch_latest_prices():
             for name, price in matches:
                 # 过滤掉太短或不像是CPU型号的条目
                 if len(name.strip()) > 3:
-                    try:
-                        float(price)
-                        price_dict[name] = price
-                    except:
-                        pass
-
+                    model = extract_hardware_model(name)
+                    if model:
+                        # 只保留有效的价格
+                        try:
+                            float(price)
+                            price_dict[model] = price
+                        except:
+                            pass
+        
         print(f"🔍 爬取到 {len(price_dict)} 个 CPU 型号")
         if price_dict:
             print("📋 部分CPU价格:")
-            for i, (model, price) in enumerate(list(price_dict.items())[:8]):
+            for i, (model, price) in enumerate(list(price_dict.items())[:5]):
                 print(f"   {model}: ￥{price}")
-
+        
         return price_dict
     except Exception as e:
         print(f"❌ CPU爬取失败: {e}")
@@ -1045,124 +1049,92 @@ def update_cooler_accurate():
 def fuzzy_match_price(name, price_dict):
     if not price_dict:
         return None
-
+    
     # 清理名称，移除特殊字符
     clean_name = name.lower().replace(" ", "").replace("-", "")
-
-    # 检查是否是散片或盒装
-    is_retail = "散" in name or "散片" in name
-    is_box = "盒" in name or "盒装" in name
-
-    # 提取完整型号（包含所有后缀）
+    
+    # 提取型号
     model = extract_hardware_model(name)
     if not model:
         print(f"  ⚠️ 无法提取型号：{name[:40]}")
         return None
-
+    
     model_clean = model.lower().replace(" ", "").replace("-", "")
-
-    # 判断是否是AMD CPU（通过"锐龙"前缀或AMD型号）
-    is_amd = "锐龙" in name or re.match(r'r[3579]', model_clean)
-
-    # 首先尝试精确匹配（考虑完整型号和散/盒关键字）
-    best_match = None
-    best_score = 0
-
+    
+    # 首先尝试精确匹配
     for price_key in price_dict.keys():
-        price_key_lower = price_key.lower()
-        price_key_clean = price_key_lower.replace(" ", "").replace("-", "")
-
-        # 如果是AMD CPU，只匹配源网站中包含"amd"的键
-        if is_amd and "amd" not in price_key_lower:
-            continue
-
-        # 如果是Intel CPU，跳过源网站中包含"amd"的键
-        if not is_amd and "amd" in price_key_lower:
-            continue
-
-        # 检查型号是否匹配
-        model_matched = False
-
-        # 方式1: 完整型号完全匹配（清理后）
+        price_key_clean = price_key.lower().replace(" ", "").replace("-", "")
+        
+        # 多种匹配方式
+        match_found = False
+        
+        # 方式1: 型号完全匹配
         if model_clean == price_key_clean:
-            model_matched = True
+            match_found = True
         # 方式2: 型号包含在价格键中
         elif model_clean in price_key_clean:
-            model_matched = True
+            match_found = True
         # 方式3: 价格键包含在型号中
         elif price_key_clean in model_clean:
-            model_matched = True
-        # 方式4: 对于AMD型号，提取并比较核心型号部分
-        elif is_amd and re.match(r'r[3579]', model_clean):
-            # 从HTML名称中提取AMD型号核心部分，如 "r55500x3d"
-            amd_match = re.search(r'r(\d)(\d{4})([a-z0-9x3d]*)', model_clean)
-            if amd_match:
-                html_model_core = f"r{amd_match.group(1)}{amd_match.group(2)}{amd_match.group(3)}"
-                # 从源网站键中提取AMD型号核心部分
-                source_match = re.search(r'amd\s*r\s*(\d)\s*(\d{4})\s*([a-z0-9x3d\s]*)', price_key_lower)
-                if source_match:
-                    source_model_core = f"r{source_match.group(1)}{source_match.group(2)}{source_match.group(3).replace(' ', '')}"
-                    if html_model_core == source_model_core:
-                        model_matched = True
-
-        if model_matched:
-            # 计算匹配分数（考虑散/盒关键字）
-            score = 100
-
-            # 如果名称中包含"散"且价格键中也包含"散"，加分
-            if is_retail and ("散" in price_key_lower or "retail" in price_key_lower):
-                score += 20
-            # 如果名称中包含"盒"且价格键中也包含"盒"，加分
-            if is_box and ("盒" in price_key_lower or "box" in price_key_lower):
-                score += 20
-            # 如果名称中包含"散"但价格键中包含"盒"，大幅减分
-            if is_retail and ("盒" in price_key_lower or "box" in price_key_lower):
-                score -= 50
-            # 如果名称中包含"盒"但价格键中包含"散"，大幅减分
-            if is_box and ("散" in price_key_lower or "retail" in price_key_lower):
-                score -= 50
-
-            # 更新最佳匹配
-            if score > best_score:
-                best_score = score
-                best_match = price_key
-
-    if best_match and best_score >= 80:
-        p = float(price_dict[best_match])
-        # 特殊处理：i5-14490F 价格 = i5-14400F + 225
-        if "i514490f" in clean_name:
-            result = str(int(p + 225))
-            print(f"  ✓ 匹配(特殊): {name[:30]}... -> {best_match} -> ￥{result}")
-            return result
-        # 特殊处理：R5-5600 盒装（基础型号，不含X/X3D）加价50
-        if "r55600" in clean_name and "x3d" not in clean_name and "x" not in model_clean:
-            result = str(int(p + 50))
-            print(f"  ✓ 匹配(加价): {name[:30]}... -> {best_match} -> ￥{result}")
-            return result
-        # 特殊处理：R5-5500X3D 加价69
-        if "r55500x3d" in clean_name:
-            result = str(int(p + 69))
-            print(f"  ✓ 匹配(加价): {name[:30]}... -> {best_match} -> ￥{result}")
-            return result
-        # 默认返回价格
-        result = str(int(p))
-        print(f"  ✓ 匹配: {name[:30]}... -> {best_match} -> ￥{result}")
-        return result
-
-    # 如果没有找到足够好的匹配，尝试模糊匹配
-    if model:
-        try:
-            best, score = process.extractOne(model, price_dict.keys())
-            if score >= MATCH_THRESHOLD:
-                p = float(price_dict[best])
-                result = str(int(p))
-                print(f"  ~ 模糊匹配({score}): {name[:30]}... -> {best} -> ￥{result}")
+            match_found = True
+        # 方式4: 对于Intel型号，只匹配核心数字部分
+        elif re.match(r'i[3579]\d+', model_clean) and re.match(r'i[3579]\d+', price_key_clean):
+            model_num = re.search(r'i[3579]\d+', model_clean).group()
+            price_num = re.search(r'i[3579]\d+', price_key_clean).group()
+            if model_num == price_num:
+                model_suffix = model_clean[len(model_num):]
+                price_suffix = price_key_clean[len(price_num):]
+                if model_suffix == price_suffix or \
+                   (model_suffix in ['k', 'kf'] and price_suffix in ['k', 'kf']):
+                    match_found = True
+        # 方式5: 对于AMD型号，只匹配核心数字部分
+        elif re.match(r'r[3579]\d+', model_clean) and re.match(r'r[3579]\d+', price_key_clean):
+            model_num = re.search(r'r[3579]\d+', model_clean).group()
+            price_num = re.search(r'r[3579]\d+', price_key_clean).group()
+            if model_num == price_num:
+                match_found = True
+        # 方式6: 对于Ultra型号
+        elif re.match(r'ultra\d+', model_clean) and re.match(r'ultra\d+', price_key_clean):
+            model_num = re.search(r'ultra\d+', model_clean).group()
+            price_num = re.search(r'ultra\d+', price_key_clean).group()
+            if model_num == price_num:
+                match_found = True
+        
+        if match_found:
+            p = float(price_dict[price_key])
+            # 特殊处理：i5-14490F 价格 = i5-14400F + 225
+            if "i514490f" in clean_name:
+                result = str(int(p + 225))
+                print(f"  ✓ 匹配(特殊): {name[:30]}... -> {price_key} -> ￥{result}")
                 return result
-            else:
-                print(f"  ⚠️ 模糊匹配分数不足 ({score}): {name[:30]}... -> {model}")
-        except Exception as e:
-            print(f"  ⚠️ 模糊匹配出错：{name[:30]}... - {e}")
-
+            # 特殊处理：R5-5600 加价50
+            if "r55600" in clean_name and "x3d" not in clean_name:
+                result = str(int(p + 50))
+                print(f"  ✓ 匹配(加价): {name[:30]}... -> {price_key} -> ￥{result}")
+                return result
+            # 特殊处理：R5-5500X3D 加价69
+            if "r55500x3d" in clean_name:
+                result = str(int(p + 69))
+                print(f"  ✓ 匹配(加价): {name[:30]}... -> {price_key} -> ￥{result}")
+                return result
+            # 默认返回价格
+            result = str(int(p))
+            print(f"  ✓ 匹配: {name[:30]}... -> {price_key} -> ￥{result}")
+            return result
+    
+    # 如果没有精确匹配，使用模糊匹配
+    try:
+        best, score = process.extractOne(model, price_dict.keys())
+        if score >= MATCH_THRESHOLD:
+            p = float(price_dict[best])
+            result = str(int(p))
+            print(f"  ~ 模糊匹配({score}): {name[:30]}... -> {best} -> ￥{result}")
+            return result
+        else:
+            print(f"  ⚠️ 模糊匹配分数不足 ({score}): {name[:30]}... -> {model}")
+    except Exception as e:
+        print(f"  ⚠️ 模糊匹配出错：{name[:30]}... - {e}")
+    
     print(f"  ❌ 未匹配到价格：{name[:30]}... -> {model}")
     return None
 
