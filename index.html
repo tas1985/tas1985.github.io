@@ -845,7 +845,10 @@
     <div class="github-settings">
         <label>GitHub Token:</label>
         <input type="password" id="githubToken" placeholder="输入GitHub Personal Access Token" oninput="saveGithubToken()">
-        <button onclick="showCloudModal()">云端配置</button>
+        <button onclick="saveLocal()">💾 本地保存</button>
+        <button onclick="showLocalList()">📋 本地列表</button>
+        <button onclick="cloudSave()" style="background:#ff6600;">☁️ 云端保存</button>
+        <button onclick="showCloudModal()" style="background:#00cccc;">☁️ 云端加载</button>
         <button onclick="testGithubToken()" title="测试Token是否有效">测试</button>
         <span class="github-status" id="githubStatus"></span>
     </div>
@@ -3291,9 +3294,13 @@
         const configData = getConfigData();
         if (!configData) return;
 
+        console.log('配置数据:', configData);
+        console.log('Token长度:', token.length);
+
         let existingGist = null;
         try {
             const existingGists = await fetchGists();
+            console.log('现有Gist数量:', existingGists.length);
             for (const gist of existingGists) {
                 try {
                     const content = gist.files[GIST_FILENAME].content;
@@ -3301,6 +3308,7 @@
                         const config = JSON.parse(content);
                         if (config.name === configData.name) {
                             existingGist = gist;
+                            console.log('找到同名Gist:', gist.id);
                             break;
                         }
                     }
@@ -3310,10 +3318,11 @@
             }
         } catch (e) {
             console.error('获取现有Gist列表失败:', e);
-            // 继续尝试创建新Gist，不中断流程
         }
 
         const gistData = JSON.stringify(configData, null, 2);
+        console.log('准备保存的JSON长度:', gistData.length);
+        
         const body = {
             description: `塔斯电脑配置单 - ${configData.name} (${configData.time})`,
             public: false,
@@ -3348,8 +3357,11 @@
                 });
             }
 
+            console.log('响应状态:', response.status, response.statusText);
+            
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('API错误响应:', errorText);
                 let errorMessage = '保存失败';
                 try {
                     const error = JSON.parse(errorText);
@@ -3361,10 +3373,11 @@
             }
 
             const result = await response.json();
+            console.log('保存成功:', result);
             alert(`云端保存成功！\n配置名称：${configData.name}\nGist ID：${result.id}`);
         } catch (error) {
             console.error('Cloud save error:', error);
-            alert('云端保存失败：' + error.message + '\n\n请检查：\n1. GitHub Token是否正确\n2. Token是否有gist权限\n3. 网络连接是否正常');
+            alert('云端保存失败：' + error.message + '\n\n请检查：\n1. GitHub Token是否正确\n2. Token是否有gist权限\n3. 网络连接是否正常\n\n详细信息请查看浏览器控制台(F12)');
         }
     }
 
@@ -3405,6 +3418,75 @@
             alert(`测试失败：${error.message}`);
             console.error('Token test error:', error);
         }
+    }
+
+    function saveLocal() {
+        const configData = getConfigData();
+        if (!configData) return;
+
+        const localConfigs = JSON.parse(localStorage.getItem('tasi_configs') || '[]');
+        const existingIndex = localConfigs.findIndex(c => c.name === configData.name);
+        
+        if (existingIndex >= 0) {
+            localConfigs[existingIndex] = configData;
+        } else {
+            localConfigs.push(configData);
+        }
+        
+        localStorage.setItem('tasi_configs', JSON.stringify(localConfigs));
+        alert(`本地保存成功！\n配置名称：${configData.name}\n共${localConfigs.length}个配置`);
+    }
+
+    function showLocalList() {
+        const localConfigs = JSON.parse(localStorage.getItem('tasi_configs') || '[]');
+        
+        if (localConfigs.length === 0) {
+            alert('暂无本地配置');
+            return;
+        }
+
+        let html = '<div style="max-height:400px;overflow-y:auto;">';
+        localConfigs.forEach((config, index) => {
+            html += `
+                <div style="padding:10px;border-bottom:1px solid #eee;">
+                    <div><strong>${index + 1}. ${config.name}</strong></div>
+                    <div style="font-size:12px;color:#666;">${config.time}</div>
+                    <button onclick="loadLocalConfig(${index})" style="margin-right:5px;">加载</button>
+                    <button onclick="deleteLocalConfig(${index})" style="color:#ff0000;">删除</button>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;box-shadow:0 0 20px rgba(0,0,0,0.5);z-index:9999;max-width:500px;';
+        modal.innerHTML = `<h3 style="margin-top:0;">本地配置列表 (${localConfigs.length})</h3>${html}<button onclick="this.parentElement.remove()" style="margin-top:10px;">关闭</button>`;
+        document.body.appendChild(modal);
+    }
+
+    function loadLocalConfig(index) {
+        const localConfigs = JSON.parse(localStorage.getItem('tasi_configs') || '[]');
+        const config = localConfigs[index];
+        if (!config) return;
+
+        document.getElementById('user').value = config.name;
+        ["cpu", "ram", "board", "cooler", "vga", "ssd", "hdd", "case", "fan", "power", "other"].forEach(k => {
+            document.getElementById(k).value = config[k] || '';
+            document.getElementById(k + '-p').value = config[k + 'p'] || '';
+        });
+        document.getElementById('remark1').value = config.remark1 || '';
+        document.getElementById('remark2').value = config.remark2 || '';
+        
+        document.querySelector('.modal').remove();
+        alert('配置加载成功！');
+    }
+
+    function deleteLocalConfig(index) {
+        const localConfigs = JSON.parse(localStorage.getItem('tasi_configs') || '[]');
+        localConfigs.splice(index, 1);
+        localStorage.setItem('tasi_configs', JSON.stringify(localConfigs));
+        alert('删除成功！');
+        showLocalList();
     }
 
     async function fetchGists() {
