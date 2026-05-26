@@ -1042,24 +1042,28 @@ def update_cooler_accurate():
         print(f"❌ 散热器更新失败：{e}")
 
 # -------------------------- CPU 核心型号提取函数 --------------------------
-def extract_cpu_core_model(text):
-    """提取CPU核心型号，核心识别要点：数字+英文后缀如12400F、5600X、5500X3D"""
+def extract_cpu_key(text):
+    """提取CPU核心型号关键字，核心识别要点：数字+英文后缀如12400F、5600X、5500X3D
+    例如: "i5-12400F 散" -> "i512400f", "锐龙 R5-5500X3D" -> "r55500x3d"
+    """
     if not text:
         return None
-    text_lower = text.lower()
+    text_lower = text.lower().replace(" ", "").replace("-", "")
     
-    # AMD型号: r3/r5/r7/r9 + 4位数字 + 可选后缀
-    amd_match = re.search(r'r([3579])(\d{4})([a-z0-9x3d]*)', text_lower)
+    # AMD型号: r3/r5/r7/r9 + 4位数字 + 可选后缀(X/X3D等)
+    amd_pattern = r'r([3579])(\d{4})([a-z0-9x3d]*)'
+    amd_match = re.search(amd_pattern, text_lower)
     if amd_match:
         return f"r{amd_match.group(1)}{amd_match.group(2)}{amd_match.group(3)}"
     
-    # Intel型号: i3/i5/i7/i9 + 4-5位数字 + 可选后缀(F/K/KF)
-    intel_match = re.search(r'i([3579])(\d{4,5})([a-z]*)', text_lower)
+    # Intel型号: i3/i5/i7/i9 + 4-5位数字 + 可选后缀(F/K/KF等)
+    intel_pattern = r'i([3579])(\d{4,5})([a-z0-9]*)'
+    intel_match = re.search(intel_pattern, text_lower)
     if intel_match:
         return f"i{intel_match.group(1)}{intel_match.group(2)}{intel_match.group(3)}"
     
-    # Ultra型号: ultra + 数字
-    ultra_match = re.search(r'ultra\s*(\d+)', text_lower)
+    # Intel Ultra型号
+    ultra_match = re.search(r'ultra(\d+)', text_lower)
     if ultra_match:
         return f"ultra{ultra_match.group(1)}"
     
@@ -1067,52 +1071,47 @@ def extract_cpu_core_model(text):
 
 # -------------------------- CPU 匹配逻辑 --------------------------
 def fuzzy_match_price(name, price_dict):
+    """匹配CPU价格：通过核心型号关键字进行匹配"""
     if not price_dict:
         return None
     
-    # 提取CPU核心型号
-    html_core = extract_cpu_core_model(name)
-    if not html_core:
-        print(f"  ⚠️ 无法提取CPU核心型号：{name[:40]}")
+    # 提取HTML中的CPU核心型号
+    html_key = extract_cpu_key(name)
+    if not html_key:
+        print(f"  ⚠️ 无法提取CPU核心型号：{name[:35]}")
         return None
     
-    # 判断HTML中的CPU类型
-    is_amd = html_core.startswith('r')
-    is_intel = html_core.startswith('i')
-    is_ultra = html_core.startswith('ultra')
+    # 判断是否需要散片
+    is_retail = "散" in name
     
-    # 判断是否需要散片/盒装匹配
-    need_retail = "散" in name  # HTML中是否要求散片
-    
-    # 遍历源网站价格字典，查找匹配
-    for price_key, price_value in price_dict.items():
-        source_core = extract_cpu_core_model(price_key)
-        if not source_core:
+    # 遍历源网站价格字典
+    for source_name, price in price_dict.items():
+        # 提取源网站中的CPU核心型号
+        source_key = extract_cpu_key(source_name)
+        if not source_key:
             continue
         
-        # 核心型号必须完全匹配
-        if html_core != source_core:
+        # 核心型号必须匹配
+        if html_key != source_key:
             continue
         
-        # 散片/盒装匹配（仅AMD CPU需要检查）
-        if is_amd:
-            source_has_retail = "散" in price_key.lower()
-            source_has_box = "盒" in price_key.lower()
-            
-            # 如果HTML要求散片但源网站没有散装，不匹配
-            if need_retail and source_has_box and not source_has_retail:
-                continue
-            # 如果HTML要求盒装但源网站没有盒装，不匹配
-            if not need_retail and source_has_retail and not source_has_box:
-                continue
+        # 散片/盒装匹配
+        source_has_retail = "散" in source_name.lower()
+        source_has_box = "盒" in source_name.lower()
         
-        # 找到匹配
-        p = float(price_value)
-        result = str(int(p))
-        print(f"  ✓ 匹配: {name[:35]}... -> {price_key} -> ￥{result}")
+        # 如果HTML要求散片，但源网站是盒装，跳过
+        if is_retail and source_has_box and not source_has_retail:
+            continue
+        # 如果HTML要求盒装，但源网站是散片，跳过
+        if not is_retail and source_has_retail and not source_has_box:
+            continue
+        
+        # 找到匹配！
+        result = str(int(float(price)))
+        print(f"  ✓ 匹配成功: {name[:35]}... -> {source_name} -> ￥{result}")
         return result
     
-    print(f"  ❌ 未匹配到价格：{name[:35]}... (核心型号: {html_core})")
+    print(f"  ❌ 未匹配到: {name[:35]}... (关键字: {html_key})")
     return None
 
 # -------------------------- 主函数 --------------------------
