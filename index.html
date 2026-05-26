@@ -3391,9 +3391,17 @@
             }
 
             let html = '';
-            gists.forEach(gist => {
+            let failedCount = 0;
+            gists.forEach((gist, index) => {
                 try {
-                    const config = JSON.parse(gist.files[GIST_FILENAME].content);
+                    const content = gist.files[GIST_FILENAME].content;
+                    if (!content || content.trim() === '') {
+                        throw new Error('配置内容为空');
+                    }
+                    const config = JSON.parse(content);
+                    if (!config.name) {
+                        throw new Error('配置缺少名称字段');
+                    }
                     html += `
                         <div class="cloud-item">
                             <div class="cloud-item-name">${config.name}</div>
@@ -3406,11 +3414,18 @@
                         </div>
                     `;
                 } catch (e) {
-                    console.error('Parse gist error:', e);
+                    failedCount++;
+                    console.error(`解析第${index + 1}个Gist失败 (ID: ${gist.id}):`, e.message);
                 }
             });
 
-            document.getElementById('cloudList').innerHTML = html || '<div style="text-align:center;padding:20px;color:#9900ff;">解析配置失败</div>';
+            if (html === '') {
+                document.getElementById('cloudList').innerHTML = `<div style="text-align:center;padding:20px;color:#9900ff;">解析配置失败，共${failedCount}个Gist无法解析<br>请检查Gist中的配置格式是否正确</div>`;
+            } else if (failedCount > 0) {
+                document.getElementById('cloudList').innerHTML = html + `<div style="text-align:center;padding:10px;color:#ff9900;">${failedCount}个配置解析失败</div>`;
+            } else {
+                document.getElementById('cloudList').innerHTML = html;
+            }
         } catch (error) {
             document.getElementById('cloudList').innerHTML = '<div style="text-align:center;padding:20px;color:#ff0000;">加载失败：' + error.message + '</div>';
         }
