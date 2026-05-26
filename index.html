@@ -672,6 +672,141 @@
             object-fit: contain;
             display: none;
         }
+
+        /* GitHub云端功能样式 */
+        .github-settings {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: #d0d0d0;
+            border: 1px solid #9900ff;
+            border-radius: 6px;
+        }
+        .github-settings label {
+            white-space: nowrap;
+            font-weight: bold;
+            color: #000;
+            font-size: 14px;
+        }
+        .github-settings input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            background: #000;
+            color: #00ff00;
+            font-size: 12px;
+        }
+        .github-settings button {
+            padding: 8px 12px;
+            border: 2px solid #9900ff;
+            border-radius: 4px;
+            background: #000;
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .github-settings button:hover {
+            background: #330066;
+            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+        }
+        .github-status {
+            font-size: 12px;
+            color: #9900ff;
+            margin-left: 8px;
+        }
+        .github-status.connected {
+            color: #00ff00;
+        }
+
+        /* 云端配置列表样式 */
+        .cloud-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .cloud-item {
+            padding: 10px;
+            border: 1px solid #9900ff;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #d0d0d0;
+            cursor: pointer;
+        }
+        .cloud-item:hover {
+            background: #9900ff;
+            color: #000;
+        }
+        .cloud-item-name {
+            font-weight: bold;
+            color: #00ff00;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .cloud-item:hover .cloud-item-name {
+            color: #000;
+        }
+        .cloud-item-time {
+            font-size: 12px;
+            color: #9900ff;
+        }
+        .cloud-item-gist {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        .cloud-item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .cloud-item-actions button {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #9900ff;
+            border-radius: 4px;
+            background: #000;
+            color: #00ff00;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .cloud-item-actions button:hover {
+            background: #330066;
+        }
+        .cloud-item-actions button.delete-btn {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+        .cloud-item-actions button.delete-btn:hover {
+            background: #660000;
+        }
+
+        /* 云端按钮样式 */
+        .btn-cloud-save {
+            border-color: #ff9900 !important;
+            color: #ff9900 !important;
+        }
+        .btn-cloud-save:hover {
+            box-shadow: 0 0 10px rgba(255,153,0,0.8) !important;
+        }
+        .btn-cloud-load {
+            border-color: #00ccff !important;
+            color: #00ccff !important;
+        }
+        .btn-cloud-load:hover {
+            box-shadow: 0 0 10px rgba(0,204,255,0.8) !important;
+        }
+        .btn-cloud-settings {
+            border-color: #9900ff !important;
+            color: #9900ff !important;
+            font-size: 12px !important;
+            padding: 8px !important;
+        }
     </style>
 </head>
 <body>
@@ -704,6 +839,14 @@
         <div class="datetime-display" id="datetimeDisplay"></div>
         <!-- 客户名称下拉列表 -->
         <div class="user-dropdown" id="userDropdown"></div>
+    </div>
+
+    <!-- GitHub云端同步设置 -->
+    <div class="github-settings">
+        <label>GitHub Token:</label>
+        <input type="password" id="githubToken" placeholder="输入GitHub Personal Access Token" oninput="saveGithubToken()">
+        <button onclick="showCloudModal()">云端配置</button>
+        <span class="github-status" id="githubStatus"></span>
     </div>
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
@@ -852,6 +995,8 @@
             <span>元</span>
         </div>
         <button class="btn-reset" onclick="reset()">清空重置</button>
+        <button class="btn-cloud-save" onclick="cloudSave()">云端保存</button>
+        <button class="btn-cloud-load" onclick="showCloudModal()">云端加载</button>
     </div>
 
 </div>
@@ -903,6 +1048,16 @@
             <button onclick="doAdd()">添加型号</button>
         </div>
         <button onclick="closeModal('addModal')">取消</button>
+    </div>
+</div>
+
+<!-- 云端配置弹窗 -->
+<div class="modal" id="cloudModal">
+    <div class="modal-box">
+        <h4>云端配置列表</h4>
+        <p style="font-size:12px;color:#9900ff;margin-bottom:8px">配置数据将保存到您的GitHub Gist中，任何浏览器都可以加载</p>
+        <div class="cloud-list" id="cloudList"></div>
+        <button onclick="closeModal('cloudModal')">关闭</button>
     </div>
 </div>
 
@@ -1047,6 +1202,9 @@
         if (isWeChatBrowser() || !checkPasswordValidity()) {
             showPasswordModal();
         }
+        // 初始化GitHub Token状态
+        document.getElementById('githubToken').value = getGithubToken();
+        updateGithubStatus();
     });
 
     // ===================== 修改后的数据加载逻辑 =====================
@@ -3073,6 +3231,257 @@
         saveNow();
         closeModal('loadModal');
         alert("加载成功");
+    }
+
+    // ===================== GitHub Gist云端同步功能 =====================
+    const GIST_API_URL = 'https://api.github.com/gists';
+    const GIST_FILENAME = 'tasi-config.json';
+
+    function getGithubToken() {
+        return localStorage.getItem('githubToken') || '';
+    }
+
+    function saveGithubToken() {
+        const token = document.getElementById('githubToken').value.trim();
+        localStorage.setItem('githubToken', token);
+        updateGithubStatus();
+    }
+
+    function updateGithubStatus() {
+        const token = getGithubToken();
+        const statusEl = document.getElementById('githubStatus');
+        if (token) {
+            statusEl.textContent = '已配置';
+            statusEl.className = 'github-status connected';
+        } else {
+            statusEl.textContent = '未配置';
+            statusEl.className = 'github-status';
+        }
+    }
+
+    function getConfigData() {
+        let u = document.getElementById("user").value.trim();
+        if (!u) {
+            alert("请输入客户名称");
+            return null;
+        }
+        let o = {
+            name: u,
+            time: new Date().toLocaleString(),
+            version: '1.0'
+        };
+        ["cpu", "ram", "board", "cooler", "vga", "ssd", "hdd", "case", "fan", "power", "other"].forEach(k => {
+            o[k] = document.getElementById(k).value;
+            o[k + "p"] = document.getElementById(k + "-p").value;
+        });
+        o.remark1 = document.getElementById("remark1").value;
+        o.remark2 = document.getElementById("remark2").value;
+        return o;
+    }
+
+    async function cloudSave() {
+        const token = getGithubToken();
+        if (!token) {
+            alert('请先输入GitHub Personal Access Token');
+            document.getElementById('githubToken').focus();
+            return;
+        }
+
+        const configData = getConfigData();
+        if (!configData) return;
+
+        const existingGists = await fetchGists();
+        const existingGist = existingGists.find(gist => 
+            gist.files && gist.files[GIST_FILENAME] && 
+            JSON.parse(gist.files[GIST_FILENAME].content).name === configData.name
+        );
+
+        const gistData = JSON.stringify(configData, null, 2);
+        const body = {
+            description: `塔斯电脑配置单 - ${configData.name} (${configData.time})`,
+            public: false,
+            files: {
+                [GIST_FILENAME]: {
+                    content: gistData
+                }
+            }
+        };
+
+        try {
+            let response;
+            if (existingGist) {
+                body.gist_id = existingGist.id;
+                response = await fetch(`${GIST_API_URL}/${existingGist.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+            } else {
+                response = await fetch(GIST_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+            }
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || '保存失败');
+            }
+
+            const result = await response.json();
+            alert(`云端保存成功！\n配置名称：${configData.name}\nGist ID：${result.id}`);
+        } catch (error) {
+            alert('云端保存失败：' + error.message);
+            console.error('Cloud save error:', error);
+        }
+    }
+
+    async function fetchGists() {
+        const token = getGithubToken();
+        if (!token) {
+            return [];
+        }
+
+        try {
+            const response = await fetch(GIST_API_URL, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || '获取列表失败');
+            }
+
+            const gists = await response.json();
+            return gists.filter(gist => gist.files && gist.files[GIST_FILENAME]);
+        } catch (error) {
+            console.error('Fetch gists error:', error);
+            return [];
+        }
+    }
+
+    async function showCloudModal() {
+        const token = getGithubToken();
+        if (!token) {
+            alert('请先输入GitHub Personal Access Token');
+            document.getElementById('githubToken').focus();
+            return;
+        }
+
+        document.getElementById('cloudList').innerHTML = '<div style="text-align:center;padding:20px;color:#00ff00;">加载中...</div>';
+        document.getElementById('cloudModal').style.display = 'flex';
+
+        try {
+            const gists = await fetchGists();
+
+            if (gists.length === 0) {
+                document.getElementById('cloudList').innerHTML = '<div style="text-align:center;padding:20px;color:#9900ff;">暂无云端配置</div>';
+                return;
+            }
+
+            let html = '';
+            gists.forEach(gist => {
+                try {
+                    const config = JSON.parse(gist.files[GIST_FILENAME].content);
+                    html += `
+                        <div class="cloud-item">
+                            <div class="cloud-item-name">${config.name}</div>
+                            <div class="cloud-item-time">${config.time || gist.updated_at}</div>
+                            <div class="cloud-item-gist">Gist: ${gist.id}</div>
+                            <div class="cloud-item-actions">
+                                <button onclick="cloudLoadConfig('${gist.id}')">加载</button>
+                                <button class="delete-btn" onclick="cloudDeleteConfig('${gist.id}')">删除</button>
+                            </div>
+                        </div>
+                    `;
+                } catch (e) {
+                    console.error('Parse gist error:', e);
+                }
+            });
+
+            document.getElementById('cloudList').innerHTML = html || '<div style="text-align:center;padding:20px;color:#9900ff;">解析配置失败</div>';
+        } catch (error) {
+            document.getElementById('cloudList').innerHTML = '<div style="text-align:center;padding:20px;color:#ff0000;">加载失败：' + error.message + '</div>';
+        }
+    }
+
+    async function cloudLoadConfig(gistId) {
+        const token = getGithubToken();
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${GIST_API_URL}/${gistId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('获取配置失败');
+            }
+
+            const gist = await response.json();
+            const config = JSON.parse(gist.files[GIST_FILENAME].content);
+
+            document.getElementById("user").value = config.name || '';
+            ["cpu", "ram", "board", "cooler", "vga", "ssd", "hdd", "case", "fan", "power", "other"].forEach(k => {
+                document.getElementById(k).value = config[k] || '';
+                document.getElementById(k + "-p").value = config[k + "p"] || '';
+            });
+            document.getElementById("remark1").value = config.remark1 || '';
+            document.getElementById("remark2").value = config.remark2 || '';
+
+            calc();
+
+            if (config.case) showCaseImage(config.case);
+            if (config.cooler) showCoolerImage(config.cooler);
+
+            saveNow();
+            closeModal('cloudModal');
+            alert('云端配置加载成功！');
+        } catch (error) {
+            alert('加载失败：' + error.message);
+            console.error('Cloud load error:', error);
+        }
+    }
+
+    async function cloudDeleteConfig(gistId) {
+        if (!confirm('确定要删除这个云端配置吗？')) return;
+
+        const token = getGithubToken();
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${GIST_API_URL}/${gistId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('删除失败');
+            }
+
+            alert('删除成功！');
+            showCloudModal();
+        } catch (error) {
+            alert('删除失败：' + error.message);
+            console.error('Cloud delete error:', error);
+        }
     }
 
     function closeModal(m){
