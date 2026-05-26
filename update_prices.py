@@ -118,14 +118,15 @@ def extract_ssd_exact_key(name):
     if cap: key_parts.append(cap.group(1))
     return "".join(key_parts)
 
-# -------------------------- 爬取函数 --------------------------
-def fetch_latest_prices():
+# -------------------------- CPU 爬取函数 --------------------------
+def fetch_cpu_prices():
+    """爬取CPU价格，返回列表格式"""
     try:
         res = requests.get(SOURCE_URL, headers=HEADERS, timeout=15)
-        res.encoding = res.apparent_encoding  # 自动检测编码
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         
-        price_dict = {}
+        cpu_list = []
         
         # 尝试从表格中提取数据
         tables = soup.find_all('table')
@@ -136,38 +137,38 @@ def fetch_latest_prices():
                 if len(cells) >= 2:
                     name = cells[0].get_text(strip=True)
                     price_text = cells[-1].get_text(strip=True)
-                    # 提取价格
                     price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
                     if price_match and name and len(name) > 3:
-                        # 直接使用原始名称作为键，保留完整信息（包括"AMD"、"盒"、"散"等关键字）
-                        price_dict[name] = price_match.group(1)
+                        price = int(float(price_match.group(1)))
+                        cpu_list.append({"name": name, "price": price})
         
         # 如果表格提取失败，尝试使用正则从文本中提取
-        if not price_dict:
+        if not cpu_list:
             text = soup.get_text()
-            # 使用更健壮的正则表达式提取型号和价格
             matches = re.findall(r'([^\n￥]+?)[：:\s]*[￥¥](\d+(?:\.\d+)?)', text)
             for name, price in matches:
-                # 过滤掉太短或不像是CPU型号的条目
                 if len(name.strip()) > 3:
                     try:
-                        float(price)
-                        price_dict[name] = price
+                        cpu_list.append({"name": name.strip(), "price": int(float(price))})
                     except:
                         pass
         
-        print(f"🔍 爬取到 {len(price_dict)} 个 CPU 型号")
-        if price_dict:
+        print(f"🔍 爬取到 {len(cpu_list)} 个 CPU 型号")
+        if cpu_list:
             print("📋 部分CPU价格:")
-            for i, (model, price) in enumerate(list(price_dict.items())[:8]):
-                print(f"   {model}: ￥{price}")
+            for i, cpu in enumerate(cpu_list[:8]):
+                print(f"   {cpu['name']}: ￥{cpu['price']}")
         
-        return price_dict
+        return cpu_list
     except Exception as e:
         print(f"❌ CPU爬取失败: {e}")
         import traceback
         traceback.print_exc()
-        return {}
+        return []
+
+# -------------------------- CPU 内容生成函数 --------------------------
+def generate_cpu_content(cpu_list):
+    return "".join([f'{INDENT}{{n:"{c["name"]}",p:{c["price"]}}},\n' for c in cpu_list])
 
 def fetch_gpu_exact_dict():
     try:
@@ -468,51 +469,59 @@ def update_ssd_prices():
         print(f"❌ 硬盘更新失败：{e}")
         return 0
 
-# -------------------------- CPU 更新 --------------------------
-def update_html_prices(price_dict):
+# -------------------------- CPU 更新函数 --------------------------
+# 定义CPU目标行（插入位置的标记）
+CPU_TARGET_LINE = '{n:"i3-12100F 3.3G 四核",p:599},'
+
+def update_cpu_accurate():
+    """仿照显卡更新逻辑，爬取CPU数据并插入到指定位置"""
     try:
-        if not price_dict:
-            print("⚠️ CPU 价格字典为空，跳过 CPU 更新")
-            return 0
+        # 先获取CPU数据
+        cpu_list = fetch_cpu_prices()
         
-        print(f"📊 获取到 {len(price_dict)} 个 CPU 价格")
+        # 如果获取失败或为空，保留原有数据
+        if not cpu_list:
+            print("⚠️ CPU数据获取失败或为空，保留原有CPU数据")
+            return
         
+        # 获取成功后打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         
-        cnt = 0
+        # 找到CPU目标行的位置
+        idx = next((i for i, l in enumerate(lines) if CPU_TARGET_LINE in l), -1)
+        if idx == -1:
+            print(f"❌ 未找到CPU目标行：{CPU_TARGET_LINE}")
+            return
         
-        for i, line in enumerate(lines):
-            # 查找CPU条目
-            match = re.search(r'\{n:"([^"]+)",p:(\d+)\}', line)
-            if match:
-                name = match.group(1)
-                old_price = match.group(2)
-                
-                # 检查是否是CPU型号
-                if re.search(r'(i[3579]-\d+|锐龙|R[3579]-\d+|Ultra)', name, re.IGNORECASE):
-                    new_price = fuzzy_match_price(name, price_dict)
-                    if new_price and new_price != old_price:
-                        # 使用正则替换当前行中的价格，避免替换其他相似字符串
-                        new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
-                        lines[i] = new_line
-                        cnt += 1
-                        print(f"  ✓ 更新: {name[:30]}... ￥{old_price} -> ￥{new_price}")
-                    elif new_price == old_price:
-                        print(f"  ≡ 价格不变: {name[:30]}... ￥{old_price}")
-                    else:
-                        print(f"  ⚠️ 未匹配: {name[:30]}...")
+        # 目标行的下一行开始插入
+        pos = idx + 1
         
+        # 删除原有CPU数据（直到遇到下一个不以12个空格开头的行或非CPU行）
+        while pos < len(lines):
+            line = lines[pos]
+            # 检查是否是CPU数据行（以12个空格开头且包含{n:"和p:）
+            if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+                del lines[pos]
+            else:
+                break
+        
+        # 生成CPU内容
+        cpu_content = generate_cpu_content(cpu_list)
+        
+        # 在目标行下一行插入新的CPU数据
+        if cpu_content:
+            lines.insert(pos, cpu_content)
+        
+        # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"✅ CPU 价格更新完成：{cnt} 个")
-        return cnt
+        print(f"✅ CPU价格自动更新完成，共更新 {len(cpu_list)} 个CPU型号")
     except Exception as e:
-        print(f"❌ CPU 更新失败：{e}")
+        print(f"❌ CPU更新失败：{e}")
         import traceback
         traceback.print_exc()
-        return 0
 
 # -------------------------- 修改后的显卡更新逻辑 --------------------------
 def update_gpu_accurate():
@@ -1124,15 +1133,8 @@ def fuzzy_match_price(name, price_dict):
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
     print("===== 硬件价格自动更新 =====")
-    cpu_prices = fetch_latest_prices()
-    print(f"CPU 价格获取结果：{len(cpu_prices)} 个")
-    if cpu_prices:
-        print("前 5 个 CPU 价格:")
-        for i, (k, v) in enumerate(list(cpu_prices.items())[:5]):
-            print(f"  {k}: {v}")
-        update_html_prices(cpu_prices)
-    else:
-        print("❌ CPU 价格获取失败，跳过更新")
+    # 使用新的CPU更新逻辑
+    update_cpu_accurate()
     # 使用新的显卡更新逻辑
     update_gpu_accurate()
     # 旧的固定显卡更新逻辑已不再需要，可以注释掉
