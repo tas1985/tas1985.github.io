@@ -3456,6 +3456,7 @@
 
             let html = '';
             let failedCount = 0;
+            let failedGists = [];
             gists.forEach((gist, index) => {
                 try {
                     const content = gist.files[GIST_FILENAME].content;
@@ -3479,14 +3480,43 @@
                     `;
                 } catch (e) {
                     failedCount++;
+                    failedGists.push({ id: gist.id, error: e.message });
                     console.error(`解析第${index + 1}个Gist失败 (ID: ${gist.id}):`, e.message);
                 }
             });
 
             if (html === '') {
-                document.getElementById('cloudList').innerHTML = `<div style="text-align:center;padding:20px;color:#9900ff;">解析配置失败，共${failedCount}个Gist无法解析<br>请检查Gist中的配置格式是否正确</div>`;
+                let failedHtml = '<div style="text-align:center;padding:20px;color:#9900ff;">解析配置失败，共' + failedCount + '个Gist无法解析<br>请检查Gist中的配置格式是否正确</div>';
+                if (failedGists.length > 0) {
+                    failedHtml += '<div style="margin-top:10px;">';
+                    failedGists.forEach((gist, i) => {
+                        failedHtml += `
+                            <div style="padding:8px;border:1px solid #ff0000;border-radius:4px;margin-bottom:5px;background:#ffe0e0;">
+                                <div style="font-size:12px;color:#ff0000;">Gist ${i+1}: ${gist.id}</div>
+                                <div style="font-size:11px;color:#990000;">错误: ${gist.error}</div>
+                                <button style="margin-top:5px;padding:4px 8px;font-size:11px;border:1px solid #ff0000;border-radius:3px;background:#fff;color:#ff0000;cursor:pointer;" onclick="cloudDeleteConfig('${gist.id}')">删除此Gist</button>
+                            </div>
+                        `;
+                    });
+                    failedHtml += '</div>';
+                }
+                document.getElementById('cloudList').innerHTML = failedHtml;
             } else if (failedCount > 0) {
-                document.getElementById('cloudList').innerHTML = html + `<div style="text-align:center;padding:10px;color:#ff9900;">${failedCount}个配置解析失败</div>`;
+                let failedHtml = '<div style="text-align:center;padding:10px;color:#ff9900;">' + failedCount + '个配置解析失败，可删除后重新保存</div>';
+                if (failedGists.length > 0) {
+                    failedHtml += '<div style="margin-top:10px;">';
+                    failedGists.forEach((gist, i) => {
+                        failedHtml += `
+                            <div style="padding:8px;border:1px solid #ff9900;border-radius:4px;margin-bottom:5px;background:#fff8e0;">
+                                <div style="font-size:12px;color:#ff9900;">无效Gist ${i+1}: ${gist.id}</div>
+                                <div style="font-size:11px;color:#996600;">原因: ${gist.error}</div>
+                                <button style="margin-top:5px;padding:4px 8px;font-size:11px;border:1px solid #ff9900;border-radius:3px;background:#fff;color:#ff9900;cursor:pointer;" onclick="cloudDeleteConfig('${gist.id}')">删除</button>
+                            </div>
+                        `;
+                    });
+                    failedHtml += '</div>';
+                }
+                document.getElementById('cloudList').innerHTML = html + failedHtml;
             } else {
                 document.getElementById('cloudList').innerHTML = html;
             }
