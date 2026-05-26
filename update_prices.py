@@ -478,37 +478,33 @@ def update_html_prices(price_dict):
         print(f"📊 获取到 {len(price_dict)} 个 CPU 价格")
         
         with open(HTML_FILE, "r", encoding="utf-8") as f:
-            content = f.read()
-        
-        # 找到 CPU 数据区域
-        # 在 defaultData.cpu 数组中查找所有 CPU 条目
-        cpu_pattern = r'\{n:"([^"]+)",p:(\d+)\}'
+            lines = f.readlines()
         
         cnt = 0
-        updated_content = content
         
-        for match in re.finditer(cpu_pattern, content):
-            name = match.group(1)
-            old_price = match.group(2)
-            
-            # 检查是否在 CPU 数据区域（通过检查上下文）
-            # 查找 "{n:" 和 ",p:" 之间的内容是否是 CPU 型号
-            if re.search(r'(i[3579]-\d+|锐龙|R[3579]-\d+|Ultra)', name, re.IGNORECASE):
-                new_price = fuzzy_match_price(name, price_dict)
-                if new_price and new_price != old_price:
-                    # 构建要替换的字符串
-                    old_str = f'{{n:"{name}",p:{old_price}}}'
-                    new_str = f'{{n:"{name}",p:{new_price}}}'
-                    updated_content = updated_content.replace(old_str, new_str)
-                    cnt += 1
-                    print(f"  ✓ 更新: {name[:30]}... ￥{old_price} -> ￥{new_price}")
-                elif new_price == old_price:
-                    print(f"  ≡ 价格不变: {name[:30]}... ￥{old_price}")
-                else:
-                    print(f"  ⚠️ 未匹配: {name[:30]}...")
+        for i, line in enumerate(lines):
+            # 查找CPU条目
+            match = re.search(r'\{n:"([^"]+)",p:(\d+)\}', line)
+            if match:
+                name = match.group(1)
+                old_price = match.group(2)
+                
+                # 检查是否是CPU型号
+                if re.search(r'(i[3579]-\d+|锐龙|R[3579]-\d+|Ultra)', name, re.IGNORECASE):
+                    new_price = fuzzy_match_price(name, price_dict)
+                    if new_price and new_price != old_price:
+                        # 使用正则替换当前行中的价格，避免替换其他相似字符串
+                        new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
+                        lines[i] = new_line
+                        cnt += 1
+                        print(f"  ✓ 更新: {name[:30]}... ￥{old_price} -> ￥{new_price}")
+                    elif new_price == old_price:
+                        print(f"  ≡ 价格不变: {name[:30]}... ￥{old_price}")
+                    else:
+                        print(f"  ⚠️ 未匹配: {name[:30]}...")
         
         with open(HTML_FILE, "w", encoding="utf-8") as f:
-            f.write(updated_content)
+            f.writelines(lines)
         
         print(f"✅ CPU 价格更新完成：{cnt} 个")
         return cnt
@@ -1050,17 +1046,19 @@ def extract_cpu_key(text):
         return None
     text_lower = text.lower().replace(" ", "").replace("-", "")
     
-    # AMD型号: r3/r5/r7/r9 + 4位数字 + 可选后缀(X/X3D等)
-    amd_pattern = r'r([3579])(\d{4})([a-z0-9x3d]*)'
-    amd_match = re.search(amd_pattern, text_lower)
-    if amd_match:
-        return f"r{amd_match.group(1)}{amd_match.group(2)}{amd_match.group(3)}"
-    
     # Intel型号: i3/i5/i7/i9 + 4-5位数字 + 可选后缀(F/K/KF等)
     intel_pattern = r'i([3579])(\d{4,5})([a-z0-9]*)'
     intel_match = re.search(intel_pattern, text_lower)
     if intel_match:
-        return f"i{intel_match.group(1)}{intel_match.group(2)}{intel_match.group(3)}"
+        result = f"i{intel_match.group(1)}{intel_match.group(2)}{intel_match.group(3)}"
+        return result
+    
+    # AMD型号: r3/r5/r7/r9 + 4位数字 + 可选后缀(X/X3D等)
+    amd_pattern = r'r([3579])(\d{4})([a-z0-9x3d]*)'
+    amd_match = re.search(amd_pattern, text_lower)
+    if amd_match:
+        result = f"r{amd_match.group(1)}{amd_match.group(2)}{amd_match.group(3)}"
+        return result
     
     # Intel Ultra型号
     ultra_match = re.search(r'ultra(\d+)', text_lower)
@@ -1081,6 +1079,9 @@ def fuzzy_match_price(name, price_dict):
         print(f"  ⚠️ 无法提取CPU核心型号：{name[:35]}")
         return None
     
+    print(f"  📌 HTML型号: {name[:40]}...")
+    print(f"  🔑 提取关键字: {html_key}")
+    
     # 判断是否需要散片
     is_retail = "散" in name
     
@@ -1091,7 +1092,11 @@ def fuzzy_match_price(name, price_dict):
         if not source_key:
             continue
         
-        # 核心型号必须匹配
+        # 调试输出：显示正在比较的关键字
+        if html_key[:2] == source_key[:2]:  # 同系列(i5/r5等)才显示
+            print(f"     ↔ 比较: {source_key} vs {html_key} ({source_name[:30]}...)")
+        
+        # 核心型号必须完全匹配
         if html_key != source_key:
             continue
         
@@ -1101,9 +1106,11 @@ def fuzzy_match_price(name, price_dict):
         
         # 如果HTML要求散片，但源网站是盒装，跳过
         if is_retail and source_has_box and not source_has_retail:
+            print(f"     ✗ 跳过: 需要散片，但源网站是盒装")
             continue
         # 如果HTML要求盒装，但源网站是散片，跳过
         if not is_retail and source_has_retail and not source_has_box:
+            print(f"     ✗ 跳过: 需要盒装，但源网站是散片")
             continue
         
         # 找到匹配！
