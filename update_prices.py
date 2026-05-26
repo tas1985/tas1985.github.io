@@ -17,7 +17,7 @@ POWER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E7%94%B5%E6%BA%90"
 COOLER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%95%A3%E7%83%AD%E5%99%A8"
 HTML_FILE = "index.html"
 START_LINE = 958
-END_LINE = 1014
+END_LINE = 1015
 MATCH_THRESHOLD = 60
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
@@ -53,8 +53,9 @@ def extract_hardware_model(name):
         return ""
     name = re.sub(r'[{n:"\",}]', '', name).lower().replace(" ", "").replace("-", "")
     pattern = re.compile(
-        r'(i[3579]\d+[a-z0-9]*)|'
-        r'(r[3579]\d+[a-z0-9]*)|'
+        r'(i[3579]\d+[a-z0-9kf]*)|'
+        r'(r[3579]\d+[a-z0-9kf]*)|'
+        r'(r[3579]\-\d+[a-z0-9kf]*)|'
         r'(rtx\d+[a-z0-9]*)|'
         r'(gtx\d+[a-z0-9]*)|'
         r'(amd\d+[a-z0-9]*)|'
