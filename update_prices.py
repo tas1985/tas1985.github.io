@@ -16,8 +16,8 @@ POWER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E7%94%B5%E6%BA%90"
 # 新增散热器URL配置
 COOLER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%95%A3%E7%83%AD%E5%99%A8"
 HTML_FILE = "index.html"
-START_LINE = 958
-END_LINE = 1015
+START_LINE = 1055
+END_LINE = 1110
 MATCH_THRESHOLD = 60
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
