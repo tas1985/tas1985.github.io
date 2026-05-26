@@ -1057,7 +1057,7 @@ def fuzzy_match_price(name, price_dict):
     
     model_clean = model.lower().replace(" ", "").replace("-", "")
     
-    # 检查是否是AMD CPU（HTML中以"锐龙"开头）
+    # 检查是否是AMD CPU（HTML中以"锐龙"开头或型号以r3/r5/r7/r9开头）
     is_amd_html = "锐龙" in name or re.match(r'r[3579]', model_clean)
     
     # 首先尝试精确匹配
@@ -1068,42 +1068,24 @@ def fuzzy_match_price(name, price_dict):
         # 多种匹配方式
         match_found = False
         
-        # 方式1: 型号完全匹配
+        # ========== 方式1: 型号完全匹配（最高优先级）==========
         if model_clean == price_key_clean:
             match_found = True
-        # 方式2: 型号包含在价格键中
-        elif model_clean in price_key_clean:
-            match_found = True
-        # 方式3: 价格键包含在型号中
-        elif price_key_clean in model_clean:
-            match_found = True
-        # 方式4: 对于Intel型号，只匹配核心数字部分
-        elif re.match(r'i[3579]\d+', model_clean) and re.match(r'i[3579]\d+', price_key_clean):
-            model_num = re.search(r'i[3579]\d+', model_clean).group()
-            price_num = re.search(r'i[3579]\d+', price_key_clean).group()
-            if model_num == price_num:
-                model_suffix = model_clean[len(model_num):]
-                price_suffix = price_key_clean[len(price_num):]
-                if model_suffix == price_suffix or \
-                   (model_suffix in ['k', 'kf'] and price_suffix in ['k', 'kf']):
-                    match_found = True
-        # 方式5: 对于AMD型号，精确匹配核心型号部分
-        elif re.match(r'r[3579]', model_clean) and re.match(r'r[3579]', price_key_clean):
+        
+        # ========== 方式2: AMD专用匹配（优先于通用匹配）==========
+        elif is_amd_html and re.search(r'r\s*[3579]', price_key_lower):
             # 提取AMD CPU的核心型号（包括所有后缀如X、X3D等）
             # HTML格式: "锐龙 R5-5500X3D" -> "r55500x3d"
-            # 源网站格式: "AMD R5 5500X3D 盒" -> "amd r5 5500x3d"
+            # 源网站格式: "AMD R5 5500X3D 盒" 或 "R5 5500X3D 盒" -> "r5500x3d"
             
-            # 提取HTML中的AMD核心型号
             html_amd = re.search(r'r([3579])(\d{4})([a-z0-9x3d]*)', model_clean)
             if html_amd:
                 html_core = f"r{html_amd.group(1)}{html_amd.group(2)}{html_amd.group(3)}"
                 
-                # 提取源网站中的AMD核心型号
-                source_amd = re.search(r'amd\s+r\s*([3579])\s*(\d{4})\s*([a-z0-9x3d\s]*)', price_key_lower)
+                source_amd = re.search(r'r\s*([3579])\s*(\d{4})\s*([a-z0-9x3d\s]*)', price_key_lower)
                 if source_amd:
                     source_core = f"r{source_amd.group(1)}{source_amd.group(2)}{source_amd.group(3).replace(' ', '')}"
                     
-                    # 如果核心型号完全匹配
                     if html_core == source_core:
                         match_found = True
                         
@@ -1113,18 +1095,38 @@ def fuzzy_match_price(name, price_dict):
                         is_source_retail = "散" in price_key_lower
                         is_source_box = "盒" in price_key_lower
                         
-                        # 如果HTML要求散片但源网站是盒装，不匹配
                         if is_html_retail and is_source_box:
                             match_found = False
-                        # 如果HTML要求盒装但源网站是散片，不匹配
                         if is_html_box and is_source_retail:
                             match_found = False
-        # 方式6: 对于Ultra型号
+        
+        # ========== 方式3: Intel K/KF专用匹配 ==========
+        elif re.match(r'i[3579]\d+', model_clean) and re.match(r'i[3579]\d+', price_key_clean):
+            model_num = re.search(r'i[3579]\d+', model_clean).group()
+            price_num = re.search(r'i[3579]\d+', price_key_clean).group()
+            if model_num == price_num:
+                model_suffix = model_clean[len(model_num):]
+                price_suffix = price_key_clean[len(price_num):]
+                if model_suffix == price_suffix or \
+                   (model_suffix in ['k', 'kf'] and price_suffix in ['k', 'kf']):
+                    match_found = True
+        
+        # ========== 方式4: Intel Ultra专用匹配 ==========
         elif re.match(r'ultra\d+', model_clean) and re.match(r'ultra\d+', price_key_clean):
             model_num = re.search(r'ultra\d+', model_clean).group()
             price_num = re.search(r'ultra\d+', price_key_clean).group()
             if model_num == price_num:
                 match_found = True
+        
+        # ========== 方式5: 型号包含在价格键中 ==========
+        elif model_clean in price_key_clean:
+            # 对于AMD型号，跳过这种匹配方式，避免错误匹配
+            if not is_amd_html:
+                match_found = True
+        
+        # ========== 方式6: 价格键包含在型号中 ==========
+        elif price_key_clean in model_clean:
+            match_found = True
         
         if match_found:
             p = float(price_dict[price_key])
