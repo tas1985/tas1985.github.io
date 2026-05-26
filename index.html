@@ -3545,14 +3545,25 @@
                     if (!content || content.trim() === '') {
                         throw new Error('配置内容为空');
                     }
-                    const config = JSON.parse(content);
-                    if (!config.name) {
-                        throw new Error('配置缺少名称字段');
+                    
+                    let config;
+                    try {
+                        config = JSON.parse(content);
+                    } catch (e) {
+                        throw new Error('JSON格式错误: ' + e.message);
                     }
+                    
+                    if (!config.name && !config.user) {
+                        throw new Error('缺少名称字段(name或user)');
+                    }
+                    
+                    const configName = config.name || config.user || '未知名称';
+                    const configTime = config.time || config.saveTime || gist.updated_at;
+                    
                     html += `
                         <div class="cloud-item">
-                            <div class="cloud-item-name">${config.name}</div>
-                            <div class="cloud-item-time">${config.time || gist.updated_at}</div>
+                            <div class="cloud-item-name">${configName}</div>
+                            <div class="cloud-item-time">${configTime}</div>
                             <div class="cloud-item-gist">Gist: ${gist.id}</div>
                             <div class="cloud-item-actions">
                                 <button onclick="cloudLoadConfig('${gist.id}')">加载</button>
@@ -3562,7 +3573,7 @@
                     `;
                 } catch (e) {
                     failedCount++;
-                    failedGists.push({ id: gist.id, error: e.message });
+                    failedGists.push({ id: gist.id, error: e.message, content: gist.files[GIST_FILENAME]?.content?.substring(0, 100) + '...' });
                     console.error(`解析第${index + 1}个Gist失败 (ID: ${gist.id}):`, e.message);
                 }
             });
@@ -3576,6 +3587,7 @@
                             <div style="padding:8px;border:1px solid #ff0000;border-radius:4px;margin-bottom:5px;background:#ffe0e0;">
                                 <div style="font-size:12px;color:#ff0000;">Gist ${i+1}: ${gist.id}</div>
                                 <div style="font-size:11px;color:#990000;">错误: ${gist.error}</div>
+                                <div style="font-size:10px;color:#666;margin-top:4px;">内容预览: ${gist.content || '空'}</div>
                                 <button style="margin-top:5px;padding:4px 8px;font-size:11px;border:1px solid #ff0000;border-radius:3px;background:#fff;color:#ff0000;cursor:pointer;" onclick="cloudDeleteConfig('${gist.id}')">删除此Gist</button>
                             </div>
                         `;
@@ -3592,6 +3604,7 @@
                             <div style="padding:8px;border:1px solid #ff9900;border-radius:4px;margin-bottom:5px;background:#fff8e0;">
                                 <div style="font-size:12px;color:#ff9900;">无效Gist ${i+1}: ${gist.id}</div>
                                 <div style="font-size:11px;color:#996600;">原因: ${gist.error}</div>
+                                <div style="font-size:10px;color:#666;margin-top:4px;">内容预览: ${gist.content || '空'}</div>
                                 <button style="margin-top:5px;padding:4px 8px;font-size:11px;border:1px solid #ff9900;border-radius:3px;background:#fff;color:#ff9900;cursor:pointer;" onclick="cloudDeleteConfig('${gist.id}')">删除</button>
                             </div>
                         `;
@@ -3627,13 +3640,13 @@
             const gist = await response.json();
             const config = JSON.parse(gist.files[GIST_FILENAME].content);
 
-            document.getElementById("user").value = config.name || '';
+            document.getElementById("user").value = config.name || config.user || '';
             ["cpu", "ram", "board", "cooler", "vga", "ssd", "hdd", "case", "fan", "power", "other"].forEach(k => {
                 document.getElementById(k).value = config[k] || '';
-                document.getElementById(k + "-p").value = config[k + "p"] || '';
+                document.getElementById(k + "-p").value = config[k + "p"] || config[k + "_p"] || '';
             });
-            document.getElementById("remark1").value = config.remark1 || '';
-            document.getElementById("remark2").value = config.remark2 || '';
+            document.getElementById("remark1").value = config.remark1 || config.note1 || '';
+            document.getElementById("remark2").value = config.remark2 || config.note2 || '';
 
             calc();
 
