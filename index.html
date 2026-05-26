@@ -3270,7 +3270,7 @@
             return null;
         }
         let o = {
-            name: u,
+            user: u,
             time: new Date().toLocaleString(),
             version: '1.0'
         };
@@ -3306,7 +3306,7 @@
                     const content = gist.files[GIST_FILENAME].content;
                     if (content) {
                         const config = JSON.parse(content);
-                        if (config.name === configData.name) {
+                        if (config.user === configData.user) {
                             existingGist = gist;
                             console.log('找到同名Gist:', gist.id);
                             break;
@@ -3553,11 +3553,11 @@
                         throw new Error('JSON格式错误: ' + e.message);
                     }
                     
-                    if (!config.name && !config.user) {
-                        throw new Error('缺少名称字段(name或user)');
+                    if (!config.user) {
+                        throw new Error('缺少用户名字段(user)');
                     }
                     
-                    const configName = config.name || config.user || '未知名称';
+                    const configName = config.user;
                     const configTime = config.time || config.saveTime || gist.updated_at;
                     
                     html += `
