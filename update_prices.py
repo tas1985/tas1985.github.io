@@ -552,8 +552,30 @@ def update_exist_ram_prices():
         cnt = 0
         jbd_32g_6000_final = 0
         jbd_32g_3200_final = 0
-        jbd_32g_3600_c18_final = 0  # 新增：金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
-        acer_pallasll_96g_6400_c32_final = 0  # 新增：宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 的价格
+        jbd_32g_3600_c18_final = 0  # 金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
+        acer_pallasll_96g_6400_c32_final = 0  # 宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 的价格
+
+        # ==================== 第一阶段：先收集所有参考价格 ====================
+        print("🔄 第一阶段：收集参考价格")
+        
+        # 收集金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
+        print(f"  🔍 收集: 金百达_银爵 32G 3600(16*2)套装 海力士c18")
+        for ram_item in ram_list:
+            if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "3600" in ram_item['name'] and "16*2" in ram_item['name']:
+                jbd_32g_3600_c18_final = float(ram_item['price'])
+                print(f"  ✓ 收集成功: 金百达_银爵 32G 3600(16*2)套装 海力士c18 = {int(jbd_32g_3600_c18_final)}")
+                break
+        
+        # 收集宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 的价格
+        print(f"  🔍 收集: 宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32")
+        for ram_item in ram_list:
+            if "宏碁掠夺者" in ram_item['name'] and "Pallas" in ram_item['name'] and "96G" in ram_item['name'] and "6400" in ram_item['name'] and "C32" in ram_item['name']:
+                acer_pallasll_96g_6400_c32_final = float(ram_item['price'])
+                print(f"  ✓ 收集成功: 宏碁掠夺者 Pallasll 96G 6400 C32 = {int(acer_pallasll_96g_6400_c32_final)}")
+                break
+        
+        # ==================== 第二阶段：进行价格更新 ====================
+        print("🔄 第二阶段：更新内存价格")
 
         for i in range(start, end + 1):
             line = lines[i]
@@ -595,6 +617,18 @@ def update_exist_ram_prices():
                     print(f"  ★ 匹配成功: {ram_name} -> 宏碁掠夺者 Pallasll 96G 6400 C32 -> 价格 {int(final_price)}")
                 else:
                     print(f"  ⚠ 宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 价格未获取到，跳过更新")
+                    special_handled = True
+                continue
+
+            # 特殊处理：阿斯加特 DDR4 64G（32X2）3200 参考金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格的2倍
+            if "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
+                print(f"  🔍 查找: 阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600海力士c18 × 2")
+                if jbd_32g_3600_c18_final > 0:
+                    final_price = jbd_32g_3600_c18_final * 2
+                    special_handled = True
+                    print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 3600海力士c18 × 2 = {int(final_price)}")
+                else:
+                    print(f"  ⚠ 金百达_银爵 32G 3600(16*2)套装 海力士c18 价格未获取到，跳过更新")
                     special_handled = True
                 continue
 
@@ -683,14 +717,6 @@ def update_exist_ram_prices():
 
                     if "阿斯加特_女武神 32G 3600(16*2)套装灯条" in ram_name:
                         final_price = base_price + 150
-                    elif "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
-                        # 修改为：按照金百达_银爵 32G 3600(16*2)套装 海力士c18 价格的2倍来更新
-                        if jbd_32g_3600_c18_final > 0:
-                            final_price = jbd_32g_3600_c18_final * 2
-                            print(f"  ✓ 阿斯加特 DDR4 64G = 金百达_银爵 32G 3600海力士c18 × 2 = {int(final_price)}")
-                        else:
-                            print(f"  ⚠ 金百达_银爵 32G 3600(16*2)套装 海力士c18 价格未获取到，跳过阿斯加特 DDR4 64G 更新")
-                            final_price = None
                     elif "金百达_银爵 32G 3200(16*2)套装" in ram_name:
                         jbd_32g_3200_final = base_price
                     elif "金百达_银爵 32G 3600(16*2)套装 海力士c18" in ram_name:
