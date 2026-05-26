@@ -1053,69 +1053,107 @@ def fuzzy_match_price(name, price_dict):
     # 清理名称，移除特殊字符
     clean_name = name.lower().replace(" ", "").replace("-", "")
     
-    # 首先尝试精确匹配
-    # 生成多个可能的匹配键
-    possible_keys = []
+    # 检查是否是散片或盒装
+    is_retail = "散" in name or "散片" in name
+    is_box = "盒" in name or "盒装" in name
     
-    # 提取型号
+    # 提取完整型号（包含所有后缀）
     model = extract_hardware_model(name)
-    if model:
-        possible_keys.append(model.lower().replace(" ", "").replace("-", ""))
-        possible_keys.append(model.lower().replace(" ", ""))
+    if not model:
+        print(f"  ⚠️ 无法提取型号：{name[:40]}")
+        return None
     
-    # 直接从名称中提取数字部分作为键
-    number_match = re.search(r'(i[3579]?\d+[a-z0-9kf]*)', clean_name)
-    if number_match:
-        possible_keys.append(number_match.group(1))
+    model_clean = model.lower().replace(" ", "").replace("-", "")
     
-    # 尝试匹配AMD型号
-    amd_match = re.search(r'(r[3579]\d+[a-z0-9x3d]*)', clean_name)
-    if amd_match:
-        possible_keys.append(amd_match.group(1))
+    # 调试输出
+    # print(f"  处理: {name[:30]}... -> 型号: {model}")
     
-    # 尝试匹配Ultra型号
-    ultra_match = re.search(r'(ultra\d+[a-z]*)', clean_name)
-    if ultra_match:
-        possible_keys.append(ultra_match.group(1))
+    # 首先尝试精确匹配（考虑完整型号和散/盒关键字）
+    best_match = None
+    best_score = 0
     
-    # 尝试精确匹配
-    for key in possible_keys:
-        if key:
-            # 检查价格字典中是否有匹配的键
-            for price_key in price_dict.keys():
-                price_key_clean = price_key.lower().replace(" ", "").replace("-", "")
-                # 双向匹配：检查key是否在price_key中，或price_key是否在key中
-                if key in price_key_clean or price_key_clean in key:
-                    p = float(price_dict[price_key])
-                    # 特殊处理：i5-14490F 价格 = i5-14400F + 225
-                    if "i514490f" in clean_name:
-                        return str(int(p + 225))
-                    # 特殊处理：R5-5600 加价50
-                    if "r55600" in clean_name and "x3d" not in clean_name:
-                        return str(int(p + 50))
-                    # 特殊处理：R5-5500X3D 加价69
-                    if "r55500x3d" in clean_name:
-                        return str(int(p + 69))
-                    return str(int(p))
+    for price_key in price_dict.keys():
+        price_key_clean = price_key.lower().replace(" ", "").replace("-", "")
+        
+        # 检查型号是否匹配
+        model_matched = False
+        
+        # 方式1: 完整型号完全匹配
+        if model_clean == price_key_clean:
+            model_matched = True
+        # 方式2: 型号包含在价格键中
+        elif model_clean in price_key_clean:
+            model_matched = True
+        # 方式3: 价格键包含在型号中
+        elif price_key_clean in model_clean:
+            model_matched = True
+        # 方式4: 对于AMD型号，匹配核心部分（如 r55500x3d 匹配 r55500x3d）
+        elif re.match(r'r[3579]\d+[a-z0-9x3d]*', model_clean) and re.match(r'r[3579]\d+[a-z0-9x3d]*', price_key_clean):
+            # 提取完整的型号部分（包含所有后缀）
+            model_full = re.search(r'r[3579]\d+[a-z0-9x3d]*', model_clean).group()
+            price_full = re.search(r'r[3579]\d+[a-z0-9x3d]*', price_key_clean).group()
+            if model_full == price_full:
+                model_matched = True
+        
+        if model_matched:
+            # 计算匹配分数（考虑散/盒关键字）
+            score = 100
+            
+            # 如果名称中包含"散"且价格键中也包含"散"，加分
+            if is_retail and ("散" in price_key.lower() or "retail" in price_key.lower()):
+                score += 10
+            # 如果名称中包含"盒"且价格键中也包含"盒"，加分
+            if is_box and ("盒" in price_key.lower() or "box" in price_key.lower()):
+                score += 10
+            # 如果名称中包含"散"但价格键中包含"盒"，减分
+            if is_retail and ("盒" in price_key.lower() or "box" in price_key.lower()):
+                score -= 20
+            # 如果名称中包含"盒"但价格键中包含"散"，减分
+            if is_box and ("散" in price_key.lower() or "retail" in price_key.lower()):
+                score -= 20
+            
+            # 更新最佳匹配
+            if score > best_score:
+                best_score = score
+                best_match = price_key
     
-    # 如果没有精确匹配，使用模糊匹配
+    if best_match and best_score >= 80:
+        p = float(price_dict[best_match])
+        # 特殊处理：i5-14490F 价格 = i5-14400F + 225
+        if "i514490f" in clean_name:
+            result = str(int(p + 225))
+            print(f"  ✓ 匹配(特殊): {name[:30]}... -> {best_match} -> ￥{result}")
+            return result
+        # 特殊处理：R5-5600 加价50（仅针对基础型号，不含X/X3D）
+        if "r55600" in clean_name and "x3d" not in clean_name and "x" not in model_clean:
+            result = str(int(p + 50))
+            print(f"  ✓ 匹配(加价): {name[:30]}... -> {best_match} -> ￥{result}")
+            return result
+        # 特殊处理：R5-5500X3D 加价69
+        if "r55500x3d" in clean_name:
+            result = str(int(p + 69))
+            print(f"  ✓ 匹配(加价): {name[:30]}... -> {best_match} -> ￥{result}")
+            return result
+        # 默认返回价格
+        result = str(int(p))
+        print(f"  ✓ 匹配: {name[:30]}... -> {best_match} -> ￥{result}")
+        return result
+    
+    # 如果没有找到足够好的匹配，尝试模糊匹配
     if model:
         try:
             best, score = process.extractOne(model, price_dict.keys())
             if score >= MATCH_THRESHOLD:
                 p = float(price_dict[best])
-                # 特殊加价处理
-                if "r55600" in clean_name and "x3d" not in clean_name:
-                    return str(int(p + 50))
-                if "r55500x3d" in clean_name:
-                    return str(int(p + 69))
-                return str(int(p))
+                result = str(int(p))
+                print(f"  ~ 模糊匹配({score}): {name[:30]}... -> {best} -> ￥{result}")
+                return result
             else:
-                print(f"  ⚠️ 模糊匹配分数不足 ({score}): {name[:40]} -> {model}")
+                print(f"  ⚠️ 模糊匹配分数不足 ({score}): {name[:30]}... -> {model}")
         except Exception as e:
-            print(f"  ⚠️ 模糊匹配出错：{name[:40]} - {e}")
+            print(f"  ⚠️ 模糊匹配出错：{name[:30]}... - {e}")
     
-    print(f"  ❌ 未匹配到价格：{name[:40]}")
+    print(f"  ❌ 未匹配到价格：{name[:30]}... -> {model}")
     return None
 
 # -------------------------- 主函数 --------------------------
