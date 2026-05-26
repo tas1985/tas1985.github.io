@@ -410,6 +410,12 @@ def update_ssd_prices():
 # -------------------------- CPU 更新 --------------------------
 def update_html_prices(price_dict):
     try:
+        if not price_dict:
+            print("⚠️ CPU 价格字典为空，跳过 CPU 更新")
+            return 0
+        
+        print(f"📊 获取到 {len(price_dict)} 个 CPU 价格")
+        
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         cnt = 0
@@ -423,10 +429,16 @@ def update_html_prices(price_dict):
             if new_p:
                 lines[i] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{new_p}", lines[i])
                 cnt += 1
+            else:
+                print(f"  ⚠️ 未匹配到价格：{name[:40]}")
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
+        print(f"✅ CPU 价格更新完成：{cnt} 个")
         return cnt
-    except Exception:
+    except Exception as e:
+        print(f"❌ CPU 更新失败：{e}")
+        import traceback
+        traceback.print_exc()
         return 0
 
 # -------------------------- 修改后的显卡更新逻辑 --------------------------
@@ -996,8 +1008,14 @@ def fuzzy_match_price(name, price_dict):
 if __name__ == "__main__":
     print("===== 硬件价格自动更新 =====")
     cpu_prices = fetch_latest_prices()
+    print(f"CPU 价格获取结果：{len(cpu_prices)} 个")
     if cpu_prices:
+        print("前 5 个 CPU 价格:")
+        for i, (k, v) in enumerate(list(cpu_prices.items())[:5]):
+            print(f"  {k}: {v}")
         update_html_prices(cpu_prices)
+    else:
+        print("❌ CPU 价格获取失败，跳过更新")
     # 使用新的显卡更新逻辑
     update_gpu_accurate()
     # 旧的固定显卡更新逻辑已不再需要，可以注释掉
