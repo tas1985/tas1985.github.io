@@ -914,13 +914,11 @@
             <textarea class="remark-input" id="remark2" oninput="saveNow()" rows="1">全新正品行货视频验货直播装机，主板、内存、固态、显卡等包装盒一起发货。</textarea>
         </div>
         <div class="service-container">
-            <label class="service-item"><input type="checkbox" id="svc-video" checked onchange="updateServiceText()"> <span class="svc-box"></span>视频验货</label>
-            <label class="service-item"><input type="checkbox" id="svc-live" checked onchange="updateServiceText()"> <span class="svc-box"></span>直播装机</label>
+            <label class="service-item"><input type="checkbox" id="svc-videolive" checked onchange="updateServiceText()"> <span class="svc-box"></span>视频验货/直播装机</label>
             <label class="service-item"><input type="checkbox" id="svc-boxing" checked onchange="updateServiceText()"> <span class="svc-box"></span>包装盒寄出</label>
             <label class="service-item"><input type="checkbox" id="svc-win10" checked onchange="updateServiceText()"> <span class="svc-box"></span>WIN10</label>
             <label class="service-item"><input type="checkbox" id="svc-win11" onchange="updateServiceText()"> <span class="svc-box"></span>WIN11</label>
             <label class="service-item"><input type="checkbox" id="svc-design" onchange="updateServiceText()"> <span class="svc-box"></span>安装设计软件</label>
-            <label class="service-item"><input type="checkbox" id="svc-partition" onchange="updateServiceText()"> <span class="svc-box"></span>分区要求</label>
             <label class="service-item"><input type="checkbox" id="svc-light" onchange="updateServiceText()"> <span class="svc-box"></span>关灯</label>
             <label class="service-item"><input type="checkbox" id="svc-burntest" checked onchange="updateServiceText()"> <span class="svc-box"></span>烤机测试</label>
         </div>
@@ -3669,13 +3667,11 @@
     // 获取选中的服务项目
     function getSelectedServices() {
         const services = [];
-        if (document.getElementById("svc-video").checked) services.push("视频验货");
-        if (document.getElementById("svc-live").checked) services.push("直播装机");
+        if (document.getElementById("svc-videolive").checked) services.push("视频验货/直播装机");
         if (document.getElementById("svc-boxing").checked) services.push("包装盒寄出");
         if (document.getElementById("svc-win10").checked) services.push("WIN10");
         if (document.getElementById("svc-win11").checked) services.push("WIN11");
         if (document.getElementById("svc-design").checked) services.push("安装设计软件");
-        if (document.getElementById("svc-partition").checked) services.push("分区要求");
         if (document.getElementById("svc-light").checked) services.push("关灯");
         if (document.getElementById("svc-burntest").checked) services.push("烤机测试");
         return services;
@@ -3691,17 +3687,18 @@
     // 加载配置时恢复服务项目勾选状态
     function loadServices(services) {
         if (!services || !Array.isArray(services)) return;
-        // 向后兼容：如果有旧数据，先加载
-        let videoChecked = services.includes("视频验货") || services.includes("装软件");
-        let liveChecked = services.includes("直播装机") || services.includes("包邮");
+        // 向后兼容：如果有旧数据，视频验货或直播装机任一个勾选，就勾选新的合并项
+        let videoLiveChecked = services.includes("视频验货/直播装机") || 
+                               services.includes("视频验货") || 
+                               services.includes("装软件") ||
+                               services.includes("直播装机") || 
+                               services.includes("包邮");
         
-        document.getElementById("svc-video").checked = videoChecked;
-        document.getElementById("svc-live").checked = liveChecked;
+        document.getElementById("svc-videolive").checked = videoLiveChecked;
         document.getElementById("svc-boxing").checked = services.includes("包装盒寄出");
         document.getElementById("svc-win10").checked = services.includes("WIN10");
         document.getElementById("svc-win11").checked = services.includes("WIN11");
         document.getElementById("svc-design").checked = services.includes("安装设计软件");
-        document.getElementById("svc-partition").checked = services.includes("分区要求");
         document.getElementById("svc-light").checked = services.includes("关灯");
         document.getElementById("svc-burntest").checked = services.includes("烤机测试");
     }
