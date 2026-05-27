@@ -3,19 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="重庆塔斯电脑DIY配置报价单">
+    <meta name="theme-color" content="#9900ff">
+    <!-- 性能优化相关标签 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
-    <!-- html2canvas库用于截图功能 - 本地引用 -->
-    <script src="html2canvas.min.js"></script>
-    <!-- 备用CDN引用 -->
+    <!-- html2canvas库用于截图功能 - 异步加载 -->
     <script>
-        // 检查html2canvas是否加载成功，如果失败则从CDN加载
-        if (typeof html2canvas === 'undefined') {
+        // 异步加载html2canvas，不阻塞页面渲染
+        function loadHtml2canvas() {
             var script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            script.src = 'html2canvas.min.js';
+            script.async = true;
+            script.onload = function() {
+                window.html2canvasLoaded = true;
+            };
             script.onerror = function() {
-                console.error('html2canvas库加载失败，截图功能不可用');
+                // 如果本地加载失败，尝试CDN
+                var cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                cdnScript.async = true;
+                cdnScript.onload = function() {
+                    window.html2canvasLoaded = true;
+                };
+                cdnScript.onerror = function() {
+                    console.error('html2canvas库加载失败，截图功能不可用');
+                };
+                document.head.appendChild(cdnScript);
             };
             document.head.appendChild(script);
+        }
+        // DOM加载完成后再加载html2canvas
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadHtml2canvas);
+        } else {
+            loadHtml2canvas();
         }
     </script>
     <style>
@@ -2548,22 +2575,73 @@
 
     // 图片缓存对象
     const imageCache = {};
+    const imageLoadQueue = [];
+    let isLoadingImages = false;
 
-    // 预加载图片到缓存
+    // 智能预加载图片 - 使用requestIdleCallback延迟加载
     function preloadImages() {
-        for (const [caseName, imageName] of Object.entries(caseImageMap)) {
-            const img = new Image();
-            img.src = `./PNG/${imageName}.png`;
-            imageCache[imageName] = img;
+        const allImages = [];
+        
+        for (const [, imageName] of Object.entries(caseImageMap)) {
+            allImages.push({ 
+                key: imageName, 
+                src: `./PNG/${imageName}.png`,
+                type: 'case' 
+            });
         }
-        for (const [coolertName, imageName] of Object.entries(coolerImageMap)) {
-            const img = new Image();
-            img.src = `./PNG_SR/${imageName}.png`;
-            imageCache['cooler_' + imageName] = img;
+        for (const [, imageName] of Object.entries(coolerImageMap)) {
+            allImages.push({ 
+                key: 'cooler_' + imageName, 
+                src: `./PNG_SR/${imageName}.png`,
+                type: 'cooler' 
+            });
+        }
+
+        // 使用requestIdleCallback分批加载
+        let index = 0;
+        const batchSize = 3; // 每批加载3张图片
+        
+        function loadBatch() {
+            if (index >= allImages.length) {
+                isLoadingImages = false;
+                return;
+            }
+            
+            const batch = allImages.slice(index, index + batchSize);
+            batch.forEach(item => {
+                const img = new Image();
+                img.onload = function() {
+                    imageCache[item.key] = img;
+                };
+                img.onerror = function() {
+                    console.warn('Failed to preload:', item.src);
+                };
+                img.src = item.src;
+                imageCache[item.key] = img; // 先缓存占位
+            });
+            
+            index += batchSize;
+            
+            // 使用requestIdleCallback延迟下一批
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(loadBatch, { timeout: 1000 });
+            } else {
+                setTimeout(loadBatch, 50);
+            }
+        }
+        
+        if (!isLoadingImages) {
+            isLoadingImages = true;
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(loadBatch, { timeout: 2000 });
+            } else {
+                // 延迟200ms后开始预加载，先让页面显示
+                setTimeout(loadBatch, 200);
+            }
         }
     }
 
-    // 显示机箱图片
+    // 显示机箱图片 - 优化版本
     function showCaseImage(caseName) {
         const container = document.getElementById('caseImageContainer');
         const imageElement = document.getElementById('caseImage');
@@ -2573,18 +2651,22 @@
             const imageName = caseImageMap[caseName];
             
             // 如果图片已经在缓存中
-            if (imageCache[imageName]) {
+            if (imageCache[imageName] && imageCache[imageName].src) {
                 imageElement.src = imageCache[imageName].src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
             } else {
+                // 显示加载中状态
+                placeholder.innerHTML = '加载中...';
+                placeholder.style.display = 'block';
+                imageElement.style.display = 'none';
+                
                 // 如果不在缓存中，加载图片
                 const img = new Image();
                 img.onload = function() {
                     imageElement.src = img.src;
                     imageElement.style.display = 'block';
                     placeholder.style.display = 'none';
-                    // 缓存图片
                     imageCache[imageName] = img;
                 };
                 img.onerror = function() {
@@ -2592,6 +2674,8 @@
                     placeholder.style.display = 'block';
                     placeholder.innerHTML = '图片<br>未找到';
                 };
+                // 添加交叉Origin支持
+                img.crossOrigin = 'anonymous';
                 img.src = `./PNG/${imageName}.png`;
             }
         } else {
@@ -2601,7 +2685,7 @@
         }
     }
 
-    // 显示散热器图片
+    // 显示散热器图片 - 优化版本
     function showCoolerImage(coolerName) {
         const imageElement = document.getElementById('coolerImage');
         const placeholder = document.getElementById('coolerImagePlaceholder');
@@ -2610,11 +2694,16 @@
             const imageName = coolerImageMap[coolerName];
             const cacheKey = 'cooler_' + imageName;
 
-            if (imageCache[cacheKey]) {
+            if (imageCache[cacheKey] && imageCache[cacheKey].src) {
                 imageElement.src = imageCache[cacheKey].src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
             } else {
+                // 显示加载中状态
+                placeholder.innerHTML = '加载中...';
+                placeholder.style.display = 'block';
+                imageElement.style.display = 'none';
+                
                 const img = new Image();
                 img.onload = function() {
                     imageElement.src = img.src;
@@ -2627,6 +2716,7 @@
                     placeholder.style.display = 'block';
                     placeholder.innerHTML = '图片<br>未找到';
                 };
+                img.crossOrigin = 'anonymous';
                 img.src = `./PNG_SR/${imageName}.png`;
             }
         } else {
