@@ -2577,9 +2577,90 @@
     const imageCache = {};
     const imageLoadQueue = [];
     let isLoadingImages = false;
+    const STORAGE_KEY = 'tasi_image_cache';
+    const CACHE_VERSION = '1.0';
+
+    // 从localStorage读取缓存的图片
+    function loadCachedImages() {
+        try {
+            const cachedData = localStorage.getItem(STORAGE_KEY);
+            if (cachedData) {
+                const cache = JSON.parse(cachedData);
+                if (cache.version === CACHE_VERSION && cache.images) {
+                    for (const [key, data] of Object.entries(cache.images)) {
+                        if (data && data.base64) {
+                            const img = new Image();
+                            img.src = data.base64;
+                            imageCache[key] = img;
+                        }
+                    }
+                    console.log('Loaded', Object.keys(imageCache).length, 'images from cache');
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to load cached images:', e);
+        }
+    }
+
+    // 保存图片到localStorage缓存
+    function saveToCache(key, imageData) {
+        try {
+            const cachedData = localStorage.getItem(STORAGE_KEY);
+            const cache = cachedData ? JSON.parse(cachedData) : { version: CACHE_VERSION, images: {} };
+            cache.version = CACHE_VERSION;
+            cache.images[key] = { base64: imageData, timestamp: Date.now() };
+            
+            // 限制缓存大小（最多50MB）
+            const jsonStr = JSON.stringify(cache);
+            const sizeInBytes = new Blob([jsonStr]).size;
+            if (sizeInBytes < 50 * 1024 * 1024) { // 50MB
+                localStorage.setItem(STORAGE_KEY, jsonStr);
+            } else {
+                console.warn('Cache size limit exceeded, not saving');
+            }
+        } catch (e) {
+            console.warn('Failed to save to cache:', e);
+        }
+    }
+
+    // 将图片转换为base64
+    function imageToBase64(img) {
+        return new Promise((resolve) => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 压缩图片尺寸（最大512px）
+                const maxSize = 512;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxSize || height > maxSize) {
+                    if (width > height) {
+                        height = (height * maxSize) / width;
+                        width = maxSize;
+                    } else {
+                        width = (width * maxSize) / height;
+                        height = maxSize;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 使用WebP格式压缩
+                const base64 = canvas.toDataURL('image/webp', 0.8);
+                resolve(base64);
+            } catch (e) {
+                console.warn('Failed to convert image:', e);
+                resolve(null);
+            }
+        });
+    }
 
     // 智能预加载图片 - 使用requestIdleCallback延迟加载
-    function preloadImages() {
+    async function preloadImages() {
         const allImages = [];
         
         for (const [, imageName] of Object.entries(caseImageMap)) {
@@ -2597,52 +2678,67 @@
             });
         }
 
-        // 使用requestIdleCallback分批加载
         let index = 0;
-        const batchSize = 3; // 每批加载3张图片
+        const batchSize = 2; // 每批加载2张图片，减少并发
         
-        function loadBatch() {
+        async function loadBatch() {
             if (index >= allImages.length) {
                 isLoadingImages = false;
                 return;
             }
             
             const batch = allImages.slice(index, index + batchSize);
-            batch.forEach(item => {
+            const promises = batch.map(async (item) => {
+                if (imageCache[item.key] && imageCache[item.key].src) {
+                    return; // 已缓存
+                }
+                
                 const img = new Image();
-                img.onload = function() {
-                    imageCache[item.key] = img;
-                };
-                img.onerror = function() {
-                    console.warn('Failed to preload:', item.src);
-                };
-                img.src = item.src;
-                imageCache[item.key] = img; // 先缓存占位
+                img.crossOrigin = 'anonymous';
+                
+                return new Promise((resolve) => {
+                    img.onload = async function() {
+                        imageCache[item.key] = img;
+                        // 保存到localStorage缓存
+                        const base64 = await imageToBase64(img);
+                        if (base64) {
+                            saveToCache(item.key, base64);
+                        }
+                        resolve();
+                    };
+                    img.onerror = function() {
+                        console.warn('Failed to preload:', item.src);
+                        resolve();
+                    };
+                    img.src = item.src;
+                });
             });
             
+            await Promise.all(promises);
             index += batchSize;
             
-            // 使用requestIdleCallback延迟下一批
             if ('requestIdleCallback' in window) {
-                requestIdleCallback(loadBatch, { timeout: 1000 });
+                requestIdleCallback(loadBatch, { timeout: 1500 });
             } else {
-                setTimeout(loadBatch, 50);
+                setTimeout(loadBatch, 100);
             }
         }
         
         if (!isLoadingImages) {
             isLoadingImages = true;
+            // 先加载缓存的图片
+            loadCachedImages();
+            
             if ('requestIdleCallback' in window) {
                 requestIdleCallback(loadBatch, { timeout: 2000 });
             } else {
-                // 延迟200ms后开始预加载，先让页面显示
-                setTimeout(loadBatch, 200);
+                setTimeout(loadBatch, 300);
             }
         }
     }
 
-    // 显示机箱图片 - 优化版本
-    function showCaseImage(caseName) {
+    // 显示机箱图片 - 优化版本（支持本地缓存）
+    async function showCaseImage(caseName) {
         const container = document.getElementById('caseImageContainer');
         const imageElement = document.getElementById('caseImage');
         const placeholder = document.getElementById('caseImagePlaceholder');
@@ -2655,29 +2751,38 @@
                 imageElement.src = imageCache[imageName].src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
-            } else {
-                // 显示加载中状态
-                placeholder.innerHTML = '加载中...';
-                placeholder.style.display = 'block';
-                imageElement.style.display = 'none';
-                
-                // 如果不在缓存中，加载图片
-                const img = new Image();
-                img.onload = function() {
-                    imageElement.src = img.src;
-                    imageElement.style.display = 'block';
-                    placeholder.style.display = 'none';
-                    imageCache[imageName] = img;
-                };
-                img.onerror = function() {
-                    imageElement.style.display = 'none';
-                    placeholder.style.display = 'block';
-                    placeholder.innerHTML = '图片<br>未找到';
-                };
-                // 添加交叉Origin支持
-                img.crossOrigin = 'anonymous';
-                img.src = `./PNG/${imageName}.png`;
+                return;
             }
+            
+            // 显示加载中状态
+            placeholder.innerHTML = '加载中...';
+            placeholder.style.display = 'block';
+            imageElement.style.display = 'none';
+            
+            // 如果不在缓存中，加载图片
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = async function() {
+                imageElement.src = img.src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                imageCache[imageName] = img;
+                
+                // 保存到localStorage缓存
+                const base64 = await imageToBase64(img);
+                if (base64) {
+                    saveToCache(imageName, base64);
+                }
+            };
+            
+            img.onerror = function() {
+                imageElement.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '图片<br>未找到';
+            };
+            
+            img.src = `./PNG/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
@@ -2685,8 +2790,8 @@
         }
     }
 
-    // 显示散热器图片 - 优化版本
-    function showCoolerImage(coolerName) {
+    // 显示散热器图片 - 优化版本（支持本地缓存）
+    async function showCoolerImage(coolerName) {
         const imageElement = document.getElementById('coolerImage');
         const placeholder = document.getElementById('coolerImagePlaceholder');
 
@@ -2698,27 +2803,37 @@
                 imageElement.src = imageCache[cacheKey].src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
-            } else {
-                // 显示加载中状态
-                placeholder.innerHTML = '加载中...';
-                placeholder.style.display = 'block';
-                imageElement.style.display = 'none';
-                
-                const img = new Image();
-                img.onload = function() {
-                    imageElement.src = img.src;
-                    imageElement.style.display = 'block';
-                    placeholder.style.display = 'none';
-                    imageCache[cacheKey] = img;
-                };
-                img.onerror = function() {
-                    imageElement.style.display = 'none';
-                    placeholder.style.display = 'block';
-                    placeholder.innerHTML = '图片<br>未找到';
-                };
-                img.crossOrigin = 'anonymous';
-                img.src = `./PNG_SR/${imageName}.png`;
+                return;
             }
+
+            // 显示加载中状态
+            placeholder.innerHTML = '加载中...';
+            placeholder.style.display = 'block';
+            imageElement.style.display = 'none';
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = async function() {
+                imageElement.src = img.src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                imageCache[cacheKey] = img;
+                
+                // 保存到localStorage缓存
+                const base64 = await imageToBase64(img);
+                if (base64) {
+                    saveToCache(cacheKey, base64);
+                }
+            };
+            
+            img.onerror = function() {
+                imageElement.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '图片<br>未找到';
+            };
+            
+            img.src = `./PNG_SR/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
