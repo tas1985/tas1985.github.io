@@ -469,6 +469,19 @@
             z-index: 1;
             text-shadow: 0 0 6px rgba(255,153,0,0.8);
         }
+        /* 功耗显示样式 */
+        .power-consumption{
+            font-size: 18px;
+            font-weight:bold;
+            color: #9932CC;
+            margin: 8px 0 0 0;
+            padding:0;
+            border:none;
+            display:block !important;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 6px rgba(153,50,204,0.8);
+        }
 
         .modal{
             position:fixed;
@@ -965,6 +978,7 @@
         <div class="total-line"><span>利润率：</span><span>+6.6%（÷0.934）</span></div>
         <div class="total-line total-final"><span>主机总价：</span><span id="final">0 元</span></div>
         <div class="total-line ludashi-score"><span>鲁大师跑分：</span><span id="ludashiScore">0 分</span></div>
+        <div class="total-line power-consumption"><span>主机默认功耗：</span><span id="totalPower">0 W</span></div>
     </div>
 
     <div class="btn-bar">
@@ -3082,7 +3096,31 @@
             "R7-9800X3D": 995755,
             "R7-9850X3D": 1054932,
             "R9-9950X3D": 1453363,
-            "E5-2666V3": 382000
+            "E5-2666V3": 382000,
+            // 补充酷睿U系列型号
+            "酷睿 U9 285K": 1323188,
+            "酷睿 U7 270K PLUS": 1223188,
+            "酷睿 U7 265KF": 1151665,
+            "酷睿 U7 265K": 1173547,
+            "酷睿 U5 245KF": 883408,
+            "酷睿 U5 230F": 720429,
+            "酷睿 U5 225F": 695000,
+            "酷睿 U5 225": 705783,
+            "Ultra 5 245K": 894297,
+            // 补充其他缺失型号
+            "i7-14790F": 1100000,
+            "R9-9950X": 1384658,
+            "R9 9950X3D": 1453363,
+            "R7-9700X": 1087080,
+            "R7 9850X 3D": 1054932,
+            "R7 9800X 3D": 995755,
+            "R5-5500GT": 595311,
+            "R5-9600X": 948398,
+            "R5-7500F": 732871,
+            "R5-5600X": 599432,
+            "R5-5500X3D": 858251,
+            "R5-5500": 473613,
+            "R7-5700X": 720412
         },
         vga: {
             "RTX5090": 1953348,
@@ -3138,6 +3176,148 @@
             "PCIE 4.0": 310000,
             "PCIE 3.0": 160000,
             "PCIE 5.0": 450000
+        }
+    };
+
+    // 配件功耗字典（W瓦）- 基于Intel/AMD/NVIDIA官方数据及网络资料
+    const powerConsumption = {
+        cpu: {
+            // ========== Intel 至强 ==========
+            "E5-2666V3": 85,
+            // ========== Intel 12代 ==========
+            "i3-12100F": 58, "i3-12100": 60,
+            "i5-12400F": 65, "i5-12400": 65,
+            "i5-12490F": 65,
+            "i5-12600KF": 125, "i5-12600K": 125,
+            "i7-12700KF": 150, "i7-12700K": 150,
+            // ========== Intel 13代 ==========
+            "i3-13100F": 58, "i3-13100": 60,
+            "i5-13400F": 65, "i5-13400": 65,
+            "i5-13600KF": 125, "i5-13600K": 125,
+            "i7-13700KF": 150, "i7-13700K": 150,
+            // ========== Intel 14代 ==========
+            "i3-14100F": 58, "i3-14100": 60,
+            "i5-14400F": 65, "i5-14400": 65,
+            "i5-14490F": 65,
+            "i5-14600KF": 125, "i5-14600K": 125,
+            "i7-14700KF": 150, "i7-14700K": 150,
+            "i7-14790F": 150,
+            "i9-14900KF": 165, "i9-14900K": 165,
+            // ========== Intel Ultra 200S（酷睿U系列） ==========
+            "酷睿 U5 225F": 54, "酷睿 U5 225": 54,
+            "酷睿 U5 230F": 59, "酷睿 U5 245KF": 105,
+            "酷睿 U5 250K PLUS": 125,
+            "酷睿 U7 265KF": 125, "酷睿 U7 265K": 125,
+            "酷睿 U7 270K PLUS": 150,
+            "酷睿 U9 285K": 180,
+            "Ultra 5 225F": 54, "Ultra 5 225": 54,
+            "Ultra 5 230F": 59, "Ultra 5 230": 59,
+            "Ultra 5 245KF": 105, "Ultra 5 245K": 105,
+            "Ultra 5 250K": 125,
+            "Ultra 7 265KF": 125, "Ultra 7 265K": 125,
+            "Ultra 7 270K": 150,
+            "Ultra 9 285K": 125,
+            // ========== AMD 锐龙5000 ==========
+            "R5-5500": 65, "R5-5500GT": 65, "R5-5500X3D": 60,
+            "R5-5600": 65, "R5-5600X": 65,
+            "R7-5700X": 80,
+            // ========== AMD 锐龙7000 ==========
+            "R5-7500F": 65,
+            "R7-7800X3D": 120,
+            // ========== AMD 锐龙9000 ==========
+            "R5-9600X": 120,
+            "R7-9700X": 120,
+            "R9-9950X": 170,
+            "R9 9950X3D": 170,
+            "R7 9800X 3D": 120, "R7 9850X 3D": 170
+        },
+        vga: {
+            // RTX 50系列
+            "RTX5090": 625, "RTX5080": 410,
+            "RTX5070TI": 350, "RTX5070": 300,
+            "RTX5060TI": 180, "RTX5060ti": 180, "RTX5060": 170,
+            "RTX5050": 150,
+            // RTX 40系列
+            "RTX4090": 450, "RTX4080SUPER": 320,
+            "RTX4080": 320, "RTX4070TI": 285,
+            "RTX4070SUPER": 220, "RTX4070": 200,
+            "RTX4060TI": 165, "RTX4060": 115,
+            // RTX 30系列
+            "RTX3090": 350, "RTX3080TI": 350,
+            "RTX3080": 320, "RTX3070TI": 290,
+            "RTX3070": 220, "RTX3060TI": 200,
+            "RTX3060": 170, "RTX3050": 130,
+            // GTX系列
+            "GTX1660S": 125, "GTX1660": 120,
+            "GTX1650": 75,
+            "GTX1060": 120,
+            // AMD RX 9000系列
+            "RX9070XT": 304, "RX9070": 220,
+            "RX9060XT": 180, "RX9060": 150,
+            // AMD RX 7000系列
+            "RX7900XTX": 355, "RX7900XT": 315,
+            "RX7800XT": 263, "RX7700XT": 245,
+            "RX7600XT": 165, "RX7600": 165,
+            // AMD RX 6000系列
+            "RX6750GRE": 186,
+            // Intel显卡
+            "B580": 190, "A750": 225,
+            "A380": 75,
+            // 其他
+            "GT730": 30, "GT610": 30,
+            "6500XT": 107
+        },
+        ram: {
+            // DDR4 每8GB约3W
+            "8G DDR4": 3, "16G DDR4": 5,
+            "32G DDR4": 8, "64G DDR4": 12,
+            // DDR5 每8GB约4W
+            "8G DDR5": 4, "16G DDR5": 6,
+            "32G DDR5": 10, "64G DDR5": 15,
+            // 默认估算
+            "DDR4": 5, "DDR5": 6
+        },
+        board: {
+            // 主板功耗约30-50W
+            "Z790": 45, "Z690": 45,
+            "B760": 35, "B660": 35,
+            "H770": 35,
+            "Z890": 45, "B860": 35,
+            "X670E": 50, "X670": 50,
+            "B650E": 45, "B650": 40,
+            "A620":  30,
+            "default": 35
+        },
+        cooler: {
+            // 散热器功耗约3-10W
+            "双塔": 8, "双塔式": 8,
+            "单塔": 5, "单塔式": 5,
+            "水冷": 40, "240": 38, "280": 39, "360": 42,
+            "下压": 5, "默认": 5
+        },
+        ssd: {
+            // 固态硬盘功耗约3-8W
+            "1T": 5, "2T": 7, "4T": 10,
+            "500G": 4, "512G": 4,
+            "256G": 3, "128G": 2,
+            "默认": 4
+        },
+        hdd: {
+            // 机械硬盘约8-12W（读写时）
+            "default": 10
+        },
+        fan: {
+            // 每把风扇约2-5W
+            "每把": 3
+        },
+        power: {
+            // 电源自身功耗（转换效率约85%时）
+            "300W": 15, "350W": 18, "400W": 22,
+            "450W": 25, "500W": 30, "550W": 35,
+            "600W": 38, "650W": 42, "700W": 45,
+            "750W": 50, "800W": 55, "850W": 60,
+            "900W": 65, "1000W": 75, "1200W": 90,
+            "default": 30
         }
     };
 
@@ -3643,6 +3823,8 @@
         
         // 计算鲁大师跑分
         calculateLudashiScore();
+        // 计算功耗
+        calculatePowerConsumption();
     }
 
     // 计算鲁大师跑分
@@ -3701,6 +3883,140 @@
         
         // 显示鲁大师跑分
         document.getElementById("ludashiScore").innerText = `${totalScore.toLocaleString()} 分`;
+    }
+
+    // 计算配件总功耗
+    function calculatePowerConsumption() {
+        let totalPower = 0;
+        
+        // CPU功耗
+        const cpuValue = document.getElementById("cpu").value;
+        if (cpuValue) {
+            for (let cpuModel in powerConsumption.cpu) {
+                if (cpuValue.includes(cpuModel)) {
+                    totalPower += powerConsumption.cpu[cpuModel];
+                    break;
+                }
+            }
+        }
+        
+        // 显卡功耗
+        const vgaValue = document.getElementById("vga").value;
+        if (vgaValue) {
+            for (let vgaModel in powerConsumption.vga) {
+                if (vgaValue.includes(vgaModel)) {
+                    totalPower += powerConsumption.vga[vgaModel];
+                    break;
+                }
+            }
+        }
+        
+        // 内存功耗（根据容量估算）
+        const ramValue = document.getElementById("ram").value;
+        if (ramValue) {
+            let ramPower = 0;
+            // 匹配内存容量
+            const ramMatch = ramValue.match(/(\d+)G/i);
+            if (ramMatch) {
+                const ramGB = parseInt(ramMatch[1]);
+                if (ramValue.includes("DDR5")) {
+                    ramPower = Math.ceil(ramGB / 8) * 4; // DDR5每8G约4W
+                } else {
+                    ramPower = Math.ceil(ramGB / 8) * 3; // DDR4每8G约3W
+                }
+            } else if (ramValue.includes("DDR5")) {
+                ramPower = powerConsumption.ram["DDR5"];
+            } else if (ramValue.includes("DDR4")) {
+                ramPower = powerConsumption.ram["DDR4"];
+            }
+            totalPower += ramPower;
+        }
+        
+        // 主板功耗
+        const boardValue = document.getElementById("board").value;
+        if (boardValue) {
+            let found = false;
+            for (let boardType in powerConsumption.board) {
+                if (boardValue.includes(boardType)) {
+                    totalPower += powerConsumption.board[boardType];
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                totalPower += powerConsumption.board["default"];
+            }
+        }
+        
+        // 散热器功耗
+        const coolerValue = document.getElementById("cooler").value;
+        if (coolerValue) {
+            let found = false;
+            for (let coolerType in powerConsumption.cooler) {
+                if (coolerValue.includes(coolerType)) {
+                    totalPower += powerConsumption.cooler[coolerType];
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                totalPower += powerConsumption.cooler["默认"];
+            }
+        }
+        
+        // 固态硬盘功耗
+        const ssdValue = document.getElementById("ssd").value;
+        if (ssdValue) {
+            let found = false;
+            for (let ssdCap in powerConsumption.ssd) {
+                if (ssdValue.includes(ssdCap)) {
+                    totalPower += powerConsumption.ssd[ssdCap];
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                totalPower += powerConsumption.ssd["默认"];
+            }
+        }
+        
+        // 机械硬盘功耗
+        const hddValue = document.getElementById("hdd").value;
+        if (hddValue && hddValue.trim() !== "") {
+            totalPower += powerConsumption.hdd["default"];
+        }
+        
+        // 风扇功耗（每把约3W）
+        const fanValue = document.getElementById("fan").value;
+        if (fanValue) {
+            const fanMatch = fanValue.match(/(\d+)把|(\d+)个/i);
+            if (fanMatch) {
+                const fanCount = parseInt(fanMatch[1] || fanMatch[2]);
+                totalPower += fanCount * powerConsumption.fan["每把"];
+            }
+        }
+        
+        // 电源自身功耗（如果用户输入了电源功率）
+        const powerValue = document.getElementById("power").value;
+        if (powerValue) {
+            const powerMatch = powerValue.match(/(\d{3,4})W/i);
+            if (powerMatch) {
+                let found = false;
+                for (let p in powerConsumption.power) {
+                    if (powerValue.includes(p)) {
+                        totalPower += powerConsumption.power[p];
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    totalPower += powerConsumption.power["default"];
+                }
+            }
+        }
+        
+        // 显示总功耗
+        document.getElementById("totalPower").innerText = `${totalPower} W`;
     }
 
     function saveNow(){
