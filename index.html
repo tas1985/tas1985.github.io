@@ -951,7 +951,7 @@
     </div>
 
     <div class="btn-bar">
-        <button class="btn-save" onclick="save()">保存配置</button>
+        <button class="btn-save" type="button" onclick="event.preventDefault(); save();">保存配置</button>
         <button class="btn-cost-toggle" onclick="toggleCostDisplay()">成本合计</button>
         <div class="cost-display" onclick="toggleCostDisplay()">
             <span>成本合计：</span>
@@ -1019,6 +1019,40 @@
     </div>
 
 <script>
+    // ===================== 全局提示消息功能 =====================
+    function showToast(message, type = 'info', duration = 3000) {
+        const container = document.getElementById('toastContainer');
+        if (!container) {
+            const newContainer = document.createElement('div');
+            newContainer.id = 'toastContainer';
+            newContainer.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;`;
+            document.body.appendChild(newContainer);
+        }
+        
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.style.cssText = `padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; min-width: 200px; max-width: 90vw; box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: auto;`;
+        
+        let bgColor, textColor;
+        switch(type) {
+            case 'success': bgColor = '#00ff00'; textColor = '#000'; break;
+            case 'error': bgColor = '#ff0000'; textColor = '#fff'; break;
+            case 'warning': bgColor = '#ff9900'; textColor = '#000'; break;
+            default: bgColor = '#9900ff'; textColor = '#fff';
+        }
+        
+        toast.style.background = bgColor;
+        toast.style.color = textColor;
+        toast.style.border = `2px solid ${textColor}`;
+        toast.textContent = message;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, duration);
+    }
+
     // ===================== 密码验证核心功能 =====================
     // 生成机器码（基于浏览器信息和当前时间）
     function generateMachineCode() {
@@ -3779,10 +3813,19 @@
             
             let list=[];
             try {
-                list=JSON.parse(localStorage.getItem("list"))||[];
+                const storedList = localStorage.getItem("list");
+                if (storedList) {
+                    list = JSON.parse(storedList);
+                    // 验证 list 是否为数组
+                    if (!Array.isArray(list)) {
+                        console.warn("存储的 list 不是数组，重置为空数组");
+                        list = [];
+                    }
+                }
+                console.log("当前配置列表长度:", list.length);
             } catch(e) {
                 console.error("读取 localStorage 失败:",e);
-                list=[];
+                list = [];
             }
             
             let o={name:u,time:new Date().toLocaleString()};
@@ -3795,21 +3838,21 @@
             o.services = getSelectedServices();
             list.push(o);
             
+            console.log("即将保存的配置数量:", list.length);
+            
             try {
                 localStorage.setItem("list",JSON.stringify(list));
+                console.log("保存成功");
             } catch(e) {
                 console.error("保存到 localStorage 失败:",e);
                 if(e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                    // 检查存储空间是否超过 1GB
-                    const listSize = new Blob([JSON.stringify(list)]).size;
                     const totalSize = estimateLocalStorageSize();
                     
-                    if (totalSize > 1024 * 1024 * 1024) { // 超过 1GB
-                        showToast("存储空间已达 1GB 上限，请删除部分旧配置或清理缓存", "error", 5000);
+                    if (totalSize > 1024 * 1024 * 1024) {
+                        showToast("存储空间已达 1GB 上限", "error", 5000);
                         return;
                     } else {
-                        // 尝试清理图片缓存后重试
-                        showToast("存储空间不足，正在清理图片缓存...", "warning");
+                        showToast("存储空间不足，正在清理缓存...", "warning");
                         if (clearImageCache()) {
                             try {
                                 localStorage.setItem("list",JSON.stringify(list));
@@ -3817,7 +3860,7 @@
                                 initUserDropdown();
                                 return;
                             } catch(e2) {
-                                showToast("保存失败：清理缓存后仍空间不足", "error", 5000);
+                                showToast("保存失败：清理后仍空间不足", "error", 5000);
                                 return;
                             }
                         } else {
@@ -3832,7 +3875,7 @@
             }
             
             initUserDropdown();
-            showToast("保存成功！", "success");
+            showToast("保存成功！当前共 " + list.length + " 个配置", "success");
         } catch(e) {
             console.error("保存配置时发生错误:",e);
             showToast("保存失败：系统错误，请重试", "error");
