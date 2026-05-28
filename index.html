@@ -46,7 +46,22 @@
         }
     </script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei",Arial}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei", "微软雅黑", "Microsoft JhengHei", "PingFang SC", sans-serif !important;}
+        html, body, div, span, applet, object, iframe,
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+        a, abbr, acronym, address, big, cite, code,
+        del, dfn, em, img, ins, kbd, q, s, samp,
+        small, strike, strong, sub, sup, tt, var,
+        b, u, i, center,
+        dl, dt, dd, ol, ul, li,
+        fieldset, form, label, legend,
+        table, caption, tbody, tfoot, thead, tr, th, td,
+        article, aside, canvas, details, embed, 
+        figure, figcaption, footer, header, hgroup, 
+        menu, nav, output, ruby, section, summary,
+        time, mark, audio, video, input, textarea, button{
+            font-family:"Microsoft YaHei", "微软雅黑", "Microsoft JhengHei", "PingFang SC", sans-serif !important;
+        }
         /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
         body{
             background: #e0e0e0; /* 参考图浅灰背景 */
@@ -82,19 +97,21 @@
         .user{
             display:flex;
             align-items:center;
-            gap:10px;
-            margin-bottom: 12px;
+            gap:8px; /* 与 .item 一致 */
+            margin-bottom: 8px; /* 与 .item 一致 */
             position:relative;
-            padding: 5px;
+            padding: 4px; /* 与 .item 一致 */
             background: #d0d0d0;
             border: 1px solid #000;
-            border-radius: 6px;
+            border-radius: 4px; /* 与 .item 一致 */
         }
         .user label{
             white-space:nowrap;
             font-weight:bold;
-            font-size: 16px;
-            color: #000; /* 客户名称标签黑色 */
+            font-size: 18px; /* 与其他栏目标题大小一致 */
+            color: #9900ff; /* 客户名称标签紫色，与边框颜色统一 */
+            width: 80px; /* 与其他栏目标题宽度一致 */
+            text-align: center; /* 居中对齐 */
         }
         .user-input-container {
             position: relative;
@@ -177,7 +194,7 @@
         .item-label{
             width:80px;
             font-weight:bold;
-            color: #000; /* 硬件标签黑色 */
+            color: #9900ff; /* 硬件标签紫色，与边框颜色统一 */
             font-size: 18px;
             text-align: center;
             padding-right: 5px;
@@ -792,7 +809,7 @@
     <div class="title">重庆塔斯电脑（线下实体店）DIY配置报价单58508218</div>
 
     <div class="user">
-        <label>客户名称：</label>
+        <label>客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -806,7 +823,7 @@
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
     <div class="item">
-        <div class="item-label">CPU</div>
+        <div class="item-label">CPU　　</div>
         <div class="item-input">
             <input class="combo" id="cpu" onclick="match('cpu')" oninput="match('cpu')" onblur="hideDrop('cpu')">
             <div class="clear-btn" onclick="clearItem('cpu')">×</div>
@@ -815,7 +832,7 @@
         <div class="item-price"><input class="price" id="cpu-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">内存</div>
+        <div class="item-label">内存　　</div>
         <div class="item-input">
             <input class="combo" id="ram" onclick="match('ram')" oninput="match('ram')" onblur="hideDrop('ram')">
             <div class="clear-btn" onclick="clearItem('ram')">×</div>
@@ -824,7 +841,7 @@
         <div class="item-price"><input class="price" id="ram-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">主板</div>
+        <div class="item-label">主板　　</div>
         <div class="item-input">
             <input class="combo" id="board" onclick="match('board')" oninput="match('board')" onblur="hideDrop('board')">
             <div class="clear-btn" onclick="clearItem('board')">×</div>
@@ -833,7 +850,7 @@
         <div class="item-price"><input class="price" id="board-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">散热器</div>
+        <div class="item-label">散热器　</div>
         <div class="item-input">
             <input class="combo" id="cooler" onclick="match('cooler')" oninput="match('cooler')" onblur="hideDrop('cooler')">
             <div class="clear-btn" onclick="clearItem('cooler')">×</div>
@@ -842,7 +859,7 @@
         <div class="item-price"><input class="price" id="cooler-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">显卡</div>
+        <div class="item-label">显卡　　</div>
         <div class="item-input">
             <input class="combo" id="vga" onclick="match('vga')" oninput="match('vga')" onblur="hideDrop('vga')">
             <div class="clear-btn" onclick="clearItem('vga')">×</div>
@@ -869,7 +886,7 @@
         <div class="item-price"><input class="price" id="hdd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">机箱</div>
+        <div class="item-label">机箱　　</div>
         <div class="item-input">
             <input class="combo" id="case" onclick="match('case')" oninput="match('case')" onblur="hideDrop('case')">
             <div class="clear-btn" onclick="clearItem('case')">×</div>
@@ -878,7 +895,7 @@
         <div class="item-price"><input class="price" id="case-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">风扇</div>
+        <div class="item-label">风扇　　</div>
         <div class="item-input">
             <input class="combo" id="fan" onclick="match('fan')" oninput="match('fan')" onblur="hideDrop('fan')">
             <div class="clear-btn" onclick="clearItem('fan')">×</div>
@@ -888,7 +905,7 @@
     </div>
     <!-- 电源调整到机箱之后、风扇之后 -->
     <div class="item">
-        <div class="item-label">电源</div>
+        <div class="item-label">电源　　</div>
         <div class="item-input">
             <input class="combo" id="power" onclick="match('power')" oninput="match('power')" onblur="hideDrop('power')">
             <div class="clear-btn" onclick="clearItem('power')">×</div>
@@ -908,7 +925,7 @@
     </div>
     <!-- 新增备注栏目 -->
     <div class="item has-service">
-        <div class="item-label">备注</div>
+        <div class="item-label">备注　　</div>
         <div class="remark-container">
             <textarea class="remark-input" id="remark1" oninput="saveNow()" rows="1">含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价。</textarea>
             <textarea class="remark-input" id="remark2" oninput="saveNow()" rows="1">全新正品行货视频验货直播装机，主板、内存、固态、显卡等包装盒一起发货。</textarea>
@@ -1433,7 +1450,6 @@
             {n:"微星 B850M GAMING PLUS WIFI D5 纯白",p:999.00},
             {n:"微星 B850M GAMING PLUS PRO WIFI6E D5 黑",p:950.00},
             {n:"微星 B850 GAMING PLUS WIFI D5 大板",p:1370.00},
-            {n:"微星 B760M MORTAR 迫击炮 WIFI D4",p:1080.00},
             {n:"微星 B760M MORTAR 迫击炮 D5 WIFI II",p:1010.00},
             {n:"微星 B760M GAMING WIFI D5 PLUS",p:860.00},
             {n:"微星 B760M GAMING WIFI D4 PLUS",p:799.00},
@@ -1792,9 +1808,7 @@
             {n:"蓝宝石 RX7650GRE 8G 黑钻三扇 黑色",p:1999},
             {n:"蓝宝石 RX7650GRE 8G 白金双扇 黑色",p:1950},
             {n:"蓝宝石 RX7650GRE 8G 极地双扇 白色",p:1950},
-            {n:"索泰 RTX5060 8G 月影白色 三扇",p:2499},
             {n:"索泰 RTX5060 8G 星夜 双扇",p:2350},
-            {n:"索泰 RTX 3050 6GB 毁灭者 OC HC 双扇",p:1299},
             {n:"磐镭 RX5500 8GD6 双风扇 （1660性能）",p:899},
             {n:"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲",p:1399},
             {n:"磐镭 RTX3050 6G 开天黑色 双扇",p:1299},
