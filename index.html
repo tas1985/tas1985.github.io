@@ -47,29 +47,16 @@
     </script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei",Arial}
-        /* 移动端全局优化 */
-        * {
-            -webkit-tap-highlight-color: rgba(0,0,0,0);
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        input, textarea {
-            -webkit-user-select: text;
-            user-select: text;
-        }
         /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
         body{
-            background: #e0e0e0;
+            background: #e0e0e0; /* 参考图浅灰背景 */
             background-image: 
                 linear-gradient(rgba(200,200,200,0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(200,200,200,0.1) 1px, transparent 1px);
             background-size: 40px 40px;
             padding: 15px;
             font-size: 14px;
-            color: #000;
-            overscroll-behavior-y: none;
-            -webkit-overflow-scrolling: touch;
+            color: #000; /* 基础文字黑色 */
         }
         .container{
             max-width: 720px;
@@ -226,43 +213,27 @@
 }
         input.combo{
             width:100%;
-            padding: 10px 25px 10px 8px;
-            border: 1px solid #9900ff;
+            padding: 8px 25px 8px 8px;
+            border: 1px solid #9900ff; /* 配件输入框紫色边框 */
             border-radius: 4px;
             outline:none;
-            background: #e0e0e0;
-            color: #000;
+            background: #e0e0e0; /* 输入框黑底 */
+            color: #000; /* 输入框绿色文字 */
             font-size: 16px;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         input.price{
             width:100%;
-            padding: 10px 8px 10px 20px;
+            padding: 8px 8px 8px 20px; /* 左侧留空给¥符号 */
             text-align:right;
-            border: 1px solid #9900ff;
+            border: 1px solid #9900ff; /* 价格输入框绿色边框 */
             border-radius: 4px;
             outline:none;
-            background: #e0e0e0;
-            color: #000;
+            background: #e0e0e0; /* 价格框黑底 */
+            color: #000; /* 价格紫色文字 */
             font-size: 16px;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         input.combo:focus,input.price:focus{
             box-shadow: 0 0 8px rgba(0,255,0,0.8);
-            border-color: #00ff00;
-        }
-        @media (max-width: 480px) {
-            input.combo, input.price {
-                font-size: 16px;
-                padding: 12px 25px 12px 8px;
-            }
-            input.price {
-                padding: 12px 8px 12px 20px;
-            }
         }
 
         /* 清空按钮样式 - 加大尺寸方便手指点击 */
@@ -299,29 +270,16 @@
             display:none;
         }
         .dropdown div{
-            padding: 10px 8px;
+            padding: 8px;
             cursor:pointer;
             display:flex;
             justify-content:space-between;
             align-items:center;
             color: #00ff00;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            transition: background-color 0.2s ease;
         }
         .dropdown div:hover{
             background: #9900ff;
             color: #000;
-        }
-        .dropdown div:active{
-            background: #cc66ff;
-            color: #000;
-        }
-        @media (hover: none) {
-            .dropdown div:hover {
-                background: transparent;
-                color: #00ff00;
-            }
         }
         /* 下拉列表价格样式 - 顶到右端对齐 */
         .dropdown-price {
@@ -348,35 +306,21 @@
         }
         .btn-bar button{
             flex:1;
-            padding: 12px 8px;
+            padding: 10px 6px;
             border:none;
             border-radius: 6px;
-            color:#00ff00;
+            color:#00ff00; /* 按钮文字绿色 */
             font-weight:bold;
             font-size: 14px;
             cursor: pointer;
-            border: 2px solid #9900ff;
-            background: #000;
+            border: 2px solid #9900ff; /* 按钮紫色边框 */
+            background: #000; /* 按钮黑底 */
             min-width: 80px;
             box-shadow: 0 0 6px rgba(153,0,255,0.6);
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            transition: all 0.2s ease;
         }
         .btn-bar button:hover{
             box-shadow: 0 0 10px rgba(0,255,0,0.8);
             background: #330066;
-        }
-        .btn-bar button:active{
-            transform: scale(0.98);
-            box-shadow: 0 0 15px rgba(0,255,0,0.9);
-            background: #440088;
-        }
-        @media (hover: none) {
-            .btn-bar button:hover {
-                box-shadow: 0 0 6px rgba(153,0,255,0.6);
-                background: #000;
-            }
         }
 
         /* 成本合计显示样式 */
@@ -1074,88 +1018,7 @@
     <div onclick="deleteSelectedItem()">删除该配件</div>
     </div>
 
-<!-- 全局提示消息容器 -->
-<div id="toastContainer" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
-
 <script>
-    // ===================== 全局提示消息功能 =====================
-    function showToast(message, type = 'info', duration = 3000) {
-        const container = document.getElementById('toastContainer');
-        if (!container) return;
-        
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            min-width: 200px;
-            max-width: 90vw;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease, fadeOut 0.3s ease ${duration - 300}ms forwards;
-            pointer-events: auto;
-        `;
-        
-        let bgColor, textColor;
-        switch(type) {
-            case 'success':
-                bgColor = '#00ff00';
-                textColor = '#000';
-                break;
-            case 'error':
-                bgColor = '#ff0000';
-                textColor = '#fff';
-                break;
-            case 'warning':
-                bgColor = '#ff9900';
-                textColor = '#000';
-                break;
-            default:
-                bgColor = '#9900ff';
-                textColor = '#fff';
-        }
-        
-        toast.style.background = bgColor;
-        toast.style.color = textColor;
-        toast.style.border = `2px solid ${textColor}`;
-        toast.textContent = message;
-        
-        container.appendChild(toast);
-        
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, duration);
-    }
-    
-    // 添加动画样式
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-
     // ===================== 密码验证核心功能 =====================
     // 生成机器码（基于浏览器信息和当前时间）
     function generateMachineCode() {
@@ -2956,7 +2819,7 @@
         }
     }
 
-    // 显示机箱图片 - 优化版本（支持本地缓存和移动端优化）
+    // 显示机箱图片 - 优化版本（支持本地缓存）
     async function showCaseImage(caseName) {
         const container = document.getElementById('caseImageContainer');
         const imageElement = document.getElementById('caseImage');
@@ -2982,74 +2845,26 @@
             const img = new Image();
             img.crossOrigin = 'anonymous';
             
-            let loadTimeout;
-            let isLoaded = false;
-            
-            // 设置超时机制（10秒）
-            loadTimeout = setTimeout(() => {
-                if (!isLoaded) {
-                    isLoaded = true;
-                    imageElement.style.display = 'none';
-                    placeholder.style.display = 'block';
-                    placeholder.innerHTML = '加载超时<br>请检查网络';
-                    console.warn('机箱图片加载超时:', imageName);
-                    showToast('机箱图片加载超时，请检查网络连接', 'warning');
-                }
-            }, 10000);
-            
             img.onload = async function() {
-                if (isLoaded) return;
-                isLoaded = true;
-                clearTimeout(loadTimeout);
+                imageElement.src = img.src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                imageCache[imageName] = img;
                 
-                try {
-                    imageElement.src = img.src;
-                    imageElement.style.display = 'block';
-                    placeholder.style.display = 'none';
-                    imageCache[imageName] = img;
-                    
-                    // 保存到localStorage缓存（仅在非移动端或WiFi环境下）
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                    const isWifi = connection && connection.type === 'wifi';
-                    
-                    if (!isMobile || isWifi) {
-                        try {
-                            const base64 = await imageToBase64(img);
-                            if (base64) {
-                                saveToCache(imageName, base64);
-                            }
-                        } catch(cacheError) {
-                            console.warn('缓存图片失败:', cacheError);
-                        }
-                    }
-                } catch(error) {
-                    console.error('显示机箱图片失败:', error);
-                    imageElement.style.display = 'none';
-                    placeholder.style.display = 'block';
-                    placeholder.innerHTML = '显示失败<br>请重试';
+                // 保存到localStorage缓存
+                const base64 = await imageToBase64(img);
+                if (base64) {
+                    saveToCache(imageName, base64);
                 }
             };
             
             img.onerror = function() {
-                if (isLoaded) return;
-                isLoaded = true;
-                clearTimeout(loadTimeout);
-                
-                console.error('机箱图片加载失败:', imageName);
                 imageElement.style.display = 'none';
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '图片加载失败<br>请检查网络';
+                placeholder.innerHTML = '图片<br>未找到';
             };
             
-            try {
-                img.src = `./PNG/${imageName}.png`;
-            } catch(error) {
-                console.error('设置机箱图片src失败:', error);
-                isLoaded = true;
-                clearTimeout(loadTimeout);
-                placeholder.innerHTML = '图片路径错误<br>请联系管理员';
-            }
+            img.src = `./PNG/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
@@ -3057,7 +2872,7 @@
         }
     }
 
-    // 显示散热器图片 - 优化版本（支持本地缓存和移动端优化）
+    // 显示散热器图片 - 优化版本（支持本地缓存）
     async function showCoolerImage(coolerName) {
         const imageElement = document.getElementById('coolerImage');
         const placeholder = document.getElementById('coolerImagePlaceholder');
@@ -3081,74 +2896,26 @@
             const img = new Image();
             img.crossOrigin = 'anonymous';
             
-            let loadTimeout;
-            let isLoaded = false;
-            
-            // 设置超时机制（10秒）
-            loadTimeout = setTimeout(() => {
-                if (!isLoaded) {
-                    isLoaded = true;
-                    imageElement.style.display = 'none';
-                    placeholder.style.display = 'block';
-                    placeholder.innerHTML = '加载超时<br>请检查网络';
-                    console.warn('散热器图片加载超时:', imageName);
-                    showToast('散热器图片加载超时，请检查网络连接', 'warning');
-                }
-            }, 10000);
-            
             img.onload = async function() {
-                if (isLoaded) return;
-                isLoaded = true;
-                clearTimeout(loadTimeout);
+                imageElement.src = img.src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                imageCache[cacheKey] = img;
                 
-                try {
-                    imageElement.src = img.src;
-                    imageElement.style.display = 'block';
-                    placeholder.style.display = 'none';
-                    imageCache[cacheKey] = img;
-                    
-                    // 保存到localStorage缓存（仅在非移动端或WiFi环境下）
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                    const isWifi = connection && connection.type === 'wifi';
-                    
-                    if (!isMobile || isWifi) {
-                        try {
-                            const base64 = await imageToBase64(img);
-                            if (base64) {
-                                saveToCache(cacheKey, base64);
-                            }
-                        } catch(cacheError) {
-                            console.warn('缓存图片失败:', cacheError);
-                        }
-                    }
-                } catch(error) {
-                    console.error('显示散热器图片失败:', error);
-                    imageElement.style.display = 'none';
-                    placeholder.style.display = 'block';
-                    placeholder.innerHTML = '显示失败<br>请重试';
+                // 保存到localStorage缓存
+                const base64 = await imageToBase64(img);
+                if (base64) {
+                    saveToCache(cacheKey, base64);
                 }
             };
             
             img.onerror = function() {
-                if (isLoaded) return;
-                isLoaded = true;
-                clearTimeout(loadTimeout);
-                
-                console.error('散热器图片加载失败:', imageName);
                 imageElement.style.display = 'none';
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '图片加载失败<br>请检查网络';
+                placeholder.innerHTML = '图片<br>未找到';
             };
             
-            try {
-                img.src = `./PNG_SR/${imageName}.png`;
-            } catch(error) {
-                console.error('设置散热器图片src失败:', error);
-                isLoaded = true;
-                clearTimeout(loadTimeout);
-                placeholder.innerHTML = '图片路径错误<br>请联系管理员';
-            }
+            img.src = `./PNG_SR/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
@@ -4014,7 +3781,7 @@
             try {
                 list=JSON.parse(localStorage.getItem("list"))||[];
             } catch(e) {
-                console.error("读取localStorage失败:",e);
+                console.error("读取 localStorage 失败:",e);
                 list=[];
             }
             
@@ -4031,12 +3798,35 @@
             try {
                 localStorage.setItem("list",JSON.stringify(list));
             } catch(e) {
-                console.error("保存到localStorage失败:",e);
-                if(e.name === 'QuotaExceededError') {
-                    showToast("保存失败：存储空间已满，请删除部分旧配置后重试", "error");
-                    return;
+                console.error("保存到 localStorage 失败:",e);
+                if(e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    // 检查存储空间是否超过 1GB
+                    const listSize = new Blob([JSON.stringify(list)]).size;
+                    const totalSize = estimateLocalStorageSize();
+                    
+                    if (totalSize > 1024 * 1024 * 1024) { // 超过 1GB
+                        showToast("存储空间已达 1GB 上限，请删除部分旧配置或清理缓存", "error", 5000);
+                        return;
+                    } else {
+                        // 尝试清理图片缓存后重试
+                        showToast("存储空间不足，正在清理图片缓存...", "warning");
+                        if (clearImageCache()) {
+                            try {
+                                localStorage.setItem("list",JSON.stringify(list));
+                                showToast("缓存已清理，保存成功！", "success");
+                                initUserDropdown();
+                                return;
+                            } catch(e2) {
+                                showToast("保存失败：清理缓存后仍空间不足", "error", 5000);
+                                return;
+                            }
+                        } else {
+                            showToast("保存失败：无法清理缓存", "error");
+                            return;
+                        }
+                    }
                 } else {
-                    showToast("保存失败：存储功能不可用，请检查浏览器设置", "error");
+                    showToast("保存失败：存储功能不可用", "error");
                     return;
                 }
             }
@@ -4046,6 +3836,30 @@
         } catch(e) {
             console.error("保存配置时发生错误:",e);
             showToast("保存失败：系统错误，请重试", "error");
+        }
+    }
+    
+    // 估算 localStorage 使用的大小（字节）
+    function estimateLocalStorageSize() {
+        let totalSize = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                totalSize += localStorage[key].length * 2; // UTF-16 编码，每个字符 2 字节
+            }
+        }
+        return totalSize;
+    }
+    
+    // 清理图片缓存
+    function clearImageCache() {
+        try {
+            const STORAGE_KEY = 'tasi_image_cache';
+            localStorage.removeItem(STORAGE_KEY);
+            console.log('Image cache cleared');
+            return true;
+        } catch(e) {
+            console.error('Failed to clear image cache:', e);
+            return false;
         }
     }
 
