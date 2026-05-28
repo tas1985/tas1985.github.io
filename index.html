@@ -198,6 +198,34 @@
             font-size: 18px;
             text-align: center;
             padding-right: 5px;
+            white-space: nowrap; /* 禁止换行 */
+            overflow: hidden; /* 隐藏溢出 */
+            text-overflow: ellipsis; /* 溢出显示省略号 */
+        }
+        /* 移动端适配 */
+        @media screen and (max-width: 480px) {
+            html {
+                width: 480px !important; /* 固定宽度，避免标签换行 */
+                min-width: 480px !important;
+            }
+            body {
+                width: 480px !important;
+                min-width: 480px !important;
+                overflow-x: auto; /* 允许横向滚动 */
+            }
+            .container {
+                width: 480px !important;
+                max-width: 480px !important;
+                min-width: 480px !important;
+            }
+            .item-label {
+                width: 75px !important;
+                font-size: 16px !important;
+                white-space: nowrap !important;
+            }
+            .item-price {
+                width: 80px !important;
+            }
         }
         .item-input{
             flex:1;
