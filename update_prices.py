@@ -221,15 +221,46 @@ def fetch_raw_ram_prices():
 def fetch_processed_ram():
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         ram_list = []
-        for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            if any(w in name for w in RAM_EXCLUDE_LIST):
-                continue
-            final_p = str(float(price) + RAM_ASC_TECH_ADD) if "阿斯加特" in name else price
-            ram_list.append({"name": name, "price": final_p})
+        
+        # 查找所有产品名称标签
+        product_names = soup.find_all('span', class_='product-name')
+        
+        for name_span in product_names:
+            # 获取产品名称（优先使用 data-fullname 属性）
+            name = name_span.get('data-fullname', '').strip()
+            if not name:
+                name = name_span.get_text(strip=True)
+            
+            # 查找紧邻的价格标签
+            price_span = name_span.find_next_sibling('span', class_='product-price')
+            if price_span:
+                price_text = price_span.get_text(strip=True)
+                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
+                if price_match:
+                    price = price_match.group(1)
+                    
+                    # 排除列表中的品牌
+                    if any(w in name for w in RAM_EXCLUDE_LIST):
+                        continue
+                    
+                    # 阿斯加特品牌价格增加
+                    final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                    ram_list.append({"name": name, "price": final_p})
+        
+        print(f"🔍 爬取到 {len(ram_list)} 个内存型号")
+        if ram_list:
+            print("📋 部分内存价格:")
+            for i, ram in enumerate(ram_list[:8]):
+                print(f"   {ram['name'][:40]}...: ￥{ram['price']}")
+        
         return ram_list
-    except Exception:
+    except Exception as e:
+        print(f"❌ 内存爬取失败: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 def fetch_ssd_exact_data():
