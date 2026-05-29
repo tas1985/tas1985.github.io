@@ -776,6 +776,18 @@ def update_exist_ram_prices():
                     special_handled = True
                 continue
 
+            # 特殊处理：光威 天策 64G（32*2）3200 白色 参考金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格的2倍
+            if "光威 天策 64G（32*2）3200 白色" in ram_name:
+                print(f"  🔍 查找: 光威 天策 64G（32*2）3200 白色 = 金百达_银爵 32G 3600海力士c18 × 2")
+                if jbd_32g_3600_c18_final > 0:
+                    final_price = jbd_32g_3600_c18_final * 2
+                    special_handled = True
+                    print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 3600海力士c18 × 2 = {int(final_price)}")
+                else:
+                    print(f"  ⚠ 金百达_银爵 32G 3600(16*2)套装 海力士c18 价格未获取到，跳过更新")
+                    special_handled = True
+                continue
+
             if "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
                 print(f"  🔍 查找: 宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB 黑/白")
                 found = False
@@ -892,18 +904,38 @@ def update_exist_ram_prices():
 def fetch_raw_ram_prices_with_details():
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         ram_list = []
         all_items = []
-        for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            brand, series, cas, capacity, freq = extract_ram_four_key(name)
-            if brand or series or cas or capacity or freq:
-                ram_list.append({
-                    'name': name,
-                    'key': (brand, series, cas, capacity, freq),
-                    'price': price
-                })
-            all_items.append((name, price))
+        
+        # 查找所有产品名称标签
+        product_names = soup.find_all('span', class_='product-name')
+        
+        for name_span in product_names:
+            # 获取产品名称（优先使用 data-fullname 属性）
+            name = name_span.get('data-fullname', '').strip()
+            if not name:
+                name = name_span.get_text(strip=True)
+            
+            # 查找紧邻的价格标签
+            price_span = name_span.find_next_sibling('span', class_='product-price')
+            if price_span:
+                price_text = price_span.get_text(strip=True)
+                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
+                if price_match:
+                    price = price_match.group(1)
+                    all_items.append((name, price))
+                    
+                    # 提取四要素
+                    brand, series, cas, capacity, freq = extract_ram_four_key(name)
+                    if brand or series or cas or capacity or freq:
+                        ram_list.append({
+                            'name': name,
+                            'key': (brand, series, cas, capacity, freq),
+                            'price': price
+                        })
+        
         print(f"\n📋 网站内存数据 (共{len(all_items)}个):")
         for n, p in all_items[:30]:
             print(f"   {n} -> {p}")
@@ -912,6 +944,8 @@ def fetch_raw_ram_prices_with_details():
         return ram_list
     except Exception as e:
         print(f"❌ 获取内存数据失败：{e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 # -------------------------- 主板/内存 自动更新 --------------------------
