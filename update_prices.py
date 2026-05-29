@@ -771,6 +771,18 @@ def update_exist_ram_prices():
                     special_handled = True
                 continue
 
+            # 特殊处理：宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜 参考宏碁掠夺者 Pallasll 96G 6400 C32 的价格
+            if "宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜" in ram_name:
+                print(f"  🔍 查找: 参考宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 的价格")
+                if acer_pallasll_96g_6400_c32_final > 0:
+                    final_price = acer_pallasll_96g_6400_c32_final
+                    special_handled = True
+                    print(f"  ★ 匹配成功: {ram_name} -> 宏碁掠夺者 Pallasll 96G 6400 C32 -> 价格 {int(final_price)}")
+                else:
+                    print(f"  ⚠ 宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 价格未获取到，跳过更新")
+                    special_handled = True
+                continue
+
             # 特殊处理：阿斯加特 DDR4 64G（32X2）3200 参考金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格的2倍
             if "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                 print(f"  🔍 查找: 阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600海力士c18 × 2")
