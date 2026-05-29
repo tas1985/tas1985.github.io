@@ -662,7 +662,7 @@
         /* 服务项目样式 */
         .service-container {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 8px 15px;
             padding: 8px 10px;
             background: #1a1a1a;
@@ -671,6 +671,8 @@
             margin-top: 6px;
             width: 100%;
             box-sizing: border-box;
+            overflow-x: auto;
+            white-space: nowrap;
         }
         .service-item {
             display: flex;
@@ -783,17 +785,18 @@
         /* 机箱图片容器样式 - 调整位置到总价区域内上方 */
         .product-images-container {
             position: absolute;
-            left: 10px;
-            top: 10px;
+            left: 5px;
+            top: 5px;
+            bottom: 5px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
             z-index: 2;
         }
 
         .case-image-container {
-            width: 128px;
-            height: 128px;
+            width: 120px;
+            height: 120px;
             background: #000;
             border: 2px solid #9900ff;
             border-radius: 6px;
@@ -804,8 +807,8 @@
         }
 
         .cooler-image-container {
-            width: 128px;
-            height: 128px;
+            width: 120px;
+            height: 120px;
             background: #000;
             border: 2px solid #00ff00;
             border-radius: 6px;
@@ -815,14 +818,26 @@
             overflow: hidden;
         }
 
+        .vga-image-container {
+            width: 120px;
+            height: 120px;
+            background: #000;
+            border: 2px solid #ff9900;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
         .image-separator {
-            font-size: 32px;
+            font-size: 20px;
             color: #9900ff;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(153,0,255,0.8);
         }
 
-        .case-image, .cooler-image {
+        .case-image, .cooler-image, .vga-image {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
@@ -1000,6 +1015,15 @@
             <div class="cooler-image-container" id="coolerImageContainer">
                 <img src="" alt="散热器图片" class="cooler-image" id="coolerImage">
                 <div id="coolerImagePlaceholder" style="color: #00ff00; text-align: center;">请选择散热器<br>查看图片</div>
+            </div>
+
+            <!-- 分隔符 -->
+            <div class="image-separator">+</div>
+
+            <!-- 显卡图片容器 -->
+            <div class="vga-image-container" id="vgaImageContainer">
+                <img src="" alt="显卡图片" class="vga-image" id="vgaImage">
+                <div id="vgaImagePlaceholder" style="color: #ff9900; text-align: center;">请选择显卡<br>查看图片</div>
             </div>
         </div>
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
@@ -2782,6 +2806,150 @@
         '瓦尔基里 B360GT-ARGB VK（黑色）带屏幕': 'wrjl_b360gt_w'
     };
 
+    // 显卡图片映射表
+    const vgaImageMap = {
+        '蓝戟 Arc B580 Photon 12G OC 黑色三扇': '蓝戟_arc_b580_photon_12g_oc_黑色三扇',
+        '蓝戟 Arc B580 Photon 12G OC 白色三扇': '蓝戟_arc_b580_photon_12g_oc_白色三扇',
+        '蓝戟 Arc B580 Index 12G 黑色双扇': '蓝戟_arc_b580_index_12g_黑色双扇',
+        '蓝戟 Arc A750 Index 8G 黑色双扇': '蓝戟_arc_a750_index_8g_黑色双扇',
+        '蓝戟 ARC A380 Photon 6G 黑色双扇 对标1650': '蓝戟_arc_a380_photon_6g_黑色双扇_对标1650',
+        '蓝宝石 RX9070XT 16G 脉动 黑色三扇': '蓝宝石_rx9070xt_16g_脉动_黑色三扇',
+        '蓝宝石 RX9070XT 16G 氮动 银色三扇': '蓝宝石_rx9070xt_16g_氮动_银色三扇',
+        '蓝宝石 RX9070XT 16G 极地 白色三扇': '蓝宝石_rx9070xt_16g_极地_白色三扇',
+        '蓝宝石 RX9070GRE 12G 脉动双扇 黑色': '蓝宝石_rx9070gre_12g_脉动双扇_b',
+        '蓝宝石 RX9060XT 8G 脉动 黑色双扇': '蓝宝石_rx9060xt_8g_脉动_黑色双扇',
+        '蓝宝石 RX9060XT 8G 极地 白色双扇': '蓝宝石_rx9060xt_8g_极地_白色双扇',
+        '蓝宝石 RX9060XT 16G 脉动 黑色双扇': '蓝宝石_rx9060xt_16g_脉动_黑色双扇',
+        '蓝宝石 RX9060XT 16G 氮动 银色三扇': '蓝宝石_rx9060xt_16g_氮动_银色三扇',
+        '蓝宝石 RX9060XT 16G 极地 白色双扇': '蓝宝石_rx9060xt_16g_极地_白色双扇',
+        '蓝宝石 RX7650GRE 8G 黑钻三扇 黑色': '蓝宝石_rx7650gre_8g_黑钻三扇_b',
+        '蓝宝石 RX7650GRE 8G 白金双扇 黑色': '蓝宝石_rx7650gre_8g_白金双扇_b',
+        '蓝宝石 RX7650GRE 8G 极地双扇 白色': '蓝宝石_rx7650gre_8g_极地双扇_w',
+        '索泰 RTX5060 8G 月影白色 三扇': '索泰_rtx5060_8g_月影白色_三扇',
+        '索泰 RTX5060 8G 星夜 双扇': '索泰_rtx5060_8g_星夜_shuangshan',
+        '索泰 RTX 3050 6GB 毁灭者 OC HC 双扇': '索泰_rtx_3050_6gb_毁灭者_oc_hc_shuangshan',
+        '磐镭 RX5500 8GD6 双风扇 （1660性能）': '磐镭_rx5500_8gd6_双风扇',
+        '磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲': '磐镭_rtx3050_8gd6_black_双风扇_黑鳞甲',
+        '磐镭 RTX3050 6G 开天黑色 双扇': '磐镭_rtx3050_6g_开天黑色_shuangshan',
+        '磐镭 GTX1660S 6G 双扇 （三年质保）': '磐镭_gtx1660s_6g_shuangshan',
+        '磐镭 GTX1650 4G 黑色 双扇': '磐镭_gtx1650_4g_shuangshan_b',
+        '磐镭 GT730 4G 4K办公电影（VGA+HDMI+DVI)': '磐镭_gt730_4g_4k办公电影',
+        '磐镭 GT 610 2G': '磐镭_gt_610_2g',
+        '盈通 RX7650GRE 8G 游戏高手 白色三扇': '盈通_rx7650gre_8g_游戏高手_白色三扇',
+        '技嘉 RX9070XT GAMING OC 16G 魔鹰': 'jijia_rx9070xt_gaming_oc_16g_魔鹰',
+        '技嘉 RX9070XT ELITE 16G 小雕': 'jijia_rx9070xt_elite_16g_小雕',
+        '技嘉 RX9060XT GAMING OC 8G 魔鹰 三扇': 'jijia_rx9060xt_gaming_oc_8g_魔鹰_三扇',
+        '技嘉 RX7650GRE GAMING OC 8G 魔鹰 三扇': 'jijia_rx7650gre_gaming_oc_8g_魔鹰_三扇',
+        '技嘉 RTX5080 WF3 OC 16G 风魔': 'jijia_rtx5080_wf3_oc_16g_风魔',
+        '技嘉 RTX5080 MASTER ICE 16G 超级冰雕': 'jijia_rtx5080_master_ice_16g_超级冰雕',
+        '技嘉 RTX5080 MASTER 16G 超级雕': 'jijia_rtx5080_master_16g_超级雕',
+        '技嘉 RTX5080 AERO OC 16G 雪鹰 SFF': 'jijia_rtx5080_aero_oc_16g_雪鹰_sff',
+        '技嘉 RTX5070TI WF3 16G 风魔 SFF': 'jijia_rtx5070ti_wf3_16g_风魔_sff',
+        '技嘉 RTX5070TI GAMING OC 16G 魔鹰': 'jijia_rtx5070ti_gaming_oc_16g_魔鹰',
+        '技嘉 RTX5070 WF3 OC 12G 风魔 三扇': 'jijia_rtx5070_wf3_oc_12g_风魔_三扇',
+        '技嘉 RTX5070 GAMING OC 12G 魔鹰': 'jijia_rtx5070_gaming_oc_12g_魔鹰',
+        '技嘉 RTX5070 Eagle OC ICE 12G 冰猎鹰 三扇': 'jijia_rtx5070_eagle_oc_ice_12g_冰猎鹰_三扇',
+        '技嘉 RTX5070 Eagle OC 12G 猎鹰 三扇': 'jijia_rtx5070_eagle_oc_12g_猎鹰_三扇',
+        '技嘉 RTX5070 AORUS MASTER OC 12G 超级雕': 'jijia_rtx5070_aorus_master_oc_12g_超级雕',
+        '技嘉 RTX5070 AERO OC 12G 雪鹰': 'jijia_rtx5070_aero_oc_12g_雪鹰',
+        '技嘉 RTX5060TI WF2 OC 16G 风魔MAX 双扇': 'jijia_rtx5060ti_wf2_oc_16g_风魔max_shuangshan',
+        '技嘉 RTX5060TI WF2 MAX OC 8G 风魔MAX': 'jijia_rtx5060ti_wf2_max_oc_8g_风魔max',
+        '技嘉 RTX5060TI GAMING OC 8G 魔鹰': 'jijia_rtx5060ti_gaming_oc_8g_魔鹰',
+        '技嘉 RTX5060TI EAGLE OC ICE 8G 冰猎鹰 白色双扇': 'jijia_rtx5060ti_eagle_oc_ice_8g_冰猎鹰_白色双扇',
+        '技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇': 'jijia_rtx5060ti_eagle_oc_16g_猎鹰_黑色双扇',
+        '技嘉 RTX5060TI EAGLE MAX OC 8G 猎鹰MAX 黑色三扇': 'jijia_rtx5060ti_eagle_max_oc_8g_猎鹰max_黑色三扇',
+        '技嘉 RTX5060TI AERO 8G 雪鹰': 'jijia_rtx5060ti_aero_8g_雪鹰',
+        '技嘉 RTX5060 WF2 MAX OC 8G 风魔': 'jijia_rtx5060_wf2_max_oc_8g_风魔',
+        '技嘉 RTX5060 GAMING OC 8G 魔鹰': 'jijia_rtx5060_gaming_oc_8g_魔鹰',
+        '技嘉 RTX5060 EAGLE OC ICE 8G 冰猎鹰 白色双扇': 'jijia_rtx5060_eagle_oc_ice_8g_冰猎鹰_白色双扇',
+        '技嘉 RTX5060 EAGLE OC 8G 猎鹰 黑色双扇': 'jijia_rtx5060_eagle_oc_8g_猎鹰_黑色双扇',
+        '技嘉 RTX5060 EAGLE MAX OC 8G 猎鹰 黑色三扇': 'jijia_rtx5060_eagle_max_oc_8g_猎鹰_黑色三扇',
+        '技嘉 RTX5060 AERO 8G 雪鹰': 'jijia_rtx5060_aero_8g_雪鹰',
+        '技嘉 RTX5050 WF2 8G 风魔': 'jijia_rtx5050_wf2_8g_风魔',
+        '技嘉 RTX4070 WF3 OC 12G 风魔 三扇': 'jijia_rtx4070_wf3_oc_12g_风魔_三扇',
+        '技嘉 RTX3060 WF2 12G 风魔EC 工包': 'jijia_rtx3060_wf2_12g_风魔ec_工包',
+        '技嘉 RTX3060 EAGLE OC 12G 猎鹰双扇': 'jijia_rtx3060_eagle_oc_12g_猎鹰双扇',
+        '技嘉 RTX3050 WF2 6G 风魔': 'jijia_rtx3050_wf2_6g_风魔',
+        '微星 RTX5080 16G VENTUS 3X OC 万图师': 'weixing_rtx5080_16g_ventus_3x_oc_万图师',
+        '微星 RTX5070TI INSPIRE 3X 16G OC 硬派师': 'weixing_rtx5070ti_inspire_3x_16g_oc_硬派师',
+        '微星 RTX5070 VENTUS 2X OC 12G 万图师 双扇': 'weixing_rtx5070_ventus_2x_oc_12g_万图师_shuangshan',
+        '微星 RTX5070 12G GAMING TRIO OC 魔龙黑色': 'weixing_rtx5070_12g_gaming_trio_oc_魔龙黑色',
+        '微星 RTX5070 12G GAMING TRIO OC WHITE 白魔龙': 'weixing_rtx5070_12g_gaming_trio_oc_white_白魔龙',
+        '微星 RTX5060TI VENTUS 2X 8G 万图师 双扇': 'weixing_rtx5060ti_ventus_2x_8g_万图师_shuangshan',
+        '微星 RTX5060TI GAMING DUKE 3X龙爵': 'weixing_rtx5060ti_gaming_duke_3x龙爵',
+        '微星 RTX5060 SHADOW 2X 8G 幻影师 双扇': 'weixing_rtx5060_shadow_2x_8g_幻影师_shuangshan',
+        '微星 RTX5050 VENTUS 2X 8G 万图师 双扇': 'weixing_rtx5050_ventus_2x_8g_万图师_shuangshan',
+        '微星 RTX3050 6G 万图师 双扇': 'weixing_rtx3050_6g_万图师_shuangshan',
+        '影驰 RTX5080 16G 金属大师 OC 黑金版 黑色': '影驰_rtx5080_16g_金属大师_oc_黑金版_b',
+        '影驰 RTX5070 星曜LUNA OC 三扇 12G 白色': '影驰_rtx5070_星曜luna_oc_三扇_12g_w',
+        '影驰 RTX5070 12G 魔刃 OC 黑色': '影驰_rtx5070_12g_魔刃_oc_b',
+        '影驰 RTX5070 12G 金属大师 白金版 白色': '影驰_rtx5070_12g_金属大师_白金版_w',
+        '影驰 RTX5070 12G 圣刃 OC 白色': '影驰_rtx5070_12g_圣刃_oc_w',
+        '影驰 RTX5060TI 魔刃 OC 8G 黑色 三扇': '影驰_rtx5060ti_魔刃_oc_8g_三扇_b',
+        '影驰 RTX5060TI FIRE MAX 16G 双扇黑色': '影驰_rtx5060ti_fire_max_16g_双扇黑色',
+        '影驰 RTX5060TI 8G 金属大师 OC 白金版 白色': '影驰_rtx5060ti_8g_金属大师_oc_白金版_w',
+        '影驰 RTX5060 魔刃V2 OC 8G 黑色 三扇': '影驰_rtx5060_魔刃v2_oc_8g_三扇_b',
+        '影驰 RTX5060 金属大师 OC 8G 黑金版 黑色三扇': '影驰_rtx5060_金属大师_oc_8g_黑金版_黑色三扇',
+        '影驰 RTX5060 金属大师 OC 8G 白金版 白色三扇': '影驰_rtx5060_金属大师_oc_8g_白金版_白色三扇',
+        '影驰 RTX5060 FIRE 8G 三扇 黑色': '影驰_rtx5060_fire_8g_三扇_b',
+        '影驰 RTX3050 虎将 6G': '影驰_rtx3050_虎将_6g',
+        '华硕 RX7650GRE O8G GAMING ATS巨齿鲨 三扇': 'huashuo_rx7650gre_o8g_gaming_ats巨齿鲨_三扇',
+        '华硕 RTX5080 O16G GAMING TUF 电竞特工': 'huashuo_rtx5080_o16g_gaming_tuf_电竞特工',
+        '华硕 RTX5080 O16G GAMING ROG ASTRAL 夜神 四风扇': 'huashuo_rtx5080_o16g_gaming_rog_astral_夜神_四风扇',
+        '华硕 RTX5070TI O16G PRIME 大师': 'huashuo_rtx5070ti_o16g_prime_大师',
+        '华硕 RTX5070 O12G PRIME 大师': 'huashuo_rtx5070_o12g_prime_大师',
+        '华硕 RTX5070 O12G GAMING TX 天选白色': 'huashuo_rtx5070_o12g_gaming_tx_天选白色',
+        '华硕 RTX5070 O12G GAMING TUF 电竞特工': 'huashuo_rtx5070_o12g_gaming_tuf_电竞特工',
+        '华硕 RTX5070 O12G ATS 巨齿鲨 V2 三扇': 'huashuo_rtx5070_o12g_ats_巨齿鲨_v2_三扇',
+        '华硕 RTX5070 12G DUAL 雪豹 黑色 双扇': 'huashuo_rtx5070_12g_dual_雪豹_shuangshan_b',
+        '华硕 RTX5060TI O8G GAMING TX 天选白色': 'huashuo_rtx5060ti_o8g_gaming_tx_天选白色',
+        '华硕 RTX5060TI O8G ATS 巨齿鲨 三扇': 'huashuo_rtx5060ti_o8g_ats_巨齿鲨_三扇',
+        '华硕 RTX5060TI 8G DUAL 雪豹 黑色': 'huashuo_rtx5060ti_8g_dual_雪豹_b',
+        '华硕 RTX5060 O8G GAMING TX 天选白色': 'huashuo_rtx5060_o8g_gaming_tx_天选白色',
+        '华硕 RTX5060 O8G DUAL 雪豹 黑色': 'huashuo_rtx5060_o8g_dual_雪豹_b',
+        '华硕 RTX5060 O8G ATS 巨齿鲨 三扇': 'huashuo_rtx5060_o8g_ats_巨齿鲨_三扇',
+        '华硕 RTX4070S 12G DUAL 雪豹 黑色 双扇': 'huashuo_rtx4070s_12g_dual_雪豹_shuangshan_b',
+        '华硕 PRIME RX9070XT O16G 大师': 'huashuo_prime_rx9070xt_o16g_大师',
+        '七彩虹 RTX5080 16G Vulcan OC 黑火神': '七彩虹_rtx5080_16g_vulcan_oc_黑火神',
+        '七彩虹 RTX5080 16G Vulcan OC W 白火神': '七彩虹_rtx5080_16g_vulcan_oc_w_白火神',
+        '七彩虹 RTX5080 16G ULTRA W OC 白色': '七彩虹_rtx5080_16g_ultra_w_oc_w',
+        '七彩虹 RTX5080 16G Advanced OC 16G 银鲨': '七彩虹_rtx5080_16g_advanced_oc_16g_银鲨',
+        '七彩虹 RTX5070TI 16G 战斧豪华版 SFF': '七彩虹_rtx5070ti_16g_战斧豪华版_sff',
+        '七彩虹 RTX5070TI 16G Vulcan OC 黑火神': '七彩虹_rtx5070ti_16g_vulcan_oc_黑火神',
+        '七彩虹 RTX5070TI 16G ULTRA W OC 白色': '七彩虹_rtx5070ti_16g_ultra_w_oc_w',
+        '七彩虹 RTX5070TI 16G Advanced OC 16G 银鲨': '七彩虹_rtx5070ti_16g_advanced_oc_16g_银鲨',
+        '七彩虹 RTX5070 12G 战斧豪华版': '七彩虹_rtx5070_12g_战斧豪华版',
+        '七彩虹 RTX5070 12G Vulcan XOC 黑火神': '七彩虹_rtx5070_12g_vulcan_xoc_黑火神',
+        '七彩虹 RTX5070 12G Vulcan OC W 白火神': '七彩虹_rtx5070_12g_vulcan_oc_w_白火神',
+        '七彩虹 RTX5070 12G ULTRA W OC 白色': '七彩虹_rtx5070_12g_ultra_w_oc_w',
+        '七彩虹 RTX5070 12G Advanced OC 银鲨': '七彩虹_rtx5070_12g_advanced_oc_银鲨',
+        '七彩虹 RTX5060TI 8G 战斧豪华版 三扇': '七彩虹_rtx5060ti_8g_战斧豪华版_三扇',
+        '七彩虹 RTX5060TI 8G 战斧 DUO 双扇': '七彩虹_rtx5060ti_8g_战斧_duo_shuangshan',
+        '七彩虹 RTX5060TI 8G ULTRA W OC 白色三扇': '七彩虹_rtx5060ti_8g_ultra_w_oc_白色三扇',
+        '七彩虹 RTX5060TI 8G ULTRA W DUO OC 白色双扇': '七彩虹_rtx5060ti_8g_ultra_w_duo_oc_白色双扇',
+        '七彩虹 RTX5060TI 16G 战斧 DUO 双扇': '七彩虹_rtx5060ti_16g_战斧_duo_shuangshan',
+        '七彩虹 RTX5060 8G 战斧豪华版 三扇': '七彩虹_rtx5060_8g_战斧豪华版_三扇',
+        '七彩虹 RTX5060 8G 战斧 DUO 双扇': '七彩虹_rtx5060_8g_战斧_duo_shuangshan',
+        '七彩虹 RTX5060 8G ULTRA W OC 白色三扇': '七彩虹_rtx5060_8g_ultra_w_oc_白色三扇',
+        '七彩虹 RTX5060 8G ULTRA W DUO OC 白色双扇': '七彩虹_rtx5060_8g_ultra_w_duo_oc_白色双扇',
+        '七彩虹 RTX5050 8G 战斧 DUO 双扇': '七彩虹_rtx5050_8g_战斧_duo_shuangshan',
+        '七彩虹 RTX5050 8G ULTRA W DUO 白色双扇': '七彩虹_rtx5050_8g_ultra_w_duo_白色双扇',
+        '七彩虹 RTX3050 8G 战斧DUO 双扇': '七彩虹_rtx3050_8g_战斧duo_shuangshan',
+        'Intel UHD 核显': 'intel_uhd_核显',
+        'AMD Vega 核显': 'amd_vega_核显',
+        'AMD Radeon Graphics': 'amd_radeon_graphics',
+        '* 技嘉 RTX5070TI Eagle OC 16G 猎鹰 三扇 SFF': '*_jijia_rtx5070ti_eagle_oc_16g_猎鹰_三扇_sff',
+        '* 技嘉 RTX5070TI AERO 16G 雪鹰': '*_jijia_rtx5070ti_aero_16g_雪鹰',
+        '* 影驰 RTX5070TI 16G 金属大师 黑金版 黑色': '*_影驰_rtx5070ti_16g_金属大师_黑金版_b',
+        '* 影驰 RTX5070TI 16G 金属大师 白金版 白色': '*_影驰_rtx5070ti_16g_金属大师_白金版_w',
+        '* 影驰 RTX5070 12G 金属大师 黑金版 黑色': '*_影驰_rtx5070_12g_金属大师_黑金版_b',
+        '* 影驰 RTX5060TI 圣刃 OC 8G 白色 三扇': '*_影驰_rtx5060ti_圣刃_oc_8g_三扇_w',
+        '* 影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色': '*_影驰_rtx5060ti_8g_金属大师_oc_黑金版_b',
+        '* 华硕 RTX5070TI O16G WHITE GAMING TUF电竞特工 白色': '*_huashuo_rtx5070ti_o16g_white_gaming_tuf电竞特工_w',
+        '* 华硕 RTX5070TI O16G GAMING TUF 电竞特工': '*_huashuo_rtx5070ti_o16g_gaming_tuf_电竞特工',
+        '* 七彩虹 RTX5070 12G ULTRA OC 黑色': '*_七彩虹_rtx5070_12g_ultra_oc_b',
+    };
+
     // 图片缓存对象
     const imageCache = {};
     const imageLoadQueue = [];
@@ -2884,6 +3052,13 @@
                 key: 'cooler_' + imageName, 
                 src: `./PNG_SR/${imageName}.png`,
                 type: 'cooler' 
+            });
+        }
+        for (const [, imageName] of Object.entries(vgaImageMap)) {
+            allImages.push({ 
+                key: 'vga_' + imageName, 
+                src: `./PNG_VGA/${imageName}.png`,
+                type: 'vga' 
             });
         }
 
@@ -3050,6 +3225,57 @@
         }
     }
 
+    // 显示显卡图片 - 支持本地缓存
+    async function showVgaImage(vgaName) {
+        const imageElement = document.getElementById('vgaImage');
+        const placeholder = document.getElementById('vgaImagePlaceholder');
+
+        if (vgaName && vgaImageMap[vgaName]) {
+            const imageName = vgaImageMap[vgaName];
+            const cacheKey = 'vga_' + imageName;
+
+            if (imageCache[cacheKey] && imageCache[cacheKey].src) {
+                imageElement.src = imageCache[cacheKey].src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                return;
+            }
+
+            // 显示加载中状态
+            placeholder.innerHTML = '加载中...';
+            placeholder.style.display = 'block';
+            imageElement.style.display = 'none';
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = async function() {
+                imageElement.src = img.src;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                imageCache[cacheKey] = img;
+                
+                // 保存到localStorage缓存
+                const base64 = await imageToBase64(img);
+                if (base64) {
+                    saveToCache(cacheKey, base64);
+                }
+            };
+            
+            img.onerror = function() {
+                imageElement.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '图片<br>未找到';
+            };
+            
+            img.src = `./PNG_VGA/${imageName}.png`;
+        } else {
+            imageElement.style.display = 'none';
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = '请选择显卡<br>查看图片';
+        }
+    }
+
     // 中文类目映射表
     const categoryMap = {
         'cpu': 'CPU',
@@ -3102,146 +3328,105 @@
     // 鲁大师跑分字典
     const ludashiScores = {
         cpu: {
-            "i3-12100F": 410809,
-            "i3-12100": 410809,
-            "i5-12400F": 480000,
-            "i5-12400": 480000,
-            "i5-12490F": 490000,
-            "i5-12600KF": 690000,
-            "i7-12700KF": 780000,
-            "i9-12900KF": 900000,
-            "i9-12900K": 900000,
-            "i3-13100F": 444790,
-            "i3-13100": 444790,
-            "i5-13400F": 620000,
-            "i5-13400": 620000,
-            "i5-13600KF": 780000,
-            "i5-13600K": 780000,
-            "i7-13700KF": 950000,
-            "i9-13900KF": 1224755,
-            "i9-13900K": 1224755,
-            "i3-14100F": 445951,
-            "i3-14100": 445951,
-            "i5-14400F": 630000,
-            "i5-14400": 630000,
-            "i5-14490F": 640000,
-            "i5-14600KF": 898251,
-            "i5-14600K": 898251,
-            "i7-14700KF": 1112887,
-            "i9-14900KF": 1257674,
-            "i9-14900K": 1257674,
-            "Ultra 5 225F": 695000,
-            "Ultra 5 225": 705783,
-            "Ultra 5 230F": 720429,
-            "Ultra 5 230": 730000,
-            "Ultra 5 245KF": 883408,
-            "Ultra 5 245K": 894297,
-            "Ultra 5 250K": 994297,
-            "酷睿 U5 250K PLUS 盒装 18核心18线程": 994297,
-            "Ultra 7 265KF": 1151665,
-            "Ultra 7 265K": 1173547,
-            "Ultra 9 285K": 1323188,
-            "Ultra 7 270K": 1223188,
-            "R5-5500X3D": 858251,
-            "AMD R5 5500X3D": 894297,
-            "R5-5500": 473613,
-            "R5 5500": 473613,
-            "R5 5600X": 599432,
-            "R5-5600": 529432,
-            "R5 5600GT": 595311,
-            "R7 5700X": 720412,
-            "R7-5700X": 720412,
-            "AMD R5 7500F": 732871,
-            "AMD R7 7800X 3D": 933217,
-            "R5 9500F": 814273,
-            "R5 9600X": 948398,
-            "R7 9700X": 1087080,
-            "R9 9900X": 1160675,
-            "R9 9950X": 1384658,
-            "R9-9950X": 1384658,
-            "R7 9800X3D": 995755,
-            "R7 9850X3D": 1054932,
-            "R9 9950X3D": 1453363,
+            // ========== Intel 至强 ==========
             "E5-2666V3": 382000,
-            // 补充酷睿U系列型号
-            "酷睿 U9 285K": 1323188,
-            "酷睿 U7 270K PLUS": 1323188,
-            "酷睿 U7 265KF": 1151665,
-            "酷睿 U7 265K": 1173547,
-            "酷睿 U5 245KF": 883408,
-            "酷睿 U5 230F": 720429,
-            "酷睿 U5 225F": 695000,
-            "酷睿 U5 225": 705783,
-            "Ultra 5 245K": 894297,
-            // 补充其他缺失型号
+            // ========== Intel 12代 ==========
+            "i3-12100F": 410809, "i3-12100": 410809,
+            "i5-12400F": 480000, "i5-12400": 480000,
+            "i5-12490F": 490000,
+            "i5-12600KF": 690000, "i5-12600K": 690000,
+            "i7-12700KF": 780000, "i7-12700K": 780000,
+            // ========== Intel 13代 ==========
+            "i3-13100F": 444790, "i3-13100": 444790,
+            "i5-13400F": 620000, "i5-13400": 620000,
+            "i5-13600KF": 780000, "i5-13600K": 780000,
+            "i7-13700KF": 950000, "i7-13700K": 950000,
+            // ========== Intel 14代 ==========
+            "i3-14100F": 445951, "i3-14100": 445951,
+            "i5-14400F": 630000, "i5-14400": 630000,
+            "i5-14490F": 640000,
+            "i5-14600KF": 898251, "i5-14600K": 898251,
+            "i7-14700KF": 1112887,
             "i7-14790F": 1100000,
-            "R9-9950X": 1384658,
-            "R9 9950X3D": 1453363,
-            "R7-9700X": 1087080,
-            "R7 9850X 3D": 1054932,
-            "R7 9800X 3D": 995755,
-            "R5-5500GT": 595311,
-            "R5-9600X": 948398,
+            "i9-14900KF": 1257674, "i9-14900K": 1257674,
+            // ========== Intel Ultra 200S（酷睿U系列）==========
+            "Ultra 5 225F": 695000, "Ultra 5 225": 705783,
+            "Ultra 5 230F": 720429, "Ultra 5 230": 730000,
+            "Ultra 5 245KF": 883408, "Ultra 5 245K": 894297,
+            "Ultra 5 250K": 994297,
+            "Ultra 7 265KF": 1151665, "Ultra 7 265K": 1173547,
+            "Ultra 7 270K": 1223188,
+            "Ultra 9 285K": 1323188,
+            "酷睿 U5 225F 盒装": 695000, "酷睿 U5 225 盒装 带核显": 705783,
+            "酷睿 U5 230F 盒装": 720429,
+            "酷睿 U5 245KF 盒装": 883408,
+            "酷睿 U5 250K PLUS 盒装": 994297,
+            "酷睿 U7 265KF 盒装": 1151665, "酷睿 U7 265K 盒装": 1173547,
+            "酷睿 U7 270K PLUS 盒装": 1223188,
+            "酷睿 U9 285K 盒装": 1323188,
+            // ========== AMD 锐龙5000 ==========
+            "R5-5500": 473613, "R5-5500GT": 595311, "R5-5500X3D": 858251,
+            "R5-5600": 599252, "R5-5600X": 599432,
+            "R7-5700X": 720412,
+            // ========== AMD 锐龙7000 ==========
             "R5-7500F": 732871,
-            "R5 5600X": 599432,
-            "R5-5500X3D": 858251,
-            "R5-5500": 473613,
-            "R7-5700X": 720412
+            "R7-7800X3D": 933217,
+            // ========== AMD 锐龙9000 ==========
+            "R5-9600X": 948398,
+            "R7-9700X": 1087080,
+            "R9-9900X": 1160675, "R9-9950X": 1384658,
+            "R7-9800X 3D": 995755,
+            "R7-9850X 3D": 1054932,
+            "R9 9950X3D": 1453363
         },
         vga: {
+            // ========== NVIDIA RTX 50系列 ==========
             "RTX5090": 1953348,
             "RTX5080": 1183213,
             "RTX5070TI": 956858,
             "RTX5070": 796206,
             "RTX5060TI": 531658,
-            "RTX5060ti": 531658,
             "RTX5060": 483440,
             "RTX5050": 350136,
-            "RTX3050": 211116,
-            "RTX3060": 360604,
-            "RX9070XT": 1001440,
-            "RX9070GRE": 714710,
-            "RX9060XT": 510700,
-            "RX7650GRE": 416010,
-            "B580": 426010,
-            "A750": 326010,
-            "A380": 137768,
-            "GTX1660S": 167768,
-            "GTX1660": 157768,
-            "GTX1650": 147768,
-            "GTX1060": 157768,
-            "GT730": 18873,
-            "6500XT": 182031,
-            "GT610": 15555
+            // ========== NVIDIA RTX 40系列 ==========
+            "RTX4090": 1500000,
+            "RTX4080SUPER": 1183213, "RTX4080": 1100000,
+            "RTX4070SUPER": 900000, "RTX4070TI": 850000, "RTX4070": 750000,
+            "RTX4060TI": 531658, "RTX4060": 400000,
+            // ========== NVIDIA RTX 30系列 ==========
+            "RTX3090": 1200000, "RTX3080TI": 1000000,
+            "RTX3080": 900000, "RTX3070TI": 750000,
+            "RTX3070": 620000, "RTX3060TI": 500000,
+            "RTX3060": 360604, "RTX3050": 211116,
+            // ========== NVIDIA GTX系列 ==========
+            "GTX1660S": 320000, "GTX1660": 300000,
+            "GTX1650": 250000, "GTX1060": 280000,
+            // ========== AMD RX 9000系列 ==========
+            "RX9070XT": 1001440, "RX9070": 850000,
+            "RX9060XT": 650000, "RX9060": 550000,
+            // ========== AMD RX 7000系列 ==========
+            "RX7900XTX": 1200000, "RX7900XT": 1000000,
+            "RX7800XT": 750000, "RX7700XT": 650000,
+            "RX7650GRE": 416010, "RX7600XT": 350000, "RX7600": 320000,
+            // ========== Intel 显卡 ==========
+            "B580": 426010, "B750": 380000, "A750": 326010, "A380": 137768,
+            // ========== 其他 ==========
+            "GT730": 50000, "GT610": 30000, "6500XT": 182031,
+            // ========== 核显 ==========
+            "Intel UHD": 50000, "AMD Vega": 80000, "AMD Radeon": 70000
         },
         ram: {
-            "3200": 98000,
-            "3600": 115000,
-            "5600": 145000,
-            "6000": 158000,
-            "6400": 172000,
-            "6800": 185000,
-            "7200": 198000,
-            "8000": 220000,
-            "DDR3": 42000,
-            "DDR4": 98000,
-            "DDR5": 158000
+            "3200": 98000, "3600": 115000, "5600": 145000,
+            "6000": 158000, "6400": 172000, "6800": 185000,
+            "7200": 198000, "8000": 220000,
+            "DDR3": 42000, "DDR4": 98000, "DDR5": 158000
         },
         ssd: {
-            "7050": 360000,
-            "3500": 165000,
-            "7250": 375000,
-            "7400": 385000,
-            "7000": 340000,
-            "7200": 350000,
-            "6700": 300000,
-            "6800": 310000,
-            "6300": 299000,
-            "6000": 295000,
-            "5000": 290000,
-            "PCIE 4.0": 310000,
-            "PCIE 3.0": 160000,
-            "PCIE 5.0": 450000
+            "7050": 360000, "7250": 375000, "7400": 385000,
+            "7000": 340000, "7200": 350000,
+            "6700": 300000, "6800": 310000,
+            "6300": 299000, "6000": 295000, "5000": 290000,
+            "PCIE 4.0": 310000, "PCIE 3.0": 160000, "PCIE 5.0": 450000
         }
     };
 
@@ -3269,13 +3454,7 @@
             "i7-14700KF": 150, "i7-14700K": 150,
             "i7-14790F": 150,
             "i9-14900KF": 165, "i9-14900K": 165,
-            // ========== Intel Ultra 200S（酷睿U系列） ==========
-            "酷睿 U5 225F": 54, "酷睿 U5 225": 54,
-            "酷睿 U5 230F": 59, "酷睿 U5 245KF": 105,
-            "酷睿 U5 250K PLUS": 125,
-            "酷睿 U7 265KF": 125, "酷睿 U7 265K": 125,
-            "酷睿 U7 270K PLUS": 150,
-            "酷睿 U9 285K": 180,
+            // ========== Intel Ultra 200S（酷睿U系列）==========
             "Ultra 5 225F": 54, "Ultra 5 225": 54,
             "Ultra 5 230F": 59, "Ultra 5 230": 59,
             "Ultra 5 245KF": 105, "Ultra 5 245K": 105,
@@ -3283,57 +3462,58 @@
             "Ultra 7 265KF": 125, "Ultra 7 265K": 125,
             "Ultra 7 270K": 150,
             "Ultra 9 285K": 125,
+            "酷睿 U5 225F 盒装": 54, "酷睿 U5 225 盒装 带核显": 54,
+            "酷睿 U5 230F 盒装": 59,
+            "酷睿 U5 245KF 盒装": 105,
+            "酷睿 U5 250K PLUS 盒装": 125,
+            "酷睿 U7 265KF 盒装": 125, "酷睿 U7 265K 盒装": 125,
+            "酷睿 U7 270K PLUS 盒装": 150,
+            "酷睿 U9 285K 盒装": 125,
             // ========== AMD 锐龙5000 ==========
             "R5-5500": 65, "R5-5500GT": 65, "R5-5500X3D": 60,
-            "R5-5600": 65, "R5-5600X": 65,"R5 5500X3D": 60,
-            "R5 5500": 65,
-            "R7 5700X": 80,
+            "R5-5600": 65, "R5-5600X": 65,
             "R7-5700X": 80,
             // ========== AMD 锐龙7000 ==========
-            "AMD R5 7500F": 65,
-            "AMD R7 7800X 3D": 120,
+            "R5-7500F": 65,
+            "R7-7800X3D": 120,
             // ========== AMD 锐龙9000 ==========
-            "R5 9600X": 120,
-            "R7 9700X": 120,
-            "R9-9950X": 170,
+            "R5-9600X": 120,
+            "R7-9700X": 120,
+            "R9-9900X": 170, "R9-9950X": 170,
             "R9 9950X3D": 170,
-            "R7 9800X 3D": 120, "R7 9850X 3D": 170
+            "R7-9800X 3D": 120, "R7-9850X 3D": 170
         },
         vga: {
-            // RTX 50系列
-            "RTX5090": 625, "RTX5080": 410,
+            // ========== NVIDIA RTX 50系列 ==========
+            "RTX5090": 575, "RTX5080": 450,
             "RTX5070TI": 350, "RTX5070": 300,
-            "RTX5060TI": 180, "RTX5060ti": 180, "RTX5060": 170,
+            "RTX5060TI": 180, "RTX5060": 170,
             "RTX5050": 150,
-            // RTX 40系列
-            "RTX4090": 450, "RTX4080SUPER": 320,
-            "RTX4080": 320, "RTX4070TI": 285,
-            "RTX4070SUPER": 220, "RTX4070": 200,
+            // ========== NVIDIA RTX 40系列 ==========
+            "RTX4090": 450, "RTX4080SUPER": 320, "RTX4080": 320,
+            "RTX4070SUPER": 220, "RTX4070TI": 285, "RTX4070": 200,
             "RTX4060TI": 165, "RTX4060": 115,
-            // RTX 30系列
+            // ========== NVIDIA RTX 30系列 ==========
             "RTX3090": 350, "RTX3080TI": 350,
             "RTX3080": 320, "RTX3070TI": 290,
             "RTX3070": 220, "RTX3060TI": 200,
             "RTX3060": 170, "RTX3050": 130,
-            // GTX系列
+            // ========== NVIDIA GTX系列 ==========
             "GTX1660S": 125, "GTX1660": 120,
-            "GTX1650": 75,
-            "GTX1060": 120,
-            // AMD RX 9000系列
+            "GTX1650": 75, "GTX1060": 120,
+            // ========== AMD RX 9000系列 ==========
             "RX9070XT": 304, "RX9070": 220,
             "RX9060XT": 180, "RX9060": 150,
-            // AMD RX 7000系列
+            // ========== AMD RX 7000系列 ==========
             "RX7900XTX": 355, "RX7900XT": 315,
             "RX7800XT": 263, "RX7700XT": 245,
-            "RX7600XT": 165, "RX7600": 165,
-            // AMD RX 6000系列
-            "RX6750GRE": 186,
-            // Intel显卡
-            "B580": 190, "A750": 225,
-            "A380": 75,
-            // 其他
-            "GT730": 30, "GT610": 30,
-            "6500XT": 107
+            "RX7650GRE": 180, "RX7600XT": 165, "RX7600": 165,
+            // ========== Intel 显卡 ==========
+            "B580": 190, "B750": 180, "A750": 225, "A380": 75,
+            // ========== 其他 ==========
+            "GT730": 30, "GT610": 30, "6500XT": 107,
+            // ========== 核显 ==========
+            "Intel UHD": 15, "AMD Vega": 15, "AMD Radeon": 15
         },
         ram: {
             // DDR4 每8GB约3W
@@ -3496,6 +3676,11 @@
                 // 如果是散热器，显示对应的图片
                 if(key === 'cooler') {
                     showCoolerImage(i.n);
+                }
+
+                // 如果是显卡，显示对应的图片
+                if(key === 'vga') {
+                    showVgaImage(i.n);
                 }
             });
             
@@ -3899,13 +4084,39 @@
     function calculateLudashiScore() {
         let totalScore = 0;
         
-        // CPU跑分 - 精确匹配型号
+        // CPU跑分 - 匹配型号（支持空格和破折号互换，支持X 3D转X3D）
         const cpuValue = document.getElementById("cpu").value;
         if (cpuValue) {
-            for (let cpuModel in ludashiScores.cpu) {
-                if (cpuValue.includes(cpuModel)) {
-                    totalScore += ludashiScores.cpu[cpuModel];
-                    break;
+            // 特殊处理：AMD R5 5500X3D 盒 跑分上浮20%
+            if (cpuValue.includes("AMD R5 5500X3D")) {
+                if (ludashiScores.cpu["R5-5500X3D"]) {
+                    totalScore += Math.floor(ludashiScores.cpu["R5-5500X3D"] * 1.2);
+                }
+            } else {
+                for (let cpuModel in ludashiScores.cpu) {
+                    // 原始匹配
+                    if (cpuValue.includes(cpuModel)) {
+                        totalScore += ludashiScores.cpu[cpuModel];
+                        break;
+                    }
+                    // 尝试将cpuValue中的空格替换为-进行匹配
+                    const cpuValueWithDash = cpuValue.replace(/\s+/g, '-');
+                    if (cpuValueWithDash.includes(cpuModel)) {
+                        totalScore += ludashiScores.cpu[cpuModel];
+                        break;
+                    }
+                    // 尝试将cpuModel中的-替换为空格进行匹配
+                    const cpuModelWithSpace = cpuModel.replace(/-/g, ' ');
+                    if (cpuValue.includes(cpuModelWithSpace)) {
+                        totalScore += ludashiScores.cpu[cpuModel];
+                        break;
+                    }
+                    // 尝试将cpuValue中的"X 3D"替换为"X3D"进行匹配（如 R7 9850X 3D -> R7-9850X3D）
+                    const cpuValueX3D = cpuValue.replace(/X\s+3D/g, 'X3D').replace(/\s+/g, '-');
+                    if (cpuValueX3D.includes(cpuModel)) {
+                        totalScore += ludashiScores.cpu[cpuModel];
+                        break;
+                    }
                 }
             }
         }
@@ -3957,11 +4168,30 @@
     function calculatePowerConsumption() {
         let totalPower = 0;
         
-        // CPU功耗
+        // CPU功耗（支持空格和破折号互换，支持X 3D转X3D）
         const cpuValue = document.getElementById("cpu").value;
         if (cpuValue) {
             for (let cpuModel in powerConsumption.cpu) {
+                // 原始匹配
                 if (cpuValue.includes(cpuModel)) {
+                    totalPower += powerConsumption.cpu[cpuModel];
+                    break;
+                }
+                // 尝试将cpuValue中的空格替换为-进行匹配
+                const cpuValueWithDash = cpuValue.replace(/\s+/g, '-');
+                if (cpuValueWithDash.includes(cpuModel)) {
+                    totalPower += powerConsumption.cpu[cpuModel];
+                    break;
+                }
+                // 尝试将cpuModel中的-替换为空格进行匹配
+                const cpuModelWithSpace = cpuModel.replace(/-/g, ' ');
+                if (cpuValue.includes(cpuModelWithSpace)) {
+                    totalPower += powerConsumption.cpu[cpuModel];
+                    break;
+                }
+                // 尝试将cpuValue中的"X 3D"替换为"X3D"进行匹配（如 R7 9850X 3D -> R7-9850X3D）
+                const cpuValueX3D = cpuValue.replace(/X\s+3D/g, 'X3D').replace(/\s+/g, '-');
+                if (cpuValueX3D.includes(cpuModel)) {
                     totalPower += powerConsumption.cpu[cpuModel];
                     break;
                 }
@@ -4192,6 +4422,12 @@
             if(selectedCooler) {
                 showCoolerImage(selectedCooler);
             }
+
+            // 如果选择了显卡，显示对应的图片
+            const selectedVga = document.getElementById("vga").value;
+            if(selectedVga) {
+                showVgaImage(selectedVga);
+            }
         }
         // 初始化客户名称下拉列表
         initUserDropdown();
@@ -4351,6 +4587,11 @@
         // 如果加载了散热器，显示对应的图片
         if(d.cooler) {
             showCoolerImage(d.cooler);
+        }
+
+        // 如果加载了显卡，显示对应的图片
+        if(d.vga) {
+            showVgaImage(d.vga);
         }
 
         saveNow();
@@ -4515,6 +4756,11 @@
         if(key === 'cooler') {
             showCoolerImage(null);
         }
+
+        // 如果是显卡，清空图片
+        if(key === 'vga') {
+            showVgaImage(null);
+        }
     }
 
     // ========== 客户名称下拉列表功能 ==========
@@ -4636,6 +4882,9 @@
 
         // 清空散热器图片
         showCoolerImage(null);
+
+        // 清空显卡图片
+        showVgaImage(null);
     }
 </script>
 </body>
