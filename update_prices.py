@@ -1049,6 +1049,32 @@ def update_ram_accurate():
         no_match_count = 0
         
         # 更新现有内存型号的价格
+        # 首先查找金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
+        ref_price = 0
+        pos = idx + 1
+        while pos < len(lines):
+            line = lines[pos]
+            if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+                match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if match:
+                    model_name = match.group(1)
+                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in model_name:
+                        ref_price = int(match.group(2))
+                        print(f"  🔍 找到参考型号：{model_name[:40]}... 价格￥{ref_price}")
+                        break
+                pos += 1
+            else:
+                break
+        
+        # 如果在HTML中没找到参考价格，从爬取数据中查找
+        if ref_price <= 0:
+            for ram in ram_list:
+                if "金百达" in ram["name"] and "银爵" in ram["name"] and "3600" in ram["name"] and ("16*2" in ram["name"] or "16x2" in ram["name"]):
+                    ref_price = int(ram["price"])
+                    print(f"  🔍 从爬取数据找到参考价格：{ram['name'][:40]}... 价格￥{ref_price}")
+                    break
+        
+        # 更新内存型号
         pos = idx + 1
         while pos < len(lines):
             line = lines[pos]
@@ -1058,15 +1084,26 @@ def update_ram_accurate():
                 if match:
                     model_name = match.group(1)
                     old_price = int(match.group(2))
+                    new_price = None
                     
-                    # 在源网站查找匹配的价格
-                    if model_name in ram_dict:
+                    # 特殊处理：阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600(16*2)套装 × 2
+                    if "阿斯加特 DDR4 64G（32X2）3200" in model_name:
+                        if ref_price > 0:
+                            new_price = str(ref_price * 2)
+                            print(f"  ★ 特殊更新：阿斯加特 DDR4 64G = 金百达_银爵 × 2 = ￥{new_price}")
+                        else:
+                            print(f"  ⚠️ 阿斯加特 DDR4 64G 缺少参考价格，跳过更新")
+                    # 特殊处理：光威 天策 64G（32*2）3200 白色 = 金百达_银爵 32G 3600(16*2)套装 × 2
+                    elif "光威 天策 64G（32*2）3200 白色" in model_name:
+                        if ref_price > 0:
+                            new_price = str(ref_price * 2)
+                            print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵 × 2 = ￥{new_price}")
+                        else:
+                            print(f"  ⚠️ 光威 天策 64G 白色 缺少参考价格，跳过更新")
+                    # 正常更新逻辑
+                    elif model_name in ram_dict:
                         new_price = ram_dict[model_name]
                         if new_price != old_price:
-                            # 更新价格
-                            new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
-                            lines[pos] = new_line
-                            update_count += 1
                             print(f"  ✓ 更新价格：{model_name[:30]}... ￥{old_price} -> ￥{new_price}")
                         else:
                             same_count += 1
@@ -1074,6 +1111,12 @@ def update_ram_accurate():
                     else:
                         no_match_count += 1
                         print(f"  ⚠️ 未匹配：{model_name[:30]}...")
+                    
+                    # 更新价格
+                    if new_price and new_price != str(old_price):
+                        new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
+                        lines[pos] = new_line
+                        update_count += 1
                 pos += 1
             else:
                 break
