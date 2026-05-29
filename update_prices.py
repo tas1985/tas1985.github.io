@@ -775,31 +775,16 @@ def update_exist_ram_prices():
             if "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                 print(f"  🔍 查找: 阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600海力士c18 × 2")
                 
-                # 首先尝试从爬取数据中获取金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
+                # 强制从HTML文件中查找金百达_银爵的价格作为参考
                 ref_price = 0
-                for ram_item in ram_list:
-                    if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "3600" in ram_item['name'] and ("16*2" in ram_item['name'] or "16x2" in ram_item['name']):
-                        ref_price = float(ram_item['price'])
-                        jbd_32g_3600_c18_final = ref_price
-                        print(f"     从爬取数据获取参考价格: {int(ref_price)}")
-                        break
-                
-                # 如果爬取数据中未获取到，从内存变量中获取（可能已在之前的处理中更新）
-                if ref_price <= 0 and jbd_32g_3600_c18_final > 0:
-                    ref_price = jbd_32g_3600_c18_final
-                    print(f"     从已更新的内存变量获取参考价格: {int(ref_price)}")
-                
-                # 如果还是没有，从HTML文件中查找
-                if ref_price <= 0:
-                    print(f"     从爬取数据未获取到参考价格，尝试从HTML文件查找...")
-                    for j in range(start, end + 1):
-                        if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
-                            price_match = re.search(r'p:(\d+)', lines[j])
-                            if price_match:
-                                ref_price = float(price_match.group(1))
-                                jbd_32g_3600_c18_final = ref_price
-                                print(f"     从HTML获取参考价格: {int(ref_price)}")
-                                break
+                for j in range(start, end + 1):
+                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
+                        price_match = re.search(r'p:(\d+)', lines[j])
+                        if price_match:
+                            ref_price = float(price_match.group(1))
+                            jbd_32g_3600_c18_final = ref_price
+                            print(f"     从HTML获取参考价格: {int(ref_price)}")
+                            break
                 
                 if ref_price > 0:
                     final_price = ref_price * 2
@@ -814,19 +799,19 @@ def update_exist_ram_prices():
             if "光威 天策 64G（32*2）3200 白色" in ram_name:
                 print(f"  🔍 查找: 光威 天策 64G（32*2）3200 白色 = 金百达_银爵 32G 3600海力士c18 × 2")
                 
-                # 如果爬取数据中未获取到参考价格，从HTML文件中查找
-                if jbd_32g_3600_c18_final <= 0:
-                    print(f"     从爬取数据未获取到参考价格，尝试从HTML文件查找...")
-                    for j in range(start, end + 1):
-                        if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
-                            price_match = re.search(r'p:(\d+)', lines[j])
-                            if price_match:
-                                jbd_32g_3600_c18_final = float(price_match.group(1))
-                                print(f"     从HTML获取参考价格: {int(jbd_32g_3600_c18_final)}")
-                                break
+                # 强制从HTML文件中查找金百达_银爵的价格作为参考
+                ref_price = 0
+                for j in range(start, end + 1):
+                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
+                        price_match = re.search(r'p:(\d+)', lines[j])
+                        if price_match:
+                            ref_price = float(price_match.group(1))
+                            jbd_32g_3600_c18_final = ref_price
+                            print(f"     从HTML获取参考价格: {int(ref_price)}")
+                            break
                 
-                if jbd_32g_3600_c18_final > 0:
-                    final_price = jbd_32g_3600_c18_final * 2
+                if ref_price > 0:
+                    final_price = ref_price * 2
                     special_handled = True
                     print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 3600海力士c18 × 2 = {int(final_price)}")
                 else:
@@ -1088,16 +1073,48 @@ def update_ram_accurate():
                     
                     # 特殊处理：阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600(16*2)套装 × 2
                     if "阿斯加特 DDR4 64G（32X2）3200" in model_name:
-                        if ref_price > 0:
-                            new_price = str(ref_price * 2)
-                            print(f"  ★ 特殊更新：阿斯加特 DDR4 64G = 金百达_银爵 × 2 = ￥{new_price}")
+                        print(f"  🔍 匹配到阿斯加特 DDR4 64G，尝试从HTML获取参考价格")
+                        # 强制从HTML文件中查找金百达_银爵的价格
+                        ref_price_from_html = 0
+                        temp_pos = idx + 1
+                        while temp_pos < len(lines):
+                            temp_line = lines[temp_pos]
+                            if '{n:"' in temp_line and '",p:' in temp_line:
+                                temp_match = re.search(r'{n:"([^"]+)",p:(\d+)}', temp_line)
+                                if temp_match:
+                                    temp_name = temp_match.group(1)
+                                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in temp_name:
+                                        ref_price_from_html = int(temp_match.group(2))
+                                        print(f"     从HTML获取参考价格: 金百达_银爵 32G 3600(16*2)套装 海力士c18 = ￥{ref_price_from_html}")
+                                        break
+                            temp_pos += 1
+                        
+                        if ref_price_from_html > 0:
+                            new_price = str(ref_price_from_html * 2)
+                            print(f"  ★ 特殊更新：阿斯加特 DDR4 64G = 金百达_银爵(￥{ref_price_from_html}) × 2 = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 阿斯加特 DDR4 64G 缺少参考价格，跳过更新")
                     # 特殊处理：光威 天策 64G（32*2）3200 白色 = 金百达_银爵 32G 3600(16*2)套装 × 2
                     elif "光威 天策 64G（32*2）3200 白色" in model_name:
-                        if ref_price > 0:
-                            new_price = str(ref_price * 2)
-                            print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵 × 2 = ￥{new_price}")
+                        print(f"  🔍 匹配到光威 天策 64G 白色，尝试从HTML获取参考价格")
+                        # 强制从HTML文件中查找金百达_银爵的价格
+                        ref_price_from_html = 0
+                        temp_pos = idx + 1
+                        while temp_pos < len(lines):
+                            temp_line = lines[temp_pos]
+                            if '{n:"' in temp_line and '",p:' in temp_line:
+                                temp_match = re.search(r'{n:"([^"]+)",p:(\d+)}', temp_line)
+                                if temp_match:
+                                    temp_name = temp_match.group(1)
+                                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in temp_name:
+                                        ref_price_from_html = int(temp_match.group(2))
+                                        print(f"     从HTML获取参考价格: 金百达_银爵 32G 3600(16*2)套装 海力士c18 = ￥{ref_price_from_html}")
+                                        break
+                            temp_pos += 1
+                        
+                        if ref_price_from_html > 0:
+                            new_price = str(ref_price_from_html * 2)
+                            print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵(￥{ref_price_from_html}) × 2 = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 64G 白色 缺少参考价格，跳过更新")
                     # 正常更新逻辑
