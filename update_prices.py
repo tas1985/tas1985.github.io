@@ -910,20 +910,107 @@ def update_mb_accurate():
         print(f"❌ 主板更新失败：{e}")
 
 def update_ram_accurate():
+    """内存更新逻辑：保留现有型号，只更新价格，不删除，新型号追加"""
     try:
+        # 先获取源网站的内存数据
+        ram_list = fetch_processed_ram()
+        
+        # 如果获取失败或为空，保留原有数据
+        if not ram_list:
+            print("⚠️ 内存数据获取失败或为空，保留原有内存数据")
+            return
+        
+        # 将列表转换为字典，方便查找
+        ram_dict = {ram["name"]: ram["price"] for ram in ram_list}
+        
+        # 获取成功后打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
+        
+        # 找到内存目标行的位置
         idx = next((i for i, l in enumerate(lines) if RAM_INSERT_TARGET in l), -1)
         if idx == -1:
+            print(f"❌ 未找到内存目标行：{RAM_INSERT_TARGET}")
             return
+        
+        update_count = 0
+        same_count = 0
+        no_match_count = 0
+        
+        # 更新现有内存型号的价格
         pos = idx + 1
-        while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
-            del lines[pos]
-        lines.insert(pos, generate_ram_content(fetch_processed_ram()))
+        while pos < len(lines):
+            line = lines[pos]
+            if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+                # 提取型号名称和当前价格
+                match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if match:
+                    model_name = match.group(1)
+                    old_price = int(match.group(2))
+                    
+                    # 在源网站查找匹配的价格
+                    if model_name in ram_dict:
+                        new_price = ram_dict[model_name]
+                        if new_price != old_price:
+                            # 更新价格
+                            new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            lines[pos] = new_line
+                            update_count += 1
+                            print(f"  ✓ 更新价格：{model_name[:30]}... ￥{old_price} -> ￥{new_price}")
+                        else:
+                            same_count += 1
+                            print(f"  ≡ 价格不变：{model_name[:30]}... ￥{old_price}")
+                    else:
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配：{model_name[:30]}...")
+                pos += 1
+            else:
+                break
+        
+        # 收集现有型号名称
+        existing_names = set()
+        pos = idx + 1
+        while pos < len(lines):
+            line = lines[pos]
+            if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+                match = re.search(r'{n:"([^"]+)",p:\d+}', line)
+                if match:
+                    existing_names.add(match.group(1))
+                pos += 1
+            else:
+                break
+        
+        # 准备新型号数据（只添加不在现有列表中的型号）
+        new_ram_lines = []
+        for ram in ram_list:
+            if ram["name"] not in existing_names:
+                new_ram_lines.append(f'{INDENT}{{n:"{ram["name"]}",p:{ram["price"]}}},\n')
+        
+        # 在现有型号后插入新型号
+        if new_ram_lines:
+            insert_pos = idx + 1
+            # 找到现有型号的最后一行
+            while insert_pos < len(lines):
+                line = lines[insert_pos]
+                if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+                    insert_pos += 1
+                else:
+                    break
+            
+            # 插入新型号
+            for i, new_line in enumerate(new_ram_lines):
+                lines.insert(insert_pos + i, new_line)
+            print(f"  ➕ 新增 {len(new_ram_lines)} 个内存型号")
+        
+        # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-    except Exception:
-        pass
+        
+        print(f"✅ 内存更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配 {no_match_count} 个")
+    except Exception as e:
+        print(f"❌ 内存更新失败：{e}")
+        import traceback
+        traceback.print_exc()
 
 # 新增机箱自动更新函数
 def update_case_accurate():
