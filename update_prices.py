@@ -704,11 +704,18 @@ def update_exist_ram_prices():
         
         # 收集金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
         print(f"  🔍 收集: 金百达_银爵 32G 3600(16*2)套装 海力士c18")
+        found_jbd_32g_3600 = False
         for ram_item in ram_list:
-            if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "3600" in ram_item['name'] and "16*2" in ram_item['name']:
+            # 调试输出：显示所有金百达银爵相关型号
+            if "金百达" in ram_item['name'] and "银爵" in ram_item['name']:
+                print(f"     候选: {ram_item['name']} -> {ram_item['price']}")
+            if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "3600" in ram_item['name'] and ("16*2" in ram_item['name'] or "16x2" in ram_item['name']):
                 jbd_32g_3600_c18_final = float(ram_item['price'])
                 print(f"  ✓ 收集成功: 金百达_银爵 32G 3600(16*2)套装 海力士c18 = {int(jbd_32g_3600_c18_final)}")
+                found_jbd_32g_3600 = True
                 break
+        if not found_jbd_32g_3600:
+            print(f"  ⚠ 从爬取数据中未找到金百达_银爵 32G 3600(16*2)套装，将从HTML文件中读取当前价格")
         
         # 收集宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 的价格
         print(f"  🔍 收集: 宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32")
@@ -767,8 +774,35 @@ def update_exist_ram_prices():
             # 特殊处理：阿斯加特 DDR4 64G（32X2）3200 参考金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格的2倍
             if "阿斯加特 DDR4 64G（32X2）3200" in ram_name:
                 print(f"  🔍 查找: 阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600海力士c18 × 2")
-                if jbd_32g_3600_c18_final > 0:
-                    final_price = jbd_32g_3600_c18_final * 2
+                
+                # 首先尝试从爬取数据中获取金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
+                ref_price = 0
+                for ram_item in ram_list:
+                    if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "3600" in ram_item['name'] and ("16*2" in ram_item['name'] or "16x2" in ram_item['name']):
+                        ref_price = float(ram_item['price'])
+                        jbd_32g_3600_c18_final = ref_price
+                        print(f"     从爬取数据获取参考价格: {int(ref_price)}")
+                        break
+                
+                # 如果爬取数据中未获取到，从内存变量中获取（可能已在之前的处理中更新）
+                if ref_price <= 0 and jbd_32g_3600_c18_final > 0:
+                    ref_price = jbd_32g_3600_c18_final
+                    print(f"     从已更新的内存变量获取参考价格: {int(ref_price)}")
+                
+                # 如果还是没有，从HTML文件中查找
+                if ref_price <= 0:
+                    print(f"     从爬取数据未获取到参考价格，尝试从HTML文件查找...")
+                    for j in range(start, end + 1):
+                        if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
+                            price_match = re.search(r'p:(\d+)', lines[j])
+                            if price_match:
+                                ref_price = float(price_match.group(1))
+                                jbd_32g_3600_c18_final = ref_price
+                                print(f"     从HTML获取参考价格: {int(ref_price)}")
+                                break
+                
+                if ref_price > 0:
+                    final_price = ref_price * 2
                     special_handled = True
                     print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 3600海力士c18 × 2 = {int(final_price)}")
                 else:
@@ -779,6 +813,18 @@ def update_exist_ram_prices():
             # 特殊处理：光威 天策 64G（32*2）3200 白色 参考金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格的2倍
             if "光威 天策 64G（32*2）3200 白色" in ram_name:
                 print(f"  🔍 查找: 光威 天策 64G（32*2）3200 白色 = 金百达_银爵 32G 3600海力士c18 × 2")
+                
+                # 如果爬取数据中未获取到参考价格，从HTML文件中查找
+                if jbd_32g_3600_c18_final <= 0:
+                    print(f"     从爬取数据未获取到参考价格，尝试从HTML文件查找...")
+                    for j in range(start, end + 1):
+                        if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
+                            price_match = re.search(r'p:(\d+)', lines[j])
+                            if price_match:
+                                jbd_32g_3600_c18_final = float(price_match.group(1))
+                                print(f"     从HTML获取参考价格: {int(jbd_32g_3600_c18_final)}")
+                                break
+                
                 if jbd_32g_3600_c18_final > 0:
                     final_price = jbd_32g_3600_c18_final * 2
                     special_handled = True
