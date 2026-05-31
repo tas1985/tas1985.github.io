@@ -716,6 +716,37 @@
             box-shadow: 0 0 5px rgba(153, 0, 255, 0.5);
         }
 
+        /* WIFI提示区域样式 - 覆盖在输入栏上方 */
+        .wifi-warning-container {
+            display: none;
+            position: absolute;
+            padding: 2px 6px;
+            background: #e0e0e0;
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            color: #666666;
+            font-weight: normal;
+            font-size: 11px;
+            text-align: right;
+            white-space: nowrap;
+            cursor: pointer;
+            line-height: 1.3;
+            z-index: 10;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 30px;
+        }
+        .wifi-warning-container.show {
+            display: block;
+        }
+        .wifi-warning-container .wifi-icon {
+            font-size: 11px;
+            margin-right: 3px;
+        }
+        .wifi-warning-container .wifi-text {
+            color: #666666;
+        }
+
         /* 密码验证弹窗样式 */
         .password-modal {
             position: fixed;
@@ -902,8 +933,14 @@
             <input class="combo" id="board" onclick="match('board')" oninput="match('board')" onblur="hideDrop('board')">
             <div class="clear-btn" onclick="clearItem('board')">×</div>
             <div class="dropdown" id="board-drop"></div>
+            <div class="wifi-warning-container" id="wifiWarning">
+                <span class="wifi-icon">⚠️</span>
+                <span class="wifi-text">需购买外置无线网卡</span>
+            </div>
         </div>
-        <div class="item-price"><input class="price" id="board-p" oninput="calc()"></div>
+        <div class="item-price">
+            <input class="price" id="board-p" oninput="calc()">
+        </div>
     </div>
     <div class="item">
         <div class="item-label">散热器　</div>
@@ -4099,6 +4136,34 @@
         calculateLudashiScore();
         // 计算功耗
         calculatePowerConsumption();
+        // 检测主板WIFI
+        checkBoardWifi();
+    }
+
+    // 检测主板是否带WIFI功能
+    function checkBoardWifi() {
+        const boardValue = document.getElementById("board").value;
+        const wifiWarning = document.getElementById("wifiWarning");
+        
+        if (boardValue && boardValue.trim() !== "") {
+            // 检测主板型号是否包含WIFI关键字（支持多种写法）
+            const hasWifi = boardValue.toUpperCase().includes("WIFI") || 
+                           boardValue.includes("无线") ||
+                           boardValue.includes("WiFi") ||
+                           boardValue.includes("Wi-Fi") ||
+                           boardValue.includes("WIFI6") ||
+                           boardValue.includes("WIFI7") ||
+                           boardValue.includes("WIFI6E");
+            
+            if (hasWifi) {
+                wifiWarning.classList.remove("show");
+            } else {
+                wifiWarning.classList.add("show");
+            }
+        } else {
+            // 如果没有选择主板，隐藏提示
+            wifiWarning.classList.remove("show");
+        }
     }
 
     // 计算鲁大师跑分
