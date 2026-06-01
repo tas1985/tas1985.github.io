@@ -183,18 +183,61 @@ def fetch_gpu_exact_dict():
         return {}
 
 def fetch_gpu_prices():
+    """爬取显卡价格，返回列表格式"""
     try:
-        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
+        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=15)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
+        
         gpu_list = []
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            price = int(float(p))
-            # 🔥 新增规则：名称含「白」→ 价格 +100
-            if "白" in n:
-                price += 100
-            gpu_list.append({"name": n, "price": price})
+        
+        # 方法1：尝试从表格中提取数据（最可靠）
+        tables = soup.find_all('table')
+        print(f"🔍 找到 {len(tables)} 个表格")
+        
+        for table in tables:
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all(['td', 'th'])
+                if len(cells) >= 2:
+                    name = cells[0].get_text(strip=True)
+                    price_text = cells[-1].get_text(strip=True)
+                    price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
+                    if price_match and name and len(name) > 3:
+                        price = int(float(price_match.group(1)))
+                        # 白色显卡价格+100
+                        if "白" in name:
+                            price += 100
+                        gpu_list.append({"name": name, "price": price})
+        
+        # 方法2：如果表格提取失败，尝试使用正则从文本中提取
+        if not gpu_list:
+            print("⚠️ 表格提取失败，尝试正则提取...")
+            text = soup.get_text()
+            # 使用更健壮的正则表达式匹配
+            matches = re.findall(r'([^\n￥]+?)[：:\s]*[￥¥](\d+(?:\.\d+)?)', text)
+            for name, price in matches:
+                if len(name.strip()) > 3:
+                    try:
+                        price_val = int(float(price))
+                        # 白色显卡价格+100
+                        if "白" in name:
+                            price_val += 100
+                        gpu_list.append({"name": name.strip(), "price": price_val})
+                    except:
+                        pass
+        
+        print(f"📊 爬取到 {len(gpu_list)} 个显卡型号")
+        if gpu_list:
+            print("📋 部分显卡价格:")
+            for i, gpu in enumerate(gpu_list[:8]):
+                print(f"   {gpu['name'][:40]}...: ￥{gpu['price']}")
+        
         return gpu_list
-    except Exception:
+    except Exception as e:
+        print(f"❌ 显卡爬取失败: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 def fetch_mb_prices():
@@ -575,6 +618,7 @@ def update_cpu_accurate():
 # -------------------------- 修改后的显卡更新逻辑 --------------------------
 def update_gpu_accurate():
     try:
+        print("\n=== 开始更新显卡数据 ===")
         # 先获取新的显卡数据，只有获取成功才进行更新
         gpu_list = fetch_gpu_prices()
         
@@ -583,20 +627,30 @@ def update_gpu_accurate():
             print("⚠️ 显卡数据获取失败或为空，保留原有显卡数据")
             return
         
+        print(f"✅ 成功获取 {len(gpu_list)} 个显卡数据")
+        
         # 获取成功后再打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
+        print(f"📄 已读取 {len(lines)} 行 HTML 文件")
+        
         # 找到GPU_START_MARK的位置
         start_idx = next((i for i, l in enumerate(lines) if GPU_START_MARK in l), -1)
         if start_idx == -1:
             print("❌ 未找到显卡自动更新区域开始标记")
             return
+        print(f"📍 找到开始标记在第 {start_idx + 1} 行")
         
         # 从开始标记的下一行开始查找结束标记
         end_idx = next((i for i, l in enumerate(lines[start_idx + 1:], start_idx + 1) if GPU_END_MARK in l), -1)
         if end_idx == -1:
             print("❌ 未找到显卡自动更新区域结束标记")
             return
+        print(f"📍 找到结束标记在第 {end_idx + 1} 行")
+        
+        # 计算要删除的行数
+        lines_to_delete = end_idx - start_idx - 1
+        print(f"🗑️ 将删除 {lines_to_delete} 行原有显卡数据")
         
         # 删除开始标记和结束标记之间的所有内容（不包括这两个标记本身）
         del lines[start_idx + 1:end_idx]
