@@ -1079,6 +1079,8 @@
             <span>元</span>
         </div>
         <button class="btn-reset" onclick="reset()">清空重置</button>
+        <button class="btn-download-images" onclick="downloadAllImages()">下载图片缓存</button>
+        <button class="btn-clear-cache" onclick="clearImageCache()">清除缓存</button>
     </div>
 
 </div>
@@ -3015,6 +3017,14 @@
     let isLoadingImages = false;
     const STORAGE_KEY = 'tasi_image_cache';
     const CACHE_VERSION = '1.0';
+    
+    // 图片服务器基础URL配置
+    const IMAGE_BASE_URL = 'https://tas1985.github.io';
+    const IMAGE_PATHS = {
+        case: `${IMAGE_BASE_URL}/PNG`,
+        cooler: `${IMAGE_BASE_URL}/PNG_SR`,
+        vga: `${IMAGE_BASE_URL}/PNG_VGA`
+    };
 
     // 从localStorage读取缓存的图片
     function loadCachedImages() {
@@ -3102,21 +3112,21 @@
         for (const [, imageName] of Object.entries(caseImageMap)) {
             allImages.push({ 
                 key: imageName, 
-                src: `./PNG/${imageName}.png`,
+                src: `${IMAGE_PATHS.case}/${imageName}.png`,
                 type: 'case' 
             });
         }
         for (const [, imageName] of Object.entries(coolerImageMap)) {
             allImages.push({ 
                 key: 'cooler_' + imageName, 
-                src: `./PNG_SR/${imageName}.png`,
+                src: `${IMAGE_PATHS.cooler}/${imageName}.png`,
                 type: 'cooler' 
             });
         }
         for (const [, imageName] of Object.entries(vgaImageMap)) {
             allImages.push({ 
                 key: 'vga_' + imageName, 
-                src: `./PNG_VGA/${imageName}.png`,
+                src: `${IMAGE_PATHS.vga}/${imageName}.png`,
                 type: 'vga' 
             });
         }
@@ -3180,7 +3190,235 @@
         }
     }
 
-    // 显示机箱图片 - 优化版本（支持本地缓存）
+    // 下载进度显示元素
+    let downloadProgressBar = null;
+    let downloadProgressText = null;
+
+    // 创建下载进度显示
+    function createProgressDisplay() {
+        if (downloadProgressBar) return;
+        
+        // 创建进度条容器
+        const container = document.createElement('div');
+        container.id = 'downloadProgressContainer';
+        container.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #9900ff;
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 10000;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(153, 0, 255, 0.8);
+        `;
+        
+        // 创建标题
+        const title = document.createElement('h3');
+        title.textContent = '正在下载图片缓存...';
+        title.style.cssText = `
+            color: #00ff00;
+            text-align: center;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        `;
+        container.appendChild(title);
+        
+        // 创建进度条背景
+        const progressBg = document.createElement('div');
+        progressBg.style.cssText = `
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 1px solid #9900ff;
+        `;
+        container.appendChild(progressBg);
+        
+        // 创建进度条
+        downloadProgressBar = document.createElement('div');
+        downloadProgressBar.style.cssText = `
+            height: 100%;
+            background: linear-gradient(90deg, #9900ff, #00ff00);
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            width: 0%;
+        `;
+        progressBg.appendChild(downloadProgressBar);
+        
+        // 创建进度文字
+        downloadProgressText = document.createElement('div');
+        downloadProgressText.style.cssText = `
+            color: #00ff00;
+            text-align: center;
+            font-size: 14px;
+        `;
+        downloadProgressText.textContent = '0/0 (0%)';
+        container.appendChild(downloadProgressText);
+        
+        // 创建取消按钮
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = '取消';
+        cancelBtn.style.cssText = `
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background: #333;
+            color: #ff0000;
+            border: 1px solid #ff0000;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        `;
+        cancelBtn.onclick = function() {
+            window.stop();
+            document.body.removeChild(container);
+            downloadProgressBar = null;
+            downloadProgressText = null;
+            showToast('下载已取消', 'warning');
+        };
+        container.appendChild(cancelBtn);
+        
+        document.body.appendChild(container);
+    }
+
+    // 更新下载进度
+    function updateProgress(current, total) {
+        if (downloadProgressBar && downloadProgressText) {
+            const percentage = Math.round((current / total) * 100);
+            downloadProgressBar.style.width = percentage + '%';
+            downloadProgressText.textContent = `${current}/${total} (${percentage}%)`;
+        }
+    }
+
+    // 关闭进度显示
+    function closeProgressDisplay() {
+        const container = document.getElementById('downloadProgressContainer');
+        if (container) {
+            document.body.removeChild(container);
+        }
+        downloadProgressBar = null;
+        downloadProgressText = null;
+    }
+
+    // 下载所有图片并缓存（带进度显示）
+    async function downloadAllImages() {
+        const allImages = [];
+        
+        // 收集所有机箱图片
+        for (const [, imageName] of Object.entries(caseImageMap)) {
+            allImages.push({ 
+                key: imageName, 
+                src: `${IMAGE_PATHS.case}/${imageName}.png`,
+                type: 'case' 
+            });
+        }
+        // 收集所有散热器图片
+        for (const [, imageName] of Object.entries(coolerImageMap)) {
+            allImages.push({ 
+                key: 'cooler_' + imageName, 
+                src: `${IMAGE_PATHS.cooler}/${imageName}.png`,
+                type: 'cooler' 
+            });
+        }
+        // 收集所有显卡图片
+        for (const [, imageName] of Object.entries(vgaImageMap)) {
+            allImages.push({ 
+                key: 'vga_' + imageName, 
+                src: `${IMAGE_PATHS.vga}/${imageName}.png`,
+                type: 'vga' 
+            });
+        }
+        
+        if (allImages.length === 0) {
+            showToast('没有需要下载的图片', 'info');
+            return;
+        }
+        
+        // 创建进度显示
+        createProgressDisplay();
+        updateProgress(0, allImages.length);
+        
+        let completed = 0;
+        let successCount = 0;
+        let failCount = 0;
+        const batchSize = 3; // 每批下载3张图片
+        
+        for (let i = 0; i < allImages.length; i += batchSize) {
+            const batch = allImages.slice(i, i + batchSize);
+            const promises = batch.map(async (item) => {
+                // 检查是否已缓存
+                if (imageCache[item.key] && imageCache[item.key].src) {
+                    completed++;
+                    updateProgress(completed, allImages.length);
+                    successCount++;
+                    return;
+                }
+                
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    
+                    img.onload = async function() {
+                        imageCache[item.key] = img;
+                        const base64 = await imageToBase64(img);
+                        if (base64) {
+                            saveToCache(item.key, base64);
+                        }
+                        completed++;
+                        successCount++;
+                        updateProgress(completed, allImages.length);
+                        resolve();
+                    };
+                    
+                    img.onerror = function() {
+                        completed++;
+                        failCount++;
+                        updateProgress(completed, allImages.length);
+                        resolve();
+                    };
+                    
+                    img.src = item.src;
+                });
+            });
+            
+            await Promise.all(promises);
+        }
+        
+        // 关闭进度显示
+        closeProgressDisplay();
+        
+        // 显示结果
+        if (failCount === 0) {
+            showToast(`全部下载完成！共 ${successCount} 张图片`, 'success');
+        } else {
+            showToast(`下载完成！成功 ${successCount} 张，失败 ${failCount} 张`, 'warning');
+        }
+    }
+
+    // 清除图片缓存
+    function clearImageCache() {
+        if (confirm('确定要清除所有图片缓存吗？下次打开页面需要重新下载。')) {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                // 清空内存缓存
+                for (const key in imageCache) {
+                    delete imageCache[key];
+                }
+                showToast('缓存已清除', 'success');
+            } catch (e) {
+                console.warn('Failed to clear cache:', e);
+                showToast('清除缓存失败', 'error');
+            }
+        }
+    }
+
+    // 显示机箱图片 - 优化版本（支持本地缓存和网络加载）
     async function showCaseImage(caseName) {
         const container = document.getElementById('caseImageContainer');
         const imageElement = document.getElementById('caseImage');
@@ -3202,7 +3440,7 @@
             placeholder.style.display = 'block';
             imageElement.style.display = 'none';
             
-            // 如果不在缓存中，加载图片
+            // 如果不在缓存中，从网络加载图片
             const img = new Image();
             img.crossOrigin = 'anonymous';
             
@@ -3225,7 +3463,7 @@
                 placeholder.innerHTML = '图片<br>未找到';
             };
             
-            img.src = `./PNG/${imageName}.png`;
+            img.src = `${IMAGE_PATHS.case}/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
@@ -3233,7 +3471,7 @@
         }
     }
 
-    // 显示散热器图片 - 优化版本（支持本地缓存）
+    // 显示散热器图片 - 优化版本（支持本地缓存和网络加载）
     async function showCoolerImage(coolerName) {
         const imageElement = document.getElementById('coolerImage');
         const placeholder = document.getElementById('coolerImagePlaceholder');
@@ -3276,7 +3514,7 @@
                 placeholder.innerHTML = '图片<br>未找到';
             };
             
-            img.src = `./PNG_SR/${imageName}.png`;
+            img.src = `${IMAGE_PATHS.cooler}/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
@@ -3284,7 +3522,7 @@
         }
     }
 
-    // 显示显卡图片 - 支持本地缓存
+    // 显示显卡图片 - 支持本地缓存和网络加载
     async function showVgaImage(vgaName) {
         const imageElement = document.getElementById('vgaImage');
         const placeholder = document.getElementById('vgaImagePlaceholder');
@@ -3327,7 +3565,7 @@
                 placeholder.innerHTML = '图片<br>未找到';
             };
             
-            img.src = `./PNG_VGA/${imageName}.png`;
+            img.src = `${IMAGE_PATHS.vga}/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
             placeholder.style.display = 'block';
