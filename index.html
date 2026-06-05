@@ -4713,6 +4713,9 @@
     }
 
     window.onload=()=>{
+        // 首先加载localStorage中的图片缓存（关键修复）
+        loadCachedImages();
+        
         let d=localStorage.getItem("last");
         if(d){
             d=JSON.parse(d);
