@@ -1079,7 +1079,7 @@
             <span>元</span>
         </div>
         <button class="btn-reset" onclick="reset()">清空重置</button>
-        <button class="btn-download-images" onclick="downloadAllImages()">下载图片缓存</button>
+        <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
     </div>
 
 </div>
@@ -1551,7 +1551,6 @@
             {n:"微星 MAG B860M MORTAR 迫击炮 WIFI7",p:1099.00},
             {n:"微星 MAG B850M MORTAR 迫击炮 WIFI",p:1199.00},
             {n:"微星 MAG B850 TOMAHAWK WIFI 战斧导弹 D5",p:1570.00},
-            {n:"微星 B850M POWER WIFI",p:1399.00},
             {n:"微星 B850M GAMING PLUS WIFI D5 纯白",p:999.00},
             {n:"微星 B850M GAMING PLUS PRO WIFI6E D5 黑",p:950.00},
             {n:"微星 B850 GAMING PLUS WIFI D5 大板",p:1370.00},
@@ -1890,7 +1889,6 @@
         ],
         vga: [
             {n:"双敏6500XT 暴雪白色",p:998},
-            {n:"映众 RTX5060ti 16G 曜夜 双风扇",p:3780},
             {n:"双敏-RTX3050暴雪 6G白色",p:1450},
             {n:"双敏RTX5050 8G 暴雪白色",p:2099},
             {n:"双敏RTX5060 8G 暴雪白色",p:2399},
@@ -2856,7 +2854,6 @@
     // 显卡图片映射表
     const vgaImageMap = {
         '双敏6500XT 暴雪白色': '双敏6500XT 暴雪白色',
-        '映众 RTX5060ti 16G 曜夜 双风扇': '映众 RTX5060ti 16G 曜夜 双风扇',
         '双敏-RTX3050暴雪 6G白色': '双敏-RTX3050暴雪 6G白色',
         '双敏RTX5050 8G 暴雪白色': '双敏RTX5050 8G 暴雪白色',
         '双敏RTX5060 8G 暴雪白色': '双敏RTX5060 8G 暴雪白色',
