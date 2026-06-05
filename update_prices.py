@@ -617,6 +617,7 @@ def update_cpu_accurate():
 
 # -------------------------- 修改后的显卡更新逻辑 --------------------------
 def update_gpu_accurate():
+    """显卡更新逻辑：保留现有型号，只更新价格，不删除用户手动添加的型号"""
     try:
         print("\n=== 开始更新显卡数据 ===")
         # 先获取新的显卡数据，只有获取成功才进行更新
@@ -627,7 +628,9 @@ def update_gpu_accurate():
             print("⚠️ 显卡数据获取失败或为空，保留原有显卡数据")
             return
         
-        print(f"✅ 成功获取 {len(gpu_list)} 个显卡数据")
+        # 将列表转换为字典，方便查找
+        gpu_dict = {gpu["name"]: gpu["price"] for gpu in gpu_list}
+        print(f"✅ 成功获取 {len(gpu_dict)} 个显卡数据")
         
         # 获取成功后再打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
@@ -648,26 +651,49 @@ def update_gpu_accurate():
             return
         print(f"📍 找到结束标记在第 {end_idx + 1} 行")
         
-        # 计算要删除的行数
-        lines_to_delete = end_idx - start_idx - 1
-        print(f"🗑️ 将删除 {lines_to_delete} 行原有显卡数据")
+        update_count = 0
+        same_count = 0
+        no_match_count = 0
         
-        # 删除开始标记和结束标记之间的所有内容（不包括这两个标记本身）
-        del lines[start_idx + 1:end_idx]
-        
-        # 生成显卡内容（注意这里不需要包含开始和结束标记）
-        gpu_content = generate_gpu_content(gpu_list)
-        
-        # 在开始标记后插入新的显卡数据
-        lines.insert(start_idx + 1, gpu_content)
+        # 更新现有显卡型号的价格（保留原有型号，只更新价格）
+        pos = start_idx + 1
+        while pos < end_idx:
+            line = lines[pos]
+            if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+                # 提取型号名称和当前价格
+                match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if match:
+                    model_name = match.group(1)
+                    old_price = int(match.group(2))
+                    
+                    # 在源网站查找匹配的价格
+                    if model_name in gpu_dict:
+                        new_price = gpu_dict[model_name]
+                        if new_price != old_price:
+                            # 更新价格
+                            new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            lines[pos] = new_line
+                            update_count += 1
+                            print(f"  ✓ 更新价格: {model_name[:40]}... ￥{old_price} -> ￥{new_price}")
+                        else:
+                            same_count += 1
+                            print(f"  ≡ 价格不变: {model_name[:40]}... ￥{old_price}")
+                    else:
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配(保留): {model_name[:40]}...")
+                pos += 1
+            else:
+                pos += 1
         
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"✅ 显卡价格自动更新完成，共更新 {len(gpu_list)} 个显卡型号")
+        print(f"✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个")
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
+        import traceback
+        traceback.print_exc()
 
 # -------------------------- 固定显卡精准更新（已废弃，保留原逻辑）--------------------------
 def update_fixed_gpu_prices():
