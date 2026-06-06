@@ -1080,7 +1080,7 @@
         </div>
         <button class="btn-reset" onclick="reset()">清空重置</button>
         <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
-        <button class="btn-download-images" onclick="checkCacheStatus()">查看缓存状态</button>
+
     </div>
 
 </div>
@@ -3429,7 +3429,9 @@
                         console.warn('Failed to preload:', item.src);
                         resolve();
                     };
-                    img.src = item.src;
+                    // 对URL进行编码，处理中文文件名
+                    const encodedSrc = encodeURI(item.src);
+                    img.src = encodedSrc;
                 });
             });
             
@@ -3651,11 +3653,16 @@
                         completed++;
                         failCount++;
                         updateProgress(completed, allImages.length);
-                        console.warn('Failed to download:', item.src);
+                        console.warn('Failed to download:', item.key, '-', item.src);
+                        // 记录失败的图片信息到全局数组，方便排查
+                        if (!window.failedImages) window.failedImages = [];
+                        window.failedImages.push({ key: item.key, src: item.src, type: item.type });
                         resolve();
                     };
                     
-                    img.src = item.src;
+                    // 对URL进行编码，处理中文文件名
+                    const encodedSrc = encodeURI(item.src);
+                    img.src = encodedSrc;
                 });
             });
             
