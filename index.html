@@ -1080,6 +1080,7 @@
         </div>
         <button class="btn-reset" onclick="reset()">清空重置</button>
         <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
+        <button class="btn-download-images" onclick="checkCacheStatus()">查看缓存状态</button>
     </div>
 
 </div>
@@ -3024,29 +3025,81 @@
         vga: `${IMAGE_BASE_URL}/PNG_VGA`
     };
 
-    // 从localStorage读取缓存的图片
+    // 从localStorage读取缓存的图片 - 优化版本
     function loadCachedImages() {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
             if (cachedData) {
                 const cache = JSON.parse(cachedData);
                 if (cache.version === CACHE_VERSION && cache.images) {
+                    let loadedCount = 0;
                     for (const [key, data] of Object.entries(cache.images)) {
                         if (data && data.base64) {
-                            const img = new Image();
-                            img.src = data.base64;
-                            imageCache[key] = img;
+                            // 直接存储 base64 字符串，不创建 Image 对象
+                            // 这样可以避免图片加载延迟问题
+                            imageCache[key] = { src: data.base64, loaded: true };
+                            loadedCount++;
                         }
                     }
-                    console.log('Loaded', Object.keys(imageCache).length, 'images from cache');
+                    console.log('Loaded', loadedCount, 'images from localStorage cache');
+                    return loadedCount;
+                }
+            }
+            return 0;
+        } catch (e) {
+            console.warn('Failed to load cached images:', e);
+            return 0;
+        }
+    }
+    
+    // 检查缓存中是否有指定图片
+    function hasCachedImage(key) {
+        // 首先检查内存缓存
+        if (imageCache[key] && imageCache[key].src) {
+            return true;
+        }
+        // 然后检查 localStorage 缓存
+        try {
+            const cachedData = localStorage.getItem(STORAGE_KEY);
+            if (cachedData) {
+                const cache = JSON.parse(cachedData);
+                if (cache.images && cache.images[key] && cache.images[key].base64) {
+                    // 找到了，加载到内存缓存
+                    imageCache[key] = { src: cache.images[key].base64, loaded: true };
+                    return true;
                 }
             }
         } catch (e) {
-            console.warn('Failed to load cached images:', e);
+            console.warn('Failed to check cache for:', key, e);
         }
+        return false;
+    }
+    
+    // 获取缓存的图片数据
+    function getCachedImageSrc(key) {
+        // 首先检查内存缓存
+        if (imageCache[key] && imageCache[key].src) {
+            return imageCache[key].src;
+        }
+        // 然后检查 localStorage 缓存
+        try {
+            const cachedData = localStorage.getItem(STORAGE_KEY);
+            if (cachedData) {
+                const cache = JSON.parse(cachedData);
+                if (cache.images && cache.images[key] && cache.images[key].base64) {
+                    // 找到了，加载到内存缓存
+                    const base64 = cache.images[key].base64;
+                    imageCache[key] = { src: base64, loaded: true };
+                    return base64;
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to get cached image:', key, e);
+        }
+        return null;
     }
 
-    // 保存图片到localStorage缓存
+    // 保存图片到localStorage缓存 - 优化版本
     function saveToCache(key, imageData) {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
@@ -3054,17 +3107,52 @@
             cache.version = CACHE_VERSION;
             cache.images[key] = { base64: imageData, timestamp: Date.now() };
             
-            // 限制缓存大小（最多50MB）
+            // 增加缓存大小限制到100MB（localStorage通常限制为5-10MB，但某些浏览器支持更大）
             const jsonStr = JSON.stringify(cache);
             const sizeInBytes = new Blob([jsonStr]).size;
-            if (sizeInBytes < 50 * 1024 * 1024) { // 50MB
-                localStorage.setItem(STORAGE_KEY, jsonStr);
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            
+            if (sizeInBytes < maxSize) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, jsonStr);
+                    console.log('Cache saved:', key, 'Total size:', (sizeInBytes / 1024 / 1024).toFixed(2), 'MB');
+                } catch (storageError) {
+                    // 如果存储失败，尝试清理旧缓存
+                    console.warn('Storage failed, size:', (sizeInBytes / 1024 / 1024).toFixed(2), 'MB');
+                    if (storageError.name === 'QuotaExceededError') {
+                        // 清理超过30天的旧缓存
+                        cleanOldCache(cache);
+                        try {
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+                            console.log('Cache cleaned and saved successfully');
+                        } catch (e2) {
+                            console.warn('Still cannot save after cleaning, cache size limit reached');
+                        }
+                    }
+                }
             } else {
-                console.warn('Cache size limit exceeded, not saving');
+                console.warn('Cache size limit exceeded:', (sizeInBytes / 1024 / 1024).toFixed(2), 'MB');
             }
         } catch (e) {
             console.warn('Failed to save to cache:', e);
         }
+    }
+    
+    // 清理旧缓存（超过30天的）
+    function cleanOldCache(cache) {
+        const now = Date.now();
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        let cleanedCount = 0;
+        
+        for (const [key, data] of Object.entries(cache.images)) {
+            if (data.timestamp && (now - data.timestamp) > thirtyDays) {
+                delete cache.images[key];
+                cleanedCount++;
+            }
+        }
+        
+        console.log('Cleaned', cleanedCount, 'old cache entries');
+        return cleanedCount;
     }
 
     // 将图片转换为base64
@@ -3105,6 +3193,9 @@
 
     // 智能预加载图片 - 使用requestIdleCallback延迟加载
     async function preloadImages() {
+        // 首先加载localStorage中的缓存
+        loadCachedImages();
+        
         const allImages = [];
         
         for (const [, imageName] of Object.entries(caseImageMap)) {
@@ -3140,7 +3231,8 @@
             
             const batch = allImages.slice(index, index + batchSize);
             const promises = batch.map(async (item) => {
-                if (imageCache[item.key] && imageCache[item.key].src) {
+                // 检查是否已缓存（使用新的缓存检查函数）
+                if (hasCachedImage(item.key)) {
                     return; // 已缓存
                 }
                 
@@ -3149,10 +3241,10 @@
                 
                 return new Promise((resolve) => {
                     img.onload = async function() {
-                        imageCache[item.key] = img;
-                        // 保存到localStorage缓存
+                        // 转换为 base64 并保存到缓存
                         const base64 = await imageToBase64(img);
                         if (base64) {
+                            imageCache[item.key] = { src: base64, loaded: true };
                             saveToCache(item.key, base64);
                         }
                         resolve();
@@ -3177,8 +3269,6 @@
         
         if (!isLoadingImages) {
             isLoadingImages = true;
-            // 先加载缓存的图片
-            loadCachedImages();
             
             if ('requestIdleCallback' in window) {
                 requestIdleCallback(loadBatch, { timeout: 2000 });
@@ -3306,6 +3396,10 @@
 
     // 下载所有图片并缓存（带进度显示）
     async function downloadAllImages() {
+        // 首先加载已有的缓存
+        const existingCacheCount = loadCachedImages();
+        console.log('Existing cache:', existingCacheCount, 'images');
+        
         const allImages = [];
         
         // 收集所有机箱图片
@@ -3350,11 +3444,12 @@
         for (let i = 0; i < allImages.length; i += batchSize) {
             const batch = allImages.slice(i, i + batchSize);
             const promises = batch.map(async (item) => {
-                // 检查是否已缓存
-                if (imageCache[item.key] && imageCache[item.key].src) {
+                // 检查是否已缓存（使用新的缓存检查函数）
+                if (hasCachedImage(item.key)) {
                     completed++;
                     updateProgress(completed, allImages.length);
                     successCount++;
+                    console.log('Already cached:', item.key);
                     return;
                 }
                 
@@ -3363,14 +3458,16 @@
                     img.crossOrigin = 'anonymous';
                     
                     img.onload = async function() {
-                        imageCache[item.key] = img;
+                        // 转换为 base64 并保存到缓存
                         const base64 = await imageToBase64(img);
                         if (base64) {
+                            imageCache[item.key] = { src: base64, loaded: true };
                             saveToCache(item.key, base64);
                         }
                         completed++;
                         successCount++;
                         updateProgress(completed, allImages.length);
+                        console.log('Downloaded and cached:', item.key);
                         resolve();
                     };
                     
@@ -3378,6 +3475,7 @@
                         completed++;
                         failCount++;
                         updateProgress(completed, allImages.length);
+                        console.warn('Failed to download:', item.src);
                         resolve();
                     };
                     
@@ -3391,11 +3489,23 @@
         // 关闭进度显示
         closeProgressDisplay();
         
+        // 显示缓存大小信息
+        try {
+            const cachedData = localStorage.getItem(STORAGE_KEY);
+            if (cachedData) {
+                const sizeInBytes = new Blob([cachedData]).size;
+                const sizeInMB = (sizeInBytes / 1024 / 1024).toFixed(2);
+                console.log('Total cache size:', sizeInMB, 'MB');
+            }
+        } catch (e) {
+            console.warn('Failed to calculate cache size:', e);
+        }
+        
         // 显示结果
         if (failCount === 0) {
-            showToast(`全部下载完成！共 ${successCount} 张图片`, 'success');
+            showToast(`全部下载完成！共 ${successCount} 张图片已缓存`, 'success', 5000);
         } else {
-            showToast(`下载完成！成功 ${successCount} 张，失败 ${failCount} 张`, 'warning');
+            showToast(`下载完成！成功 ${successCount} 张，失败 ${failCount} 张`, 'warning', 5000);
         }
     }
 
@@ -3409,14 +3519,57 @@
                     delete imageCache[key];
                 }
                 showToast('缓存已清除', 'success');
+                return true;
             } catch (e) {
                 console.warn('Failed to clear cache:', e);
                 showToast('清除缓存失败', 'error');
+                return false;
             }
+        }
+        return false;
+    }
+    
+    // 查看缓存状态
+    function checkCacheStatus() {
+        try {
+            const cachedData = localStorage.getItem(STORAGE_KEY);
+            if (!cachedData) {
+                showToast('缓存为空，请先下载图片', 'info', 5000);
+                return { count: 0, size: 0 };
+            }
+            
+            const cache = JSON.parse(cachedData);
+            const count = cache.images ? Object.keys(cache.images).length : 0;
+            const sizeInBytes = new Blob([cachedData]).size;
+            const sizeInMB = (sizeInBytes / 1024 / 1024).toFixed(2);
+            
+            // 统计各类型图片数量
+            let caseCount = 0;
+            let coolerCount = 0;
+            let vgaCount = 0;
+            
+            if (cache.images) {
+                for (const key of Object.keys(cache.images)) {
+                    if (key.startsWith('cooler_')) coolerCount++;
+                    else if (key.startsWith('vga_')) vgaCount++;
+                    else caseCount++;
+                }
+            }
+            
+            const message = `缓存状态:\n机箱图片: ${caseCount} 张\n散热器图片: ${coolerCount} 张\n显卡图片: ${vgaCount} 张\n总计: ${count} 张\n缓存大小: ${sizeInMB} MB`;
+            
+            showToast(message, 'info', 8000);
+            console.log('Cache status:', { count, sizeInMB, caseCount, coolerCount, vgaCount });
+            
+            return { count, size: parseFloat(sizeInMB), caseCount, coolerCount, vgaCount };
+        } catch (e) {
+            console.warn('Failed to check cache status:', e);
+            showToast('检查缓存状态失败', 'error');
+            return { count: 0, size: 0 };
         }
     }
 
-    // 显示机箱图片 - 优化版本（支持本地缓存和网络加载）
+    // 显示机箱图片 - 优化版本（优先使用本地缓存）
     async function showCaseImage(caseName) {
         const container = document.getElementById('caseImageContainer');
         const imageElement = document.getElementById('caseImage');
@@ -3425,9 +3578,11 @@
         if (caseName && caseImageMap[caseName]) {
             const imageName = caseImageMap[caseName];
             
-            // 如果图片已经在缓存中
-            if (imageCache[imageName] && imageCache[imageName].src) {
-                imageElement.src = imageCache[imageName].src;
+            // 优先检查本地缓存（内存缓存 + localStorage）
+            const cachedSrc = getCachedImageSrc(imageName);
+            if (cachedSrc) {
+                console.log('Using cached image for:', imageName);
+                imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
                 return;
@@ -3446,12 +3601,13 @@
                 imageElement.src = img.src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
-                imageCache[imageName] = img;
                 
-                // 保存到localStorage缓存
+                // 转换为 base64 并保存到缓存
                 const base64 = await imageToBase64(img);
                 if (base64) {
+                    imageCache[imageName] = { src: base64, loaded: true };
                     saveToCache(imageName, base64);
+                    console.log('Saved image to cache:', imageName);
                 }
             };
             
@@ -3469,7 +3625,7 @@
         }
     }
 
-    // 显示散热器图片 - 优化版本（支持本地缓存和网络加载）
+    // 显示散热器图片 - 优化版本（优先使用本地缓存）
     async function showCoolerImage(coolerName) {
         const imageElement = document.getElementById('coolerImage');
         const placeholder = document.getElementById('coolerImagePlaceholder');
@@ -3478,8 +3634,11 @@
             const imageName = coolerImageMap[coolerName];
             const cacheKey = 'cooler_' + imageName;
 
-            if (imageCache[cacheKey] && imageCache[cacheKey].src) {
-                imageElement.src = imageCache[cacheKey].src;
+            // 优先检查本地缓存（内存缓存 + localStorage）
+            const cachedSrc = getCachedImageSrc(cacheKey);
+            if (cachedSrc) {
+                console.log('Using cached cooler image for:', imageName);
+                imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
                 return;
@@ -3497,12 +3656,13 @@
                 imageElement.src = img.src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
-                imageCache[cacheKey] = img;
                 
-                // 保存到localStorage缓存
+                // 转换为 base64 并保存到缓存
                 const base64 = await imageToBase64(img);
                 if (base64) {
+                    imageCache[cacheKey] = { src: base64, loaded: true };
                     saveToCache(cacheKey, base64);
+                    console.log('Saved cooler image to cache:', cacheKey);
                 }
             };
             
@@ -3520,7 +3680,7 @@
         }
     }
 
-    // 显示显卡图片 - 支持本地缓存和网络加载
+    // 显示显卡图片 - 优先使用本地缓存
     async function showVgaImage(vgaName) {
         const imageElement = document.getElementById('vgaImage');
         const placeholder = document.getElementById('vgaImagePlaceholder');
@@ -3529,8 +3689,11 @@
             const imageName = vgaImageMap[vgaName];
             const cacheKey = 'vga_' + imageName;
 
-            if (imageCache[cacheKey] && imageCache[cacheKey].src) {
-                imageElement.src = imageCache[cacheKey].src;
+            // 优先检查本地缓存（内存缓存 + localStorage）
+            const cachedSrc = getCachedImageSrc(cacheKey);
+            if (cachedSrc) {
+                console.log('Using cached VGA image for:', imageName);
+                imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
                 return;
@@ -3548,12 +3711,13 @@
                 imageElement.src = img.src;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
-                imageCache[cacheKey] = img;
                 
-                // 保存到localStorage缓存
+                // 转换为 base64 并保存到缓存
                 const base64 = await imageToBase64(img);
                 if (base64) {
+                    imageCache[cacheKey] = { src: base64, loaded: true };
                     saveToCache(cacheKey, base64);
+                    console.log('Saved VGA image to cache:', cacheKey);
                 }
             };
             
@@ -4856,11 +5020,15 @@
         return totalSize;
     }
     
-    // 清理图片缓存
+    // 清理图片缓存（自动清理版本，无确认对话框）
     function clearImageCache() {
         try {
             const STORAGE_KEY = 'tasi_image_cache';
             localStorage.removeItem(STORAGE_KEY);
+            // 清空内存缓存
+            for (const key in imageCache) {
+                delete imageCache[key];
+            }
             console.log('Image cache cleared');
             return true;
         } catch(e) {
