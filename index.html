@@ -3025,8 +3025,55 @@
         vga: `${IMAGE_BASE_URL}/PNG_VGA`
     };
 
-    // 从localStorage读取缓存的图片 - 优化版本
-    function loadCachedImages() {
+    // 从IndexedDB读取缓存的图片
+    async function loadCachedImages() {
+        return new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            let loadedCount = 0;
+            
+            request.onerror = function() {
+                console.warn('IndexedDB not available, falling back to localStorage');
+                resolve(loadCachedImagesFromLocalStorage());
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+                const getAllRequest = store.getAll();
+                
+                getAllRequest.onsuccess = function() {
+                    const images = getAllRequest.result || [];
+                    images.forEach((item) => {
+                        if (item && item.base64) {
+                            imageCache[item.key] = { src: item.base64, loaded: true };
+                            loadedCount++;
+                        }
+                    });
+                    console.log('Loaded', loadedCount, 'images from IndexedDB cache');
+                    db.close();
+                    resolve(loadedCount);
+                };
+                
+                getAllRequest.onerror = function() {
+                    console.warn('Failed to get images from IndexedDB');
+                    db.close();
+                    resolve(loadCachedImagesFromLocalStorage());
+                };
+            };
+            
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        });
+    }
+    
+    // 从localStorage读取缓存（降级方案）
+    function loadCachedImagesFromLocalStorage() {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
             if (cachedData) {
@@ -3035,8 +3082,6 @@
                     let loadedCount = 0;
                     for (const [key, data] of Object.entries(cache.images)) {
                         if (data && data.base64) {
-                            // 直接存储 base64 字符串，不创建 Image 对象
-                            // 这样可以避免图片加载延迟问题
                             imageCache[key] = { src: data.base64, loaded: true };
                             loadedCount++;
                         }
@@ -3052,19 +3097,70 @@
         }
     }
     
-    // 检查缓存中是否有指定图片
+    // 检查缓存中是否有指定图片（同步版本，先检查内存缓存）
     function hasCachedImage(key) {
         // 首先检查内存缓存
         if (imageCache[key] && imageCache[key].src) {
             return true;
         }
-        // 然后检查 localStorage 缓存
+        return false;
+    }
+    
+    // 异步检查缓存中是否有指定图片（检查IndexedDB）
+    async function hasCachedImageAsync(key) {
+        // 首先检查内存缓存
+        if (imageCache[key] && imageCache[key].src) {
+            return true;
+        }
+        // 然后检查 IndexedDB
+        return new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            
+            request.onerror = function() {
+                // IndexedDB不可用，检查localStorage
+                resolve(hasCachedImageFromLocalStorage(key));
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+                const getRequest = store.get(key);
+                
+                getRequest.onsuccess = function() {
+                    if (getRequest.result && getRequest.result.base64) {
+                        imageCache[key] = { src: getRequest.result.base64, loaded: true };
+                        db.close();
+                        resolve(true);
+                    } else {
+                        db.close();
+                        resolve(false);
+                    }
+                };
+                
+                getRequest.onerror = function() {
+                    db.close();
+                    resolve(hasCachedImageFromLocalStorage(key));
+                };
+            };
+            
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        });
+    }
+    
+    // 从localStorage检查缓存
+    function hasCachedImageFromLocalStorage(key) {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
             if (cachedData) {
                 const cache = JSON.parse(cachedData);
                 if (cache.images && cache.images[key] && cache.images[key].base64) {
-                    // 找到了，加载到内存缓存
                     imageCache[key] = { src: cache.images[key].base64, loaded: true };
                     return true;
                 }
@@ -3075,19 +3171,70 @@
         return false;
     }
     
-    // 获取缓存的图片数据
+    // 获取缓存的图片数据（同步版本，先检查内存缓存）
     function getCachedImageSrc(key) {
         // 首先检查内存缓存
         if (imageCache[key] && imageCache[key].src) {
             return imageCache[key].src;
         }
-        // 然后检查 localStorage 缓存
+        return null;
+    }
+    
+    // 异步获取缓存的图片数据（检查IndexedDB）
+    async function getCachedImageSrcAsync(key) {
+        // 首先检查内存缓存
+        if (imageCache[key] && imageCache[key].src) {
+            return imageCache[key].src;
+        }
+        // 然后检查 IndexedDB
+        return new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            
+            request.onerror = function() {
+                resolve(getCachedImageSrcFromLocalStorage(key));
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+                const getRequest = store.get(key);
+                
+                getRequest.onsuccess = function() {
+                    if (getRequest.result && getRequest.result.base64) {
+                        const base64 = getRequest.result.base64;
+                        imageCache[key] = { src: base64, loaded: true };
+                        db.close();
+                        resolve(base64);
+                    } else {
+                        db.close();
+                        resolve(getCachedImageSrcFromLocalStorage(key));
+                    }
+                };
+                
+                getRequest.onerror = function() {
+                    db.close();
+                    resolve(getCachedImageSrcFromLocalStorage(key));
+                };
+            };
+            
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        });
+    }
+    
+    // 从localStorage获取缓存图片
+    function getCachedImageSrcFromLocalStorage(key) {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
             if (cachedData) {
                 const cache = JSON.parse(cachedData);
                 if (cache.images && cache.images[key] && cache.images[key].base64) {
-                    // 找到了，加载到内存缓存
                     const base64 = cache.images[key].base64;
                     imageCache[key] = { src: base64, loaded: true };
                     return base64;
@@ -3099,42 +3246,71 @@
         return null;
     }
 
-    // 保存图片到localStorage缓存 - 优化版本
-    function saveToCache(key, imageData) {
+    // 保存图片到IndexedDB缓存
+    async function saveToCache(key, imageData) {
+        return new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            
+            request.onerror = function() {
+                console.warn('IndexedDB not available, falling back to localStorage');
+                saveToCacheLocalStorage(key, imageData);
+                resolve();
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['images'], 'readwrite');
+                const store = transaction.objectStore('images');
+                const putRequest = store.put({
+                    key: key,
+                    base64: imageData,
+                    timestamp: Date.now()
+                });
+                
+                putRequest.onsuccess = function() {
+                    db.close();
+                    console.log('Saved to IndexedDB:', key);
+                    resolve();
+                };
+                
+                putRequest.onerror = function() {
+                    db.close();
+                    console.warn('Failed to save to IndexedDB, falling back to localStorage');
+                    saveToCacheLocalStorage(key, imageData);
+                    resolve();
+                };
+            };
+            
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        });
+    }
+    
+    // 保存图片到localStorage缓存（降级方案）
+    function saveToCacheLocalStorage(key, imageData) {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
             const cache = cachedData ? JSON.parse(cachedData) : { version: CACHE_VERSION, images: {} };
             cache.version = CACHE_VERSION;
             cache.images[key] = { base64: imageData, timestamp: Date.now() };
             
-            // 增加缓存大小限制到100MB（localStorage通常限制为5-10MB，但某些浏览器支持更大）
             const jsonStr = JSON.stringify(cache);
             const sizeInBytes = new Blob([jsonStr]).size;
-            const maxSize = 100 * 1024 * 1024; // 100MB
+            const maxSize = 5 * 1024 * 1024; // 5MB (localStorage限制)
             
             if (sizeInBytes < maxSize) {
-                try {
-                    localStorage.setItem(STORAGE_KEY, jsonStr);
-                    console.log('Cache saved:', key, 'Total size:', (sizeInBytes / 1024 / 1024).toFixed(2), 'MB');
-                } catch (storageError) {
-                    // 如果存储失败，尝试清理旧缓存
-                    console.warn('Storage failed, size:', (sizeInBytes / 1024 / 1024).toFixed(2), 'MB');
-                    if (storageError.name === 'QuotaExceededError') {
-                        // 清理超过30天的旧缓存
-                        cleanOldCache(cache);
-                        try {
-                            localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-                            console.log('Cache cleaned and saved successfully');
-                        } catch (e2) {
-                            console.warn('Still cannot save after cleaning, cache size limit reached');
-                        }
-                    }
-                }
+                localStorage.setItem(STORAGE_KEY, jsonStr);
+                console.log('Saved to localStorage:', key);
             } else {
-                console.warn('Cache size limit exceeded:', (sizeInBytes / 1024 / 1024).toFixed(2), 'MB');
+                console.warn('localStorage size limit exceeded');
             }
         } catch (e) {
-            console.warn('Failed to save to cache:', e);
+            console.warn('Failed to save to localStorage:', e);
         }
     }
     
@@ -3396,8 +3572,8 @@
 
     // 下载所有图片并缓存（带进度显示）
     async function downloadAllImages() {
-        // 首先加载已有的缓存
-        const existingCacheCount = loadCachedImages();
+        // 首先加载已有的缓存（异步）
+        const existingCacheCount = await loadCachedImages();
         console.log('Existing cache:', existingCacheCount, 'images');
         
         const allImages = [];
@@ -3444,8 +3620,8 @@
         for (let i = 0; i < allImages.length; i += batchSize) {
             const batch = allImages.slice(i, i + batchSize);
             const promises = batch.map(async (item) => {
-                // 检查是否已缓存（使用新的缓存检查函数）
-                if (hasCachedImage(item.key)) {
+                // 检查是否已缓存（使用异步缓存检查函数）
+                if (await hasCachedImageAsync(item.key)) {
                     completed++;
                     updateProgress(completed, allImages.length);
                     successCount++;
@@ -3462,7 +3638,7 @@
                         const base64 = await imageToBase64(img);
                         if (base64) {
                             imageCache[item.key] = { src: base64, loaded: true };
-                            saveToCache(item.key, base64);
+                            await saveToCache(item.key, base64);
                         }
                         completed++;
                         successCount++;
@@ -3509,32 +3685,108 @@
         }
     }
 
-    // 清除图片缓存
+    // 清除图片缓存（同时清除IndexedDB和localStorage）
     function clearImageCache() {
         if (confirm('确定要清除所有图片缓存吗？下次打开页面需要重新下载。')) {
+            // 清空内存缓存
+            for (const key in imageCache) {
+                delete imageCache[key];
+            }
+            
+            // 清除 IndexedDB
+            const request = indexedDB.deleteDatabase('ImageCacheDB');
+            request.onsuccess = function() {
+                console.log('IndexedDB deleted');
+            };
+            request.onerror = function() {
+                console.warn('Failed to delete IndexedDB');
+            };
+            
+            // 清除 localStorage
             try {
                 localStorage.removeItem(STORAGE_KEY);
-                // 清空内存缓存
-                for (const key in imageCache) {
-                    delete imageCache[key];
-                }
-                showToast('缓存已清除', 'success');
-                return true;
             } catch (e) {
-                console.warn('Failed to clear cache:', e);
-                showToast('清除缓存失败', 'error');
-                return false;
+                console.warn('Failed to clear localStorage:', e);
             }
+            
+            showToast('缓存已清除', 'success');
+            return true;
         }
         return false;
     }
     
-    // 查看缓存状态
-    function checkCacheStatus() {
+    // 查看缓存状态（检查IndexedDB）
+    async function checkCacheStatus() {
+        return new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            
+            request.onerror = function() {
+                // IndexedDB不可用，检查localStorage
+                checkCacheStatusLocalStorage(resolve);
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+                const getAllRequest = store.getAll();
+                
+                getAllRequest.onsuccess = function() {
+                    const images = getAllRequest.result || [];
+                    const count = images.length;
+                    
+                    // 统计各类型图片数量
+                    let caseCount = 0;
+                    let coolerCount = 0;
+                    let vgaCount = 0;
+                    
+                    images.forEach((item) => {
+                        if (item.key.startsWith('cooler_')) coolerCount++;
+                        else if (item.key.startsWith('vga_')) vgaCount++;
+                        else caseCount++;
+                    });
+                    
+                    // 计算缓存大小（估算）
+                    let totalSizeInBytes = 0;
+                    images.forEach((item) => {
+                        if (item.base64) {
+                            totalSizeInBytes += item.base64.length * 0.75; // base64大约增加33%
+                        }
+                    });
+                    const sizeInMB = (totalSizeInBytes / 1024 / 1024).toFixed(2);
+                    
+                    const message = `缓存状态:\n机箱图片: ${caseCount} 张\n散热器图片: ${coolerCount} 张\n显卡图片: ${vgaCount} 张\n总计: ${count} 张\n缓存大小: ${sizeInMB} MB`;
+                    
+                    showToast(message, 'info', 8000);
+                    console.log('Cache status:', { count, sizeInMB, caseCount, coolerCount, vgaCount });
+                    
+                    db.close();
+                    resolve({ count, size: parseFloat(sizeInMB), caseCount, coolerCount, vgaCount });
+                };
+                
+                getAllRequest.onerror = function() {
+                    db.close();
+                    checkCacheStatusLocalStorage(resolve);
+                };
+            };
+            
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        });
+    }
+    
+    // 查看缓存状态（localStorage版本）
+    function checkCacheStatusLocalStorage(resolve) {
         try {
             const cachedData = localStorage.getItem(STORAGE_KEY);
             if (!cachedData) {
                 showToast('缓存为空，请先下载图片', 'info', 5000);
+                if (resolve) resolve({ count: 0, size: 0 });
                 return { count: 0, size: 0 };
             }
             
@@ -3561,11 +3813,15 @@
             showToast(message, 'info', 8000);
             console.log('Cache status:', { count, sizeInMB, caseCount, coolerCount, vgaCount });
             
-            return { count, size: parseFloat(sizeInMB), caseCount, coolerCount, vgaCount };
+            const result = { count, size: parseFloat(sizeInMB), caseCount, coolerCount, vgaCount };
+            if (resolve) resolve(result);
+            return result;
         } catch (e) {
             console.warn('Failed to check cache status:', e);
             showToast('检查缓存状态失败', 'error');
-            return { count: 0, size: 0 };
+            const result = { count: 0, size: 0 };
+            if (resolve) resolve(result);
+            return result;
         }
     }
 
@@ -3578,10 +3834,10 @@
         if (caseName && caseImageMap[caseName]) {
             const imageName = caseImageMap[caseName];
             
-            // 优先检查本地缓存（内存缓存 + localStorage）
-            const cachedSrc = getCachedImageSrc(imageName);
+            // 先检查内存缓存
+            let cachedSrc = getCachedImageSrc(imageName);
             if (cachedSrc) {
-                console.log('Using cached image for:', imageName);
+                console.log('Using memory cached image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -3592,6 +3848,16 @@
             placeholder.innerHTML = '加载中...';
             placeholder.style.display = 'block';
             imageElement.style.display = 'none';
+            
+            // 异步检查IndexedDB缓存
+            cachedSrc = await getCachedImageSrcAsync(imageName);
+            if (cachedSrc) {
+                console.log('Using IndexedDB cached image for:', imageName);
+                imageElement.src = cachedSrc;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                return;
+            }
             
             // 如果不在缓存中，从网络加载图片
             const img = new Image();
@@ -3606,7 +3872,7 @@
                 const base64 = await imageToBase64(img);
                 if (base64) {
                     imageCache[imageName] = { src: base64, loaded: true };
-                    saveToCache(imageName, base64);
+                    await saveToCache(imageName, base64);
                     console.log('Saved image to cache:', imageName);
                 }
             };
@@ -3634,10 +3900,10 @@
             const imageName = coolerImageMap[coolerName];
             const cacheKey = 'cooler_' + imageName;
 
-            // 优先检查本地缓存（内存缓存 + localStorage）
-            const cachedSrc = getCachedImageSrc(cacheKey);
+            // 先检查内存缓存
+            let cachedSrc = getCachedImageSrc(cacheKey);
             if (cachedSrc) {
-                console.log('Using cached cooler image for:', imageName);
+                console.log('Using memory cached cooler image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -3648,6 +3914,16 @@
             placeholder.innerHTML = '加载中...';
             placeholder.style.display = 'block';
             imageElement.style.display = 'none';
+            
+            // 异步检查IndexedDB缓存
+            cachedSrc = await getCachedImageSrcAsync(cacheKey);
+            if (cachedSrc) {
+                console.log('Using IndexedDB cached cooler image for:', imageName);
+                imageElement.src = cachedSrc;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                return;
+            }
             
             const img = new Image();
             img.crossOrigin = 'anonymous';
@@ -3661,7 +3937,7 @@
                 const base64 = await imageToBase64(img);
                 if (base64) {
                     imageCache[cacheKey] = { src: base64, loaded: true };
-                    saveToCache(cacheKey, base64);
+                    await saveToCache(cacheKey, base64);
                     console.log('Saved cooler image to cache:', cacheKey);
                 }
             };
@@ -3689,10 +3965,10 @@
             const imageName = vgaImageMap[vgaName];
             const cacheKey = 'vga_' + imageName;
 
-            // 优先检查本地缓存（内存缓存 + localStorage）
-            const cachedSrc = getCachedImageSrc(cacheKey);
+            // 先检查内存缓存
+            let cachedSrc = getCachedImageSrc(cacheKey);
             if (cachedSrc) {
-                console.log('Using cached VGA image for:', imageName);
+                console.log('Using memory cached VGA image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -3703,6 +3979,16 @@
             placeholder.innerHTML = '加载中...';
             placeholder.style.display = 'block';
             imageElement.style.display = 'none';
+            
+            // 异步检查IndexedDB缓存
+            cachedSrc = await getCachedImageSrcAsync(cacheKey);
+            if (cachedSrc) {
+                console.log('Using IndexedDB cached VGA image for:', imageName);
+                imageElement.src = cachedSrc;
+                imageElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                return;
+            }
             
             const img = new Image();
             img.crossOrigin = 'anonymous';
@@ -3716,7 +4002,7 @@
                 const base64 = await imageToBase64(img);
                 if (base64) {
                     imageCache[cacheKey] = { src: base64, loaded: true };
-                    saveToCache(cacheKey, base64);
+                    await saveToCache(cacheKey, base64);
                     console.log('Saved VGA image to cache:', cacheKey);
                 }
             };
