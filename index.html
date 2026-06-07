@@ -1064,7 +1064,7 @@
             </div>
         </div>
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
-        <div class="total-line"><span>利润率：</span><span>+6.6%（÷0.934）</span></div>
+        <div class="total-line"><span>利润率：</span><span>+5.95%（÷0.9405）</span></div>
         <div class="total-line total-final"><span>主机总价：</span><span id="final">0 元</span></div>
         <div class="total-line ludashi-score"><span>鲁大师跑分：</span><span id="ludashiScore">0 分</span></div>
         <div class="total-line power-consumption"><span>主机默认功耗：</span><span id="totalPower">0 W</span></div>
@@ -4823,7 +4823,7 @@
         // 更新成本合计显示（所有配件成本 + 450元运营成本）
         document.getElementById("costTotal").innerText=Math.round(sum + 450);
         // 修改：最终报价四舍五入为整数，去掉小数点
-        const finalPrice = Math.round(sum / 0.934);
+        const finalPrice = Math.round(sum / 0.9405);
         document.getElementById("final").innerText=`${finalPrice} 元`;
         
         // 计算鲁大师跑分
