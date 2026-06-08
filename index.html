@@ -3369,8 +3369,8 @@
 
     // 智能预加载图片 - 使用requestIdleCallback延迟加载
     async function preloadImages() {
-        // 首先加载localStorage中的缓存
-        loadCachedImages();
+        // 首先加载localStorage中的缓存 - 等待缓存加载完成
+        await loadCachedImages();
         
         const allImages = [];
         
@@ -5165,9 +5165,10 @@
         document.getElementById("datetimeDisplay").textContent = formattedTime;
     }
 
-    window.onload=()=>{
-        // 首先加载localStorage中的图片缓存（关键修复）
-        loadCachedImages();
+    window.onload=async ()=>{
+        // 首先加载localStorage中的图片缓存（关键修复）- 等待缓存加载完成
+        const cachedCount = await loadCachedImages();
+        console.log('Loaded', cachedCount, 'images from cache on startup');
         
         let d=localStorage.getItem("last");
         if(d){
