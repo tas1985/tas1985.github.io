@@ -911,6 +911,41 @@ def update_exist_ram_prices():
                     special_handled = True
                 continue
 
+            # 特殊处理：金百达_银爵 16G 3200(8*2)套装 -> 金百达 银爵 16G 8x2 3200 D4 C16
+            if "金百达_银爵 16G 3200(8*2)套装" in ram_name:
+                print(f"  🔍 查找: 金百达 银爵 16G 8x2 3200 D4 C16")
+                found = False
+                for ram_item in ram_list:
+                    item_name = ram_item['name']
+                    if "金百达" in item_name and "银爵" in item_name and "16G" in item_name and "3200" in item_name and ("8x2" in item_name or "8*2" in item_name):
+                        final_price = float(ram_item['price'])
+                        special_handled = True
+                        found = True
+                        print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
+                        break
+                if not found:
+                    print(f"  ⚠ 未找到金百达 银爵 16G 8x2 3200 D4 C16，跳过更新")
+                    special_handled = True
+                continue
+
+            # 特殊处理：金百达_银爵 32G 3600(16*2)套装 海力士c18 -> 金百达 银爵 32G 16x2 3600 D4 C18
+            if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in ram_name:
+                print(f"  🔍 查找: 金百达 银爵 32G 16x2 3600 D4 C18")
+                found = False
+                for ram_item in ram_list:
+                    item_name = ram_item['name']
+                    if "金百达" in item_name and "银爵" in item_name and "32G" in item_name and "3600" in item_name and ("16x2" in item_name or "16*2" in item_name):
+                        final_price = float(ram_item['price'])
+                        jbd_32g_3600_c18_final = final_price  # 保存价格供其他型号参考
+                        special_handled = True
+                        found = True
+                        print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
+                        break
+                if not found:
+                    print(f"  ⚠ 未找到金百达 银爵 32G 16x2 3600 D4 C18，跳过更新")
+                    special_handled = True
+                continue
+
             if "金百达_星刃 32G 6000 c28 海力士A-die 灯条" in ram_name:
                 print(f"  🔍 查找: 宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB 黑/白")
                 found = False
