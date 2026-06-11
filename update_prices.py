@@ -298,6 +298,13 @@ def fetch_processed_ram():
             print("📋 部分内存价格:")
             for i, ram in enumerate(ram_list[:8]):
                 print(f"   {ram['name'][:40]}...: ￥{ram['price']}")
+            
+            # 🔍 调试输出：显示所有弗雷相关的数据
+            print("\n🔍 爬取到的所有弗雷相关内存:")
+            for ram in ram_list:
+                if "弗雷" in ram['name']:
+                    print(f"   {ram['name']} -> ￥{ram['price']}")
+            print()
         
         return ram_list
     except Exception as e:
@@ -1190,21 +1197,32 @@ def update_ram_accurate():
             print(f"❌ 未找到内存目标行：{RAM_INSERT_TARGET}")
             return
         
+        # 🔍 找到内存区域的开始位置（ram: [之后）
+        ram_start_idx = -1
+        for i in range(idx - 1, max(0, idx - 100), -1):  # 向前最多查找 100 行
+            if 'ram: [' in lines[i]:
+                ram_start_idx = i
+                break
+        
+        if ram_start_idx == -1:
+            print("⚠️ 未找到内存区域开始位置，使用目标行作为参考")
+            ram_start_idx = idx
+        
         update_count = 0
         same_count = 0
         no_match_count = 0
         
         # 更新现有内存型号的价格
-        # 首先查找金百达_银爵 32G 3600(16*2)套装 海力士c18 的价格
+        # 首先查找金百达_银爵 32G 3600(16*2)套装 海力士 c18 的价格
         ref_price = 0
-        pos = idx + 1
+        pos = ram_start_idx + 1  # 从内存区域开始位置查找
         while pos < len(lines):
             line = lines[pos]
             if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
                 match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
                 if match:
                     model_name = match.group(1)
-                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in model_name:
+                    if "金百达_银爵 32G 3600(16*2)套装 海力士 c18" in model_name:
                         ref_price = int(match.group(2))
                         print(f"  🔍 找到参考型号：{model_name[:40]}... 价格￥{ref_price}")
                         break
@@ -1212,7 +1230,7 @@ def update_ram_accurate():
             else:
                 break
         
-        # 如果在HTML中没找到参考价格，从爬取数据中查找
+        # 如果在 HTML 中没找到参考价格，从爬取数据中查找
         if ref_price <= 0:
             for ram in ram_list:
                 if "金百达" in ram["name"] and "银爵" in ram["name"] and "3600" in ram["name"] and ("16*2" in ram["name"] or "16x2" in ram["name"]):
@@ -1220,8 +1238,30 @@ def update_ram_accurate():
                     print(f"  🔍 从爬取数据找到参考价格：{ram['name'][:40]}... 价格￥{ref_price}")
                     break
         
-        # 更新内存型号
-        pos = idx + 1
+        # 更新内存型号 - 从内存区域开始位置到目标行之后
+        pos = ram_start_idx + 1
+        
+        # 🔍 调试：输出所有爬取到的阿斯加特弗雷相关数据
+        print("\n🔍 爬取到的阿斯加特弗雷相关数据:")
+        for ram in ram_list:
+            if "弗雷" in ram["name"]:
+                print(f"   {ram['name']} -> ￥{ram['price']}")
+        print()
+        
+        # 💾 预先查找弗雷内存的价格（用于同时更新带黑甲和不带黑甲的型号）
+        fei_le_16g_price = None
+        fei_le_32g_price = None
+        for ram in ram_list:
+            ram_name = ram["name"]
+            # 查找 16G 弗雷价格（优先匹配不带黑甲的，如果没有则用黑甲的）
+            if fei_le_16g_price is None and "阿斯加特" in ram_name and "弗雷" in ram_name and "16G" in ram_name and "3200" in ram_name and ("8x2" in ram_name or "8*2" in ram_name):
+                fei_le_16g_price = ram["price"]
+                print(f"💾 找到弗雷 16G 价格：{ram_name} -> ￥{fei_le_16g_price}")
+            # 查找 32G 弗雷价格（优先匹配不带黑甲的，如果没有则用黑甲的）
+            if fei_le_32g_price is None and "阿斯加特" in ram_name and "弗雷" in ram_name and "32G" in ram_name and "3200" in ram_name and ("16x2" in ram_name or "16*2" in ram_name):
+                fei_le_32g_price = ram["price"]
+                print(f"💾 找到弗雷 32G 价格：{ram_name} -> ￥{fei_le_32g_price}")
+        
         while pos < len(lines):
             line = lines[pos]
             if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
@@ -1278,32 +1318,20 @@ def update_ram_accurate():
                             print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵(￥{ref_price_from_html}) × 2 = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 64G 白色 缺少参考价格，跳过更新")
-                    # 特殊处理：阿斯加特 弗雷 16G 8*2 3200 参考 阿斯加特 弗雷 16G 8*2 3200 黑甲 的价格
-                    elif "阿斯加特 弗雷 16G 8*2 3200" in model_name and "黑甲" not in model_name:
-                        print(f"  🔍 匹配到阿斯加特 弗雷 16G 8*2 3200，尝试从爬取数据中查找黑甲版本价格")
-                        found = False
-                        for ram in ram_list:
-                            ram_name = ram["name"]
-                            if "阿斯加特" in ram_name and "弗雷" in ram_name and "16G" in ram_name and "3200" in ram_name and ("8x2" in ram_name or "8*2" in ram_name) and "黑甲" in ram_name:
-                                new_price = ram["price"]
-                                print(f"  ★ 特殊更新：阿斯加特 弗雷 16G 8*2 3200 = {ram_name} -> ￥{new_price}")
-                                found = True
-                                break
-                        if not found:
-                            print(f"  ⚠️ 阿斯加特 弗雷 16G 8*2 3200 黑甲 未找到，跳过更新")
-                    # 特殊处理：阿斯加特 弗雷 32G 16*2 3200 参考 阿斯加特 弗雷 32G 16*2 3200 黑甲 的价格
-                    elif "阿斯加特 弗雷 32G 16*2 3200" in model_name and "黑甲" not in model_name:
-                        print(f"  🔍 匹配到阿斯加特 弗雷 32G 16*2 3200，尝试从爬取数据中查找黑甲版本价格")
-                        found = False
-                        for ram in ram_list:
-                            ram_name = ram["name"]
-                            if "阿斯加特" in ram_name and "弗雷" in ram_name and "32G" in ram_name and "3200" in ram_name and ("16x2" in ram_name or "16*2" in ram_name) and "黑甲" in ram_name:
-                                new_price = ram["price"]
-                                print(f"  ★ 特殊更新：阿斯加特 弗雷 32G 16*2 3200 = {ram_name} -> ￥{new_price}")
-                                found = True
-                                break
-                        if not found:
-                            print(f"  ⚠️ 阿斯加特 弗雷 32G 16*2 3200 黑甲 未找到，跳过更新")
+                    # 特殊处理：阿斯加特 弗雷 16G 8*2 3200（不区分是否黑甲）使用爬取到的弗雷 16G 价格
+                    elif "阿斯加特 弗雷 16G 8*2 3200" in model_name:
+                        if fei_le_16g_price is not None:
+                            new_price = str(fei_le_16g_price)
+                            print(f"  ★ 特殊更新：阿斯加特 弗雷 16G 8*2 3200 = 爬取的弗雷 16G 价格 -> ￥{new_price}")
+                        else:
+                            print(f"  ⚠️ 未找到阿斯加特 弗雷 16G 8*2 3200 的爬取价格，跳过更新")
+                    # 特殊处理：阿斯加特 弗雷 32G 16*2 3200（不区分是否黑甲）使用爬取到的弗雷 32G 价格
+                    elif "阿斯加特 弗雷 32G 16*2 3200" in model_name:
+                        if fei_le_32g_price is not None:
+                            new_price = str(fei_le_32g_price)
+                            print(f"  ★ 特殊更新：阿斯加特 弗雷 32G 16*2 3200 = 爬取的弗雷 32G 价格 -> ￥{new_price}")
+                        else:
+                            print(f"  ⚠️ 未找到阿斯加特 弗雷 32G 16*2 3200 的爬取价格，跳过更新")
                     # 正常更新逻辑
                     elif model_name in ram_dict:
                         new_price = ram_dict[model_name]
