@@ -911,6 +911,40 @@ def update_exist_ram_prices():
                     special_handled = True
                 continue
 
+            # 特殊处理：阿斯加特 弗雷 16G 8*2 3200 参考 阿斯加特 弗雷 16G 8*2 3200 黑甲 的价格
+            if "阿斯加特 弗雷 16G 8*2 3200" in ram_name and "黑甲" not in ram_name:
+                print(f"  🔍 查找: 阿斯加特 弗雷 16G 8*2 3200 = 阿斯加特 弗雷 16G 8*2 3200 黑甲")
+                found = False
+                for ram_item in ram_list:
+                    item_name = ram_item['name']
+                    if "阿斯加特" in item_name and "弗雷" in item_name and "16G" in item_name and "3200" in item_name and ("8x2" in item_name or "8*2" in item_name) and "黑甲" in item_name:
+                        final_price = float(ram_item['price'])
+                        special_handled = True
+                        found = True
+                        print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
+                        break
+                if not found:
+                    print(f"  ⚠ 未找到阿斯加特 弗雷 16G 8*2 3200 黑甲，跳过更新")
+                    special_handled = True
+                continue
+
+            # 特殊处理：阿斯加特 弗雷 32G 16*2 3200 参考 阿斯加特 弗雷 32G 16*2 3200 黑甲 的价格
+            if "阿斯加特 弗雷 32G 16*2 3200" in ram_name and "黑甲" not in ram_name:
+                print(f"  🔍 查找: 阿斯加特 弗雷 32G 16*2 3200 = 阿斯加特 弗雷 32G 16*2 3200 黑甲")
+                found = False
+                for ram_item in ram_list:
+                    item_name = ram_item['name']
+                    if "阿斯加特" in item_name and "弗雷" in item_name and "32G" in item_name and "3200" in item_name and ("16x2" in item_name or "16*2" in item_name) and "黑甲" in item_name:
+                        final_price = float(ram_item['price'])
+                        special_handled = True
+                        found = True
+                        print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
+                        break
+                if not found:
+                    print(f"  ⚠ 未找到阿斯加特 弗雷 32G 16*2 3200 黑甲，跳过更新")
+                    special_handled = True
+                continue
+
             # 特殊处理：金百达_银爵 16G 3200(8*2)套装 -> 金百达 银爵 16G 8x2 3200 D4 C16
             if "金百达_银爵 16G 3200(8*2)套装" in ram_name:
                 print(f"  🔍 查找: 金百达 银爵 16G 8x2 3200 D4 C16")
@@ -1244,6 +1278,32 @@ def update_ram_accurate():
                             print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵(￥{ref_price_from_html}) × 2 = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 64G 白色 缺少参考价格，跳过更新")
+                    # 特殊处理：阿斯加特 弗雷 16G 8*2 3200 参考 阿斯加特 弗雷 16G 8*2 3200 黑甲 的价格
+                    elif "阿斯加特 弗雷 16G 8*2 3200" in model_name and "黑甲" not in model_name:
+                        print(f"  🔍 匹配到阿斯加特 弗雷 16G 8*2 3200，尝试从爬取数据中查找黑甲版本价格")
+                        found = False
+                        for ram in ram_list:
+                            ram_name = ram["name"]
+                            if "阿斯加特" in ram_name and "弗雷" in ram_name and "16G" in ram_name and "3200" in ram_name and ("8x2" in ram_name or "8*2" in ram_name) and "黑甲" in ram_name:
+                                new_price = ram["price"]
+                                print(f"  ★ 特殊更新：阿斯加特 弗雷 16G 8*2 3200 = {ram_name} -> ￥{new_price}")
+                                found = True
+                                break
+                        if not found:
+                            print(f"  ⚠️ 阿斯加特 弗雷 16G 8*2 3200 黑甲 未找到，跳过更新")
+                    # 特殊处理：阿斯加特 弗雷 32G 16*2 3200 参考 阿斯加特 弗雷 32G 16*2 3200 黑甲 的价格
+                    elif "阿斯加特 弗雷 32G 16*2 3200" in model_name and "黑甲" not in model_name:
+                        print(f"  🔍 匹配到阿斯加特 弗雷 32G 16*2 3200，尝试从爬取数据中查找黑甲版本价格")
+                        found = False
+                        for ram in ram_list:
+                            ram_name = ram["name"]
+                            if "阿斯加特" in ram_name and "弗雷" in ram_name and "32G" in ram_name and "3200" in ram_name and ("16x2" in ram_name or "16*2" in ram_name) and "黑甲" in ram_name:
+                                new_price = ram["price"]
+                                print(f"  ★ 特殊更新：阿斯加特 弗雷 32G 16*2 3200 = {ram_name} -> ￥{new_price}")
+                                found = True
+                                break
+                        if not found:
+                            print(f"  ⚠️ 阿斯加特 弗雷 32G 16*2 3200 黑甲 未找到，跳过更新")
                     # 正常更新逻辑
                     elif model_name in ram_dict:
                         new_price = ram_dict[model_name]
