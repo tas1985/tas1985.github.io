@@ -751,7 +751,7 @@ def update_fixed_gpu_prices():
 # -------------------------- 内存定制价格（四要素匹配） --------------------------
 def extract_ram_four_key(name):
     brand_pattern = r"(金百达|宏碁掠夺者|阿斯加特|芝奇|海盗船|金士顿|威刚|三星|科赋|光威|英睿达|十铨|宇瞻|影驰|海力士|镁光)"
-    series_pattern = r"(银爵|星刃|女武神|皇家戟|复仇者|铂胜|Ballistix|Trident|Vengeance|FURY|XPG|DDR4|DDR5|马甲条|灯条)"
+    series_pattern = r"(银爵|星刃|女武神|皇家戟|复仇者|铂胜|Ballistix|Trident|Vengeance|FURY|XPG|DDR4|DDR5|马甲条|灯条|弗雷|雷神|海拉|海姆达尔)"
     cas_pattern = r"(C\d+)"
     brand = re.search(brand_pattern, name).group() if re.search(brand_pattern, name) else ""
     series = re.search(series_pattern, name).group() if re.search(series_pattern, name) else ""
@@ -1148,12 +1148,16 @@ def fetch_raw_ram_prices_with_details():
                     
                     # 提取四要素
                     brand, series, cas, capacity, freq = extract_ram_four_key(name)
-                    if brand or series or cas or capacity or freq:
-                        ram_list.append({
-                            'name': name,
-                            'key': (brand, series, cas, capacity, freq),
-                            'price': price
-                        })
+                    
+                    # 阿斯加特品牌价格增加
+                    final_price = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                    
+                    # 所有爬取到的数据都加入列表（不管是否能提取四要素）
+                    ram_list.append({
+                        'name': name,
+                        'key': (brand, series, cas, capacity, freq),
+                        'price': final_price
+                    })
         
         print(f"\n📋 网站内存数据 (共{len(all_items)}个):")
         for n, p in all_items[:30]:
