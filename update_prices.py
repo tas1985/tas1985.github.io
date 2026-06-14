@@ -26,9 +26,9 @@ GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
 GPU_END_MARK = "<!-- 显卡自动更新区域 结束 -->"
 MB_TARGET_LINE = '{n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},'
 MB_EXCLUDE = "铭瑄"
-RAM_EXIST_START = '{n:"金百达_银爵 16G 3200(8*2)套装",'
+RAM_EXIST_START = '{n:"金百达 银爵 16G 8x2 3200'
 RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
-RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（到手30天质保）",p:250},'
+RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（拆机内存到手30天质保）",p:249},'
 RAM_EXCLUDE_LIST = ["金百达", "金士顿", "科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 50
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
@@ -877,7 +877,7 @@ def update_exist_ram_prices():
                 # 强制从HTML文件中查找金百达_银爵的价格作为参考
                 ref_price = 0
                 for j in range(start, end + 1):
-                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
+                    if "金百达 银爵 32G 16x2 3600 D4 C18" in lines[j]:
                         price_match = re.search(r'p:(\d+)', lines[j])
                         if price_match:
                             ref_price = float(price_match.group(1))
@@ -901,7 +901,7 @@ def update_exist_ram_prices():
                 # 强制从HTML文件中查找金百达_银爵的价格作为参考
                 ref_price = 0
                 for j in range(start, end + 1):
-                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in lines[j]:
+                    if "金百达 银爵 32G 16x2 3600 D4 C18" in lines[j]:
                         price_match = re.search(r'p:(\d+)', lines[j])
                         if price_match:
                             ref_price = float(price_match.group(1))
@@ -918,37 +918,57 @@ def update_exist_ram_prices():
                     special_handled = True
                 continue
 
-            # 特殊处理：阿斯加特 弗雷 16G 8*2 3200 参考 阿斯加特 弗雷 16G 8*2 3200 黑甲 的价格
-            if "阿斯加特 弗雷 16G 8*2 3200" in ram_name and "黑甲" not in ram_name:
-                print(f"  🔍 查找: 阿斯加特 弗雷 16G 8*2 3200 = 阿斯加特 弗雷 16G 8*2 3200 黑甲")
+            # 特殊处理：阿斯加特 弗雷 16G 8*2 3200（包含有黑甲和无黑甲版本）参考爬取数据
+            if "阿斯加特 弗雷 16G 8*2 3200" in ram_name:
                 found = False
+                # 优先查找无黑甲的弗雷 16G
                 for ram_item in ram_list:
                     item_name = ram_item['name']
-                    if "阿斯加特" in item_name and "弗雷" in item_name and "16G" in item_name and "3200" in item_name and ("8x2" in item_name or "8*2" in item_name) and "黑甲" in item_name:
+                    if "阿斯加特" in item_name and "弗雷" in item_name and "16G" in item_name and "3200" in item_name and ("8x2" in item_name or "8*2" in item_name) and "黑甲" not in item_name:
                         final_price = float(ram_item['price'])
                         special_handled = True
                         found = True
                         print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
                         break
+                # 如果没找到无黑甲版本，尝试有黑甲版本
                 if not found:
-                    print(f"  ⚠ 未找到阿斯加特 弗雷 16G 8*2 3200 黑甲，跳过更新")
+                    for ram_item in ram_list:
+                        item_name = ram_item['name']
+                        if "阿斯加特" in item_name and "弗雷" in item_name and "16G" in item_name and "3200" in item_name and ("8x2" in item_name or "8*2" in item_name) and "黑甲" in item_name:
+                            final_price = float(ram_item['price'])
+                            special_handled = True
+                            found = True
+                            print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
+                            break
+                if not found:
+                    print(f"  ⚠ 未找到阿斯加特 弗雷 16G 8*2 3200 相关型号，跳过更新")
                     special_handled = True
                 continue
 
-            # 特殊处理：阿斯加特 弗雷 32G 16*2 3200 参考 阿斯加特 弗雷 32G 16*2 3200 黑甲 的价格
-            if "阿斯加特 弗雷 32G 16*2 3200" in ram_name and "黑甲" not in ram_name:
-                print(f"  🔍 查找: 阿斯加特 弗雷 32G 16*2 3200 = 阿斯加特 弗雷 32G 16*2 3200 黑甲")
+            # 特殊处理：阿斯加特 弗雷 32G 16*2 3200（包含有黑甲和无黑甲版本）参考爬取数据
+            if "阿斯加特 弗雷 32G 16*2 3200" in ram_name:
                 found = False
+                # 优先查找无黑甲的弗雷 32G
                 for ram_item in ram_list:
                     item_name = ram_item['name']
-                    if "阿斯加特" in item_name and "弗雷" in item_name and "32G" in item_name and "3200" in item_name and ("16x2" in item_name or "16*2" in item_name) and "黑甲" in item_name:
+                    if "阿斯加特" in item_name and "弗雷" in item_name and "32G" in item_name and "3200" in item_name and ("16x2" in item_name or "16*2" in item_name) and "黑甲" not in item_name:
                         final_price = float(ram_item['price'])
                         special_handled = True
                         found = True
                         print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
                         break
+                # 如果没找到无黑甲版本，尝试有黑甲版本
                 if not found:
-                    print(f"  ⚠ 未找到阿斯加特 弗雷 32G 16*2 3200 黑甲，跳过更新")
+                    for ram_item in ram_list:
+                        item_name = ram_item['name']
+                        if "阿斯加特" in item_name and "弗雷" in item_name and "32G" in item_name and "3200" in item_name and ("16x2" in item_name or "16*2" in item_name) and "黑甲" in item_name:
+                            final_price = float(ram_item['price'])
+                            special_handled = True
+                            found = True
+                            print(f"  ★ 匹配成功: {ram_name} -> {item_name} -> 价格 {int(final_price)}")
+                            break
+                if not found:
+                    print(f"  ⚠ 未找到阿斯加特 弗雷 32G 16*2 3200 相关型号，跳过更新")
                     special_handled = True
                 continue
 
@@ -970,7 +990,7 @@ def update_exist_ram_prices():
                 continue
 
             # 特殊处理：金百达_银爵 32G 3600(16*2)套装 海力士c18 -> 金百达 银爵 32G 16x2 3600 D4 C18
-            if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in ram_name:
+            if "金百达 银爵 32G 16x2 3600 D4 C18" in ram_name:
                 print(f"  🔍 查找: 金百达 银爵 32G 16x2 3600 D4 C18")
                 found = False
                 for ram_item in ram_list:
@@ -1074,7 +1094,7 @@ def update_exist_ram_prices():
                         final_price = base_price + 150
                     elif "金百达_银爵 32G 3200(16*2)套装" in ram_name:
                         jbd_32g_3200_final = base_price
-                    elif "金百达_银爵 32G 3600(16*2)套装 海力士c18" in ram_name:
+                    elif "金百达 银爵 32G 16x2 3600 D4 C18" in ram_name:
                         jbd_32g_3600_c18_final = base_price  # 保存金百达_银爵 32G 3600海力士c18的价格
                     elif "宏碁掠夺者" in ram_name:
                         final_price = base_price + 300
@@ -1222,7 +1242,7 @@ def update_ram_accurate():
                 match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
                 if match:
                     model_name = match.group(1)
-                    if "金百达_银爵 32G 3600(16*2)套装 海力士 c18" in model_name:
+                    if "金百达 银爵 32G 16x2 3600 D4 C18" in model_name:
                         ref_price = int(match.group(2))
                         print(f"  🔍 找到参考型号：{model_name[:40]}... 价格￥{ref_price}")
                         break
@@ -1284,7 +1304,7 @@ def update_ram_accurate():
                                 temp_match = re.search(r'{n:"([^"]+)",p:(\d+)}', temp_line)
                                 if temp_match:
                                     temp_name = temp_match.group(1)
-                                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in temp_name:
+                                    if "金百达 银爵 32G 16x2 3600 D4 C18" in temp_name:
                                         ref_price_from_html = int(temp_match.group(2))
                                         print(f"     从HTML获取参考价格: 金百达_银爵 32G 3600(16*2)套装 海力士c18 = ￥{ref_price_from_html}")
                                         break
@@ -1307,7 +1327,7 @@ def update_ram_accurate():
                                 temp_match = re.search(r'{n:"([^"]+)",p:(\d+)}', temp_line)
                                 if temp_match:
                                     temp_name = temp_match.group(1)
-                                    if "金百达_银爵 32G 3600(16*2)套装 海力士c18" in temp_name:
+                                    if "金百达 银爵 32G 16x2 3600 D4 C18" in temp_name:
                                         ref_price_from_html = int(temp_match.group(2))
                                         print(f"     从HTML获取参考价格: 金百达_银爵 32G 3600(16*2)套装 海力士c18 = ￥{ref_price_from_html}")
                                         break
