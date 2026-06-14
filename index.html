@@ -2040,6 +2040,8 @@
             {n:"品牌GTX1060（到手30天质保）",p:499}
         ],
         ssd: [
+            {n:"宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",p:640},
+            {n:"宏碁 GM7 1T PCIE 4.0 读7200写6300",p:1070},
             {n:"佰维 NV7400 512G TLC颗粒 读速7050MB/s",p:690},
             {n:"佰维 NV3500 512G TLC颗粒",p:549},
             {n:"佰维 NV3500 1T TLC颗粒",p:799},
@@ -2081,13 +2083,11 @@
             {n:"梵想 S790 1T NVME 读7400 写6300 TLC 5年",p:899},
             {n:"梵想 S500PRO 2T PCIE3.0 3500/3250 TLC",p:1499},
             {n:"宏碁 N5000S 1T PCIE 4.0 读5000写4400",p:860},
-            {n:"宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",p:550},
             {n:"宏碁 N3500 1T NVME PCIE3.0 读3500 TLC",p:799},
             {n:"宏碁 GM9000 2T PCIE 5.0 读14000 2G缓存",p:1999},
             {n:"宏碁 GM9000 1T PCIE 5.0 读14000 1G缓存",p:1350},
             {n:"宏碁 GM9 2T PCIE 5.0 读14500写10000",p:1899},
             {n:"宏碁 GM9 1T PCIE 5.0 读14500写10000",p:1199},
-            {n:"宏碁 GM7 1T PCIE 4.0 读7200写6300",p:980},
             {n:"佰维 NV7400 2T NVME 读7450 TLC",p:1999},
             {n:"佰维 NV7200 1T NVME 读7200 QLC",p:999},
             {n:"佰维 NV3500 512G NVME",p:550},
@@ -5437,7 +5437,18 @@
             
             if(targetIndex !== -1){
                 // 更新价格
-                data[type][targetIndex].p = parseFloat(price);
+                let newPrice = parseFloat(price);
+                
+                // 特定型号价格额外加90元
+                const specialSsdModels = [
+                    "宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",
+                    "宏碁 GM7 1T PCIE 4.0 读7200写6300"
+                ];
+                if (type === "ssd" && specialSsdModels.includes(name.trim())) {
+                    newPrice += 90;
+                }
+                
+                data[type][targetIndex].p = newPrice;
                 updateCount++;
             } else {
                 notFoundList.push(`${typeName}: ${name} (型号未找到)`);
