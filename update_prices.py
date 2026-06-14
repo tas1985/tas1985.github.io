@@ -1197,6 +1197,213 @@ def update_mb_accurate():
     except Exception as e:
         print(f"❌ 主板更新失败：{e}")
 
+def update_ram_new():
+    """内存更新逻辑（简洁版）：
+    1. 爬取源网站获取最新的型号和价格
+    2. 比对index里的内存型号和价格（支持模糊匹配）
+    3. 价格变化直接更新
+    4. 新型号追加到内存区域末尾
+    """
+    print("\n" + "="*50)
+    print("🔄 开始内存价格更新")
+    print("="*50)
+    
+    try:
+        # ========== 第一步：爬取源网站数据 ==========
+        print("\n📥 第一步：爬取源网站数据...")
+        scraped_data = fetch_all_ram_from_source()
+        if not scraped_data:
+            print("❌ 未能获取到源网站数据")
+            return
+        print(f"   爬取到 {len(scraped_data)} 个内存型号")
+        
+        # 打印部分爬取数据用于调试
+        print("\n   📋 部分爬取数据:")
+        for i, (name, price) in enumerate(list(scraped_data.items())[:10]):
+            print(f"      {name[:45]}... -> ￥{price}")
+        
+        # ========== 第二步：读取HTML中的内存数据 ==========
+        print("\n📖 第二步：读取HTML内存数据...")
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+            lines = content.split('\n')
+        
+        # 找到内存区域开始和结束位置
+        ram_start_idx = -1
+        ram_end_idx = -1
+        for i, line in enumerate(lines):
+            if 'ram: [' in line:
+                ram_start_idx = i
+            elif ram_start_idx != -1 and ram_end_idx == -1 and line.strip() == '],':
+                # 确认是内存数组的结束（检查后面是否是board）
+                if i + 1 < len(lines) and 'board: [' in lines[i + 1]:
+                    ram_end_idx = i
+                    break
+        
+        if ram_start_idx == -1 or ram_end_idx == -1:
+            print("❌ 未找到内存区域")
+            return
+        
+        print(f"   内存区域：第{ram_start_idx + 1}行 - 第{ram_end_idx + 1}行")
+        
+        # 解析HTML中的内存数据
+        html_rams = {}  # {型号名: (价格, 行索引)}
+        for i in range(ram_start_idx + 1, ram_end_idx):
+            line = lines[i]
+            match = re.search(r'{n:"([^"]+)",p:(\d+(?:\.\d+)?)}', line)
+            if match:
+                name = match.group(1)
+                price = int(float(match.group(2)))
+                html_rams[name] = (price, i)
+        
+        print(f"   HTML中有 {len(html_rams)} 个内存型号")
+        
+        # ========== 第三步：比对并更新 ==========
+        print("\n📝 第三步：比对并更新...")
+        
+        update_count = 0
+        new_add_count = 0
+        no_change_count = 0
+        
+        # 创建模糊匹配映射（用于处理名称略有差异的情况）
+        def normalize_name(name):
+            """标准化型号名，便于模糊匹配"""
+            # 去掉空格、下划线、星号等差异
+            n = name.replace(' ', '').replace('_', '').replace('*', 'x').replace('（', '(').replace('）', ')')
+            return n
+        
+        # 建立标准化映射
+        html_normalized = {normalize_name(k): (k, v) for k, v in html_rams.items()}
+        scraped_normalized = {normalize_name(k): (k, v) for k, v in scraped_data.items()}
+        
+        # 收集需要更新的数据
+        updates = []  # [(行索引, 新的价格)]
+        new_items = []  # [型号名] - 需要追加的新型号
+        matched_html = set()  # 已匹配的HTML型号
+        matched_scraped = set()  # 已匹配的爬取型号
+        
+        # 首先进行精确匹配
+        for scraped_name, scraped_price in scraped_data.items():
+            if scraped_name in html_rams:
+                old_price, line_idx = html_rams[scraped_name]
+                if scraped_price != old_price:
+                    updates.append((line_idx, scraped_price, scraped_name, old_price))
+                else:
+                    no_change_count += 1
+                matched_html.add(scraped_name)
+                matched_scraped.add(scraped_name)
+        
+        # 进行模糊匹配（处理名称略有差异的情况，如"黑甲"后缀）
+        for scraped_norm, (scraped_name, scraped_price) in scraped_normalized.items():
+            if scraped_name in matched_scraped:
+                continue
+            
+            for html_norm, (html_name, (html_price, line_idx)) in html_normalized.items():
+                if html_name in matched_html:
+                    continue
+                
+                # 检查是否是同一个型号（忽略"黑甲"等后缀差异）
+                # 策略：去掉"黑甲"、"白甲"等后缀后比较核心部分
+                def remove_suffix(name):
+                    for suffix in ['黑甲', '白甲', '极夜黑', '极地白']:
+                        name = name.replace(suffix, '')
+                    return name
+                
+                core_scraped = remove_suffix(scraped_norm)
+                core_html = remove_suffix(html_norm)
+                
+                if core_scraped == core_html:
+                    # 找到匹配！检查价格是否变化
+                    if scraped_price != html_price:
+                        updates.append((line_idx, scraped_price, scraped_name, html_price))
+                        print(f"   🔗 模糊匹配: {scraped_name[:35]}... ≈ {html_name[:35]}...")
+                    else:
+                        no_change_count += 1
+                    matched_html.add(html_name)
+                    matched_scraped.add(scraped_name)
+                    break
+        
+        # 执行更新
+        for line_idx, new_price, name, old_price in updates:
+            lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
+            print(f"   ✓ 更新: {name[:35]}... ￥{old_price} -> ￥{new_price}")
+            update_count += 1
+        
+        # 追加新型号（只有确实没匹配上的才追加）
+        if new_items:
+            print(f"\n   📌 追加 {len(new_items)} 个新型号:")
+            new_lines = []
+            for name, price in new_items:
+                new_line = f'            {{n:"{name}",p:{price}}},\n'
+                new_lines.append(new_line)
+                print(f"   + 新增: {name[:40]}... ￥{price}")
+                new_add_count += 1
+            
+            # 在内存区域末尾追加
+            lines[ram_end_idx] = lines[ram_end_idx] + '\n' + ''.join(new_lines)
+        
+        # ========== 第四步：保存文件 ==========
+        print("\n💾 第四步：保存文件...")
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.write('\n'.join(lines))
+        
+        # ========== 输出统计 ==========
+        print("\n" + "="*50)
+        print(f"📊 更新统计:")
+        print(f"   - 价格更新: {update_count} 个型号")
+        print(f"   - 新型号追加: {new_add_count} 个型号")
+        print(f"   - 价格不变: {no_change_count} 个型号")
+        print("="*50)
+        print("✅ 内存更新完成!")
+        
+    except Exception as e:
+        print(f"❌ 内存更新失败: {e}")
+        import traceback
+        traceback.print_exc()
+
+def fetch_all_ram_from_source():
+    """从源网站爬取所有内存数据"""
+    try:
+        res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
+        soup = BeautifulSoup(res.text, "html.parser")
+        
+        ram_dict = {}
+        
+        # 查找所有产品名称标签
+        product_names = soup.find_all('span', class_='product-name')
+        
+        for name_span in product_names:
+            # 获取产品名称
+            name = name_span.get('data-fullname', '').strip()
+            if not name:
+                name = name_span.get_text(strip=True)
+            
+            # 排除列表中的品牌
+            if any(w in name for w in RAM_EXCLUDE_LIST):
+                continue
+            
+            # 查找价格
+            price_span = name_span.find_next_sibling('span', class_='product-price')
+            if price_span:
+                price_text = price_span.get_text(strip=True)
+                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
+                if price_match:
+                    price = int(float(price_match.group(1)))
+                    
+                    # 阿斯加特品牌价格增加
+                    if "阿斯加特" in name:
+                        price += RAM_ASC_TECH_ADD
+                    
+                    ram_dict[name] = price
+        
+        return ram_dict
+    except Exception as e:
+        print(f"❌ 内存爬取失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {}
+
 def update_ram_accurate():
     """内存更新逻辑：保留现有型号，只更新价格，不删除，新型号追加"""
     try:
@@ -1654,11 +1861,11 @@ if __name__ == "__main__":
     update_gpu_accurate()
     # 旧的固定显卡更新逻辑已不再需要，可以注释掉
     # update_fixed_gpu_prices()
-    update_exist_ram_prices()
+    # 内存更新（使用新的简洁逻辑）
+    update_ram_new()
     update_ssd_prices()
     update_mb_accurate()
-    update_ram_accurate()
-    # 新增执行机箱更新
+    # 机箱更新
     update_case_accurate()
     # 新增执行电源更新
     update_power_accurate()
