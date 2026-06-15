@@ -2041,7 +2041,7 @@
         ],
         ssd: [
             {n:"宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",p:640},
-            {n:"宏碁 GM7 1T PCIE 4.0 读7200写6300",p:1070},
+            {n:"宏碁 GM7 1T PCIE 4.0 读7200写6300",p:1030},
             {n:"佰维 NV7400 512G TLC颗粒 读速7050MB/s",p:690},
             {n:"佰维 NV3500 512G TLC颗粒",p:549},
             {n:"佰维 NV3500 1T TLC颗粒",p:799},
@@ -5445,7 +5445,7 @@
                     "宏碁 GM7 1T PCIE 4.0 读7200写6300"
                 ];
                 if (type === "ssd" && specialSsdModels.includes(name.trim())) {
-                    newPrice += 90;
+                    newPrice += 50;
                 }
                 
                 data[type][targetIndex].p = newPrice;
