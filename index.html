@@ -262,9 +262,13 @@
             border: 1px solid #888; /* 配件输入框灰色边框 */
             border-radius: 4px;
             outline:none;
-            background: #e0e0e0; /* 输入框黑底 */
+            background: #e8e8e8; /* 输入框深一点的浅灰底 */
             color: #000; /* 输入框绿色文字 */
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: normal;
+        }
+        input.combo.selected {
+            font-size: 16px !important;
         }
         input.price{
             width:100%;
@@ -296,6 +300,7 @@
             font-size:18px;
             cursor:pointer;
             display:none;
+            z-index: 20;
         }
         .item-input:hover .clear-btn{
             display:block;
@@ -453,20 +458,7 @@
             box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #9900ff;
             min-height: 148px; /* 增加最小高度以容纳机箱图片 */
         }
-        .total::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 200%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0,255,0,0.3), transparent);
-            animation: greenGlow 3s linear infinite;
-        }
-        @keyframes greenGlow {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
+        
         .total-line{
             display:none;
             color: #00ff00;
@@ -488,14 +480,14 @@
         .ludashi-score{
             font-size: 18px;
             font-weight:bold;
-            color: #ff9900; /* 橙色文字，突出显示 */
+            color: #9900ff; /* 紫色文字 */
             margin: 8px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 6px rgba(255,153,0,0.8);
+            text-shadow: 0 0 6px rgba(153,0,255,0.8);
         }
         /* 功耗显示样式 */
         .power-consumption{
@@ -726,7 +718,7 @@
             border-radius: 3px;
             color: #666666;
             font-weight: normal;
-            font-size: 11px;
+            font-size: 6px;
             text-align: right;
             white-space: nowrap;
             cursor: pointer;
@@ -734,7 +726,7 @@
             z-index: 10;
             top: 50%;
             transform: translateY(-50%);
-            right: 30px;
+            right: 10px;
         }
         .wifi-warning-container.show {
             display: block;
@@ -841,7 +833,7 @@
             width: 120px;
             height: 120px;
             background: #000;
-            border: 2px solid #00ff00;
+            border: 2px solid #9900ff;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -853,7 +845,7 @@
             width: 120px;
             height: 120px;
             background: #000;
-            border: 2px solid #ff9900;
+            border: 2px solid #9900ff;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -935,7 +927,7 @@
             <div class="dropdown" id="board-drop"></div>
             <div class="wifi-warning-container" id="wifiWarning">
                 <span class="wifi-icon">⚠️</span>
-                <span class="wifi-text">需购买外置无线网卡</span>
+                <span class="wifi-text">需购买USB无线网卡</span>
             </div>
         </div>
         <div class="item-price">
@@ -4425,6 +4417,7 @@
                 e.preventDefault();
                 document.getElementById(key).value = i.n;
                 document.getElementById(key+"-p").value = i.p;
+                document.getElementById(key).classList.add('selected');
                 box.style.display = "none";
                 calc();
                 saveNow();
@@ -5550,6 +5543,7 @@
     function clearItem(key) {
         document.getElementById(key).value = "";
         document.getElementById(key + "-p").value = "";
+        document.getElementById(key).classList.remove('selected');
         calc(); // 重新计算总价
         saveNow(); // 保存当前状态
         // 隐藏下拉框（如果显示的话）
