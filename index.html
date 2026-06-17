@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="description" content="重庆塔斯电脑DIY配置报价单">
-    <meta name="theme-color" content="#9900ff">
+    <meta name="theme-color" content="#7C3AED">
     <!-- 性能优化相关标签 -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="mobile-web-app-capable" content="yes">
@@ -80,7 +80,7 @@
             border-radius: 8px;
             padding: 15px;
             box-shadow: 0 0 30px rgba(128,0,255,0.5);
-            border: 2px solid #9900ff; /* 外层紫色边框 */
+            border: 2px solid #7C3AED; /* 外层紫色边框 */
         }
         .title{
             text-align:center;
@@ -91,7 +91,7 @@
             border-radius: 6px;
             background: #000; /* 标题黑底 */
             color: #00ff00; /* 标题绿色文字 */
-            border: 2px solid #9900ff; /* 标题紫色边框 */
+            border: 2px solid #7C3AED; /* 标题紫色边框 */
             box-shadow: 0 0 10px rgba(153,0,255,0.8), inset 0 0 8px #00ff00;
         }
         .user{
@@ -109,7 +109,7 @@
             white-space:nowrap;
             font-weight:bold;
             font-size: 18px; /* 与其他栏目标题大小一致 */
-            color: #9900ff; /* 客户名称标签紫色，与边框颜色统一 */
+            color: #7C3AED; /* 客户名称标签紫色，与边框颜色统一 */
             width: 80px; /* 与其他栏目标题宽度一致 */
             text-align: center; /* 居中对齐 */
         }
@@ -120,7 +120,7 @@
         .user input{
             width: 100%;
             padding: 8px 25px 8px 8px; /* 增加左侧内边距，右侧为X按钮预留空间 */
-            border: 1px solid #9900ff; /* 输入框紫色边框 */
+            border: 1px solid #7C3AED; /* 输入框紫色边框 */
             border-radius: 4px;
             background: #000; /* 输入框黑底 */
             color: #00ff00; /* 输入框绿色文字 */
@@ -153,7 +153,7 @@
             font-size: 14px;
             color: #00ff00; /* 绿色文字 */
             white-space:nowrap;
-            border: 1px solid #9900ff; /* 紫色边框 */
+            border: 1px solid #7C3AED; /* 紫色边框 */
             box-shadow: inset 0 0 5px #00ff00;
         }
 
@@ -164,7 +164,7 @@
             top:100%;
             width:calc(100% - 70px);
             background: #000;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 4px;
             max-height:180px;
             overflow-y:auto;
@@ -177,7 +177,7 @@
             color: #00ff00;
         }
         .user-dropdown div:hover{
-            background: #9900ff;
+            background: #7C3AED;
             color: #000;
         }
 
@@ -194,13 +194,18 @@
         .item-label{
             width:80px;
             font-weight:bold;
-            color: #9900ff; /* 硬件标签紫色，与边框颜色统一 */
+            color: #7C3AED; /* 紫色文字 */
             font-size: 18px;
-            text-align: center;
+            text-align: right;
             padding-right: 5px;
             white-space: nowrap; /* 禁止换行 */
             overflow: hidden; /* 隐藏溢出 */
             text-overflow: ellipsis; /* 溢出显示省略号 */
+        }
+        .icon-gray {
+            filter: grayscale(100%) brightness(60%);
+            display: inline-block;
+            margin-right: 2px;
         }
         /* 移动端适配 */
         @media screen and (max-width: 480px) {
@@ -312,7 +317,7 @@
             top:100%;
             width:100%;
             background: #000;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 4px;
             max-height:180px;
             overflow-y:auto;
@@ -328,14 +333,14 @@
             color: #00ff00;
         }
         .dropdown div:hover{
-            background: #9900ff;
+            background: #7C3AED;
             color: #000;
         }
         /* 下拉列表价格样式 - 顶到右端对齐 */
         .dropdown-price {
             margin-left: auto; /* 推到右边 */
             font-weight: bold;
-            color: #9900ff; /* 紫色价格文字 */
+            color: #7C3AED; /* 紫色价格文字 */
             min-width: 60px; /* 设置最小宽度确保对齐 */
             text-align: right; /* 文字右对齐 */
             padding-left: 8px; /* 与左侧内容保持间距 */
@@ -363,7 +368,7 @@
             font-weight:bold;
             font-size: 14px;
             cursor: pointer;
-            border: 2px solid #9900ff; /* 按钮紫色边框 */
+            border: 2px solid #7C3AED; /* 按钮紫色边框 */
             background: #000; /* 按钮黑底 */
             min-width: 80px;
             box-shadow: 0 0 6px rgba(153,0,255,0.6);
@@ -381,7 +386,7 @@
             justify-content: center;
             gap: 6px;
             padding: 10px 6px;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 6px;
             background: #000;
             color: #ff9900;
@@ -452,10 +457,10 @@
             border-radius: 8px;
             margin-top: 12px;
             text-align:right;
-            border: 3px solid #9900ff; /* 外层紫色边框 */
+            border: 3px solid #7C3AED; /* 外层紫色边框 */
             position: relative;
             overflow: hidden; /* 限制流光效果在黑色框内 */
-            box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #9900ff;
+            box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #7C3AED;
             min-height: 148px; /* 增加最小高度以容纳机箱图片 */
         }
         
@@ -480,7 +485,7 @@
         .ludashi-score{
             font-size: 18px;
             font-weight:bold;
-            color: #9900ff; /* 紫色文字 */
+            color: #7C3AED; /* 紫色文字 */
             margin: 8px 0 0 0;
             padding:0;
             border:none;
@@ -493,14 +498,14 @@
         .power-consumption{
             font-size: 18px;
             font-weight:bold;
-            color: #9932CC;
+            color: #7C3AED;
             margin: 8px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 6px rgba(153,50,204,0.8);
+            text-shadow: 0 0 6px rgba(124,58,237,0.8);
         }
 
         .modal{
@@ -522,7 +527,7 @@
             width:100%;
             max-width:340px;
             padding: 18px;
-            border: 3px solid #9900ff;
+            border: 3px solid #7C3AED;
             box-shadow: 0 0 20px rgba(0,255,0,0.6);
         }
         .modal-list{
@@ -532,7 +537,7 @@
         }
         .modal-item{
             padding:8px;
-            border:1px solid #9900ff;
+            border:1px solid #7C3AED;
             border-radius:6px;
             margin-bottom:6px;
             color: #000;
@@ -546,7 +551,7 @@
             color:#00ff00;
             border:none;
             border-radius:4px;
-            border: 1px solid #9900ff;
+            border: 1px solid #7C3AED;
         }
         .update-area{
             margin:12px 0;
@@ -555,7 +560,7 @@
             width:100%;
             height:120px;
             padding:8px;
-            border:2px solid #9900ff;
+            border:2px solid #7C3AED;
             border-radius:6px;
             margin-bottom:8px;
             resize:none;
@@ -570,7 +575,7 @@
         .add-area select, .add-area input{
             width:100%;
             padding:8px;
-            border:2px solid #9900ff;
+            border:2px solid #7C3AED;
             border-radius:6px;
             margin-bottom:8px;
             background: #000;
@@ -584,7 +589,7 @@
             background: #000;
             color:#00ff00;
             margin-top:6px;
-            border: 1px solid #9900ff;
+            border: 1px solid #7C3AED;
         }
         
         /* 右键菜单样式 */
@@ -592,7 +597,7 @@
             position: absolute;
             width: 140px;
             background: #000;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 6px;
             box-shadow: 0 2px 15px rgba(0,255,0,0.5);
             z-index: 1000;
@@ -605,7 +610,7 @@
             color: #00ff00;
         }
         .context-menu div:hover {
-            background: #9900ff;
+            background: #7C3AED;
             color: #000;
         }
 
@@ -621,7 +626,7 @@
         .remark-input {
             flex: none;
             padding: 6px 10px;
-            border: 1px solid #9900ff;
+            border: 1px solid #7C3AED;
             border-radius: 4px;
             background: #e0e0e0;
             font-size: 15px;
@@ -635,7 +640,7 @@
             overflow: auto;
             outline: none;
             resize: vertical;
-            color: #9900ff;
+            color: #7C3AED;
             box-sizing: border-box;
         }
 
@@ -658,7 +663,7 @@
             gap: 8px 15px;
             padding: 8px 10px;
             background: #1a1a1a;
-            border: 1px solid #9900ff;
+            border: 1px solid #7C3AED;
             border-radius: 6px;
             margin-top: 6px;
             width: 100%;
@@ -681,7 +686,7 @@
         .service-item .svc-box {
             width: 16px;
             height: 16px;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 3px;
             display: inline-flex;
             align-items: center;
@@ -697,8 +702,8 @@
             display: none;
         }
         .service-item input[type="checkbox"]:checked + .svc-box {
-            background: #9900ff;
-            border-color: #9900ff;
+            background: #7C3AED;
+            border-color: #7C3AED;
         }
         .service-item input[type="checkbox"]:checked + .svc-box::after {
             display: block;
@@ -763,7 +768,7 @@
             box-shadow: 0 0 20px rgba(153,0,255,0.8);
         }
         .password-box h3{
-            color: #9900ff;
+            color: #7C3AED;
             margin-bottom: 12px;
         }
         .password-box p {
@@ -779,7 +784,7 @@
         .password-box input {
             width: 100%;
             padding: 10px;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 6px;
             margin: 8px 0;
             font-size: 16px;
@@ -798,7 +803,7 @@
             font-size: 16px;
             cursor: pointer;
             margin-top: 4px;
-            border: 1px solid #9900ff;
+            border: 1px solid #7C3AED;
         }
         .password-box button:hover {
             background: #330066;
@@ -821,7 +826,7 @@
             width: 120px;
             height: 120px;
             background: #000;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -833,7 +838,7 @@
             width: 120px;
             height: 120px;
             background: #000;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -845,7 +850,7 @@
             width: 120px;
             height: 120px;
             background: #000;
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -855,7 +860,7 @@
 
         .image-separator {
             font-size: 20px;
-            color: #9900ff;
+            color: #7C3AED;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(153,0,255,0.8);
         }
@@ -902,7 +907,7 @@
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
     <div class="item">
-        <div class="item-label">CPU　　</div>
+        <div class="item-label"><span class="icon-gray">⚙️</span> CPU</div>
         <div class="item-input">
             <input class="combo" id="cpu" onclick="match('cpu')" oninput="match('cpu')" onblur="hideDrop('cpu')">
             <div class="clear-btn" onclick="clearItem('cpu')">×</div>
@@ -911,7 +916,7 @@
         <div class="item-price"><input class="price" id="cpu-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">内存　　</div>
+        <div class="item-label"><span class="icon-gray">💿</span> 内存</div>
         <div class="item-input">
             <input class="combo" id="ram" onclick="match('ram')" oninput="match('ram')" onblur="hideDrop('ram')">
             <div class="clear-btn" onclick="clearItem('ram')">×</div>
@@ -920,7 +925,7 @@
         <div class="item-price"><input class="price" id="ram-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">主板　　</div>
+        <div class="item-label"><span class="icon-gray">🔧</span> 主板</div>
         <div class="item-input">
             <input class="combo" id="board" onclick="match('board')" oninput="match('board')" onblur="hideDrop('board')">
             <div class="clear-btn" onclick="clearItem('board')">×</div>
@@ -935,7 +940,7 @@
         </div>
     </div>
     <div class="item">
-        <div class="item-label">散热器　</div>
+        <div class="item-label"><span class="icon-gray">🌀</span> 散热</div>
         <div class="item-input">
             <input class="combo" id="cooler" onclick="match('cooler')" oninput="match('cooler')" onblur="hideDrop('cooler')">
             <div class="clear-btn" onclick="clearItem('cooler')">×</div>
@@ -944,7 +949,7 @@
         <div class="item-price"><input class="price" id="cooler-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">显卡　　</div>
+        <div class="item-label"><span class="icon-gray">🎯</span> 显卡</div>
         <div class="item-input">
             <input class="combo" id="vga" onclick="match('vga')" oninput="match('vga')" onblur="hideDrop('vga')">
             <div class="clear-btn" onclick="clearItem('vga')">×</div>
@@ -953,7 +958,7 @@
         <div class="item-price"><input class="price" id="vga-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">固态硬盘</div>
+        <div class="item-label"><span class="icon-gray">💽</span> 固态</div>
         <div class="item-input">
             <input class="combo" id="ssd" onclick="match('ssd')" oninput="match('ssd')" onblur="hideDrop('ssd')">
             <div class="clear-btn" onclick="clearItem('ssd')">×</div>
@@ -962,7 +967,7 @@
         <div class="item-price"><input class="price" id="ssd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">机械硬盘</div>
+        <div class="item-label"><span class="icon-gray">🖇️</span> 机械</div>
         <div class="item-input">
             <input class="combo" id="hdd" onclick="match('hdd')" oninput="match('hdd')" onblur="hideDrop('hdd')">
             <div class="clear-btn" onclick="clearItem('hdd')">×</div>
@@ -971,7 +976,7 @@
         <div class="item-price"><input class="price" id="hdd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">机箱　　</div>
+        <div class="item-label"><span class="icon-gray">🗄️</span> 机箱</div>
         <div class="item-input">
             <input class="combo" id="case" onclick="match('case')" oninput="match('case')" onblur="hideDrop('case')">
             <div class="clear-btn" onclick="clearItem('case')">×</div>
@@ -980,7 +985,7 @@
         <div class="item-price"><input class="price" id="case-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label">风扇　　</div>
+        <div class="item-label"><span class="icon-gray">🌀</span> 风扇</div>
         <div class="item-input">
             <input class="combo" id="fan" onclick="match('fan')" oninput="match('fan')" onblur="hideDrop('fan')">
             <div class="clear-btn" onclick="clearItem('fan')">×</div>
@@ -990,7 +995,7 @@
     </div>
     <!-- 电源调整到机箱之后、风扇之后 -->
     <div class="item">
-        <div class="item-label">电源　　</div>
+        <div class="item-label"><span class="icon-gray">🔋</span> 电源</div>
         <div class="item-input">
             <input class="combo" id="power" onclick="match('power')" oninput="match('power')" onblur="hideDrop('power')">
             <div class="clear-btn" onclick="clearItem('power')">×</div>
@@ -1000,7 +1005,7 @@
     </div>
     <!-- 新增其他配件栏目 -->
     <div class="item">
-        <div class="item-label">其他配件</div>
+        <div class="item-label"><span class="icon-gray">🔩</span> 配件</div>
         <div class="item-input">
             <input class="combo" id="other" value="不含显示器键盘鼠标耳机，赠品：鼠标垫" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
             <div class="clear-btn" onclick="clearItem('other')">×</div>
@@ -1010,7 +1015,7 @@
     </div>
     <!-- 新增备注栏目 -->
     <div class="item has-service">
-        <div class="item-label">备注　　</div>
+        <div class="item-label"><span class="icon-gray">📝</span> 备注</div>
         <div class="remark-container">
             <textarea class="remark-input" id="remark1" oninput="saveNow()" rows="1">含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价。</textarea>
             <textarea class="remark-input" id="remark2" oninput="saveNow()" rows="1">全新正品行货视频验货直播装机，主板、内存、固态、显卡等包装盒一起发货。</textarea>
@@ -1091,7 +1096,7 @@
     <div class="modal-box">
         <h4>更新产品报价</h4>
         <div class="update-area">
-            <p style="font-size:13px;color:#9900ff;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
+            <p style="font-size:13px;color:#7C3AED;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
             <p style="font-size:12px;color:#ff0000;margin-bottom:4px">示例：内存,金士顿 8G DDR4 3200,530 或 ram,金士顿 8G DDR4 3200,530</p>
             <textarea id="updateText" placeholder="请按格式输入更新内容"></textarea>
             <button onclick="doUpdate()">执行更新</button>
@@ -1152,7 +1157,7 @@
             case 'success': bgColor = '#00ff00'; textColor = '#000'; break;
             case 'error': bgColor = '#ff0000'; textColor = '#fff'; break;
             case 'warning': bgColor = '#ff9900'; textColor = '#000'; break;
-            default: bgColor = '#9900ff'; textColor = '#fff';
+            default: bgColor = '#7C3AED'; textColor = '#fff';
         }
         
         toast.style.background = bgColor;
@@ -3474,7 +3479,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #9900ff;
+            border: 2px solid #7C3AED;
             border-radius: 12px;
             padding: 20px;
             z-index: 10000;
@@ -3503,7 +3508,7 @@
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 10px;
-            border: 1px solid #9900ff;
+            border: 1px solid #7C3AED;
         `;
         container.appendChild(progressBg);
         
@@ -3511,7 +3516,7 @@
         downloadProgressBar = document.createElement('div');
         downloadProgressBar.style.cssText = `
             height: 100%;
-            background: linear-gradient(90deg, #9900ff, #00ff00);
+            background: linear-gradient(90deg, #7C3AED, #00ff00);
             border-radius: 8px;
             transition: width 0.3s ease;
             width: 0%;
@@ -4561,6 +4566,32 @@
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
+                    // 将图标转换为灰色（修复截图时filter不生效的问题）
+                    const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
+                    const grayIconMap = {
+                        '⚙️': '⚙',
+                        '💿': '◉',
+                        '🔧': '⊛',
+                        '🌀': '◎',
+                        '🎯': '⊕',
+                        '💽': '⊚',
+                        '🖇️': '⊜',
+                        '🗄️': '▣',
+                        '🔋': '⊗',
+                        '🔩': '⊘',
+                        '📝': '✐',
+                        '🗄️': '▣',
+                        '📝': '✐'
+                    };
+                    iconGraySpans.forEach(function(span) {
+                        const icon = span.textContent;
+                        // 使用对应的灰色图标替换
+                        const grayIcon = grayIconMap[icon] || '▣';
+                        span.textContent = grayIcon;
+                        span.style.color = '#888888';
+                        span.style.filter = 'none';
+                    });
+                    
                     // 确保容器宽度正确
                     if (clonedContainer) {
                         clonedContainer.style.width = '100%';
@@ -4625,7 +4656,7 @@
                             display: block !important;
                             margin: 0 auto !important;
                             box-shadow: none !important;
-                            border: 2px solid #9900ff !important;
+                            border: 2px solid #7C3AED !important;
                             overflow: visible !important;
                         }
                         .item {
@@ -4660,7 +4691,7 @@
                         }
                         .total {
                             box-shadow: none !important;
-                            border: 3px solid #9900ff !important;
+                            border: 3px solid #7C3AED !important;
                         }
                         .total::before {
                             display: none !important;
@@ -4682,11 +4713,11 @@
                         }
                         .title {
                             box-shadow: none !important;
-                            border: 2px solid #9900ff !important;
+                            border: 2px solid #7C3AED !important;
                         }
                         .datetime-display {
                             box-shadow: none !important;
-                            border: 1px solid #9900ff !important;
+                            border: 1px solid #7C3AED !important;
                         }
                         input.combo, input.price {
                             width: 100% !important;
@@ -5338,7 +5369,7 @@
         let h="";
         if(list.length===0)h="<div style='padding:10px;text-align:center;color:#000'>暂无保存</div>";
         else list.forEach((i,j)=>{
-            h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#9900ff'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
+            h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#7C3AED'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
         });
         document.getElementById("mlist").innerHTML=h;
         document.getElementById("loadModal").style.display="flex";
