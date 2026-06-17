@@ -201,11 +201,16 @@
             white-space: nowrap; /* 禁止换行 */
             overflow: hidden; /* 隐藏溢出 */
             text-overflow: ellipsis; /* 溢出显示省略号 */
+            line-height: 24px; /* 统一行高，确保垂直对齐 */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
         .icon-gray {
             filter: grayscale(100%) brightness(60%);
             display: inline-block;
-            margin-right: 2px;
+            margin-right: 4px;
+            line-height: 1;
         }
         /* 移动端适配 */
         @media screen and (max-width: 480px) {
@@ -4676,8 +4681,17 @@
                             flex-shrink: 0 !important;
                             font-weight: bold !important;
                             font-size: 18px !important;
-                            text-align: center !important;
+                            text-align: right !important;
                             padding-right: 5px !important;
+                            line-height: 24px !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: flex-end !important;
+                        }
+                        .icon-gray {
+                            display: inline-block !important;
+                            margin-right: 4px !important;
+                            line-height: 1 !important;
                         }
                         .item-input {
                             flex: 1 !important;
