@@ -4696,6 +4696,19 @@
                         clonedRemark.style.height = actualHeight + 'px';
                     }
                     
+                    // 直接为所有输入框设置正确的背景色（彻底修复截图显示错误）
+                    const comboInputs = clonedDoc.querySelectorAll('input.combo');
+                    comboInputs.forEach(function(input) {
+                        input.style.backgroundColor = '#e8e8e8';
+                        input.style.background = '#e8e8e8';
+                    });
+                    
+                    const priceInputs = clonedDoc.querySelectorAll('input.price');
+                    priceInputs.forEach(function(input) {
+                        input.style.backgroundColor = '#e0e0e0';
+                        input.style.background = '#e0e0e0';
+                    });
+                    
                     // 移除所有动画效果和边框，修复布局问题
                     const style = clonedDoc.createElement('style');
                     style.textContent = `
@@ -4820,10 +4833,12 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
+                            background-color: #e8e8e8 !important;
                             background: #e8e8e8 !important;
                             color: #000 !important;
                             border: 1px solid #888 !important;
                             border-radius: 4px !important;
+                            padding: 8px 25px 8px 8px !important;
                         }
                         input.price {
                             width: 100% !important;
@@ -4833,6 +4848,7 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
+                            background-color: #e0e0e0 !important;
                             background: #e0e0e0 !important;
                             color: #000 !important;
                             border: 1px solid #888 !important;
@@ -4907,13 +4923,23 @@
                             display: none !important;
                         }
                         /* 修复配件列表字体大小不一的问题 - 确保所有文字元素字体统一 */
-                        .user input, .item input, .combo, .price {
+                        .user input, .item input, .combo {
                             font-size: 16px !important;
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.6 !important;
                             color: #000 !important;
                             background: #e8e8e8 !important;
+                        }
+                        /* 价格输入框保持不同的背景色 */
+                        input.price {
+                            font-size: 16px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: normal !important;
+                            line-height: 1.6 !important;
+                            color: #000 !important;
+                            background: #e0e0e0 !important;
+                            background-color: #e0e0e0 !important;
                         }
                         /* 客户名称输入框特殊处理 - 保持黑色背景和绿色文字 */
                         #user {
