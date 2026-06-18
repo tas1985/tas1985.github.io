@@ -1375,7 +1375,6 @@
         ],
         ram: [
             {n:"金百达 银爵 16G 8x2 3200 D4 C16",p:650},
-            {n:"光威 天策 16G（8G*2）3200 C18皓月白",p:630},
             {n:"阿斯加特 弗雷 16G 8*2 3200",p:630},
             {n:"金百达 银爵 32G 16x2 3200 D4 C16",p:1099},
             {n:"阿斯加特 弗雷 32G 16*2 3200",p:1049},
@@ -4591,14 +4590,14 @@
                         '📝': '📝'
                     };
                     iconGraySpans.forEach(function(span) {
-                        // 直接设置颜色为灰色，不依赖filter属性（修复移动端截图时图标仍显示彩色的问题）
-                        span.style.color = '#666666';
-                        span.style.fontSize = '20px';
-                        span.style.filter = 'none';
-                        span.style.webkitFilter = 'none';
+                        // 使用CSS filter强制将emoji转换为灰色（兼容移动端浏览器）
+                        span.style.filter = 'grayscale(100%) brightness(0.6)';
+                        span.style.webkitFilter = 'grayscale(100%) brightness(0.6)';
+                        span.style.fontSize = '22px';
                         span.style.padding = '0';
                         span.style.borderRadius = '0';
-                        span.style.opacity = '0.7';
+                        span.style.color = '#888888';
+                        span.style.opacity = '1';
                     });
                     
                     // 确保容器宽度正确
@@ -4697,8 +4696,9 @@
                             margin-right: 4px !important;
                             line-height: 1 !important;
                             font-size: 22px !important;
-                            color: #666666 !important;
-                            filter: grayscale(100%) !important;
+                            color: #888888 !important;
+                            filter: grayscale(100%) brightness(0.6) !important;
+                            -webkit-filter: grayscale(100%) brightness(0.6) !important;
                         }
                         .item-input {
                             flex: 1 !important;
@@ -4817,14 +4817,21 @@
                         }
                         /* 修复配件列表字体大小不一的问题 - 确保所有文字元素字体统一 */
                         .user input, .item input, .combo, .price {
-                            font-size: 14px !important;
+                            font-size: 16px !important;
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
-                            line-height: 1.5 !important;
+                            line-height: 1.6 !important;
                             color: #000 !important;
+                            background: #e8e8e8 !important;
+                        }
+                        /* 客户名称输入框特殊处理 - 保持黑色背景和绿色文字 */
+                        #user {
+                            color: #00ff00 !important;
+                            background: #000 !important;
+                            font-size: 15px !important;
                         }
                         .user label, .item-label {
-                            font-size: 18px !important;
+                            font-size: 20px !important;
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: bold !important;
                             line-height: 1.5 !important;
@@ -4836,8 +4843,34 @@
                         }
                         /* 覆盖selected状态的字体大小，确保所有输入框字体统一 */
                         input.combo.selected {
-                            font-size: 14px !important;
+                            font-size: 16px !important;
                             font-weight: normal !important;
+                        }
+                        /* 确保客户名称区域正确显示 */
+                        .user {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            align-items: center !important;
+                            gap: 8px !important;
+                            margin-bottom: 8px !important;
+                            padding: 4px !important;
+                            background: #d0d0d0 !important;
+                            border: 1px solid #000 !important;
+                            border-radius: 4px !important;
+                            width: 100% !important;
+                        }
+                        .user label {
+                            width: 80px !important;
+                            font-weight: bold !important;
+                            font-size: 18px !important;
+                            color: #7C3AED !important;
+                            text-align: center !important;
+                            white-space: nowrap !important;
+                        }
+                        .user-input-container {
+                            flex: 1 !important;
+                            position: relative !important;
+                            min-width: 0 !important;
                         }
                         /* 禁用所有hover和focus状态效果 */
                         input:focus, input:hover, select:focus, select:hover {
