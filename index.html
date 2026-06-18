@@ -4603,7 +4603,8 @@
                         // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
-                            const canvas = document.createElement('canvas');
+                            // 使用克隆文档创建canvas，避免影响原始文档样式
+                            const canvas = clonedDoc.createElement('canvas');
                             const ctx = canvas.getContext('2d');
                             
                             // 设置canvas大小
@@ -4678,8 +4679,8 @@
                         clonedRemark.style.boxSizing = 'border-box';
                         // 确保备注栏高度能够显示所有内容（不产生空白行）
                         const remarkText = clonedRemark.value || clonedRemark.innerText || '';
-                        // 创建临时元素计算实际高度
-                        const tempDiv = document.createElement('div');
+                        // 创建临时元素计算实际高度（使用克隆文档，避免影响原始文档）
+                        const tempDiv = clonedDoc.createElement('div');
                         tempDiv.style.position = 'absolute';
                         tempDiv.style.visibility = 'hidden';
                         tempDiv.style.whiteSpace = 'pre-wrap';
@@ -4689,9 +4690,9 @@
                         tempDiv.style.fontSize = '12px';
                         tempDiv.style.width = clonedRemark.offsetWidth + 'px';
                         tempDiv.textContent = remarkText;
-                        document.body.appendChild(tempDiv);
+                        clonedDoc.body.appendChild(tempDiv);
                         const actualHeight = Math.max(tempDiv.offsetHeight, 36);
-                        document.body.removeChild(tempDiv);
+                        clonedDoc.body.removeChild(tempDiv);
                         clonedRemark.style.height = actualHeight + 'px';
                     }
                     
@@ -4730,6 +4731,17 @@
                             max-width: 100% !important;
                             height: auto !important;
                             min-height: auto !important;
+                            margin-bottom: 8px !important;
+                            padding: 4px !important;
+                            background: #d0d0d0 !important;
+                            border-radius: 4px !important;
+                            border: 1px solid #000 !important;
+                            overflow: visible !important;
+                        }
+                        .user {
+                            display: flex !important;
+                            align-items: center !important;
+                            gap: 8px !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
                             background: #d0d0d0 !important;
@@ -4800,7 +4812,7 @@
                             box-shadow: none !important;
                             border: 1px solid #7C3AED !important;
                         }
-                        input.combo, input.price {
+                        input.combo {
                             width: 100% !important;
                             max-width: 100% !important;
                             box-sizing: border-box !important;
@@ -4808,6 +4820,25 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
+                            background: #e8e8e8 !important;
+                            color: #000 !important;
+                            border: 1px solid #888 !important;
+                            border-radius: 4px !important;
+                        }
+                        input.price {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            box-sizing: border-box !important;
+                            font-size: 16px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: normal !important;
+                            line-height: 1.5 !important;
+                            background: #e0e0e0 !important;
+                            color: #000 !important;
+                            border: 1px solid #888 !important;
+                            border-radius: 4px !important;
+                            text-align: right !important;
+                            padding: 8px 8px 8px 20px !important;
                         }
                         select {
                             width: 100% !important;
