@@ -4599,29 +4599,49 @@
                     
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
-                    const grayIconMap = {
-                        '⚙️': '⚙️',
-                        '💿': '💿',
-                        '🔧': '🔧',
-                        '🌀': '🌀',
-                        '🎯': '🎯',
-                        '💽': '💽',
-                        '🖇️': '🖇️',
-                        '🗄️': '🗄️',
-                        '🔋': '🔋',
-                        '🔩': '🔩',
-                        '📝': '📝',
-                        '🗄️': '🗄️',
-                        '📝': '📝'
-                    };
                     iconGraySpans.forEach(function(span) {
-                        // 使用更强的CSS filter强制将emoji转换为灰色
-                        // grayscale(100%) 移除颜色，saturate(0%) 饱和度为0，brightness(0.5) 降低亮度
-                        span.style.filter = 'grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2)';
-                        span.style.webkitFilter = 'grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2)';
-                        span.style.MozFilter = 'grayscale(100%) saturate(0%) brightness(0.5)';
-                        span.style.msFilter = 'grayscale(100%) saturate(0%) brightness(0.5)';
-                        span.style.OFilter = 'grayscale(100%) saturate(0%) brightness(0.5)';
+                        // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
+                        const emoji = span.textContent || span.innerText;
+                        if (emoji && emoji.length > 0) {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // 设置canvas大小
+                            canvas.width = 48;
+                            canvas.height = 48;
+                            
+                            // 绘制emoji
+                            ctx.font = '36px serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+                            
+                            // 获取图像数据并转换为灰度
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+                            
+                            for (let i = 0; i < data.length; i += 4) {
+                                // 计算灰度值（使用标准的亮度公式）
+                                const gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+                                data[i] = gray;     // red
+                                data[i + 1] = gray; // green
+                                data[i + 2] = gray; // blue
+                                // alpha保持不变
+                            }
+                            
+                            ctx.putImageData(imageData, 0, 0);
+                            
+                            // 将canvas转换为data URL并替换span内容
+                            const grayEmojiUrl = canvas.toDataURL('image/png');
+                            span.innerHTML = `<img src="${grayEmojiUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                        }
+                        
+                        // 移除所有filter样式，避免干扰canvas生成的灰度图片
+                        span.style.filter = 'none';
+                        span.style.webkitFilter = 'none';
+                        span.style.MozFilter = 'none';
+                        span.style.msFilter = 'none';
+                        span.style.OFilter = 'none';
                         span.style.fontSize = '22px';
                         span.style.padding = '0';
                         span.style.borderRadius = '0';
