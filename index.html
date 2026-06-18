@@ -4566,28 +4566,24 @@
                 container.offsetHeight
             );
             
-            html2canvas(container, {
+            // 临时设置容器为block布局，确保能获取完整高度
+            container.style.display = 'block';
+            container.style.position = 'static';
+            container.style.overflow = 'visible';
+            container.style.height = 'auto';
+            
+            // 等待一小段时间确保页面完全渲染
+            setTimeout(function() {
+                html2canvas(container, {
                 backgroundColor: '#e0e0e0',
                 scale: 2, // 提高清晰度
                 useCORS: true, // 允许跨域图片
                 logging: false, // 关闭日志
                 allowTaint: true, // 允许跨域图片污染canvas
-                foreignObjectRendering: true, // 启用foreignObject渲染，支持emoji正确显示
+                foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
-                width: container.offsetWidth, // 设置截图宽度
-                height: Math.max(container.offsetHeight, fullHeight - container.offsetTop), // 设置截图高度（确保完整）
-                windowHeight: fullHeight, // 使用完整窗口高度
-                scrollX: 0, // 从页面顶部开始截图
-                scrollY: 0, // 从页面顶部开始截图
-                x: 0, // X坐标
-                y: 0, // Y坐标
-                onrendered: function(canvas) {
-                    // 确保canvas高度正确
-                    if (canvas.height < fullHeight) {
-                        canvas.height = fullHeight;
-                    }
-                },
+                // 移除手动设置的宽高和坐标，让html2canvas自动计算
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
                     const clonedContainer = clonedDoc.querySelector('.container');
@@ -4984,6 +4980,7 @@
                 
                 throw error;
             });
+            }, 100); // 100ms延迟确保页面渲染
         } catch (error) {
             console.error('截图失败:', error);
             btn.innerText = originalText;
