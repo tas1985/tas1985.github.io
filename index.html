@@ -207,11 +207,12 @@
             justify-content: flex-end;
         }
         .icon-gray {
-            filter: grayscale(100%) brightness(60%);
+            filter: grayscale(100%) brightness(60%) !important;
             display: inline-block;
             margin-right: 4px;
-            line-height: 1;
+            line-height: 28px;
             font-size: 22px;
+            vertical-align: middle;
         }
         /* 移动端适配 */
         @media screen and (max-width: 480px) {
@@ -231,8 +232,15 @@
             }
             .item-label {
                 width: 75px !important;
-                font-size: 16px !important;
+                font-size: 20px !important;
                 white-space: nowrap !important;
+                line-height: 28px !important;
+            }
+            .item-label .icon-gray {
+                font-size: 22px !important;
+                line-height: 28px !important;
+                vertical-align: middle !important;
+                filter: grayscale(100%) brightness(60%) !important;
             }
             .item-price {
                 width: 80px !important;
