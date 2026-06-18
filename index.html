@@ -2119,7 +2119,6 @@
             {n:"未知玩家 X100手提机箱",p:149},
             {n:"乔思伯 Z20 粉白 手提机箱",p:379},
             {n:"航嘉 GX760M 追梦 ",p:199},
-            {n:"动力火车 臻界G3 360 ATX USB开关顶部",p:166},
             {n:"先马 风致360",p:189},
             {n:"先马 风致240",p:129},
             {n:"瓦尔基里 VK03 全景房黑色 不带屏",p:289},
@@ -2399,7 +2398,6 @@
         '玩嘉 孤勇者 PLUS 白色 ATX主板': 'wanjia_gyz_plus_w',
         '玩嘉 孤勇者 PLUS 黑色 ATX主板': 'wanjia_gyz_plus_b',
         '航嘉 GX760M 追梦 黑色': 'hangjia_GX760M_b',
-        '动力火车 臻界G3 360 ATX USB开关顶部': '动力火车 臻界G3 360 ATX USB开关顶部',
         '先马 风致360': 'xm_fz_360_b',
         '先马 风致240': 'xm_fz_240_b',
         '瓦尔基里 VK03 全景房黑色 不带屏': 'wejl_VK03_W_N',
@@ -4558,17 +4556,36 @@
             screenshotBtn.style.display = 'none';
 
             // 使用html2canvas生成截图
+            // 获取完整的文档高度（修复手机端截不全的问题）
+            const fullHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                container.scrollHeight,
+                container.offsetHeight
+            );
+            
             html2canvas(container, {
                 backgroundColor: '#e0e0e0',
                 scale: 2, // 提高清晰度
                 useCORS: true, // 允许跨域图片
                 logging: false, // 关闭日志
                 allowTaint: true, // 允许跨域图片污染canvas
-                foreignObjectRendering: false, // 使用html2canvas的渲染方式
+                foreignObjectRendering: true, // 启用foreignObject渲染，支持emoji正确显示
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
                 width: container.offsetWidth, // 设置截图宽度
-                height: container.offsetHeight, // 设置截图高度
+                height: Math.max(container.offsetHeight, fullHeight - container.offsetTop), // 设置截图高度（确保完整）
+                windowHeight: fullHeight, // 使用完整窗口高度
+                scrollX: 0, // 从页面顶部开始截图
+                scrollY: 0, // 从页面顶部开始截图
+                x: 0, // X坐标
+                y: 0, // Y坐标
+                onrendered: function(canvas) {
+                    // 确保canvas高度正确
+                    if (canvas.height < fullHeight) {
+                        canvas.height = fullHeight;
+                    }
+                },
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
                     const clonedContainer = clonedDoc.querySelector('.container');
@@ -4592,23 +4609,30 @@
                         '📝': '📝'
                     };
                     iconGraySpans.forEach(function(span) {
-                        // 使用CSS filter强制将emoji转换为灰色（兼容移动端浏览器）
-                        span.style.filter = 'grayscale(100%) brightness(0.6)';
-                        span.style.webkitFilter = 'grayscale(100%) brightness(0.6)';
+                        // 使用更强的CSS filter强制将emoji转换为灰色
+                        // grayscale(100%) 移除颜色，saturate(0%) 饱和度为0，brightness(0.5) 降低亮度
+                        span.style.filter = 'grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2)';
+                        span.style.webkitFilter = 'grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2)';
+                        span.style.MozFilter = 'grayscale(100%) saturate(0%) brightness(0.5)';
+                        span.style.msFilter = 'grayscale(100%) saturate(0%) brightness(0.5)';
+                        span.style.OFilter = 'grayscale(100%) saturate(0%) brightness(0.5)';
                         span.style.fontSize = '22px';
                         span.style.padding = '0';
                         span.style.borderRadius = '0';
-                        span.style.color = '#888888';
                         span.style.opacity = '1';
                     });
                     
-                    // 确保容器宽度正确
+                    // 确保容器宽度和高度正确（修复手机端截不全的问题）
                     if (clonedContainer) {
                         clonedContainer.style.width = '100%';
                         clonedContainer.style.maxWidth = '760px';
                         clonedContainer.style.minWidth = '320px';
                         clonedContainer.style.display = 'block';
                         clonedContainer.style.margin = '0 auto';
+                        clonedContainer.style.height = 'auto';
+                        clonedContainer.style.minHeight = 'auto';
+                        clonedContainer.style.overflow = 'visible';
+                        clonedContainer.style.position = 'static';
                     }
                     
                     // 确保备注栏样式正确
@@ -4657,7 +4681,10 @@
                             width: 100% !important;
                             max-width: 100% !important;
                             min-width: 320px !important;
+                            height: auto !important;
+                            min-height: 100% !important;
                             display: block !important;
+                            overflow: visible !important;
                         }
                         .container {
                             width: 100% !important;
@@ -4675,11 +4702,14 @@
                             align-items: center !important;
                             width: 100% !important;
                             max-width: 100% !important;
+                            height: auto !important;
+                            min-height: auto !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
                             background: #d0d0d0 !important;
                             border-radius: 4px !important;
                             border: 1px solid #000 !important;
+                            overflow: visible !important;
                         }
                         .item-label {
                             width: 80px !important;
@@ -4698,9 +4728,11 @@
                             margin-right: 4px !important;
                             line-height: 1 !important;
                             font-size: 22px !important;
-                            color: #888888 !important;
-                            filter: grayscale(100%) brightness(0.6) !important;
-                            -webkit-filter: grayscale(100%) brightness(0.6) !important;
+                            filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                            -webkit-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                            -moz-filter: grayscale(100%) saturate(0%) brightness(0.5) !important;
+                            -ms-filter: grayscale(100%) saturate(0%) brightness(0.5) !important;
+                            -o-filter: grayscale(100%) saturate(0%) brightness(0.5) !important;
                         }
                         .item-input {
                             flex: 1 !important;
@@ -4885,13 +4917,21 @@
                                 width: 480px !important;
                                 min-width: 480px !important;
                                 max-width: 480px !important;
+                                height: auto !important;
+                                min-height: 100% !important;
+                                overflow: visible !important;
                             }
                             .item-label {
                                 width: 80px !important;
-                                font-size: 18px !important;
+                                font-size: 20px !important;
                             }
                             .item-price {
                                 width: 100px !important;
+                            }
+                            .user, .item {
+                                height: auto !important;
+                                min-height: auto !important;
+                                overflow: visible !important;
                             }
                         }
                     `;
