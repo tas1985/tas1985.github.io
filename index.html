@@ -166,15 +166,20 @@
             background: #000;
             border: 2px solid #7C3AED;
             border-radius: 4px;
-            max-height:240px;
-            overflow-y:auto;
+            max-height:300px;
+            overflow-y:scroll;
+            overflow-x:hidden;
             z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
-            -ms-overflow-style: -ms-autohiding-scrollbar;
-            overflow-x: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
             -webkit-tap-highlight-color: transparent;
+        }
+        .user-dropdown::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
         }
         .user-dropdown div{
             padding: 8px;
@@ -264,8 +269,10 @@
                 min-width: 200px;
             }
             .dropdown, .user-dropdown {
-                max-height: 200px !important;
+                max-height: 250px !important;
                 z-index: 2000 !important;
+                overflow-y: scroll !important;
+                -webkit-overflow-scrolling: touch !important;
             }
             .user-dropdown {
                 left: 60px !important;
@@ -359,16 +366,20 @@
             background: #000;
             border: 2px solid #7C3AED;
             border-radius: 4px;
-            max-height:240px;
-            overflow-y:auto;
+            max-height:300px;
+            overflow-y:scroll;
+            overflow-x:hidden;
             z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
-            -webkit-overflow-scrolling: touch;
-            -ms-overflow-style: -ms-autohiding-scrollbar;
-            overflow-x: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
             -webkit-tap-highlight-color: transparent;
+        }
+        .dropdown::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
         }
         .dropdown div{
             padding: 8px;
@@ -1063,7 +1074,7 @@
     <div class="item has-service">
         <div class="item-label"><span class="icon-gray">📝</span> 备注</div>
         <div class="remark-container">
-            <textarea class="remark-input" id="remark1" oninput="saveNow()" rows="1">含装机布线系统调试，三年一对一售后。德邦到付约80含保价。</textarea>
+            <textarea class="remark-input" id="remark1" oninput="saveNow()" rows="1">含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价。</textarea>
             <textarea class="remark-input" id="remark2" oninput="saveNow()" rows="1">全新正品行货视频验货直播装机，主板、内存、固态、显卡等包装盒一起发货。</textarea>
         </div>
         <div class="service-container">
@@ -4464,32 +4475,57 @@
                 <span class="dropdown-price">¥${i.p}</span>
                 <span class="dropdown-delete" data-type="${key}" data-index="${idx}">×</span>
             `;
-            // 左键点击选择配件
-            d.addEventListener('mousedown', function(e) {
-                // 阻止事件冒泡，避免触发删除按钮的点击
-                if (e.target.classList.contains('dropdown-delete')) return;
-                
-                e.preventDefault();
-                document.getElementById(key).value = i.n;
-                document.getElementById(key+"-p").value = i.p;
-                document.getElementById(key).classList.add('selected');
-                box.style.display = "none";
-                calc();
-                saveNow();
-
-                // 如果是机箱，显示对应的图片
-                if(key === 'case') {
-                    showCaseImage(i.n);
+            
+            // 移动端触摸事件处理
+            let touchStartTime = 0;
+            let touchStartY = 0;
+            let isScrolling = false;
+            
+            d.addEventListener('touchstart', function(e) {
+                touchStartTime = Date.now();
+                touchStartY = e.touches[0].clientY;
+                isScrolling = false;
+            }, {passive: true});
+            
+            d.addEventListener('touchmove', function(e) {
+                if (Math.abs(e.touches[0].clientY - touchStartY) > 5) {
+                    isScrolling = true;
                 }
-
-                // 如果是散热器，显示对应的图片
-                if(key === 'cooler') {
-                    showCoolerImage(i.n);
+            }, {passive: true});
+            
+            d.addEventListener('touchend', function(e) {
+                const touchDuration = Date.now() - touchStartTime;
+                if (!isScrolling && touchDuration < 300) {
+                    // 短时间点击，选择配件
+                    document.getElementById(key).value = i.n;
+                    document.getElementById(key+"-p").value = i.p;
+                    document.getElementById(key).classList.add('selected');
+                    box.style.display = "none";
+                    calc();
+                    saveNow();
+                    
+                    if(key === 'case') showCaseImage(i.n);
+                    if(key === 'cooler') showCoolerImage(i.n);
+                    if(key === 'vga') showVgaImage(i.n);
                 }
-
-                // 如果是显卡，显示对应的图片
-                if(key === 'vga') {
-                    showVgaImage(i.n);
+            }, {passive: true});
+            
+            // 桌面端点击事件
+            d.addEventListener('click', function(e) {
+                if (!('ontouchstart' in window)) {
+                    // 阻止事件冒泡，避免触发删除按钮的点击
+                    if (e.target.classList.contains('dropdown-delete')) return;
+                    
+                    document.getElementById(key).value = i.n;
+                    document.getElementById(key+"-p").value = i.p;
+                    document.getElementById(key).classList.add('selected');
+                    box.style.display = "none";
+                    calc();
+                    saveNow();
+                    
+                    if(key === 'case') showCaseImage(i.n);
+                    if(key === 'cooler') showCoolerImage(i.n);
+                    if(key === 'vga') showVgaImage(i.n);
                 }
             });
             
@@ -4521,44 +4557,10 @@
         box.style.position = "absolute";
         box.style.width = document.getElementById(key).offsetWidth + "px";
         
-        setupDropdownTouch(box, key);
-    }
-
-    function setupDropdownTouch(box, key) {
-        let startY = 0;
-        let currentY = 0;
-        let isScrolling = false;
-        
-        box.addEventListener('touchstart', function(e) {
-            startY = e.touches[0].clientY;
-            currentY = startY;
-            isScrolling = false;
-            currentDropKey = key;
-        }, {passive: true});
-        
-        box.addEventListener('touchmove', function(e) {
-            currentY = e.touches[0].clientY;
-            if (Math.abs(currentY - startY) > 3) {
-                isScrolling = true;
-            }
-        }, {passive: true});
-        
-        box.addEventListener('touchend', function(e) {
-            if (isScrolling) {
-                setTimeout(function() {
-                    isScrolling = false;
-                }, 150);
-            }
-        }, {passive: true});
-        
-        box.addEventListener('click', function(e) {
-            if (!isScrolling) {
-                const target = e.target.closest('div');
-                if (target && target !== box) {
-                    box.style.display = 'none';
-                }
-            }
-        });
+        // 确保下拉列表可以滚动
+        box.style.overflowY = "scroll";
+        box.style.overflowX = "hidden";
+        box.style.webkitOverflowScrolling = "touch";
     }
 
     // 删除下拉列表中的配件项
@@ -4599,50 +4601,13 @@
         selectedItem = {type: '', index: -1};
     });
 
-    let currentDropKey = null;
-    let isTouchingDrop = false;
-    let touchStartY = 0;
-    let touchCurrentY = 0;
-    let isDragging = false;
-
-    document.addEventListener('touchstart', function(e) {
-        const target = e.target;
-        isTouchingDrop = target.closest('.dropdown') !== null || target.closest('.user-dropdown') !== null;
-        if (isTouchingDrop) {
-            touchStartY = e.touches[0].clientY;
-            touchCurrentY = touchStartY;
-            isDragging = false;
-        }
-    }, {passive: true});
-
-    document.addEventListener('touchmove', function(e) {
-        if (isTouchingDrop) {
-            touchCurrentY = e.touches[0].clientY;
-            if (Math.abs(touchCurrentY - touchStartY) > 5) {
-                isDragging = true;
-                e.preventDefault();
-            }
-        }
-    }, {passive: false});
-
-    document.addEventListener('touchend', function() {
-        if (isTouchingDrop && isDragging) {
-            setTimeout(function() {
-                isDragging = false;
-            }, 100);
-        }
-        isTouchingDrop = false;
-    }, {passive: true});
-
     function hideDrop(key){
         setTimeout(()=>{
-            if (!isDragging && !isTouchingDrop) {
-                const drop = document.getElementById(key+"-drop");
-                if (drop) {
-                    drop.style.display = "none";
-                }
+            const drop = document.getElementById(key+"-drop");
+            if (drop) {
+                drop.style.display = "none";
             }
-        }, 300);
+        }, 150);
     }
 
     // 切换成本合计显示/隐藏
@@ -5950,12 +5915,42 @@
         userNames.forEach(name => {
             const div = document.createElement("div");
             div.innerText = name;
+            
+            // 移动端触摸事件处理
+            let touchStartTime = 0;
+            let touchStartY = 0;
+            let isScrolling = false;
+            
+            div.addEventListener('touchstart', function(e) {
+                touchStartTime = Date.now();
+                touchStartY = e.touches[0].clientY;
+                isScrolling = false;
+            }, {passive: true});
+            
+            div.addEventListener('touchmove', function(e) {
+                if (Math.abs(e.touches[0].clientY - touchStartY) > 5) {
+                    isScrolling = true;
+                }
+            }, {passive: true});
+            
+            div.addEventListener('touchend', function(e) {
+                const touchDuration = Date.now() - touchStartTime;
+                if (!isScrolling && touchDuration < 300) {
+                    document.getElementById("user").value = name;
+                    dropdown.style.display = "none";
+                    loadConfigByName(name);
+                }
+            }, {passive: true});
+            
+            // 桌面端点击事件
             div.onmousedown = () => {
-                document.getElementById("user").value = name;
-                dropdown.style.display = "none";
-                // 自动加载对应的配置单
-                loadConfigByName(name);
+                if (!('ontouchstart' in window)) {
+                    document.getElementById("user").value = name;
+                    dropdown.style.display = "none";
+                    loadConfigByName(name);
+                }
             };
+            
             dropdown.appendChild(div);
         });
     }
@@ -6047,7 +6042,7 @@
             document.getElementById(k).value = "";
             document.getElementById(k+"-p").value = "";
         });
-        document.getElementById("remark1").value = "含装机布线系统调试，三年一对一售后。德邦到付约80含保价。";
+        document.getElementById("remark1").value = "含装机布线系统调试，三年一对一售后免费装系统。德邦到付约80含保价。";
         document.getElementById("remark2").value = "全新正品行货视频验货直播装机，主板、内存、固态、显卡等包装盒一起发货。";
         calc(); // 重新计算总价
         saveNow(); // 保存当前状态
