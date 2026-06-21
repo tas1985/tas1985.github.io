@@ -166,13 +166,15 @@
             background: #000;
             border: 2px solid #7C3AED;
             border-radius: 4px;
-            max-height:180px;
+            max-height:240px;
             overflow-y:auto;
-            z-index:99;
+            z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             -ms-overflow-style: -ms-autohiding-scrollbar;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         .user-dropdown div{
             padding: 8px;
@@ -218,35 +220,56 @@
             vertical-align: middle;
         }
         /* 移动端适配 */
-        @media screen and (max-width: 480px) {
+        @media screen and (max-width: 500px) {
             html {
-                width: 480px !important; /* 固定宽度，避免标签换行 */
-                min-width: 480px !important;
+                width: 100% !important;
+                min-width: 100% !important;
+                overflow-x: hidden;
             }
             body {
-                width: 480px !important;
-                min-width: 480px !important;
-                overflow-x: auto; /* 允许横向滚动 */
+                width: 100% !important;
+                min-width: 100% !important;
+                overflow-x: hidden;
+                padding: 8px;
             }
             .container {
-                width: 480px !important;
-                max-width: 480px !important;
-                min-width: 480px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 100% !important;
+                padding: 10px;
+                overflow-x: auto;
+            }
+            .item {
+                flex-wrap: nowrap;
+                min-width: 400px;
             }
             .item-label {
-                width: 75px !important;
-                font-size: 20px !important;
+                width: 70px !important;
+                font-size: 16px !important;
                 white-space: nowrap !important;
-                line-height: 28px !important;
+                line-height: 24px !important;
             }
             .item-label .icon-gray {
-                font-size: 22px !important;
-                line-height: 28px !important;
+                font-size: 18px !important;
+                line-height: 24px !important;
                 vertical-align: middle !important;
                 filter: grayscale(100%) brightness(60%) !important;
             }
             .item-price {
-                width: 80px !important;
+                width: 75px !important;
+                flex-shrink: 0;
+            }
+            .item-input {
+                flex: 1;
+                min-width: 200px;
+            }
+            .dropdown, .user-dropdown {
+                max-height: 200px !important;
+                z-index: 2000 !important;
+            }
+            .user-dropdown {
+                left: 60px !important;
+                width: calc(100% - 60px) !important;
             }
         }
         .item-input{
@@ -336,14 +359,16 @@
             background: #000;
             border: 2px solid #7C3AED;
             border-radius: 4px;
-            max-height:180px;
+            max-height:240px;
             overflow-y:auto;
-            z-index:99;
+            z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             -webkit-overflow-scrolling: touch;
             -ms-overflow-style: -ms-autohiding-scrollbar;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         .dropdown div{
             padding: 8px;
@@ -4492,10 +4517,48 @@
             box.appendChild(d);
         });
         box.style.display="block";
-        // 关键优化：确保下拉框能被正确显示（解决层级/显示问题）
-        box.style.zIndex = 100;
+        box.style.zIndex = 1000;
         box.style.position = "absolute";
         box.style.width = document.getElementById(key).offsetWidth + "px";
+        
+        setupDropdownTouch(box, key);
+    }
+
+    function setupDropdownTouch(box, key) {
+        let startY = 0;
+        let currentY = 0;
+        let isScrolling = false;
+        
+        box.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+            currentY = startY;
+            isScrolling = false;
+            currentDropKey = key;
+        }, {passive: true});
+        
+        box.addEventListener('touchmove', function(e) {
+            currentY = e.touches[0].clientY;
+            if (Math.abs(currentY - startY) > 3) {
+                isScrolling = true;
+            }
+        }, {passive: true});
+        
+        box.addEventListener('touchend', function(e) {
+            if (isScrolling) {
+                setTimeout(function() {
+                    isScrolling = false;
+                }, 150);
+            }
+        }, {passive: true});
+        
+        box.addEventListener('click', function(e) {
+            if (!isScrolling) {
+                const target = e.target.closest('div');
+                if (target && target !== box) {
+                    box.style.display = 'none';
+                }
+            }
+        });
     }
 
     // 删除下拉列表中的配件项
@@ -4536,32 +4599,50 @@
         selectedItem = {type: '', index: -1};
     });
 
-    let isScrolling = false;
-    let lastScrollTime = 0;
+    let currentDropKey = null;
+    let isTouchingDrop = false;
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isDragging = false;
 
-    document.addEventListener('touchstart', function() {
-        isScrolling = false;
+    document.addEventListener('touchstart', function(e) {
+        const target = e.target;
+        isTouchingDrop = target.closest('.dropdown') !== null || target.closest('.user-dropdown') !== null;
+        if (isTouchingDrop) {
+            touchStartY = e.touches[0].clientY;
+            touchCurrentY = touchStartY;
+            isDragging = false;
+        }
     }, {passive: true});
 
-    document.addEventListener('touchmove', function() {
-        isScrolling = true;
-        lastScrollTime = Date.now();
-    }, {passive: true});
+    document.addEventListener('touchmove', function(e) {
+        if (isTouchingDrop) {
+            touchCurrentY = e.touches[0].clientY;
+            if (Math.abs(touchCurrentY - touchStartY) > 5) {
+                isDragging = true;
+                e.preventDefault();
+            }
+        }
+    }, {passive: false});
 
     document.addEventListener('touchend', function() {
-        setTimeout(function() {
-            if (Date.now() - lastScrollTime > 150) {
-                isScrolling = false;
-            }
-        }, 200);
+        if (isTouchingDrop && isDragging) {
+            setTimeout(function() {
+                isDragging = false;
+            }, 100);
+        }
+        isTouchingDrop = false;
     }, {passive: true});
 
     function hideDrop(key){
         setTimeout(()=>{
-            if (!isScrolling && Date.now() - lastScrollTime > 150) {
-                document.getElementById(key+"-drop").style.display="none";
+            if (!isDragging && !isTouchingDrop) {
+                const drop = document.getElementById(key+"-drop");
+                if (drop) {
+                    drop.style.display = "none";
+                }
             }
-        }, 200)
+        }, 300);
     }
 
     // 切换成本合计显示/隐藏
