@@ -170,6 +170,9 @@
             overflow-y:auto;
             z-index:99;
             display:none;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            -ms-overflow-style: -ms-autohiding-scrollbar;
         }
         .user-dropdown div{
             padding: 8px;
@@ -337,6 +340,10 @@
             overflow-y:auto;
             z-index:99;
             display:none;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+            -ms-overflow-style: -ms-autohiding-scrollbar;
         }
         .dropdown div{
             padding: 8px;
@@ -4529,8 +4536,32 @@
         selectedItem = {type: '', index: -1};
     });
 
+    let isScrolling = false;
+    let lastScrollTime = 0;
+
+    document.addEventListener('touchstart', function() {
+        isScrolling = false;
+    }, {passive: true});
+
+    document.addEventListener('touchmove', function() {
+        isScrolling = true;
+        lastScrollTime = Date.now();
+    }, {passive: true});
+
+    document.addEventListener('touchend', function() {
+        setTimeout(function() {
+            if (Date.now() - lastScrollTime > 150) {
+                isScrolling = false;
+            }
+        }, 200);
+    }, {passive: true});
+
     function hideDrop(key){
-        setTimeout(()=>document.getElementById(key+"-drop").style.display="none",150)
+        setTimeout(()=>{
+            if (!isScrolling && Date.now() - lastScrollTime > 150) {
+                document.getElementById(key+"-drop").style.display="none";
+            }
+        }, 200)
     }
 
     // 切换成本合计显示/隐藏
