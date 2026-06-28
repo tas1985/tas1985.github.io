@@ -1098,8 +1098,7 @@ def update_exist_ram_prices():
                         jbd_32g_3600_c18_final = base_price  # 保存金百达_银爵 32G 3600海力士c18的价格
                     elif "宏碁掠夺者" in ram_name:
                         final_price = base_price + 300
-                    elif "阿斯加特" in ram_name and "女武神" not in ram_name:
-                        final_price = base_price + 50
+
 
                     if final_price is not None:
                         print(f"  ✓ 匹配成功 [{best_score}分]: {ram_name} -> 价格 {int(final_price)}")
