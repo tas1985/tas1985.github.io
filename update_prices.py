@@ -1322,6 +1322,12 @@ def update_ram_new():
                     matched_scraped.add(scraped_name)
                     break
         
+        # 识别未匹配的新型号
+        for scraped_name, scraped_price in scraped_data.items():
+            if scraped_name not in matched_scraped:
+                new_items.append((scraped_name, scraped_price))
+                print(f"   📌 发现新型号: {scraped_name[:35]}... ￥{scraped_price}")
+        
         # 执行更新
         for line_idx, new_price, name, old_price in updates:
             lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
@@ -1369,33 +1375,26 @@ def fetch_all_ram_from_source():
         
         ram_dict = {}
         
-        # 查找所有产品名称标签
-        product_names = soup.find_all('span', class_='product-name')
+        # 直接从文本中提取数据，格式如："- 阿斯加特 弗雷 32G 16*2 3200 黑甲 ￥950.00"
+        text = soup.get_text()
+        matches = re.findall(r'[-*]?\s*([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)', text)
         
-        for name_span in product_names:
-            # 获取产品名称
-            name = name_span.get('data-fullname', '').strip()
-            if not name:
-                name = name_span.get_text(strip=True)
-            
+        for name, price in matches:
+            name = name.strip()
             # 排除列表中的品牌
             if any(w in name for w in RAM_EXCLUDE_LIST):
                 continue
+            if len(name) < 3:
+                continue
             
-            # 查找价格
-            price_span = name_span.find_next_sibling('span', class_='product-price')
-            if price_span:
-                price_text = price_span.get_text(strip=True)
-                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
-                if price_match:
-                    price = int(float(price_match.group(1)))
-                    
-                    # 阿斯加特品牌价格增加
-                    if "阿斯加特" in name:
-                        price += RAM_ASC_TECH_ADD
-                    
-                    ram_dict[name] = price
+            price = int(float(price))
+            # 阿斯加特品牌价格增加
+            if "阿斯加特" in name:
+                price += RAM_ASC_TECH_ADD
+            
+            ram_dict[name] = price
         
+        print(f"🔍 爬取到 {len(ram_dict)} 个内存型号")
         return ram_dict
     except Exception as e:
         print(f"❌ 内存爬取失败: {e}")
