@@ -1047,7 +1047,7 @@ def update_exist_ram_prices():
                 if not special_handled:
                     print(f"  ⚠ 未找到金百达 银爵 16G 6000 D5 C36 单根，跳过更新")
                     special_handled = True
-            elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name:
+            elif "金百达_银爵 16G 6000单根 c30 m-die" in ram_name or "金百达 银爵 16G 6000 D5 C30" in ram_name:
                 print(f"  🔍 查找: 金百达 银爵 16G 6000 D5 C30 单根")
                 for ram_item in ram_list:
                     if "金百达" in ram_item['name'] and "银爵" in ram_item['name'] and "6000" in ram_item['name'] and "C30" in ram_item['name']:
@@ -1862,6 +1862,8 @@ if __name__ == "__main__":
     # update_fixed_gpu_prices()
     # 内存更新（使用新的简洁逻辑）
     update_ram_new()
+    # 内存定制价格更新（处理金百达等特殊品牌）
+    update_exist_ram_prices()
     update_ssd_prices()
     update_mb_accurate()
     # 机箱更新
