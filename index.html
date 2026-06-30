@@ -516,9 +516,16 @@
             background: #330066;
         }
 
+        /* 保存截图按钮容器样式 */
+        .screenshot-btn-container {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            margin-top: 8px;
+        }
         /* 保存截图按钮样式 */
         .btn-screenshot {
-            width: 100%;
+            flex: 1;
             padding: 12px;
             border: 2px solid #00ff00;
             border-radius: 6px;
@@ -530,10 +537,19 @@
             margin: 0;
             box-shadow: 0 0 6px rgba(0,255,0,0.6);
             white-space: nowrap;
+            min-width: 0;
         }
         .btn-screenshot:hover {
             box-shadow: 0 0 10px rgba(0,255,0,0.8);
             background: #330066;
+        }
+        .btn-anonymous {
+            border-color: #ff9900;
+            color: #ff9900;
+            box-shadow: 0 0 6px rgba(255,153,0,0.6);
+        }
+        .btn-anonymous:hover {
+            box-shadow: 0 0 10px rgba(255,153,0,0.8);
         }
 
         /* 总价区域样式 - 核心匹配参考图 */
@@ -1128,7 +1144,10 @@
             <label class="service-item"><input type="checkbox" id="svc-light" onchange="updateServiceText()"> <span class="svc-box"></span>关灯</label>
             <label class="service-item"><input type="checkbox" id="svc-burntest" checked onchange="updateServiceText()"> <span class="svc-box"></span>烤机测试</label>
         </div>
+        <div class="screenshot-btn-container">
         <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
+        <button class="btn-screenshot btn-anonymous" onclick="saveAnonymousScreenshot()">匿名截图</button>
+    </div>
     </div>
 
     <!-- 最终报价区域移到按钮栏上方 -->
@@ -4679,10 +4698,10 @@
             const btnBarDisplay = btnBar.style.display;
             btnBar.style.display = 'none';
             
-            // 隐藏截图按钮
-            const screenshotBtn = document.querySelector('.btn-screenshot');
-            const screenshotBtnDisplay = screenshotBtn.style.display;
-            screenshotBtn.style.display = 'none';
+            // 隐藏截图按钮容器
+            const screenshotContainer = document.querySelector('.screenshot-btn-container');
+            const screenshotContainerDisplay = screenshotContainer.style.display;
+            screenshotContainer.style.display = 'none';
 
             // 使用html2canvas生成截图
             // 获取完整的文档高度（修复手机端截不全的问题）
@@ -5142,7 +5161,7 @@
             }).then(canvas => {
                 // 恢复按钮栏显示
                 btnBar.style.display = btnBarDisplay;
-                screenshotBtn.style.display = screenshotBtnDisplay;
+                screenshotContainer.style.display = screenshotContainerDisplay;
 
                 // 生成文件名（使用当前日期时间）
                 const now = new Date();
@@ -5180,7 +5199,7 @@
             }).catch(error => {
                 // 恢复按钮栏显示
                 btnBar.style.display = btnBarDisplay;
-                screenshotBtn.style.display = screenshotBtnDisplay;
+                screenshotContainer.style.display = screenshotContainerDisplay;
                 
                 throw error;
             });
@@ -5190,6 +5209,545 @@
             btn.innerText = originalText;
             btn.disabled = false;
             alert('截图失败：' + error.message + '\n请刷新页面重试');
+        }
+    }
+
+    // 匿名截图功能
+    function saveAnonymousScreenshot() {
+        if (typeof html2canvas === 'undefined') {
+            alert('截图功能暂时不可用，请刷新页面重试。如果问题持续，请检查网络连接。');
+            return;
+        }
+
+        const btn = document.querySelector('.btn-anonymous');
+        const originalText = btn.innerText;
+        btn.innerText = '正在生成...';
+        btn.disabled = true;
+
+        try {
+            const container = document.querySelector('.container');
+            
+            const btnBar = document.querySelector('.btn-bar');
+            const btnBarDisplay = btnBar.style.display;
+            btnBar.style.display = 'none';
+            
+            const screenshotContainer = document.querySelector('.screenshot-btn-container');
+            const screenshotContainerDisplay = screenshotContainer.style.display;
+            screenshotContainer.style.display = 'none';
+
+            const fullHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                container.scrollHeight,
+                container.offsetHeight
+            );
+            
+            container.style.display = 'block';
+            container.style.position = 'static';
+            container.style.overflow = 'visible';
+            container.style.height = 'auto';
+            
+            setTimeout(function() {
+                html2canvas(container, {
+                backgroundColor: '#e0e0e0',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                foreignObjectRendering: false,
+                removeContainer: true,
+                imageTimeout: 15000,
+                onclone: function(clonedDoc) {
+                    const clonedContainer = clonedDoc.querySelector('.container');
+                    const clonedRemark = clonedDoc.querySelector('.remark-input');
+                    
+                    // 将图标转换为灰色
+                    const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
+                    iconGraySpans.forEach(function(span) {
+                        const emoji = span.textContent || span.innerText;
+                        if (emoji && emoji.length > 0) {
+                            const canvas = clonedDoc.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            canvas.width = 48;
+                            canvas.height = 48;
+                            
+                            ctx.font = '36px serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+                            
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+                            
+                            for (let i = 0; i < data.length; i += 4) {
+                                const gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+                                data[i] = gray;
+                                data[i + 1] = gray;
+                                data[i + 2] = gray;
+                            }
+                            
+                            ctx.putImageData(imageData, 0, 0);
+                            
+                            const grayEmojiUrl = canvas.toDataURL('image/png');
+                            span.innerHTML = `<img src="${grayEmojiUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                        }
+                        
+                        span.style.filter = 'none';
+                        span.style.webkitFilter = 'none';
+                        span.style.MozFilter = 'none';
+                        span.style.msFilter = 'none';
+                        span.style.OFilter = 'none';
+                        span.style.fontSize = '22px';
+                        span.style.padding = '0';
+                        span.style.borderRadius = '0';
+                        span.style.opacity = '1';
+                    });
+                    
+                    // 匿名化处理：隐藏标题中的58508218
+                    const title = clonedDoc.querySelector('.title');
+                    if (title) {
+                        title.textContent = title.textContent.replace(/58508218/g, '');
+                    }
+                    
+                    // 匿名化处理：配件价格替换为???
+                    const priceInputs = clonedDoc.querySelectorAll('input.price');
+                    priceInputs.forEach(function(input) {
+                        input.value = '???';
+                    });
+                    
+                    // 匿名化处理：总价仅显示第一位数字，其余替换为X
+                    const finalTotal = clonedDoc.querySelector('#final');
+                    if (finalTotal) {
+                        const originalText = finalTotal.textContent;
+                        const match = originalText.match(/(\d+)(\s*元)/);
+                        if (match) {
+                            const digits = match[1];
+                            const suffix = match[2];
+                            if (digits.length > 0) {
+                                const firstDigit = digits[0];
+                                const maskedDigits = firstDigit + 'X'.repeat(digits.length - 1);
+                                finalTotal.textContent = maskedDigits + suffix;
+                            }
+                        }
+                    }
+                    
+                    // 匿名化处理：配件总价隐藏
+                    const totalPrice = clonedDoc.querySelector('#total');
+                    if (totalPrice) {
+                        totalPrice.textContent = '???.??';
+                    }
+
+                    // 匿名化处理：成本合计隐藏
+                    const costTotal = clonedDoc.querySelector('#costTotal');
+                    if (costTotal) {
+                        costTotal.textContent = '???';
+                    }
+                    
+                    if (clonedContainer) {
+                        clonedContainer.style.width = '100%';
+                        clonedContainer.style.maxWidth = '760px';
+                        clonedContainer.style.minWidth = '320px';
+                        clonedContainer.style.display = 'block';
+                        clonedContainer.style.margin = '0 auto';
+                        clonedContainer.style.height = 'auto';
+                        clonedContainer.style.minHeight = 'auto';
+                        clonedContainer.style.overflow = 'visible';
+                        clonedContainer.style.position = 'static';
+                    }
+                    
+                    if (clonedRemark) {
+                        clonedRemark.style.whiteSpace = 'pre-wrap';
+                        clonedRemark.style.wordWrap = 'break-word';
+                        clonedRemark.style.overflow = 'hidden';
+                        clonedRemark.style.height = 'auto';
+                        clonedRemark.style.minHeight = '36px';
+                        clonedRemark.style.maxHeight = '150px';
+                        clonedRemark.style.maxWidth = '100%';
+                        clonedRemark.style.width = '100%';
+                        clonedRemark.style.display = 'block';
+                        clonedRemark.style.resize = 'none';
+                        clonedRemark.style.lineHeight = '18px';
+                        clonedRemark.style.padding = '4px 8px';
+                        clonedRemark.style.boxSizing = 'border-box';
+                        const remarkText = clonedRemark.value || clonedRemark.innerText || '';
+                        const tempDiv = clonedDoc.createElement('div');
+                        tempDiv.style.position = 'absolute';
+                        tempDiv.style.visibility = 'hidden';
+                        tempDiv.style.whiteSpace = 'pre-wrap';
+                        tempDiv.style.wordWrap = 'break-word';
+                        tempDiv.style.lineHeight = '18px';
+                        tempDiv.style.padding = '4px 8px';
+                        tempDiv.style.fontSize = '12px';
+                        tempDiv.style.width = clonedRemark.offsetWidth + 'px';
+                        tempDiv.textContent = remarkText;
+                        clonedDoc.body.appendChild(tempDiv);
+                        const actualHeight = Math.max(tempDiv.offsetHeight, 36);
+                        clonedDoc.body.removeChild(tempDiv);
+                        clonedRemark.style.height = actualHeight + 'px';
+                    }
+                    
+                    const comboInputs = clonedDoc.querySelectorAll('input.combo');
+                    comboInputs.forEach(function(input) {
+                        input.style.backgroundColor = '#e8e8e8';
+                        input.style.background = '#e8e8e8';
+                    });
+                    
+                    const priceInputs2 = clonedDoc.querySelectorAll('input.price');
+                    priceInputs2.forEach(function(input) {
+                        input.style.backgroundColor = '#e0e0e0';
+                        input.style.background = '#e0e0e0';
+                    });
+                    
+                    const style = clonedDoc.createElement('style');
+                    style.textContent = `
+                        * {
+                            animation: none !important;
+                            transition: none !important;
+                            float: none !important;
+                        }
+                        html, body {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            min-width: 320px !important;
+                            height: auto !important;
+                            min-height: 100% !important;
+                            display: block !important;
+                            overflow: visible !important;
+                        }
+                        .container {
+                            width: 100% !important;
+                            max-width: 760px !important;
+                            min-width: 320px !important;
+                            display: block !important;
+                            margin: 0 auto !important;
+                            box-shadow: none !important;
+                            border: 2px solid #7C3AED !important;
+                            overflow: visible !important;
+                        }
+                        .item {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            align-items: center !important;
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            height: auto !important;
+                            min-height: auto !important;
+                            margin-bottom: 8px !important;
+                            padding: 4px !important;
+                            background: #d0d0d0 !important;
+                            border-radius: 4px !important;
+                            border: 1px solid #000 !important;
+                            overflow: visible !important;
+                        }
+                        .user {
+                            display: flex !important;
+                            align-items: center !important;
+                            gap: 8px !important;
+                            margin-bottom: 8px !important;
+                            padding: 4px !important;
+                            background: #d0d0d0 !important;
+                            border-radius: 4px !important;
+                            border: 1px solid #000 !important;
+                            overflow: visible !important;
+                        }
+                        .item-label {
+                            width: 80px !important;
+                            flex-shrink: 0 !important;
+                            font-weight: bold !important;
+                            font-size: 20px !important;
+                            text-align: right !important;
+                            padding-right: 5px !important;
+                            line-height: 28px !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: flex-end !important;
+                        }
+                        .icon-gray {
+                            display: inline-block !important;
+                            margin-right: 4px !important;
+                            line-height: 1 !important;
+                            font-size: 22px !important;
+                            filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                            -webkit-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                            -moz-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                            -ms-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                            -o-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
+                        }
+                        .item-input {
+                            flex: 1 !important;
+                            position: relative !important;
+                            min-width: 0 !important;
+                        }
+                        .item-price {
+                            width: 100px !important;
+                            flex-shrink: 0 !important;
+                            position: relative !important;
+                        }
+                        .total {
+                            box-shadow: none !important;
+                            border: 3px solid #7C3AED !important;
+                        }
+                        .total::before {
+                            display: none !important;
+                        }
+                        .dropdown {
+                            display: none !important;
+                        }
+                        .clear-btn {
+                            display: none !important;
+                        }
+                        .user-clear-btn {
+                            display: none !important;
+                        }
+                        .dropdown-delete {
+                            display: none !important;
+                        }
+                        .btn-screenshot {
+                            display: none !important;
+                        }
+                        .screenshot-btn-container {
+                            display: none !important;
+                        }
+                        .title {
+                            box-shadow: none !important;
+                            border: 2px solid #7C3AED !important;
+                        }
+                        .datetime-display {
+                            box-shadow: none !important;
+                            border: 1px solid #7C3AED !important;
+                        }
+                        input.combo {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            box-sizing: border-box !important;
+                            font-size: 14px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: normal !important;
+                            line-height: 1.5 !important;
+                            background-color: #e8e8e8 !important;
+                            background: #e8e8e8 !important;
+                            color: #000 !important;
+                            border: 1px solid #888 !important;
+                            border-radius: 4px !important;
+                            padding: 8px 25px 8px 8px !important;
+                        }
+                        input.price {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            box-sizing: border-box !important;
+                            font-size: 16px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: normal !important;
+                            line-height: 1.5 !important;
+                            background-color: #e0e0e0 !important;
+                            background: #e0e0e0 !important;
+                            color: #000 !important;
+                            border: 1px solid #888 !important;
+                            border-radius: 4px !important;
+                            text-align: right !important;
+                            padding: 8px 8px 8px 20px !important;
+                        }
+                        select {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                        }
+                        textarea.remark-input {
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            min-height: 40px !important;
+                            max-height: 120px !important;
+                            height: auto !important;
+                            white-space: pre-wrap !important;
+                            word-break: break-all !important;
+                            overflow: auto !important;
+                            resize: vertical !important;
+                            flex: none !important;
+                            align-self: flex-start !important;
+                            line-height: 20px !important;
+                            padding: 6px 10px !important;
+                            box-sizing: border-box !important;
+                            font-family: "Microsoft YaHei", Arial !important;
+                            font-size: 15px !important;
+                        }
+                        .item:has(.remark-input) {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            flex-wrap: wrap !important;
+                            align-items: flex-start !important;
+                            width: 100% !important;
+                            overflow: visible !important;
+                        }
+                        .item:has(.remark-input) .item-label {
+                            width: 80px !important;
+                            flex-shrink: 0 !important;
+                        }
+                        .item:has(.remark-input) .remark-input {
+                            flex: 1 !important;
+                            min-width: 0 !important;
+                            min-height: 40px !important;
+                            max-height: 120px !important;
+                            height: auto !important;
+                            line-height: 20px !important;
+                            white-space: pre-wrap !important;
+                            word-wrap: break-word !important;
+                            overflow: auto !important;
+                            resize: vertical !important;
+                            padding: 6px 10px !important;
+                            box-sizing: border-box !important;
+                        }
+                        .item.has-service:has(.remark-input) {
+                            flex-wrap: wrap !important;
+                        }
+                        .item.has-service:has(.remark-input) .remark-container {
+                            flex: 1 !important;
+                            width: calc(100% - 90px) !important;
+                        }
+                        .item.has-service:has(.remark-input) .remark-input {
+                            width: 100% !important;
+                        }
+                        .item:has(.remark-input) .btn-screenshot {
+                            width: 100px !important;
+                            flex-shrink: 0 !important;
+                            align-self: flex-start !important;
+                        }
+                        .btn-screenshot {
+                            display: none !important;
+                        }
+                        .user input, .item input, .combo {
+                            font-size: 16px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: normal !important;
+                            line-height: 1.6 !important;
+                            color: #000 !important;
+                            background: #e8e8e8 !important;
+                        }
+                        input.price {
+                            font-size: 16px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: normal !important;
+                            line-height: 1.6 !important;
+                            color: #000 !important;
+                            background: #e0e0e0 !important;
+                            background-color: #e0e0e0 !important;
+                        }
+                        #user {
+                            color: #00ff00 !important;
+                            background: #000 !important;
+                            font-size: 15px !important;
+                        }
+                        .user label, .item-label {
+                            font-size: 20px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                            font-weight: bold !important;
+                            line-height: 1.5 !important;
+                        }
+                        .dropdown div {
+                            font-size: 14px !important;
+                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
+                        }
+                        input.combo.selected {
+                            font-size: 16px !important;
+                            font-weight: normal !important;
+                        }
+                        .user {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            align-items: center !important;
+                            gap: 8px !important;
+                            margin-bottom: 8px !important;
+                            padding: 4px !important;
+                            background: #d0d0d0 !important;
+                            border: 1px solid #000 !important;
+                            border-radius: 4px !important;
+                            width: 100% !important;
+                        }
+                        .user label {
+                            width: 80px !important;
+                            font-weight: bold !important;
+                            font-size: 18px !important;
+                            color: #7C3AED !important;
+                            text-align: center !important;
+                            white-space: nowrap !important;
+                        }
+                        .user-input-container {
+                            flex: 1 !important;
+                            position: relative !important;
+                            min-width: 0 !important;
+                        }
+                        input:focus, input:hover, select:focus, select:hover {
+                            box-shadow: none !important;
+                            outline: none !important;
+                        }
+                        @media screen and (max-width: 480px) {
+                            html, body, .container {
+                                width: 480px !important;
+                                min-width: 480px !important;
+                                max-width: 480px !important;
+                                height: auto !important;
+                                min-height: 100% !important;
+                                overflow: visible !important;
+                            }
+                            .item-label {
+                                width: 80px !important;
+                                font-size: 20px !important;
+                            }
+                            .item-price {
+                                width: 100px !important;
+                            }
+                            .user, .item {
+                                height: auto !important;
+                                min-height: auto !important;
+                                overflow: visible !important;
+                            }
+                        }
+                    `;
+                    clonedDoc.head.appendChild(style);
+                }
+            }).then(canvas => {
+                btnBar.style.display = btnBarDisplay;
+                screenshotContainer.style.display = screenshotContainerDisplay;
+
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
+
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        throw new Error('图片生成失败');
+                    }
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    
+                    alert(`匿名截图已保存：${fileName}`);
+                }, 'image/jpeg', 0.95);
+            }).catch(error => {
+                btnBar.style.display = btnBarDisplay;
+                screenshotContainer.style.display = screenshotContainerDisplay;
+                
+                throw error;
+            });
+            }, 100);
+        } catch (error) {
+            console.error('匿名截图失败:', error);
+            btn.innerText = originalText;
+            btn.disabled = false;
+            alert('匿名截图失败：' + error.message + '\n请刷新页面重试');
         }
     }
 
