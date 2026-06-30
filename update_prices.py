@@ -108,14 +108,21 @@ def extract_gpu_exact_key(name):
     return "|".join(key_parts)
 
 def extract_ssd_exact_key(name):
+    """提取SSD型号的关键标识，用于匹配价格"""
     name = name.strip().replace(" ", "").upper()
-    brand = re.search(r"(佰维|梵想|西数|致态|三星|雷克沙|宏碁)", name)
-    model = re.search(r"(NV7400|NV3500|S500PRO|SN7100|TIPLUS7100|990PRO|雷神THOR|GM7)", name)
-    cap = re.search(r"(\d+G|\d+TB|\d+T)", name)
+    # 扩展品牌列表
+    brand = re.search(r"(佰维|梵想|西数|致态|三星|雷克沙|宏碁|铠侠|惠普|英特尔|INTEL|HP|KIOXIA|LEXAR|ACER|BIWIN|SAMSUNG|ZHITAI|WD)", name)
+    # 扩展型号列表 - 包含更多常见型号
+    model = re.search(r"(NV7400|NV7100|NV3500|NV3000|S500PRO|S790|SP510|SP500|SN7100|SN850|SN770|TIPLUS7100|TIPLUS5000|TI600|990PRO|990EVO|9100PRO|雷神THOR|THOR|GM7|GM9|GM9000|ARES|VD10|SF10|KP270|KP260|KP230|KP130|NV3|N5000|N3500|X570|FA200|7100|7400|980|970|EX900|EX950|KC3000|NVME|PCIE)", name)
+    # 容量匹配（更宽松）
+    cap = re.search(r"(\d+G|\d+TB|\d+T|\d+GB)", name)
     key_parts = []
     if brand: key_parts.append(brand.group(1))
     if model: key_parts.append(model.group(1))
     if cap: key_parts.append(cap.group(1))
+    # 如果没有匹配到品牌或型号，使用名称本身作为key（去除空格后）
+    if not key_parts:
+        return name[:50]  # 使用前50个字符作为唯一标识
     return "".join(key_parts)
 
 # -------------------------- CPU 爬取函数 --------------------------
@@ -314,20 +321,61 @@ def fetch_processed_ram():
         return []
 
 def fetch_ssd_exact_data():
+    """爬取固态硬盘价格，返回字典和列表格式"""
     try:
-        res = requests.get(SSD_SOURCE_URL, headers=HEADERS, timeout=10)
+        res = requests.get(SSD_SOURCE_URL, headers=HEADERS, timeout=15)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         ssd_map = {}
         ssd_list = []
-        raw_text = soup.get_text()
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", raw_text):
-            if any(ex in n for ex in SSD_EXCLUDE_LIST):
-                continue
-            key = extract_ssd_exact_key(n)
-            ssd_map[key] = int(float(p))
-            ssd_list.append({"name": n, "price": int(float(p))})
+        
+        # 方法1：尝试从表格中提取数据（最可靠）
+        tables = soup.find_all('table')
+        print(f"🔍 SSD页面找到 {len(tables)} 个表格")
+        
+        for table in tables:
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all(['td', 'th'])
+                if len(cells) >= 2:
+                    name = cells[0].get_text(strip=True)
+                    price_text = cells[-1].get_text(strip=True)
+                    price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
+                    if price_match and name and len(name) > 3:
+                        price = int(float(price_match.group(1)))
+                        # 排除列表中的品牌
+                        if not any(ex in name for ex in SSD_EXCLUDE_LIST):
+                            key = extract_ssd_exact_key(name)
+                            ssd_map[key] = price
+                            ssd_list.append({"name": name, "price": price})
+        
+        # 方法2：如果表格提取失败，尝试使用正则从文本中提取
+        if not ssd_list:
+            print("⚠️ SSD表格提取失败，尝试正则提取...")
+            raw_text = soup.get_text()
+            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", raw_text):
+                if len(n.strip()) > 3:
+                    # 排除列表中的品牌
+                    if not any(ex in n for ex in SSD_EXCLUDE_LIST):
+                        try:
+                            price = int(float(p))
+                            key = extract_ssd_exact_key(n)
+                            ssd_map[key] = price
+                            ssd_list.append({"name": n.strip(), "price": price})
+                        except:
+                            pass
+        
+        print(f"📊 爬取到 {len(ssd_list)} 个固态硬盘型号")
+        if ssd_list:
+            print("📋 部分固态硬盘价格:")
+            for i, ssd in enumerate(ssd_list[:8]):
+                print(f"   {ssd['name'][:40]}...: ￥{ssd['price']}")
+        
         return ssd_map, ssd_list
-    except Exception:
+    except Exception as e:
+        print(f"❌ 固态硬盘爬取失败: {e}")
+        import traceback
+        traceback.print_exc()
         return {}, []
 
 # 新增机箱爬取函数
@@ -431,74 +479,120 @@ def find_next_non_ssd_line(lines, start_pos):
     return pos
 
 def update_ssd_prices():
-    """修复后的SSD价格更新函数"""
+    """修复后的SSD价格更新函数 - 使用模糊匹配"""
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         
         ssd_map, ssd_list = fetch_ssd_exact_data()
+        
+        # 如果爬取失败或为空，保留原有数据
+        if not ssd_list:
+            print("⚠️ SSD数据获取失败或为空，保留原有SSD数据")
+            return 0
+        
+        # 将列表转换为字典，方便查找（使用完整名称作为key）
+        ssd_dict = {ssd["name"]: ssd["price"] for ssd in ssd_list}
+        
         updated = 0
+        same_count = 0
+        no_match_count = 0
 
         # 计算特定硬盘价格
         nv7400_2t_price = 0
-        for key in ssd_map:
-            if "佰维" in key and "NV7400" in key and ("2T" in key or "2TB" in key):
-                nv7400_2t_price = ssd_map[key]
+        for ssd in ssd_list:
+            if "佰维" in ssd["name"] and "NV7400" in ssd["name"] and ("2T" in ssd["name"] or "2TB" in ssd["name"]):
+                nv7400_2t_price = ssd["price"]
                 break
 
         nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
 
-        target_ssd = [
-            "佰维 NV7400 512G TLC颗粒 读速7050MB/s",
-            "佰维 NV3500 512G TLC颗粒",
-            "佰维 NV3500 1T TLC颗粒",
-            "佰维 NV7400 1T TLC颗粒 读速7400MB/s",
-            "佰维 NV7400 2T TLC颗粒 读速7400MB/s",
-            "梵想S500PRO-1T TLC颗粒",
-            "梵想S500PRO-512GB TLC颗粒",
-            "西数 黑盘SN7100 1T PCIE 4.0 读7250写6800",
-            "致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",
-            "三星 990 PRO 1T PCIE 4.0 读7450写6900",
-            "雷克沙 雷神THOR 4T PCIE4.0 7000/6000",
-            "品牌SSD 512G（到手10天质保）",
-            "宏碁 GM7 2T PCIE 4.0 读7200写6300"
-        ]
+        # 特殊处理的型号（需要价格调整）
+        special_models = {
+            "佰维 NV7400 1T TLC颗粒 读速7400MB/s": {"adjust": -90, "base_price": nv7400_1t_price},
+            "佰维 NV7400 2T TLC颗粒 读速7400MB/s": {"adjust": -300, "base_price": nv7400_2t_price},
+        }
 
-        # 更新特定SSD价格
+        # 更新SSD价格 - 遍历HTML文件中的每个SSD行
         for i in range(len(lines)):
             line = lines[i]
-            if not re.search(r'p:\d+', line):
+            match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+            if not match:
                 continue
-
-            if "佰维 NV7400 1T TLC颗粒 读速7400MB/s" in line:
-                if nv7400_1t_price > 0:
-                    # 价格按更新后再减去90
-                    final_price = nv7400_1t_price - 90
-                    lines[i] = re.sub(r'p:\d+', f'p:{final_price}', line)
-                    updated += 1
-                    continue
-
-            if "佰维 NV7400 2T TLC颗粒 读速7400MB/s" in line:
-                if nv7400_2t_price > 0:
-                    # 价格按更新后再减去300
-                    final_price = nv7400_2t_price - 300
-                    lines[i] = re.sub(r'p:\d+', f'p:{final_price}', line)
-                    updated += 1
-                    continue
-
-            for ssd_name in target_ssd:
-                if ssd_name in line:
-                    key = extract_ssd_exact_key(ssd_name)
-                    if key in ssd_map:
-                        # 检查是否是需要特殊处理的型号
-                        if ssd_name == "佰维 NV7400 2T TLC颗粒 读速7400MB/s" and nv7400_2t_price > 0:
-                            # 价格按更新后再减去300
-                            final_price = nv7400_2t_price - 300
-                            lines[i] = re.sub(r'p:\d+', f'p:{final_price}', line)
-                        else:
-                            lines[i] = re.sub(r'p:\d+', f'p:{ssd_map[key]}', line)
+            
+            ssd_name = match.group(1)
+            old_price = int(match.group(2))
+            
+            # 检查是否是特殊型号
+            if ssd_name in special_models:
+                special_info = special_models[ssd_name]
+                if special_info["base_price"] > 0:
+                    new_price = special_info["base_price"] + special_info["adjust"]
+                    if new_price != old_price:
+                        lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
                         updated += 1
-                    break
+                        print(f"  ✓ 特殊更新: {ssd_name[:30]}... ￥{old_price} -> ￥{new_price}")
+                    else:
+                        same_count += 1
+                continue
+            
+            # 使用模糊匹配查找爬取数据中的对应型号
+            best_match = None
+            best_score = 0
+            
+            # 先尝试精确匹配
+            if ssd_name in ssd_dict:
+                new_price = ssd_dict[ssd_name]
+                if new_price != old_price:
+                    lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    updated += 1
+                    print(f"  ✓ 精确匹配: {ssd_name[:30]}... ￥{old_price} -> ￥{new_price}")
+                else:
+                    same_count += 1
+                continue
+            
+            # 提取容量信息用于匹配
+            cap_match = re.search(r'(\d+G|\d+TB|\d+T)', ssd_name)
+            capacity = cap_match.group(1) if cap_match else ""
+            
+            # 尝试使用型号关键字匹配
+            ssd_key = extract_ssd_exact_key(ssd_name)
+            
+            # 在爬取数据中查找匹配
+            for crawled_name, crawled_price in ssd_dict.items():
+                crawled_key = extract_ssd_exact_key(crawled_name)
+                
+                # 检查容量是否一致
+                crawled_cap = re.search(r'(\d+G|\d+TB|\d+T)', crawled_name)
+                crawled_capacity = crawled_cap.group(1) if crawled_cap else ""
+                
+                # 容量必须一致才能匹配
+                if capacity and crawled_capacity and capacity != crawled_capacity:
+                    continue
+                
+                # 使用 fuzzywuzzy 进行模糊匹配
+                from fuzzywuzzy import fuzz
+                score = fuzz.token_set_ratio(ssd_name, crawled_name)
+                
+                # 如果key匹配，给予更高分数
+                if ssd_key and crawled_key and ssd_key == crawled_key:
+                    score = 95
+                
+                if score > best_score and score >= 70:
+                    best_score = score
+                    best_match = (crawled_name, crawled_price)
+            
+            if best_match:
+                new_price = best_match[1]
+                if new_price != old_price:
+                    lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    updated += 1
+                    print(f"  ✓ 模糊匹配({best_score}%): {ssd_name[:25]}... -> {best_match[0][:25]}... ￥{old_price} -> ￥{new_price}")
+                else:
+                    same_count += 1
+            else:
+                no_match_count += 1
+                print(f"  ⚠️ 未匹配: {ssd_name[:30]}...")
 
         # 查找SSD目标位置和范围
         target_idx = find_ssd_target_position(lines, SSD_TARGET_LINE)
@@ -510,26 +604,25 @@ def update_ssd_prices():
             # 删除现有的SSD数据行
             del lines[start_pos:end_pos]
             
-            # 准备新SSD数据（只包含不在目标列表中的新硬盘）
-            existing_names = set(target_ssd)  # 已经处理过的SSD名称
+            # 准备新SSD数据（只包含不在HTML文件中的新硬盘）
+            existing_names = set()
+            # 收集HTML文件中已存在的SSD名称
+            for line in lines:
+                match = re.search(r'{n:"([^"]+)",p:\d+}', line)
+                if match:
+                    existing_names.add(match.group(1))
+            
             new_ssd_lines = []
             
             for ssd in ssd_list:
-                # 检查这个SSD是否已经在目标列表中（即是否已更新价格）
-                found_in_targets = False
-                for target_name in target_ssd:
-                    if target_name in ssd["name"]:
-                        found_in_targets = True
-                        break
-                
-                # 只添加不在目标列表中的新SSD
-                if not found_in_targets:
+                # 只添加不在HTML文件中的新SSD
+                if ssd["name"] not in existing_names:
                     new_ssd_lines.append(f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
             
             # 在目标位置后插入新的SSD数据
             if new_ssd_lines:
-                for i, new_line in enumerate(new_ssd_lines):
-                    lines.insert(start_pos + i, new_line)
+                for j, new_line in enumerate(new_ssd_lines):
+                    lines.insert(start_pos + j, new_line)
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
@@ -543,11 +636,15 @@ def update_ssd_prices():
         print(f"🧮 佰维 NV7400 2T 调整后价格 = {adjusted_2t_price} (-300)")
         print(f"🧮 佰维 NV7400 1T 原始价格 = {nv7400_1t_price} (2T × 0.53)")
         print(f"🧮 佰维 NV7400 1T 调整后价格 = {adjusted_1t_price} (-90)")
-        print(f"🧮 更新了 {updated} 个已知SSD价格")
-        print(f"🧮 添加了 {len(new_ssd_lines)} 个新SSD型号")
+        print(f"🧮 更新了 {updated} 个SSD价格")
+        print(f"🧮 价格不变 {same_count} 个")
+        print(f"🧮 未匹配 {no_match_count} 个")
+        print(f"🧮 添加了 {len(new_ssd_lines) if 'new_ssd_lines' in dir() else 0} 个新SSD型号")
         return updated
     except Exception as e:
         print(f"❌ 硬盘更新失败：{e}")
+        import traceback
+        traceback.print_exc()
         return 0
 
 # -------------------------- CPU 更新函数 --------------------------
