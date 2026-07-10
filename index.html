@@ -237,49 +237,116 @@
                 width: 100% !important;
                 min-width: 100% !important;
                 overflow-x: hidden;
+                font-size: 16px;
             }
             body {
                 width: 100% !important;
                 min-width: 100% !important;
                 overflow-x: hidden;
                 padding: 8px;
+                font-size: 16px;
             }
             .container {
                 width: 100% !important;
                 max-width: 100% !important;
                 min-width: 100% !important;
-                padding: 10px;
+                padding: 12px;
                 overflow-x: auto;
+            }
+            .title {
+                font-size: 18px !important;
+                padding: 12px !important;
+            }
+            .user label {
+                font-size: 18px !important;
+                width: 85px !important;
+            }
+            .user input {
+                font-size: 16px !important;
+                padding: 12px 30px 12px 10px !important;
+                height: 48px !important;
+            }
+            .user-clear-btn {
+                width: 32px !important;
+                height: 32px !important;
+                line-height: 32px !important;
+                font-size: 22px !important;
+            }
+            .datetime-display {
+                font-size: 14px !important;
+                padding: 10px 12px !important;
             }
             .item {
                 flex-wrap: nowrap;
-                min-width: 400px;
+                min-width: 420px;
+                padding: 8px !important;
+                margin-bottom: 10px !important;
             }
             .item-label {
-                width: 70px !important;
-                font-size: 16px !important;
+                width: 75px !important;
+                font-size: 18px !important;
                 white-space: nowrap !important;
-                line-height: 24px !important;
+                line-height: 28px !important;
             }
             .item-label .icon-gray {
-                font-size: 18px !important;
-                line-height: 24px !important;
+                font-size: 20px !important;
+                line-height: 28px !important;
                 vertical-align: middle !important;
                 filter: grayscale(100%) brightness(60%) !important;
             }
             .item-price {
-                width: 75px !important;
+                width: 85px !important;
                 flex-shrink: 0;
             }
             .item-input {
                 flex: 1;
-                min-width: 200px;
+                min-width: 220px;
+            }
+            input.combo {
+                font-size: 16px !important;
+                padding: 12px 30px 12px 10px !important;
+                height: 48px !important;
+            }
+            input.combo.selected {
+                font-size: 17px !important;
+            }
+            input.price {
+                font-size: 18px !important;
+                padding: 12px 10px 12px 25px !important;
+                height: 48px !important;
+            }
+            .clear-btn {
+                width: 32px !important;
+                height: 32px !important;
+                line-height: 32px !important;
+                font-size: 22px !important;
+                right: 10px !important;
+                display: block !important;
+            }
+            .user-clear-btn {
+                display: block !important;
+            }
+            input.combo, input.price, button, .clear-btn, .user-clear-btn {
+                -webkit-tap-highlight-color: transparent !important;
+                touch-action: manipulation !important;
             }
             .dropdown, .user-dropdown {
-                max-height: 250px !important;
+                max-height: 300px !important;
                 z-index: 2000 !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
+            }
+            .dropdown div,
+            .user-dropdown div {
+                padding: 14px 12px !important;
+                font-size: 16px !important;
+                min-height: 50px !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+            .dropdown-price {
+                font-size: 16px !important;
+                min-width: 70px !important;
             }
             .dropdown::-webkit-scrollbar,
             .user-dropdown::-webkit-scrollbar {
@@ -297,8 +364,72 @@
                 min-height: 50px !important;
             }
             .user-dropdown {
-                left: 60px !important;
-                width: calc(100% - 60px) !important;
+                left: 70px !important;
+                width: calc(100% - 70px) !important;
+            }
+            .btn-bar {
+                gap: 8px !important;
+                margin: 15px 0 !important;
+            }
+            .btn-bar button {
+                padding: 14px 8px !important;
+                font-size: 16px !important;
+                min-width: 90px !important;
+                min-height: 50px !important;
+            }
+            .btn-cost-toggle {
+                padding: 14px 8px !important;
+                font-size: 16px !important;
+                min-width: 130px !important;
+                min-height: 50px !important;
+            }
+            .cost-display {
+                padding: 14px 8px !important;
+                font-size: 16px !important;
+                min-width: 130px !important;
+                min-height: 50px !important;
+            }
+            .cost-display #costTotal {
+                font-size: 20px !important;
+            }
+            .btn-screenshot {
+                padding: 16px !important;
+                font-size: 17px !important;
+                min-height: 52px !important;
+            }
+            .invoice-btn-bar {
+                gap: 8px !important;
+                margin: 10px 0 !important;
+            }
+            .btn-invoice {
+                padding: 14px 8px !important;
+                font-size: 16px !important;
+                min-width: 120px !important;
+                min-height: 50px !important;
+            }
+            .total {
+                padding: 18px !important;
+                min-height: 160px !important;
+            }
+            .total-final {
+                font-size: 32px !important;
+            }
+            .ludashi-score,
+            .power-consumption {
+                font-size: 16px !important;
+            }
+            .remark-input {
+                font-size: 16px !important;
+                padding: 10px !important;
+                min-height: 48px !important;
+                line-height: 22px !important;
+            }
+            .service-item {
+                font-size: 15px !important;
+            }
+            .service-item .svc-box {
+                width: 20px !important;
+                height: 20px !important;
             }
         }
         .item-input{
