@@ -552,6 +552,39 @@
             box-shadow: 0 0 10px rgba(255,153,0,0.8);
         }
 
+        /* 发票按钮容器样式 */
+        .invoice-btn-bar {
+            display: flex;
+            gap: 6px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+        /* 发票按钮样式 */
+        .btn-invoice {
+            flex: 1;
+            padding: 10px 6px;
+            border: 2px solid #7C3AED;
+            border-radius: 6px;
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            background: #000;
+            min-width: 100px;
+            box-shadow: 0 0 6px rgba(153,0,255,0.6);
+            transition: all 0.3s;
+        }
+        .btn-invoice:hover {
+            box-shadow: 0 0 10px rgba(0,255,0,0.8);
+            background: #330066;
+        }
+        .btn-invoice.active {
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0,255,0,0.8);
+            background: #7C3AED;
+            color: #000;
+        }
+
         /* 总价区域样式 - 核心匹配参考图 */
         .total{
             background: #000; /* 总价区域黑底 */
@@ -1198,6 +1231,10 @@
         <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
 
     </div>
+    <div class="invoice-btn-bar">
+        <button class="btn-invoice" id="btn-kai-pu" onclick="toggleInvoice('pu')">开普票</button>
+        <button class="btn-invoice" id="btn-kai-zhuan" onclick="toggleInvoice('zhuan')">开专票</button>
+    </div>
 
 </div>
 
@@ -1257,6 +1294,9 @@
     </div>
 
 <script>
+    // 发票类型全局变量：null-无发票, 'pu'-普票, 'zhuan'-专票
+    let invoiceType = null;
+
     // ===================== 全局提示消息功能 =====================
     function showToast(message, type = 'info', duration = 3000) {
         const container = document.getElementById('toastContainer');
@@ -4677,6 +4717,28 @@
         costDisplay.classList.toggle('show');
     }
 
+    // 发票类型切换功能
+    function toggleInvoice(type) {
+        const btnPu = document.getElementById('btn-kai-pu');
+        const btnZhuan = document.getElementById('btn-kai-zhuan');
+        
+        if (invoiceType === type) {
+            invoiceType = null;
+            btnPu.classList.remove('active');
+            btnZhuan.classList.remove('active');
+        } else {
+            invoiceType = type;
+            btnPu.classList.remove('active');
+            btnZhuan.classList.remove('active');
+            if (type === 'pu') {
+                btnPu.classList.add('active');
+            } else {
+                btnZhuan.classList.add('active');
+            }
+        }
+        calc();
+    }
+
     // 保存截图功能
     function saveScreenshot() {
         // 检查html2canvas是否加载成功
@@ -4704,6 +4766,13 @@
             const screenshotContainer = document.querySelector('.screenshot-btn-container');
             const screenshotContainerDisplay = screenshotContainer.style.display;
             screenshotContainer.style.display = 'none';
+            
+            // 隐藏发票按钮栏
+            const invoiceBtnBar = document.querySelector('.invoice-btn-bar');
+            const invoiceBtnBarDisplay = invoiceBtnBar ? invoiceBtnBar.style.display : 'none';
+            if (invoiceBtnBar) {
+                invoiceBtnBar.style.display = 'none';
+            }
 
             // 使用html2canvas生成截图
             // 获取完整的文档高度（修复手机端截不全的问题）
@@ -5164,6 +5233,10 @@
                 // 恢复按钮栏显示
                 btnBar.style.display = btnBarDisplay;
                 screenshotContainer.style.display = screenshotContainerDisplay;
+                // 恢复发票按钮栏显示
+                if (invoiceBtnBar) {
+                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
+                }
 
                 // 生成文件名（使用当前日期时间）
                 const now = new Date();
@@ -5202,6 +5275,10 @@
                 // 恢复按钮栏显示
                 btnBar.style.display = btnBarDisplay;
                 screenshotContainer.style.display = screenshotContainerDisplay;
+                // 恢复发票按钮栏显示
+                if (invoiceBtnBar) {
+                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
+                }
                 
                 throw error;
             });
@@ -5236,6 +5313,13 @@
             const screenshotContainer = document.querySelector('.screenshot-btn-container');
             const screenshotContainerDisplay = screenshotContainer.style.display;
             screenshotContainer.style.display = 'none';
+            
+            // 隐藏发票按钮栏
+            const invoiceBtnBar = document.querySelector('.invoice-btn-bar');
+            const invoiceBtnBarDisplay = invoiceBtnBar ? invoiceBtnBar.style.display : 'none';
+            if (invoiceBtnBar) {
+                invoiceBtnBar.style.display = 'none';
+            }
 
             const fullHeight = Math.max(
                 document.body.scrollHeight,
@@ -5709,6 +5793,10 @@
             }).then(canvas => {
                 btnBar.style.display = btnBarDisplay;
                 screenshotContainer.style.display = screenshotContainerDisplay;
+                // 恢复发票按钮栏显示
+                if (invoiceBtnBar) {
+                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
+                }
 
                 const now = new Date();
                 const year = now.getFullYear();
@@ -5741,6 +5829,10 @@
             }).catch(error => {
                 btnBar.style.display = btnBarDisplay;
                 screenshotContainer.style.display = screenshotContainerDisplay;
+                // 恢复发票按钮栏显示
+                if (invoiceBtnBar) {
+                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
+                }
                 
                 throw error;
             });
@@ -5763,7 +5855,17 @@
         // 更新成本合计显示（所有配件成本 + 450元运营成本）
         document.getElementById("costTotal").innerText=Math.round(sum + 450);
         // 修改：最终报价四舍五入为整数，去掉小数点
-        const finalPrice = Math.round(sum / 0.9415);
+        let finalPrice = Math.round(sum / 0.9415);
+        
+        // 根据发票类型应用税率
+        let taxRate = 1;
+        if (invoiceType === 'pu') {
+            taxRate = 1.025;
+        } else if (invoiceType === 'zhuan') {
+            taxRate = 1.13;
+        }
+        finalPrice = Math.round(finalPrice * taxRate);
+        
         document.getElementById("final").innerText=`${finalPrice} 元`;
         
         // 计算鲁大师跑分
@@ -6334,6 +6436,11 @@
     function reset(){
         if(!confirm("确定清空？"))return;
         localStorage.removeItem("last");
+        invoiceType = null;
+        const btnPu = document.getElementById('btn-kai-pu');
+        const btnZhuan = document.getElementById('btn-kai-zhuan');
+        if (btnPu) btnPu.classList.remove('active');
+        if (btnZhuan) btnZhuan.classList.remove('active');
         location.reload();
     }
 
