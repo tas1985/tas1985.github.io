@@ -6661,6 +6661,22 @@
                         updateCount++;
                     }
                 }
+                
+                if (type === "ram" && name.trim() === "阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲") {
+                    const gwModelIndex = data[type].findIndex(item => item.n.trim() === "光威 天策 16G（8*2）3200 白色 ");
+                    if (gwModelIndex !== -1) {
+                        data[type][gwModelIndex].p = newPrice;
+                        updateCount++;
+                    }
+                }
+                
+                if (type === "ram" && name.trim() === "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲") {
+                    const gwModelIndex = data[type].findIndex(item => item.n.trim() === "光威 天策 32G（16*2）3200 白色 ");
+                    if (gwModelIndex !== -1) {
+                        data[type][gwModelIndex].p = newPrice;
+                        updateCount++;
+                    }
+                }
             } else {
                 notFoundList.push(`${typeName}: ${name} (型号未找到)`);
             }
