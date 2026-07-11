@@ -574,21 +574,29 @@
             display:flex;
             gap:6px;
             margin: 15px 0;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            align-items: stretch;
         }
-        .btn-bar button{
+        .btn-bar button,
+        .btn-bar .btn-cost-toggle,
+        .btn-bar .cost-display {
             flex:1;
             padding: 10px 6px;
-            border:none;
             border-radius: 6px;
-            color:#00ff00; /* 按钮文字绿色 */
             font-weight:bold;
             font-size: 14px;
             cursor: pointer;
-            border: 2px solid #7C3AED; /* 按钮紫色边框 */
-            background: #000; /* 按钮黑底 */
-            min-width: 80px;
             box-shadow: 0 0 6px rgba(153,0,255,0.6);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-bar button{
+            border:none;
+            color:#00ff00;
+            border: 2px solid #7C3AED;
+            background: #000;
         }
         .btn-bar button:hover{
             box-shadow: 0 0 10px rgba(0,255,0,0.8);
@@ -647,67 +655,102 @@
             background: #330066;
         }
 
-        /* 保存截图按钮容器样式 */
-        .screenshot-btn-container {
+        /* 所有按钮容器样式 */
+        .all-btn-container {
             display: flex;
-            gap: 6px;
+            flex-direction: column;
+            gap: 4px;
             width: 100%;
-            margin-top: 8px;
+            margin-top: 10px;
         }
-        /* 保存截图按钮样式 */
-        .btn-screenshot {
+        .screenshot-btn-row,
+        .action-btn-row,
+        .invoice-btn-row {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+            flex-wrap: nowrap;
+            align-items: stretch;
+        }
+        .screenshot-btn-row button,
+        .action-btn-row button,
+        .action-btn-row .cost-display {
             flex: 1;
-            padding: 12px;
-            border: 2px solid #00ff00;
+            padding: 12px 4px;
             border-radius: 6px;
-            color: #00ff00;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
+            box-shadow: 0 0 6px rgba(153,0,255,0.6);
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: #000;
-            margin: 0;
-            box-shadow: 0 0 6px rgba(0,255,0,0.6);
+            border: 2px solid #7C3AED;
+            color: #00ff00;
             white-space: nowrap;
-            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .btn-screenshot:hover {
+        .invoice-btn-row button {
+            flex: 1;
+            padding: 8px 4px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(153,0,255,0.6);
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border: 2px solid #7C3AED;
+            color: #ff9900;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .screenshot-btn-row button:hover,
+        .action-btn-row button:hover,
+        .action-btn-row .cost-display:hover,
+        .invoice-btn-row button:hover {
             box-shadow: 0 0 10px rgba(0,255,0,0.8);
             background: #330066;
+        }
+
+        .btn-screenshot {
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 6px rgba(0,255,0,0.6);
         }
         .btn-anonymous {
             border-color: #ff9900;
             color: #ff9900;
             box-shadow: 0 0 6px rgba(255,153,0,0.6);
         }
-        .btn-anonymous:hover {
-            box-shadow: 0 0 10px rgba(255,153,0,0.8);
+        .btn-cost-toggle {
+            border-color: #ff9900;
+            color: #ff9900;
+            box-shadow: 0 0 6px rgba(255,153,0,0.6);
         }
-
-        /* 发票按钮容器样式 */
-        .invoice-btn-bar {
+        .cost-display {
             display: flex;
-            gap: 6px;
-            margin: 8px 0;
-            flex-wrap: wrap;
+            border-color: #7C3AED;
+            color: #ff9900;
+            gap: 4px;
         }
-        /* 发票按钮样式 */
-        .btn-invoice {
-            flex: 1;
-            padding: 10px 6px;
-            border: 2px solid #7C3AED;
-            border-radius: 6px;
+        .cost-display span:first-child {
             color: #00ff00;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            background: #000;
-            min-width: 100px;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
-            transition: all 0.3s;
         }
-        .btn-invoice:hover {
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
-            background: #330066;
+        .cost-display #costTotal {
+            color: #ff9900;
+            font-size: 16px;
+            text-shadow: 0 0 8px rgba(255,153,0,0.8);
+        }
+        .cost-display span:last-child {
+            color: #ff9900;
         }
         .btn-invoice.active {
             border-color: #00ff00;
@@ -1308,10 +1351,26 @@
             <label class="service-item"><input type="checkbox" id="svc-light" onchange="updateServiceText()"> <span class="svc-box"></span>关灯</label>
             <label class="service-item"><input type="checkbox" id="svc-burntest" checked onchange="updateServiceText()"> <span class="svc-box"></span>烤机测试</label>
         </div>
-        <div class="screenshot-btn-container">
-        <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
-        <button class="btn-screenshot btn-anonymous" onclick="saveAnonymousScreenshot()">匿名截图</button>
-    </div>
+        <div class="all-btn-container">
+            <div class="action-btn-row">
+                <button class="btn-save" type="button" onclick="event.preventDefault(); save();">保存配置</button>
+                <div class="cost-display">
+                    <span>成本合计：</span>
+                    <span id="costTotal">0</span>
+                    <span>元</span>
+                </div>
+                <button class="btn-reset" onclick="reset()">清空重置</button>
+                <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
+            </div>
+            <div class="screenshot-btn-row">
+                <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
+                <button class="btn-screenshot btn-anonymous" onclick="saveAnonymousScreenshot()">匿名截图</button>
+            </div>
+            <div class="invoice-btn-row">
+                <button class="btn-invoice" id="btn-kai-pu" onclick="toggleInvoice('pu')">开普票</button>
+                <button class="btn-invoice" id="btn-kai-zhuan" onclick="toggleInvoice('zhuan')">开专票</button>
+            </div>
+        </div>
     </div>
 
     <!-- 最终报价区域移到按钮栏上方 -->
@@ -1348,23 +1407,6 @@
         <div class="total-line ludashi-score"><span>鲁大师跑分：</span><span id="ludashiScore">0 分</span></div>
         <div class="total-line power-consumption"><span>主机默认功耗：</span><span id="totalPower">0 W</span></div>
         <div class="total-line rebate-info"><span>确认收货后凭图文好评可返现10元</span></div>
-    </div>
-
-    <div class="btn-bar">
-        <button class="btn-save" type="button" onclick="event.preventDefault(); save();">保存配置</button>
-        <button class="btn-cost-toggle" onclick="toggleCostDisplay()">成本合计</button>
-        <div class="cost-display" onclick="toggleCostDisplay()">
-            <span>成本合计：</span>
-            <span id="costTotal">0</span>
-            <span>元</span>
-        </div>
-        <button class="btn-reset" onclick="reset()">清空重置</button>
-        <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
-
-    </div>
-    <div class="invoice-btn-bar">
-        <button class="btn-invoice" id="btn-kai-pu" onclick="toggleInvoice('pu')">开普票</button>
-        <button class="btn-invoice" id="btn-kai-zhuan" onclick="toggleInvoice('zhuan')">开专票</button>
     </div>
 
 </div>
@@ -4842,12 +4884,6 @@
         }, 150);
     }
 
-    // 切换成本合计显示/隐藏
-    function toggleCostDisplay() {
-        const costDisplay = document.querySelector('.cost-display');
-        costDisplay.classList.toggle('show');
-    }
-
     // 发票类型切换功能
     function toggleInvoice(type) {
         const btnPu = document.getElementById('btn-kai-pu');
@@ -4888,22 +4924,10 @@
             // 获取要截图的容器
             const container = document.querySelector('.container');
             
-            // 临时隐藏按钮栏和截图按钮
-            const btnBar = document.querySelector('.btn-bar');
-            const btnBarDisplay = btnBar.style.display;
-            btnBar.style.display = 'none';
-            
-            // 隐藏截图按钮容器
-            const screenshotContainer = document.querySelector('.screenshot-btn-container');
-            const screenshotContainerDisplay = screenshotContainer.style.display;
-            screenshotContainer.style.display = 'none';
-            
-            // 隐藏发票按钮栏
-            const invoiceBtnBar = document.querySelector('.invoice-btn-bar');
-            const invoiceBtnBarDisplay = invoiceBtnBar ? invoiceBtnBar.style.display : 'none';
-            if (invoiceBtnBar) {
-                invoiceBtnBar.style.display = 'none';
-            }
+            // 临时隐藏所有按钮容器
+            const allBtnContainer = document.querySelector('.all-btn-container');
+            const allBtnContainerDisplay = allBtnContainer.style.display;
+            allBtnContainer.style.display = 'none';
 
             // 使用html2canvas生成截图
             // 获取完整的文档高度（修复手机端截不全的问题）
@@ -5361,13 +5385,8 @@
                     clonedDoc.head.appendChild(style);
                 }
             }).then(canvas => {
-                // 恢复按钮栏显示
-                btnBar.style.display = btnBarDisplay;
-                screenshotContainer.style.display = screenshotContainerDisplay;
-                // 恢复发票按钮栏显示
-                if (invoiceBtnBar) {
-                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
-                }
+                // 恢复所有按钮容器显示
+                allBtnContainer.style.display = allBtnContainerDisplay;
 
                 // 生成文件名（使用当前日期时间）
                 const now = new Date();
@@ -5403,13 +5422,8 @@
                     alert(`截图已保存：${fileName}`);
                 }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
             }).catch(error => {
-                // 恢复按钮栏显示
-                btnBar.style.display = btnBarDisplay;
-                screenshotContainer.style.display = screenshotContainerDisplay;
-                // 恢复发票按钮栏显示
-                if (invoiceBtnBar) {
-                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
-                }
+                // 恢复所有按钮容器显示
+                allBtnContainer.style.display = allBtnContainerDisplay;
                 
                 throw error;
             });
@@ -5437,20 +5451,10 @@
         try {
             const container = document.querySelector('.container');
             
-            const btnBar = document.querySelector('.btn-bar');
-            const btnBarDisplay = btnBar.style.display;
-            btnBar.style.display = 'none';
-            
-            const screenshotContainer = document.querySelector('.screenshot-btn-container');
-            const screenshotContainerDisplay = screenshotContainer.style.display;
-            screenshotContainer.style.display = 'none';
-            
-            // 隐藏发票按钮栏
-            const invoiceBtnBar = document.querySelector('.invoice-btn-bar');
-            const invoiceBtnBarDisplay = invoiceBtnBar ? invoiceBtnBar.style.display : 'none';
-            if (invoiceBtnBar) {
-                invoiceBtnBar.style.display = 'none';
-            }
+            // 临时隐藏所有按钮容器
+            const allBtnContainer = document.querySelector('.all-btn-container');
+            const allBtnContainerDisplay = allBtnContainer.style.display;
+            allBtnContainer.style.display = 'none';
 
             const fullHeight = Math.max(
                 document.body.scrollHeight,
@@ -5922,12 +5926,8 @@
                     clonedDoc.head.appendChild(style);
                 }
             }).then(canvas => {
-                btnBar.style.display = btnBarDisplay;
-                screenshotContainer.style.display = screenshotContainerDisplay;
-                // 恢复发票按钮栏显示
-                if (invoiceBtnBar) {
-                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
-                }
+                // 恢复所有按钮容器显示
+                allBtnContainer.style.display = allBtnContainerDisplay;
 
                 const now = new Date();
                 const year = now.getFullYear();
@@ -5958,12 +5958,8 @@
                     alert(`匿名截图已保存：${fileName}`);
                 }, 'image/jpeg', 0.95);
             }).catch(error => {
-                btnBar.style.display = btnBarDisplay;
-                screenshotContainer.style.display = screenshotContainerDisplay;
-                // 恢复发票按钮栏显示
-                if (invoiceBtnBar) {
-                    invoiceBtnBar.style.display = invoiceBtnBarDisplay;
-                }
+                // 恢复所有按钮容器显示
+                allBtnContainer.style.display = allBtnContainerDisplay;
                 
                 throw error;
             });
