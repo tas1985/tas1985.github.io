@@ -720,15 +720,50 @@
             background: #330066;
         }
 
+        .btn-save {
+            background: #000 !important;
+            border-color: #00ff00 !important;
+            color: #9900ff !important;
+            box-shadow: 0 0 12px rgba(0,255,0,0.8) !important;
+            border-width: 3px !important;
+            font-size: 18px !important;
+            text-shadow: 0 0 6px rgba(153,0,255,0.8) !important;
+        }
+        .btn-save:hover {
+            background: #000 !important;
+            box-shadow: 0 0 20px rgba(0,255,0,1) !important;
+            transform: scale(1.02) !important;
+        }
         .btn-screenshot {
-            border-color: #00ff00;
-            color: #00ff00;
-            box-shadow: 0 0 6px rgba(0,255,0,0.6);
+            background: #000 !important;
+            border-color: #00ff00 !important;
+            color: #9900ff !important;
+            box-shadow: 0 0 12px rgba(0,255,0,0.8) !important;
+            border-width: 3px !important;
+            font-size: 18px !important;
+            text-shadow: 0 0 6px rgba(153,0,255,0.8) !important;
+        }
+        .btn-screenshot:hover {
+            background: #000 !important;
+            box-shadow: 0 0 20px rgba(0,255,0,1) !important;
+            transform: scale(1.02) !important;
         }
         .btn-anonymous {
-            border-color: #ff9900;
-            color: #ff9900;
-            box-shadow: 0 0 6px rgba(255,153,0,0.6);
+            background: #000 !important;
+            border-color: #9900ff !important;
+            color: #00ff00 !important;
+            box-shadow: 0 0 6px rgba(153,0,255,0.6) !important;
+            border-width: 2px !important;
+            font-size: 14px !important;
+            text-shadow: none !important;
+        }
+        .btn-anonymous:hover {
+            background: #330066 !important;
+            box-shadow: 0 0 10px rgba(153,0,255,0.8) !important;
+            transform: none !important;
+        }
+        .btn-reset {
+            color: #ff9900 !important;
         }
         .btn-cost-toggle {
             border-color: #ff9900;
@@ -2217,6 +2252,7 @@
         ],
         vga: [
             {n:"双敏6500XT 暴雪白色",p:998},
+            {n:"华硕 RTX5060TI 16G DUAL 雪豹 黑色",p:3950},
             {n:"七彩虹RTX5060TiUItra DUO 16GB黑色双风扇",p:3899},
             {n:"七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇",p:2550},
             {n:"映众 RTX5060ti 16G 曜夜 双风扇",p:3780},
@@ -3307,6 +3343,7 @@
         '华硕 RTX5060TI O8G GAMING TX 天选白色': 'huashuo_rtx5060ti_o8g_gaming_tx_天选白色',
         '华硕 RTX5060TI O8G ATS 巨齿鲨 三扇': 'huashuo_rtx5060ti_o8g_ats_巨齿鲨_三扇',
         '华硕 RTX5060TI 8G DUAL 雪豹 黑色': 'huashuo_rtx5060ti_8g_dual_雪豹_b',
+        '华硕 RTX5060TI 16G DUAL 雪豹 黑色': 'huashuo_rtx5060ti_8g_dual_雪豹_b',
         '华硕 RTX5060 O8G GAMING TX 天选白色': 'huashuo_rtx5060_o8g_gaming_tx_天选白色',
         '华硕 RTX5060 O8G DUAL 雪豹 黑色': 'huashuo_rtx5060_o8g_dual_雪豹_b',
         '华硕 RTX5060 O8G ATS 巨齿鲨 三扇': 'huashuo_rtx5060_o8g_ats_巨齿鲨_三扇',
@@ -6604,10 +6641,8 @@
             let targetIndex = data[type].findIndex(item => item.n.trim() === name.trim());
             
             if(targetIndex !== -1){
-                // 更新价格
                 let newPrice = parseFloat(price);
                 
-                // 特定型号价格额外加90元
                 const specialSsdModels = [
                     "宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",
                     "宏碁 GM7 1T PCIE 4.0 读7200写6300"
@@ -6618,6 +6653,14 @@
                 
                 data[type][targetIndex].p = newPrice;
                 updateCount++;
+                
+                if (type === "vga" && name.trim() === "技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇") {
+                    const asusModelIndex = data[type].findIndex(item => item.n.trim() === "华硕 RTX5060TI 16G DUAL 雪豹 黑色");
+                    if (asusModelIndex !== -1) {
+                        data[type][asusModelIndex].p = newPrice + 100;
+                        updateCount++;
+                    }
+                }
             } else {
                 notFoundList.push(`${typeName}: ${name} (型号未找到)`);
             }
