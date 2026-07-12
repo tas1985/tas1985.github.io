@@ -693,6 +693,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .invoice-btn-row {
+            margin-top: 10px;
+        }
         .invoice-btn-row button {
             flex: 1;
             padding: 8px 4px;
@@ -1401,10 +1404,6 @@
                 <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
                 <button class="btn-screenshot btn-anonymous" onclick="saveAnonymousScreenshot()">匿名截图</button>
             </div>
-            <div class="invoice-btn-row">
-                <button class="btn-invoice" id="btn-kai-pu" onclick="toggleInvoice('pu')">开普票</button>
-                <button class="btn-invoice" id="btn-kai-zhuan" onclick="toggleInvoice('zhuan')">开专票</button>
-            </div>
         </div>
     </div>
 
@@ -1442,6 +1441,11 @@
         <div class="total-line ludashi-score"><span>鲁大师跑分：</span><span id="ludashiScore">0 分</span></div>
         <div class="total-line power-consumption"><span>主机默认功耗：</span><span id="totalPower">0 W</span></div>
         <div class="total-line rebate-info"><span>确认收货后凭图文好评可返现10元</span></div>
+    </div>
+
+    <div class="invoice-btn-row">
+        <button class="btn-invoice" id="btn-kai-pu" onclick="toggleInvoice('pu')">开普票</button>
+        <button class="btn-invoice" id="btn-kai-zhuan" onclick="toggleInvoice('zhuan')">开专票</button>
     </div>
 
 </div>
@@ -5218,6 +5222,9 @@
                         .btn-screenshot {
                             display: none !important;
                         }
+                        .invoice-btn-row {
+                            display: none !important;
+                        }
                         .title {
                             box-shadow: none !important;
                             border: 2px solid #7C3AED !important;
@@ -5321,6 +5328,9 @@
                             align-self: flex-start !important;
                         }
                         .btn-screenshot {
+                            display: none !important;
+                        }
+                        .invoice-btn-row {
                             display: none !important;
                         }
                         /* 修复配件列表字体大小不一的问题 - 确保所有文字元素字体统一 */
@@ -5764,6 +5774,9 @@
                         .btn-screenshot {
                             display: none !important;
                         }
+                        .invoice-btn-row {
+                            display: none !important;
+                        }
                         .screenshot-btn-container {
                             display: none !important;
                         }
@@ -5870,6 +5883,9 @@
                             align-self: flex-start !important;
                         }
                         .btn-screenshot {
+                            display: none !important;
+                        }
+                        .invoice-btn-row {
                             display: none !important;
                         }
                         .user input, .item input, .combo {
