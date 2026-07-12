@@ -2257,6 +2257,7 @@
         vga: [
             {n:"双敏6500XT 暴雪白色",p:998},
             {n:"华硕 RTX5060TI 16G DUAL 雪豹 黑色",p:3950},
+            {n:"微星-RTX5070Ti 16G VENTUS  3X OC",p:7799},
             {n:"七彩虹RTX5060TiUItra DUO 16GB黑色双风扇",p:3899},
             {n:"七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇",p:2550},
             {n:"映众 RTX5060ti 16G 曜夜 双风扇",p:3780},
@@ -3348,6 +3349,7 @@
         '华硕 RTX5060TI O8G ATS 巨齿鲨 三扇': 'huashuo_rtx5060ti_o8g_ats_巨齿鲨_三扇',
         '华硕 RTX5060TI 8G DUAL 雪豹 黑色': 'huashuo_rtx5060ti_8g_dual_雪豹_b',
         '华硕 RTX5060TI 16G DUAL 雪豹 黑色': 'huashuo_rtx5060ti_8g_dual_雪豹_b',
+        '微星-RTX5070Ti 16G VENTUS  3X OC': '微星-RTX5070Ti 16G VENTUS  3X OC',
         '华硕 RTX5060 O8G GAMING TX 天选白色': 'huashuo_rtx5060_o8g_gaming_tx_天选白色',
         '华硕 RTX5060 O8G DUAL 雪豹 黑色': 'huashuo_rtx5060_o8g_dual_雪豹_b',
         '华硕 RTX5060 O8G ATS 巨齿鲨 三扇': 'huashuo_rtx5060_o8g_ats_巨齿鲨_三扇',
@@ -6674,6 +6676,14 @@
                     const asusModelIndex = data[type].findIndex(item => item.n.trim() === "华硕 RTX5060TI 16G DUAL 雪豹 黑色");
                     if (asusModelIndex !== -1) {
                         data[type][asusModelIndex].p = newPrice + 100;
+                        updateCount++;
+                    }
+                }
+                
+                if (type === "vga" && name.trim() === "技嘉 RTX5070TI GAMING OC 16G 魔鹰") {
+                    const msiModelIndex = data[type].findIndex(item => item.n.trim() === "微星-RTX5070Ti 16G VENTUS  3X OC");
+                    if (msiModelIndex !== -1) {
+                        data[type][msiModelIndex].p = newPrice;
                         updateCount++;
                     }
                 }
