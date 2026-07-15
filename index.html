@@ -62,25 +62,21 @@
         time, mark, audio, video, input, textarea, button{
             font-family:"Microsoft YaHei", "微软雅黑", "Microsoft JhengHei", "PingFang SC", sans-serif !important;
         }
-        /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
+        /* 全局浅色商务风格基础样式 - 匹配参考图配色 */
         body{
-            background: #e0e0e0; /* 参考图浅灰背景 */
-            background-image: 
-                linear-gradient(rgba(200,200,200,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(200,200,200,0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background: #f5f5f7; /* 参考图浅灰背景 */
             padding: 15px;
             font-size: 14px;
-            color: #000; /* 基础文字黑色 */
+            color: #333; /* 基础文字黑色 */
         }
         .container{
             max-width: 760px;
             margin: 0 auto;
-            background: #e0e0e0; /* 容器浅灰背景 */
+            background: #fff; /* 容器白色背景 */
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 0 30px rgba(128,0,255,0.5);
-            border: 2px solid #7C3AED; /* 外层紫色边框 */
+            box-shadow: 0 2px 15px rgba(124,58,237,0.2);
+            border: 1px solid rgba(192,132,252,0.3); /* 外层浅紫色边框 */
         }
         .title{
             text-align:center;
@@ -89,29 +85,28 @@
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 6px;
-            background: #000; /* 标题黑底 */
-            color: #00ff00; /* 标题绿色文字 */
+            background: #fff; /* 标题白底 */
+            color: #7C3AED; /* 标题紫色文字 */
             border: 2px solid #7C3AED; /* 标题紫色边框 */
-            box-shadow: 0 0 10px rgba(153,0,255,0.8), inset 0 0 8px #00ff00;
         }
         .user{
             display:flex;
             align-items:center;
-            gap:8px; /* 与 .item 一致 */
-            margin-bottom: 8px; /* 与 .item 一致 */
+            gap:8px;
+            margin-bottom: 8px;
             position:relative;
-            padding: 4px; /* 与 .item 一致 */
-            background: #d0d0d0;
-            border: 1px solid #000;
-            border-radius: 4px; /* 与 .item 一致 */
+            padding: 4px;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 4px;
         }
         .user label{
             white-space:nowrap;
             font-weight:bold;
-            font-size: 18px; /* 与其他栏目标题大小一致 */
-            color: #7C3AED; /* 客户名称标签紫色，与边框颜色统一 */
-            width: 80px; /* 与其他栏目标题宽度一致 */
-            text-align: center; /* 居中对齐 */
+            font-size: 18px;
+            color: #7C3AED;
+            width: 80px;
+            text-align: center;
         }
         .user-input-container {
             position: relative;
@@ -119,11 +114,11 @@
         }
         .user input{
             width: 100%;
-            padding: 8px 25px 8px 8px; /* 增加左侧内边距，右侧为X按钮预留空间 */
-            border: 1px solid #7C3AED; /* 输入框紫色边框 */
+            padding: 8px 25px 8px 8px;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 4px;
-            background: #000; /* 输入框黑底 */
-            color: #00ff00; /* 输入框绿色文字 */
+            background: #fff;
+            color: #333;
             font-size: 14px;
         }
         /* 新增：客户名称输入框内的X按钮 - 加大尺寸方便手指点击 */
@@ -148,13 +143,12 @@
         /* 日期时间样式 - 匹配参考图 */
         .datetime-display{
             padding: 8px 12px;
-            background: #000; /* 黑底 */
+            background: #fff;
             border-radius: 4px;
             font-size: 14px;
-            color: #00ff00; /* 绿色文字 */
+            color: #333;
             white-space:nowrap;
-            border: 1px solid #7C3AED; /* 紫色边框 */
-            box-shadow: inset 0 0 5px #00ff00;
+            border: 1px solid rgba(192,132,252,0.3);
         }
 
         /* 客户名称下拉列表样式 */
@@ -163,8 +157,8 @@
             left:70px;
             top:100%;
             width:calc(100% - 70px);
-            background: #000;
-            border: 2px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 4px;
             max-height:300px;
             overflow-y:auto;
@@ -172,30 +166,31 @@
             z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .user-dropdown::-webkit-scrollbar {
             width: 12px;
         }
         .user-dropdown::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #f0f0f0;
             border-radius: 6px;
         }
         .user-dropdown::-webkit-scrollbar-thumb {
-            background: #7C3AED;
+            background: rgba(192,132,252,0.5);
             border-radius: 6px;
             min-height: 40px;
         }
         .user-dropdown::-webkit-scrollbar-thumb:hover {
-            background: #9F67FF;
+            background: #7C3AED;
         }
         .user-dropdown div{
             padding: 8px;
             cursor:pointer;
-            color: #00ff00;
+            color: #333;
         }
         .user-dropdown div:hover{
-            background: #7C3AED;
-            color: #000;
+            background: rgba(124,58,237,0.1);
+            color: #7C3AED;
         }
 
         .item{
@@ -204,21 +199,21 @@
             gap:8px;
             margin-bottom: 8px;
             padding: 4px;
-            background: #d0d0d0;
+            background: #fff;
             border-radius: 4px;
-            border: 1px solid #000;
+            border: 1px solid rgba(192,132,252,0.3);
         }
         .item-label{
             width:80px;
             font-weight:bold;
-            color: #7C3AED; /* 紫色文字 */
+            color: #7C3AED;
             font-size: 20px;
             text-align: right;
             padding-right: 5px;
-            white-space: nowrap; /* 禁止换行 */
-            overflow: hidden; /* 隐藏溢出 */
-            text-overflow: ellipsis; /* 溢出显示省略号 */
-            line-height: 28px; /* 统一行高，确保垂直对齐 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 28px;
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -354,7 +349,7 @@
             }
             .dropdown::-webkit-scrollbar-track,
             .user-dropdown::-webkit-scrollbar-track {
-                background: #1a1a1a !important;
+                background: #f0f0f0 !important;
                 border-radius: 8px !important;
             }
             .dropdown::-webkit-scrollbar-thumb,
@@ -447,7 +442,7 @@
             left: 8px;
             top: 50%;
             transform: translateY(-50%);
-            color: #000; /* 紫色¥符号，匹配价格文字颜色 */
+            color: #7C3AED; /* 紫色¥符号，匹配价格文字颜色 */
             font-size: 14px;
             font-weight: bold;
             z-index: 1;
@@ -464,11 +459,11 @@
         input.combo{
             width:100%;
             padding: 8px 25px 8px 8px;
-            border: 1px solid #888; /* 配件输入框灰色边框 */
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 4px;
             outline:none;
-            background: #e8e8e8; /* 输入框深一点的浅灰底 */
-            color: #000; /* 输入框绿色文字 */
+            background: #fff;
+            color: #333;
             font-size: 14px;
             font-weight: normal;
         }
@@ -477,17 +472,18 @@
         }
         input.price{
             width:100%;
-            padding: 8px 8px 8px 20px; /* 左侧留空给¥符号 */
+            padding: 8px 8px 8px 20px;
             text-align:right;
-            border: 1px solid #888; /* 价格输入框灰色边框 */
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 4px;
             outline:none;
-            background: #e0e0e0; /* 价格框黑底 */
-            color: #000; /* 价格紫色文字 */
+            background: #fff;
+            color: #333;
             font-size: 16px;
         }
         input.combo:focus,input.price:focus{
-            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+            box-shadow: 0 0 8px rgba(192,132,252,0.5);
+            border-color: #7C3AED;
         }
 
         /* 清空按钮样式 - 加大尺寸方便手指点击 */
@@ -516,8 +512,8 @@
             left:0;
             top:100%;
             width:100%;
-            background: #000;
-            border: 2px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 4px;
             max-height:300px;
             overflow-y:auto;
@@ -525,21 +521,22 @@
             z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .dropdown::-webkit-scrollbar {
             width: 12px;
         }
         .dropdown::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #f0f0f0;
             border-radius: 6px;
         }
         .dropdown::-webkit-scrollbar-thumb {
-            background: #7C3AED;
+            background: rgba(192,132,252,0.5);
             border-radius: 6px;
             min-height: 40px;
         }
         .dropdown::-webkit-scrollbar-thumb:hover {
-            background: #9F67FF;
+            background: #7C3AED;
         }
         .dropdown div{
             padding: 8px;
@@ -547,11 +544,11 @@
             display:flex;
             justify-content:space-between;
             align-items:center;
-            color: #00ff00;
+            color: #333;
         }
         .dropdown div:hover{
-            background: #7C3AED;
-            color: #000;
+            background: rgba(124,58,237,0.1);
+            color: #7C3AED;
         }
         /* 下拉列表价格样式 - 顶到右端对齐 */
         .dropdown-price {
@@ -586,7 +583,6 @@
             font-weight:bold;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
             min-height: 44px;
             display: flex;
             align-items: center;
@@ -594,13 +590,12 @@
         }
         .btn-bar button{
             border:none;
-            color:#00ff00;
-            border: 2px solid #7C3AED;
-            background: #000;
+            color:#7C3AED;
+            border: 1px solid #7C3AED;
+            background: #fff;
         }
         .btn-bar button:hover{
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
-            background: #330066;
+            background: rgba(124,58,237,0.1);
         }
 
         /* 成本合计显示样式 */
@@ -611,26 +606,24 @@
             justify-content: center;
             gap: 6px;
             padding: 10px 6px;
-            border: 2px solid #7C3AED;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 6px;
-            background: #000;
+            background: #fff;
             color: #ff9900;
             font-weight: bold;
             font-size: 14px;
             min-width: 120px;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
             cursor: pointer;
         }
         .cost-display.show {
             display: flex;
         }
         .cost-display span:first-child {
-            color: #00ff00;
+            color: #7C3AED;
         }
         .cost-display #costTotal {
             color: #ff9900;
             font-size: 18px;
-            text-shadow: 0 0 8px rgba(255,153,0,0.8);
         }
         .cost-display span:last-child {
             color: #ff9900;
@@ -640,19 +633,17 @@
         .btn-cost-toggle {
             flex: 1;
             padding: 10px 6px;
-            border: 2px solid #ff9900;
+            border: 1px solid #ff9900;
             border-radius: 6px;
             color: #ff9900;
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            background: #000;
+            background: #fff;
             min-width: 120px;
-            box-shadow: 0 0 6px rgba(255,153,0,0.6);
         }
         .btn-cost-toggle:hover {
-            box-shadow: 0 0 10px rgba(255,153,0,0.8);
-            background: #330066;
+            background: rgba(255,153,0,0.1);
         }
 
         /* 所有按钮容器样式 */
@@ -681,14 +672,13 @@
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
             min-height: 52px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
-            border: 2px solid #7C3AED;
-            color: #00ff00;
+            background: #fff;
+            border: 1px solid #7C3AED;
+            color: #7C3AED;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -703,14 +693,13 @@
             font-weight: bold;
             font-size: 13px;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
             min-height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
-            border: 2px solid #7C3AED;
-            color: #ff9900;
+            background: #fff;
+            border: 1px solid #7C3AED;
+            color: #7C3AED;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -719,127 +708,107 @@
         .action-btn-row button:hover,
         .action-btn-row .cost-display:hover,
         .invoice-btn-row button:hover {
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
-            background: #330066;
+            background: rgba(124,58,237,0.1);
         }
 
         .btn-save {
-            background: #000 !important;
-            border-color: #00ff00 !important;
-            color: #9900ff !important;
-            box-shadow: 0 0 12px rgba(0,255,0,0.8) !important;
-            border-width: 3px !important;
+            background: #fff !important;
+            border-color: #7C3AED !important;
+            color: #7C3AED !important;
+            border-width: 2px !important;
             font-size: 18px !important;
-            text-shadow: 0 0 6px rgba(153,0,255,0.8) !important;
         }
         .btn-save:hover {
-            background: #000 !important;
-            box-shadow: 0 0 20px rgba(0,255,0,1) !important;
+            background: rgba(124,58,237,0.1) !important;
             transform: scale(1.02) !important;
         }
         .btn-screenshot {
-            background: #000 !important;
-            border-color: #00ff00 !important;
-            color: #9900ff !important;
-            box-shadow: 0 0 12px rgba(0,255,0,0.8) !important;
-            border-width: 3px !important;
+            background: #fff !important;
+            border-color: #7C3AED !important;
+            color: #7C3AED !important;
+            border-width: 2px !important;
             font-size: 18px !important;
-            text-shadow: 0 0 6px rgba(153,0,255,0.8) !important;
         }
         .btn-screenshot:hover {
-            background: #000 !important;
-            box-shadow: 0 0 20px rgba(0,255,0,1) !important;
+            background: rgba(124,58,237,0.1) !important;
             transform: scale(1.02) !important;
         }
         .btn-anonymous {
-            background: #000 !important;
-            border-color: #9900ff !important;
-            color: #00ff00 !important;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6) !important;
-            border-width: 2px !important;
+            background: #fff !important;
+            border-color: #7C3AED !important;
+            color: #7C3AED !important;
+            border-width: 1px !important;
             font-size: 14px !important;
-            text-shadow: none !important;
         }
         .btn-anonymous:hover {
-            background: #330066 !important;
-            box-shadow: 0 0 10px rgba(153,0,255,0.8) !important;
+            background: rgba(124,58,237,0.1) !important;
             transform: none !important;
         }
         .btn-reset {
             color: #ff9900 !important;
+            border-color: #ff9900 !important;
         }
         .btn-cost-toggle {
             border-color: #ff9900;
             color: #ff9900;
-            box-shadow: 0 0 6px rgba(255,153,0,0.6);
         }
         .cost-display {
             display: flex;
-            border-color: #7C3AED;
+            border-color: rgba(192,132,252,0.4);
             color: #ff9900;
             gap: 4px;
         }
         .cost-display span:first-child {
-            color: #00ff00;
+            color: #7C3AED;
         }
         .cost-display #costTotal {
             color: #ff9900;
             font-size: 16px;
-            text-shadow: 0 0 8px rgba(255,153,0,0.8);
         }
         .cost-display span:last-child {
             color: #ff9900;
         }
         .btn-invoice.active {
-            border-color: #00ff00;
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
+            border-color: #7C3AED;
             background: #7C3AED;
-            color: #000;
+            color: #fff;
         }
 
         /* 总价区域样式 - 核心匹配参考图 */
         .total{
-            background: #000; /* 总价区域黑底 */
+            background: #fff;
             padding: 15px;
             border-radius: 8px;
             margin-top: 12px;
             text-align:right;
-            border: 3px solid #7C3AED; /* 外层紫色边框 */
+            border: 2px solid #7C3AED;
             position: relative;
-            overflow: hidden; /* 限制流光效果在黑色框内 */
-            box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #7C3AED;
-            min-height: 148px; /* 增加最小高度以容纳机箱图片 */
+            min-height: 148px;
         }
         
         .total-line{
             display:none;
-            color: #00ff00;
+            color: #333;
         }
         .total-final{
             font-size: 28px;
             font-weight:bold;
-            color: #00ff00; /* 最终报价绿色文字 */
+            color: #7C3AED;
             margin:0;
             padding:0;
             border:none;
             display:block !important;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 8px rgba(0,255,0,1);
         }
 
         /* 鲁大师跑分样式 */
         .ludashi-score{
             font-size: 18px;
             font-weight:bold;
-            color: #7C3AED; /* 紫色文字 */
+            color: #7C3AED;
             margin: 8px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 6px rgba(153,0,255,0.8);
         }
         /* 功耗显示样式 */
         .power-consumption{
@@ -850,22 +819,16 @@
             padding:0;
             border:none;
             display:block !important;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 6px rgba(124,58,237,0.8);
         }
         /* 返现信息样式 */
         .rebate-info{
             font-size: 14px;
             font-weight:normal;
-            color: #00ff00;
+            color: #ff9900;
             margin: 8px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 6px rgba(0,255,0,0.8);
         }
 
         .modal{
@@ -874,7 +837,7 @@
             left:0;
             width:100%;
             height:100%;
-            background:rgba(0,0,0,0.9);
+            background:rgba(0,0,0,0.5);
             display:none;
             align-items:center;
             justify-content:center;
@@ -882,13 +845,13 @@
             z-index:999;
         }
         .modal-box{
-            background: #e0e0e0;
+            background: #fff;
             border-radius: 8px;
             width:100%;
             max-width:340px;
             padding: 18px;
-            border: 3px solid #7C3AED;
-            box-shadow: 0 0 20px rgba(0,255,0,0.6);
+            border: 1px solid rgba(192,132,252,0.4);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
         }
         .modal-list{
             max-height:300px;
@@ -897,18 +860,18 @@
         }
         .modal-item{
             padding:8px;
-            border:1px solid #7C3AED;
+            border:1px solid rgba(192,132,252,0.3);
             border-radius:6px;
             margin-bottom:6px;
-            color: #000;
-            background: #d0d0d0;
+            color: #333;
+            background: #fff;
         }
         .modal-item button{
             width:100%;
             padding:6px;
             margin-top:6px;
-            background: #000;
-            color:#00ff00;
+            background: #fff;
+            color:#7C3AED;
             border:none;
             border-radius:4px;
             border: 1px solid #7C3AED;
@@ -920,12 +883,12 @@
             width:100%;
             height:120px;
             padding:8px;
-            border:2px solid #7C3AED;
+            border:1px solid rgba(192,132,252,0.4);
             border-radius:6px;
             margin-bottom:8px;
             resize:none;
-            background: #000;
-            color: #00ff00;
+            background: #fff;
+            color: #333;
         }
         
         /* 添加型号弹窗样式 */
@@ -935,19 +898,19 @@
         .add-area select, .add-area input{
             width:100%;
             padding:8px;
-            border:2px solid #7C3AED;
+            border:1px solid rgba(192,132,252,0.4);
             border-radius:6px;
             margin-bottom:8px;
-            background: #000;
-            color: #00ff00;
+            background: #fff;
+            color: #333;
         }
         .add-area button{
             width:100%;
             padding:8px;
             border:none;
             border-radius:6px;
-            background: #000;
-            color:#00ff00;
+            background: #fff;
+            color:#7C3AED;
             margin-top:6px;
             border: 1px solid #7C3AED;
         }
@@ -956,10 +919,10 @@
         .context-menu {
             position: absolute;
             width: 140px;
-            background: #000;
-            border: 2px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 6px;
-            box-shadow: 0 2px 15px rgba(0,255,0,0.5);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
             z-index: 1000;
             display: none;
         }
@@ -967,11 +930,11 @@
             padding: 8px;
             cursor: pointer;
             font-size: 14px;
-            color: #00ff00;
+            color: #333;
         }
         .context-menu div:hover {
-            background: #7C3AED;
-            color: #000;
+            background: rgba(124,58,237,0.1);
+            color: #7C3AED;
         }
 
         /* 备注栏样式 */
@@ -986,9 +949,9 @@
         .remark-input {
             flex: none;
             padding: 6px 10px;
-            border: 1px solid #7C3AED;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 4px;
-            background: #e0e0e0;
+            background: #fff;
             font-size: 15px;
             line-height: 20px;
             min-height: 40px;
@@ -1000,7 +963,7 @@
             overflow: auto;
             outline: none;
             resize: vertical;
-            color: #7C3AED;
+            color: #333;
             box-sizing: border-box;
         }
 
@@ -1022,8 +985,8 @@
             flex-wrap: nowrap;
             gap: 8px 15px;
             padding: 8px 10px;
-            background: #1a1a1a;
-            border: 1px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.3);
             border-radius: 6px;
             margin-top: 6px;
             width: 100%;
@@ -1037,7 +1000,7 @@
             gap: 4px;
             cursor: pointer;
             font-size: 13px;
-            color: #00ff00;
+            color: #333;
             user-select: none;
         }
         .service-item input[type="checkbox"] {
@@ -1046,17 +1009,17 @@
         .service-item .svc-box {
             width: 16px;
             height: 16px;
-            border: 2px solid #7C3AED;
+            border: 2px solid rgba(192,132,252,0.6);
             border-radius: 3px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #000;
+            background: #fff;
             transition: all 0.2s;
         }
         .service-item .svc-box::after {
             content: '✓';
-            color: #00ff00;
+            color: #7C3AED;
             font-size: 12px;
             font-weight: bold;
             display: none;
@@ -1067,10 +1030,10 @@
         }
         .service-item input[type="checkbox"]:checked + .svc-box::after {
             display: block;
+            color: #fff;
         }
         .service-item:hover .svc-box {
-            border-color: #cc66ff;
-            box-shadow: 0 0 5px rgba(153, 0, 255, 0.5);
+            border-color: #7C3AED;
         }
 
         /* WIFI提示区域样式 - 覆盖在输入栏上方 */
@@ -1111,21 +1074,21 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.6);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
         }
         .password-box {
-            background: #e0e0e0;
+            background: #fff;
             border-radius: 8px;
             width: 90%;
             max-width: 320px;
             padding: 20px;
             text-align: center;
-            border: 3px solid #00ff00;
-            box-shadow: 0 0 20px rgba(153,0,255,0.8);
+            border: 1px solid rgba(192,132,252,0.4);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
         }
         .password-box h3{
             color: #7C3AED;
@@ -1133,7 +1096,7 @@
         }
         .password-box p {
             margin-bottom: 12px;
-            color: #000;
+            color: #333;
             line-height: 1.5;
         }
         .password-box .tips {
@@ -1144,21 +1107,21 @@
         .password-box input {
             width: 100%;
             padding: 10px;
-            border: 2px solid #7C3AED;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 6px;
             margin: 8px 0;
             font-size: 16px;
             text-align: center;
-            background: #000;
-            color: #00ff00;
+            background: #fff;
+            color: #333;
         }
         .password-box button {
             width: 100%;
             padding: 10px;
             border: none;
             border-radius: 6px;
-            background: #000;
-            color: #00ff00;
+            background: #fff;
+            color: #7C3AED;
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
@@ -1166,8 +1129,7 @@
             border: 1px solid #7C3AED;
         }
         .password-box button:hover {
-            background: #330066;
-            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+            background: rgba(124,58,237,0.1);
         }
         
         /* 机箱图片容器样式 - 调整位置到总价区域内上方 */
@@ -1185,8 +1147,8 @@
         .case-image-container {
             width: 120px;
             height: 120px;
-            background: #000;
-            border: 2px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -1197,8 +1159,8 @@
         .cooler-image-container {
             width: 120px;
             height: 120px;
-            background: #000;
-            border: 2px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -1209,8 +1171,8 @@
         .vga-image-container {
             width: 120px;
             height: 120px;
-            background: #000;
-            border: 2px solid #7C3AED;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -1240,9 +1202,9 @@
         <h3>请输入序列号</h3>
         <p>需使用算号器生成序列号</p>
         <p class="tips">输入正确序列号后，当前设备3个月内无需重复验证</p>
-        <div class="machine-code" style="margin: 15px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
-            <span style="font-weight: bold;">机器码：</span>
-            <span id="machineCodeDisplay" style="font-family: monospace; font-size: 14px; word-break: break-all;"></span>
+        <div class="machine-code" style="margin: 15px 0; padding: 10px; background: #f5f5f7; border-radius: 5px; border: 1px solid rgba(192,132,252,0.3);">
+            <span style="font-weight: bold; color: #7C3AED;">机器码：</span>
+            <span id="machineCodeDisplay" style="font-family: monospace; font-size: 14px; word-break: break-all; color: #333;"></span>
         </div>
         <input type="text" id="passwordInput" placeholder="请输入序列号 (格式：XXXX-XXXX-XXXX-XXXX)">
         <button onclick="checkPassword()">解锁</button>
@@ -1414,7 +1376,7 @@
             <!-- 机箱图片容器 -->
             <div class="case-image-container" id="caseImageContainer">
                 <img src="" alt="机箱图片" class="case-image" id="caseImage">
-                <div id="caseImagePlaceholder" style="color: #00ff00; text-align: center;">请选择机箱<br>查看图片</div>
+                <div id="caseImagePlaceholder" style="color: #333; text-align: center;">请选择机箱<br>查看图片</div>
             </div>
 
             <!-- 分隔符 -->
@@ -1423,7 +1385,7 @@
             <!-- 散热器图片容器 -->
             <div class="cooler-image-container" id="coolerImageContainer">
                 <img src="" alt="散热器图片" class="cooler-image" id="coolerImage">
-                <div id="coolerImagePlaceholder" style="color: #00ff00; text-align: center;">请选择散热器<br>查看图片</div>
+                <div id="coolerImagePlaceholder" style="color: #333; text-align: center;">请选择散热器<br>查看图片</div>
             </div>
 
             <!-- 分隔符 -->
@@ -1432,7 +1394,7 @@
             <!-- 显卡图片容器 -->
             <div class="vga-image-container" id="vgaImageContainer">
                 <img src="" alt="显卡图片" class="vga-image" id="vgaImage">
-                <div id="vgaImagePlaceholder" style="color: #ff9900; text-align: center;">请选择显卡<br>查看图片</div>
+                <div id="vgaImagePlaceholder" style="color: #333; text-align: center;">请选择显卡<br>查看图片</div>
             </div>
         </div>
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
@@ -1453,7 +1415,7 @@
 <!-- 加载配置弹窗 -->
 <div class="modal" id="loadModal">
     <div class="modal-box">
-        <h4>已保存配置</h4>
+        <h4 style="color: #7C3AED; margin-bottom: 10px;">已保存配置</h4>
         <div class="modal-list" id="mlist"></div>
         <button onclick="closeModal('loadModal')">关闭</button>
     </div>
@@ -1462,7 +1424,7 @@
 <!-- 更新报价弹窗 -->
 <div class="modal" id="updateModal">
     <div class="modal-box">
-        <h4>更新产品报价</h4>
+        <h4 style="color: #7C3AED; margin-bottom: 10px;">更新产品报价</h4>
         <div class="update-area">
             <p style="font-size:13px;color:#7C3AED;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
             <p style="font-size:12px;color:#ff0000;margin-bottom:4px">示例：内存,金士顿 8G DDR4 3200,530 或 ram,金士顿 8G DDR4 3200,530</p>
@@ -1476,7 +1438,7 @@
 <!-- 新增添加型号弹窗 -->
 <div class="modal" id="addModal">
     <div class="modal-box">
-        <h4>添加自定义型号</h4>
+        <h4 style="color: #7C3AED; margin-bottom: 10px;">添加自定义型号</h4>
         <div class="add-area">
             <select id="addType">
                 <option value="">请选择品类</option>
@@ -3871,7 +3833,7 @@
         const title = document.createElement('h3');
         title.textContent = '正在下载图片缓存...';
         title.style.cssText = `
-            color: #00ff00;
+            color: #7C3AED;
             text-align: center;
             margin: 0 0 15px 0;
             font-size: 18px;
@@ -3883,7 +3845,7 @@
         progressBg.style.cssText = `
             width: 100%;
             height: 20px;
-            background: #333;
+            background: #f0f0f0;
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 10px;
@@ -3895,7 +3857,7 @@
         downloadProgressBar = document.createElement('div');
         downloadProgressBar.style.cssText = `
             height: 100%;
-            background: linear-gradient(90deg, #7C3AED, #00ff00);
+            background: linear-gradient(90deg, #7C3AED, #C084FC);
             border-radius: 8px;
             transition: width 0.3s ease;
             width: 0%;
@@ -3905,7 +3867,7 @@
         // 创建进度文字
         downloadProgressText = document.createElement('div');
         downloadProgressText.style.cssText = `
-            color: #00ff00;
+            color: #7C3AED;
             text-align: center;
             font-size: 14px;
         `;
@@ -3919,7 +3881,7 @@
             width: 100%;
             margin-top: 15px;
             padding: 10px;
-            background: #333;
+            background: #fff;
             color: #ff0000;
             border: 1px solid #ff0000;
             border-radius: 6px;
@@ -4990,7 +4952,7 @@
             // 等待一小段时间确保页面完全渲染
             setTimeout(function() {
                 html2canvas(container, {
-                backgroundColor: '#e0e0e0',
+                backgroundColor: '#f5f5f7',
                 scale: 2, // 提高清晰度
                 useCORS: true, // 允许跨域图片
                 logging: false, // 关闭日志
@@ -5106,14 +5068,14 @@
                     // 直接为所有输入框设置正确的背景色（彻底修复截图显示错误）
                     const comboInputs = clonedDoc.querySelectorAll('input.combo');
                     comboInputs.forEach(function(input) {
-                        input.style.backgroundColor = '#e8e8e8';
-                        input.style.background = '#e8e8e8';
+                        input.style.backgroundColor = '#fff';
+                        input.style.background = '#fff';
                     });
                     
                     const priceInputs = clonedDoc.querySelectorAll('input.price');
                     priceInputs.forEach(function(input) {
-                        input.style.backgroundColor = '#e0e0e0';
-                        input.style.background = '#e0e0e0';
+                        input.style.backgroundColor = '#fff';
+                        input.style.background = '#fff';
                     });
                     
                     // 移除所有动画效果和边框，修复布局问题
@@ -5153,9 +5115,9 @@
                             min-height: auto !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
-                            background: #d0d0d0 !important;
+                            background: #fff !important;
                             border-radius: 4px !important;
-                            border: 1px solid #000 !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
                             overflow: visible !important;
                         }
                         .user {
@@ -5164,9 +5126,9 @@
                             gap: 8px !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
-                            background: #d0d0d0 !important;
+                            background: #fff !important;
                             border-radius: 4px !important;
-                            border: 1px solid #000 !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
                             overflow: visible !important;
                         }
                         .item-label {
@@ -5230,10 +5192,14 @@
                         .title {
                             box-shadow: none !important;
                             border: 2px solid #7C3AED !important;
+                            background: #fff !important;
+                            color: #7C3AED !important;
                         }
                         .datetime-display {
                             box-shadow: none !important;
-                            border: 1px solid #7C3AED !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
+                            background: #fff !important;
+                            color: #333 !important;
                         }
                         input.combo {
                             width: 100% !important;
@@ -5243,10 +5209,10 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
-                            background-color: #e8e8e8 !important;
-                            background: #e8e8e8 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
+                            background-color: #fff !important;
+                            background: #fff !important;
+                            color: #333 !important;
+                            border: 1px solid rgba(192,132,252,0.4) !important;
                             border-radius: 4px !important;
                             padding: 8px 25px 8px 8px !important;
                         }
@@ -5258,10 +5224,10 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
-                            background-color: #e0e0e0 !important;
-                            background: #e0e0e0 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
+                            background-color: #fff !important;
+                            background: #fff !important;
+                            color: #333 !important;
+                            border: 1px solid rgba(192,132,252,0.4) !important;
                             border-radius: 4px !important;
                             text-align: right !important;
                             padding: 8px 8px 8px 20px !important;
@@ -5341,23 +5307,23 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e8e8e8 !important;
+                            color: #333 !important;
+                            background: #fff !important;
                         }
-                        /* 价格输入框保持不同的背景色 */
+                        /* 价格输入框保持白色背景 */
                         input.price {
                             font-size: 16px !important;
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e0e0e0 !important;
-                            background-color: #e0e0e0 !important;
+                            color: #333 !important;
+                            background: #fff !important;
+                            background-color: #fff !important;
                         }
-                        /* 客户名称输入框特殊处理 - 保持黑色背景和绿色文字 */
+                        /* 客户名称输入框 */
                         #user {
-                            color: #00ff00 !important;
-                            background: #000 !important;
+                            color: #333 !important;
+                            background: #fff !important;
                             font-size: 15px !important;
                         }
                         .user label, .item-label {
@@ -5384,8 +5350,8 @@
                             gap: 8px !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border: 1px solid #000 !important;
+                            background: #fff !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
                             border-radius: 4px !important;
                             width: 100% !important;
                         }
@@ -5519,7 +5485,7 @@
             
             setTimeout(function() {
                 html2canvas(container, {
-                backgroundColor: '#e0e0e0',
+                backgroundColor: '#f5f5f7',
                 scale: 2,
                 useCORS: true,
                 logging: false,
@@ -5659,14 +5625,14 @@
                     
                     const comboInputs = clonedDoc.querySelectorAll('input.combo');
                     comboInputs.forEach(function(input) {
-                        input.style.backgroundColor = '#e8e8e8';
-                        input.style.background = '#e8e8e8';
+                        input.style.backgroundColor = '#fff';
+                        input.style.background = '#fff';
                     });
                     
                     const priceInputs2 = clonedDoc.querySelectorAll('input.price');
                     priceInputs2.forEach(function(input) {
-                        input.style.backgroundColor = '#e0e0e0';
-                        input.style.background = '#e0e0e0';
+                        input.style.backgroundColor = '#fff';
+                        input.style.background = '#fff';
                     });
                     
                     const style = clonedDoc.createElement('style');
@@ -5705,9 +5671,9 @@
                             min-height: auto !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
-                            background: #d0d0d0 !important;
+                            background: #fff !important;
                             border-radius: 4px !important;
-                            border: 1px solid #000 !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
                             overflow: visible !important;
                         }
                         .user {
@@ -5716,9 +5682,9 @@
                             gap: 8px !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
-                            background: #d0d0d0 !important;
+                            background: #fff !important;
                             border-radius: 4px !important;
-                            border: 1px solid #000 !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
                             overflow: visible !important;
                         }
                         .item-label {
@@ -5785,10 +5751,14 @@
                         .title {
                             box-shadow: none !important;
                             border: 2px solid #7C3AED !important;
+                            background: #fff !important;
+                            color: #7C3AED !important;
                         }
                         .datetime-display {
                             box-shadow: none !important;
-                            border: 1px solid #7C3AED !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
+                            background: #fff !important;
+                            color: #333 !important;
                         }
                         input.combo {
                             width: 100% !important;
@@ -5798,10 +5768,10 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
-                            background-color: #e8e8e8 !important;
-                            background: #e8e8e8 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
+                            background-color: #fff !important;
+                            background: #fff !important;
+                            color: #333 !important;
+                            border: 1px solid rgba(192,132,252,0.4) !important;
                             border-radius: 4px !important;
                             padding: 8px 25px 8px 8px !important;
                         }
@@ -5813,10 +5783,10 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.5 !important;
-                            background-color: #e0e0e0 !important;
-                            background: #e0e0e0 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
+                            background-color: #fff !important;
+                            background: #fff !important;
+                            color: #333 !important;
+                            border: 1px solid rgba(192,132,252,0.4) !important;
                             border-radius: 4px !important;
                             text-align: right !important;
                             padding: 8px 8px 8px 20px !important;
@@ -5895,21 +5865,21 @@
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e8e8e8 !important;
+                            color: #333 !important;
+                            background: #fff !important;
                         }
                         input.price {
                             font-size: 16px !important;
                             font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
                             font-weight: normal !important;
                             line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e0e0e0 !important;
-                            background-color: #e0e0e0 !important;
+                            color: #333 !important;
+                            background: #fff !important;
+                            background-color: #fff !important;
                         }
                         #user {
-                            color: #00ff00 !important;
-                            background: #000 !important;
+                            color: #333 !important;
+                            background: #fff !important;
                             font-size: 15px !important;
                         }
                         .user label, .item-label {
@@ -5933,8 +5903,8 @@
                             gap: 8px !important;
                             margin-bottom: 8px !important;
                             padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border: 1px solid #000 !important;
+                            background: #fff !important;
+                            border: 1px solid rgba(192,132,252,0.3) !important;
                             border-radius: 4px !important;
                             width: 100% !important;
                         }
@@ -6558,7 +6528,7 @@
     function showLoad(){
         let list=JSON.parse(localStorage.getItem("list"))||[];
         let h="";
-        if(list.length===0)h="<div style='padding:10px;text-align:center;color:#000'>暂无保存</div>";
+        if(list.length===0)h="<div style='padding:10px;text-align:center;color:#333'>暂无保存</div>";
         else list.forEach((i,j)=>{
             h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#7C3AED'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
         });
