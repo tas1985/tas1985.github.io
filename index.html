@@ -5085,7 +5085,7 @@
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
-                foreignObjectRendering: true,
+                foreignObjectRendering: false,
                 removeContainer: true,
                 imageTimeout: 15000,
                 onclone: function(clonedDoc) {
@@ -5149,6 +5149,8 @@
                         }
                         .item {
                             overflow: hidden !important;
+                            display: flex !important;
+                            align-items: center !important;
                         }
                         input:focus, input:hover, select:focus, select:hover {
                             box-shadow: none !important;
@@ -5184,7 +5186,7 @@
                             white-space: nowrap !important;
                             border: 1px solid rgba(192,132,252,0.2) !important;
                         }
-                        .user, .item {
+                        .user {
                             background: rgba(245,245,247,0.8) !important;
                             border: 1px solid rgba(192,132,252,0.2) !important;
                             display: flex !important;
@@ -5203,6 +5205,24 @@
                         }
                         .service-item {
                             color: #333 !important;
+                        }
+                        .btn-bar {
+                            display: flex !important;
+                            flex-wrap: wrap !important;
+                            gap: 8px !important;
+                        }
+                        .screenshot-btn-row, .action-btn-row, .invoice-btn-row {
+                            display: flex !important;
+                            gap: 8px !important;
+                        }
+                        .service-container {
+                            display: flex !important;
+                            flex-wrap: wrap !important;
+                            gap: 4px 8px !important;
+                        }
+                        .remark-container {
+                            display: flex !important;
+                            flex-direction: column !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
@@ -5275,7 +5295,7 @@
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
-                foreignObjectRendering: true,
+                foreignObjectRendering: false,
                 removeContainer: true,
                 imageTimeout: 15000,
                 onclone: function(clonedDoc) {
@@ -5463,11 +5483,18 @@
                             white-space: nowrap !important;
                             border: 1px solid rgba(192,132,252,0.2) !important;
                         }
-                        .user, .item {
+                        .user {
                             background: rgba(245,245,247,0.8) !important;
                             border: 1px solid rgba(192,132,252,0.2) !important;
                             display: flex !important;
                             align-items: center !important;
+                        }
+                        .item {
+                            background: rgba(245,245,247,0.8) !important;
+                            border: 1px solid rgba(192,132,252,0.2) !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            overflow: hidden !important;
                         }
                         input.combo, input.price, .remark-input {
                             background: #ffffff !important;
@@ -5482,6 +5509,24 @@
                         }
                         .service-item {
                             color: #333 !important;
+                        }
+                        .btn-bar {
+                            display: flex !important;
+                            flex-wrap: wrap !important;
+                            gap: 8px !important;
+                        }
+                        .screenshot-btn-row, .action-btn-row, .invoice-btn-row {
+                            display: flex !important;
+                            gap: 8px !important;
+                        }
+                        .service-container {
+                            display: flex !important;
+                            flex-wrap: wrap !important;
+                            gap: 4px 8px !important;
+                        }
+                        .remark-container {
+                            display: flex !important;
+                            flex-direction: column !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
