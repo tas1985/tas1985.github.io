@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="description" content="重庆塔斯电脑DIY配置报价单">
-    <meta name="theme-color" content="#7C3AED">
+    <meta name="theme-color" content="#C084FC">
     <!-- 性能优化相关标签 -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="mobile-web-app-capable" content="yes">
@@ -62,56 +62,68 @@
         time, mark, audio, video, input, textarea, button{
             font-family:"Microsoft YaHei", "微软雅黑", "Microsoft JhengHei", "PingFang SC", sans-serif !important;
         }
-        /* 全局赛博朋克风格基础样式 - 匹配参考图配色 */
+        /* 全局科技风格基础样式 */
         body{
-            background: #e0e0e0; /* 参考图浅灰背景 */
-            background-image: 
-                linear-gradient(rgba(200,200,200,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(200,200,200,0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
-            padding: 15px;
+            background: #f5f5f7;
+            padding: 10px;
             font-size: 14px;
-            color: #000; /* 基础文字黑色 */
+            color: #333;
+            min-height: 100vh;
         }
         .container{
-            max-width: 760px;
+            max-width: 800px;
             margin: 0 auto;
-            background: #e0e0e0; /* 容器浅灰背景 */
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 0 30px rgba(128,0,255,0.5);
-            border: 2px solid #7C3AED; /* 外层紫色边框 */
+            background: #fff;
+            border-radius: 16px;
+            padding: 10px;
+            box-shadow: 
+                0 4px 20px rgba(0,0,0,0.08),
+                0 0 30px rgba(192,132,252,0.1);
+            border: 1px solid rgba(192,132,252,0.3);
+            position: relative;
+            overflow: hidden;
         }
         .title{
             text-align:center;
             font-size: 20px;
             font-weight:bold;
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            background: #000; /* 标题黑底 */
-            color: #00ff00; /* 标题绿色文字 */
-            border: 2px solid #7C3AED; /* 标题紫色边框 */
-            box-shadow: 0 0 10px rgba(153,0,255,0.8), inset 0 0 8px #00ff00;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(192,132,252,0.1) 0%, rgba(168,85,247,0.05) 100%);
+            color: #C084FC;
+            border: 1px solid rgba(192,132,252,0.3);
+            box-shadow: 
+                0 0 20px rgba(192,132,252,0.15);
+            position: relative;
+            overflow: hidden;
         }
         .user{
             display:flex;
             align-items:center;
-            gap:8px; /* 与 .item 一致 */
-            margin-bottom: 8px; /* 与 .item 一致 */
+            gap:6px;
+            margin-bottom: 6px;
             position:relative;
-            padding: 4px; /* 与 .item 一致 */
-            background: #d0d0d0;
-            border: 1px solid #000;
-            border-radius: 4px; /* 与 .item 一致 */
+            padding: 5px;
+            background: rgba(245,245,247,0.8);
+            border: 1px solid rgba(192,132,252,0.2);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .user:hover,
+        .user:focus-within {
+            border-color: rgba(192,132,252,0.5);
+            box-shadow: 0 4px 20px rgba(192,132,252,0.15);
+            transform: translateY(-2px);
+            z-index: 100;
         }
         .user label{
             white-space:nowrap;
             font-weight:bold;
-            font-size: 18px; /* 与其他栏目标题大小一致 */
-            color: #7C3AED; /* 客户名称标签紫色，与边框颜色统一 */
-            width: 80px; /* 与其他栏目标题宽度一致 */
-            text-align: center; /* 居中对齐 */
+            font-size: 18px;
+            color: #C084FC;
+            width: 80px;
+            text-align: center;
         }
         .user-input-container {
             position: relative;
@@ -119,12 +131,18 @@
         }
         .user input{
             width: 100%;
-            padding: 8px 25px 8px 8px; /* 增加左侧内边距，右侧为X按钮预留空间 */
-            border: 1px solid #7C3AED; /* 输入框紫色边框 */
-            border-radius: 4px;
-            background: #000; /* 输入框黑底 */
-            color: #00ff00; /* 输入框绿色文字 */
+            padding: 6px 30px 6px 12px;
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
             font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .user input:focus {
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
         }
         /* 新增：客户名称输入框内的X按钮 - 加大尺寸方便手指点击 */
         .user-clear-btn{
@@ -145,16 +163,15 @@
         .user:hover .user-clear-btn{
             display: block;
         }
-        /* 日期时间样式 - 匹配参考图 */
+        /* 日期时间样式 */
         .datetime-display{
             padding: 8px 12px;
-            background: #000; /* 黑底 */
+            background: rgba(245,245,247,0.9);
             border-radius: 4px;
             font-size: 14px;
-            color: #00ff00; /* 绿色文字 */
+            color: #666;
             white-space:nowrap;
-            border: 1px solid #7C3AED; /* 紫色边框 */
-            box-shadow: inset 0 0 5px #00ff00;
+            border: 1px solid rgba(192,132,252,0.2);
         }
 
         /* 客户名称下拉列表样式 */
@@ -163,62 +180,73 @@
             left:70px;
             top:100%;
             width:calc(100% - 70px);
-            background: #000;
-            border: 2px solid #7C3AED;
-            border-radius: 4px;
+            background: #fff;
+            border: 2px solid #C084FC;
+            border-radius: 8px;
             max-height:300px;
             overflow-y:auto;
             overflow-x:hidden;
             z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
+            box-shadow: 0 4px 20px rgba(192,132,252,0.15);
         }
         .user-dropdown::-webkit-scrollbar {
             width: 12px;
         }
         .user-dropdown::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #f0f0f0;
             border-radius: 6px;
         }
         .user-dropdown::-webkit-scrollbar-thumb {
-            background: #7C3AED;
+            background: #C084FC;
             border-radius: 6px;
             min-height: 40px;
         }
         .user-dropdown::-webkit-scrollbar-thumb:hover {
-            background: #9F67FF;
+            background: #A855F7;
         }
         .user-dropdown div{
             padding: 8px;
             cursor:pointer;
-            color: #00ff00;
+            color: #333;
         }
         .user-dropdown div:hover{
-            background: #7C3AED;
-            color: #000;
+            background: rgba(192,132,252,0.1);
+            color: #C084FC;
         }
 
         .item{
             display:flex;
             align-items:center;
-            gap:8px;
-            margin-bottom: 8px;
-            padding: 4px;
-            background: #d0d0d0;
-            border-radius: 4px;
-            border: 1px solid #000;
+            gap:6px;
+            margin-bottom: 6px;
+            padding: 6px;
+            background: rgba(245,245,247,0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(192,132,252,0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: visible;
+        }
+        .item:hover,
+        .item:focus-within {
+            border-color: rgba(192,132,252,0.4);
+            box-shadow: 0 8px 30px rgba(192,132,252,0.1), 0 0 20px rgba(192,132,252,0.05);
+            transform: translateY(-3px);
+            z-index: 100;
         }
         .item-label{
             width:80px;
             font-weight:bold;
-            color: #7C3AED; /* 紫色文字 */
+            color: #C084FC;
             font-size: 20px;
             text-align: right;
-            padding-right: 5px;
-            white-space: nowrap; /* 禁止换行 */
-            overflow: hidden; /* 隐藏溢出 */
-            text-overflow: ellipsis; /* 溢出显示省略号 */
-            line-height: 28px; /* 统一行高，确保垂直对齐 */
+            padding-right: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 24px;
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -359,7 +387,7 @@
             }
             .dropdown::-webkit-scrollbar-thumb,
             .user-dropdown::-webkit-scrollbar-thumb {
-                background: #7C3AED !important;
+                background: #C084FC !important;
                 border-radius: 8px !important;
                 min-height: 50px !important;
             }
@@ -463,31 +491,35 @@
 }
         input.combo{
             width:100%;
-            padding: 8px 25px 8px 8px;
-            border: 1px solid #888; /* 配件输入框灰色边框 */
-            border-radius: 4px;
+            padding: 6px 30px 6px 12px;
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 8px;
             outline:none;
-            background: #e8e8e8; /* 输入框深一点的浅灰底 */
-            color: #000; /* 输入框绿色文字 */
+            background: #fff;
+            color: #333;
             font-size: 14px;
             font-weight: normal;
+            transition: all 0.3s ease;
         }
         input.combo.selected {
             font-size: 16px !important;
+            color: #C084FC;
         }
         input.price{
             width:100%;
-            padding: 8px 8px 8px 20px; /* 左侧留空给¥符号 */
+            padding: 6px 12px 6px 24px;
             text-align:right;
-            border: 1px solid #888; /* 价格输入框灰色边框 */
-            border-radius: 4px;
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 8px;
             outline:none;
-            background: #e0e0e0; /* 价格框黑底 */
-            color: #000; /* 价格紫色文字 */
+            background: #fff;
+            color: #C084FC;
             font-size: 16px;
+            transition: all 0.3s ease;
         }
         input.combo:focus,input.price:focus{
-            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
         }
 
         /* 清空按钮样式 - 加大尺寸方便手指点击 */
@@ -516,48 +548,50 @@
             left:0;
             top:100%;
             width:100%;
-            background: #000;
-            border: 2px solid #7C3AED;
-            border-radius: 4px;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
+            border-radius: 10px;
             max-height:300px;
             overflow-y:auto;
             overflow-x:hidden;
             z-index:1000;
             display:none;
             -webkit-overflow-scrolling: touch;
+            box-shadow: 0 4px 20px rgba(192,132,252,0.15);
         }
         .dropdown::-webkit-scrollbar {
-            width: 12px;
+            width: 8px;
         }
         .dropdown::-webkit-scrollbar-track {
-            background: #1a1a1a;
-            border-radius: 6px;
+            background: #f0f0f0;
+            border-radius: 4px;
         }
         .dropdown::-webkit-scrollbar-thumb {
-            background: #7C3AED;
-            border-radius: 6px;
+            background: rgba(192,132,252,0.6);
+            border-radius: 4px;
             min-height: 40px;
         }
         .dropdown::-webkit-scrollbar-thumb:hover {
-            background: #9F67FF;
+            background: rgba(192,132,252,0.8);
         }
         .dropdown div{
-            padding: 8px;
+            padding: 12px 15px;
             cursor:pointer;
             display:flex;
             justify-content:space-between;
             align-items:center;
-            color: #00ff00;
+            color: #333;
+            transition: all 0.2s ease;
         }
         .dropdown div:hover{
-            background: #7C3AED;
-            color: #000;
+            background: rgba(192,132,252,0.1);
+            color: #C084FC;
         }
         /* 下拉列表价格样式 - 顶到右端对齐 */
         .dropdown-price {
             margin-left: auto; /* 推到右边 */
             font-weight: bold;
-            color: #7C3AED; /* 紫色价格文字 */
+            color: #C084FC; /* 紫色价格文字 */
             min-width: 60px; /* 设置最小宽度确保对齐 */
             text-align: right; /* 文字右对齐 */
             padding-left: 8px; /* 与左侧内容保持间距 */
@@ -572,8 +606,8 @@
 
         .btn-bar{
             display:flex;
-            gap:6px;
-            margin: 15px 0;
+            gap:4px;
+            margin: 10px 0;
             flex-wrap: nowrap;
             align-items: stretch;
         }
@@ -581,26 +615,30 @@
         .btn-bar .btn-cost-toggle,
         .btn-bar .cost-display {
             flex:1;
-            padding: 10px 6px;
-            border-radius: 6px;
+            padding: 8px 8px;
+            border-radius: 10px;
             font-weight:bold;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
-            min-height: 44px;
+            box-shadow: 0 0 15px rgba(192,132,252,0.3);
+            min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         .btn-bar button{
             border:none;
-            color:#00ff00;
-            border: 2px solid #7C3AED;
-            background: #000;
+            color:#C084FC;
+            border: 1px solid rgba(192,132,252,0.4);
+            background: rgba(245,245,247,0.9);
         }
         .btn-bar button:hover{
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
-            background: #330066;
+            border-color: rgba(192,132,252,0.8);
+            box-shadow: 0 0 20px rgba(192,132,252,0.15);
+            transform: translateY(-2px);
         }
 
         /* 成本合计显示样式 */
@@ -609,65 +647,64 @@
             display: none;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 10px 6px;
-            border: 2px solid #7C3AED;
+            gap: 4px;
+            padding: 6px 6px;
+            border: 2px solid #C084FC;
             border-radius: 6px;
-            background: #000;
-            color: #ff9900;
+            background: rgba(245,245,247,0.9);
+            color: #333;
             font-weight: bold;
             font-size: 14px;
             min-width: 120px;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
+            box-shadow: 0 0 6px rgba(192,132,252,0.3);
             cursor: pointer;
         }
         .cost-display.show {
             display: flex;
         }
         .cost-display span:first-child {
-            color: #00ff00;
+            color: #C084FC;
         }
         .cost-display #costTotal {
-            color: #ff9900;
+            color: #C084FC;
             font-size: 18px;
-            text-shadow: 0 0 8px rgba(255,153,0,0.8);
         }
         .cost-display span:last-child {
-            color: #ff9900;
+            color: #333;
         }
 
         /* 成本合计切换按钮样式 */
         .btn-cost-toggle {
             flex: 1;
-            padding: 10px 6px;
-            border: 2px solid #ff9900;
+            padding: 6px 6px;
+            border: 2px solid #C084FC;
             border-radius: 6px;
-            color: #ff9900;
+            color: #C084FC;
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            background: #000;
+            background: rgba(245,245,247,0.9);
             min-width: 120px;
-            box-shadow: 0 0 6px rgba(255,153,0,0.6);
+            box-shadow: 0 0 6px rgba(192,132,252,0.3);
         }
         .btn-cost-toggle:hover {
-            box-shadow: 0 0 10px rgba(255,153,0,0.8);
-            background: #330066;
+            box-shadow: 0 0 10px rgba(192,132,252,0.4);
+            background: rgba(192,132,252,0.1);
         }
 
         /* 所有按钮容器样式 */
         .all-btn-container {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 6px;
         }
         .screenshot-btn-row,
         .action-btn-row,
         .invoice-btn-row {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             width: 100%;
             flex-wrap: nowrap;
             align-items: stretch;
@@ -676,196 +713,193 @@
         .action-btn-row button,
         .action-btn-row .cost-display {
             flex: 1;
-            padding: 12px 4px;
-            border-radius: 6px;
+            padding: 10px 8px;
+            border-radius: 10px;
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
-            min-height: 52px;
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
-            border: 2px solid #7C3AED;
-            color: #00ff00;
+            background: rgba(245,245,247,0.9);
+            border: 1px solid rgba(192,132,252,0.4);
+            color: #C084FC;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            transition: all 0.3s ease;
         }
         .invoice-btn-row {
             margin-top: 10px;
         }
         .invoice-btn-row button {
             flex: 1;
-            padding: 8px 4px;
-            border-radius: 6px;
+            padding: 10px 8px;
+            border-radius: 10px;
             font-weight: bold;
             font-size: 13px;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6);
-            min-height: 42px;
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
-            border: 2px solid #7C3AED;
-            color: #ff9900;
+            background: rgba(245,245,247,0.9);
+            border: 1px solid rgba(192,132,252,0.4);
+            color: #C084FC;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            transition: all 0.3s ease;
         }
         .screenshot-btn-row button:hover,
         .action-btn-row button:hover,
         .action-btn-row .cost-display:hover,
         .invoice-btn-row button:hover {
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
-            background: #330066;
+            box-shadow: 0 0 20px rgba(192,132,252,0.3), 0 0 40px rgba(192,132,252,0.2);
+            border-color: rgba(192,132,252,0.6);
+            transform: translateY(-2px);
         }
 
         .btn-save {
-            background: #000 !important;
-            border-color: #00ff00 !important;
-            color: #9900ff !important;
-            box-shadow: 0 0 12px rgba(0,255,0,0.8) !important;
-            border-width: 3px !important;
+            background: rgba(192,132,252,0.1) !important;
+            border-color: rgba(192,132,252,0.6) !important;
+            color: #C084FC !important;
+            box-shadow: 0 0 20px rgba(192,132,252,0.2) !important;
+            border-width: 2px !important;
             font-size: 18px !important;
-            text-shadow: 0 0 6px rgba(153,0,255,0.8) !important;
         }
         .btn-save:hover {
-            background: #000 !important;
-            box-shadow: 0 0 20px rgba(0,255,0,1) !important;
-            transform: scale(1.02) !important;
+            background: rgba(192,132,252,0.15) !important;
+            box-shadow: 0 0 30px rgba(192,132,252,0.3) !important;
+            transform: translateY(-3px) !important;
         }
         .btn-screenshot {
-            background: #000 !important;
-            border-color: #00ff00 !important;
-            color: #9900ff !important;
-            box-shadow: 0 0 12px rgba(0,255,0,0.8) !important;
-            border-width: 3px !important;
+            background: rgba(192,132,252,0.1) !important;
+            border-color: rgba(192,132,252,0.6) !important;
+            color: #C084FC !important;
+            box-shadow: 0 0 20px rgba(192,132,252,0.2) !important;
+            border-width: 2px !important;
             font-size: 18px !important;
-            text-shadow: 0 0 6px rgba(153,0,255,0.8) !important;
         }
         .btn-screenshot:hover {
-            background: #000 !important;
-            box-shadow: 0 0 20px rgba(0,255,0,1) !important;
-            transform: scale(1.02) !important;
+            background: rgba(192,132,252,0.15) !important;
+            box-shadow: 0 0 30px rgba(192,132,252,0.3) !important;
+            transform: translateY(-3px) !important;
         }
         .btn-anonymous {
-            background: #000 !important;
-            border-color: #9900ff !important;
-            color: #00ff00 !important;
-            box-shadow: 0 0 6px rgba(153,0,255,0.6) !important;
+            background: rgba(245,245,247,0.9) !important;
+            border-color: rgba(192,132,252,0.5) !important;
+            color: #C084FC !important;
+            box-shadow: 0 0 15px rgba(192,132,252,0.15) !important;
             border-width: 2px !important;
             font-size: 14px !important;
-            text-shadow: none !important;
         }
         .btn-anonymous:hover {
-            background: #330066 !important;
-            box-shadow: 0 0 10px rgba(153,0,255,0.8) !important;
-            transform: none !important;
+            background: rgba(192,132,252,0.1) !important;
+            box-shadow: 0 0 25px rgba(192,132,252,0.25) !important;
+            transform: translateY(-2px) !important;
         }
         .btn-reset {
-            color: #ff9900 !important;
+            color: #666 !important;
+            border-color: rgba(102,102,102,0.4) !important;
         }
         .btn-cost-toggle {
-            border-color: #ff9900;
-            color: #ff9900;
-            box-shadow: 0 0 6px rgba(255,153,0,0.6);
+            border-color: rgba(192,132,252,0.5);
+            color: #C084FC;
+            box-shadow: 0 0 15px rgba(192,132,252,0.2);
         }
         .cost-display {
             display: flex;
-            border-color: #7C3AED;
-            color: #ff9900;
+            border-color: #C084FC;
+            color: #333;
             gap: 4px;
         }
         .cost-display span:first-child {
-            color: #00ff00;
+            color: #C084FC;
         }
         .cost-display #costTotal {
-            color: #ff9900;
+            color: #C084FC;
             font-size: 16px;
-            text-shadow: 0 0 8px rgba(255,153,0,0.8);
         }
         .cost-display span:last-child {
-            color: #ff9900;
+            color: #333;
         }
         .btn-invoice.active {
-            border-color: #00ff00;
-            box-shadow: 0 0 10px rgba(0,255,0,0.8);
-            background: #7C3AED;
-            color: #000;
+            border-color: #C084FC;
+            box-shadow: 0 0 10px rgba(192,132,252,0.5);
+            background: rgba(192,132,252,0.15);
+            color: #C084FC;
         }
 
-        /* 总价区域样式 - 核心匹配参考图 */
+        /* 总价区域样式 */
         .total{
-            background: #000; /* 总价区域黑底 */
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 12px;
+            background: rgba(245,245,247,0.9);
+            padding: 12px;
+            border-radius: 16px;
+            margin-top: 10px;
             text-align:right;
-            border: 3px solid #7C3AED; /* 外层紫色边框 */
+            border: 1px solid rgba(192,132,252,0.4);
             position: relative;
-            overflow: hidden; /* 限制流光效果在黑色框内 */
-            box-shadow: 0 0 15px rgba(0,255,0,0.7), inset 0 0 10px #7C3AED;
-            min-height: 148px; /* 增加最小高度以容纳机箱图片 */
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(192,132,252,0.15);
+            min-height: 120px;
         }
         
         .total-line{
             display:none;
-            color: #00ff00;
+            color: #C084FC;
         }
         .total-final{
-            font-size: 28px;
+            font-size: 32px;
             font-weight:bold;
-            color: #00ff00; /* 最终报价绿色文字 */
+            color: #C084FC;
             margin:0;
             padding:0;
             border:none;
             display:block !important;
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 8px rgba(0,255,0,1);
         }
 
         /* 鲁大师跑分样式 */
         .ludashi-score{
             font-size: 18px;
             font-weight:bold;
-            color: #7C3AED; /* 紫色文字 */
-            margin: 8px 0 0 0;
+            color: #C084FC;
+            margin: 10px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 6px rgba(153,0,255,0.8);
         }
         /* 功耗显示样式 */
         .power-consumption{
             font-size: 18px;
             font-weight:bold;
-            color: #7C3AED;
-            margin: 8px 0 0 0;
+            color: #C084FC;
+            margin: 10px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 6px rgba(124,58,237,0.8);
         }
         /* 返现信息样式 */
         .rebate-info{
             font-size: 14px;
             font-weight:normal;
-            color: #00ff00;
-            margin: 8px 0 0 0;
+            color: #ff9966;
+            margin: 10px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 6px rgba(0,255,0,0.8);
+            text-shadow: 0 0 8px rgba(255,153,102,0.6);
         }
 
         .modal{
@@ -874,7 +908,9 @@
             left:0;
             width:100%;
             height:100%;
-            background:rgba(0,0,0,0.9);
+            background:rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             display:none;
             align-items:center;
             justify-content:center;
@@ -882,36 +918,63 @@
             z-index:999;
         }
         .modal-box{
-            background: #e0e0e0;
-            border-radius: 8px;
+            background: #fff;
+            border-radius: 16px;
             width:100%;
             max-width:340px;
-            padding: 18px;
-            border: 3px solid #7C3AED;
-            box-shadow: 0 0 20px rgba(0,255,0,0.6);
+            padding: 20px;
+            border: 1px solid rgba(192,132,252,0.4);
+            box-shadow: 0 0 30px rgba(192,132,252,0.2);
+        }
+        .modal-box h4 {
+            color: #C084FC;
+            margin-bottom: 15px;
+            text-align: center;
         }
         .modal-list{
             max-height:300px;
             overflow-y:auto;
             margin:12px 0;
         }
+        .modal-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-list::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        .modal-list::-webkit-scrollbar-thumb {
+            background: rgba(192,132,252,0.5);
+            border-radius: 3px;
+        }
         .modal-item{
-            padding:8px;
-            border:1px solid #7C3AED;
-            border-radius:6px;
-            margin-bottom:6px;
-            color: #000;
-            background: #d0d0d0;
+            padding:10px;
+            border:1px solid rgba(192,132,252,0.3);
+            border-radius:10px;
+            margin-bottom:8px;
+            color: #333;
+            background: rgba(245,245,247,0.8);
+            transition: all 0.2s ease;
+        }
+        .modal-item:hover {
+            border-color: rgba(192,132,252,0.4);
+            background: rgba(192,132,252,0.08);
         }
         .modal-item button{
             width:100%;
-            padding:6px;
-            margin-top:6px;
-            background: #000;
-            color:#00ff00;
+            padding:8px;
+            margin-top:8px;
+            background: rgba(245,245,247,0.9);
+            color:#C084FC;
             border:none;
-            border-radius:4px;
-            border: 1px solid #7C3AED;
+            border-radius:8px;
+            border: 1px solid rgba(192,132,252,0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .modal-item button:hover {
+            border-color: rgba(192,132,252,0.8);
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
         }
         .update-area{
             margin:12px 0;
@@ -919,13 +982,19 @@
         .update-area textarea{
             width:100%;
             height:120px;
-            padding:8px;
-            border:2px solid #7C3AED;
-            border-radius:6px;
-            margin-bottom:8px;
+            padding:12px;
+            border:1px solid rgba(192,132,252,0.3);
+            border-radius:10px;
+            margin-bottom:10px;
             resize:none;
-            background: #000;
-            color: #00ff00;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+        }
+        .update-area textarea:focus {
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
+            outline: none;
         }
         
         /* 添加型号弹窗样式 */
@@ -934,44 +1003,57 @@
         }
         .add-area select, .add-area input{
             width:100%;
-            padding:8px;
-            border:2px solid #7C3AED;
-            border-radius:6px;
-            margin-bottom:8px;
-            background: #000;
-            color: #00ff00;
+            padding:12px;
+            border:1px solid rgba(192,132,252,0.3);
+            border-radius:10px;
+            margin-bottom:10px;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+        }
+        .add-area select:focus, .add-area input:focus {
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
+            outline: none;
         }
         .add-area button{
             width:100%;
-            padding:8px;
+            padding:12px;
             border:none;
-            border-radius:6px;
-            background: #000;
-            color:#00ff00;
-            margin-top:6px;
-            border: 1px solid #7C3AED;
+            border-radius:10px;
+            background: rgba(245,245,247,0.9);
+            color:#C084FC;
+            margin-top:8px;
+            border: 1px solid rgba(192,132,252,0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .add-area button:hover {
+            border-color: rgba(192,132,252,0.8);
+            box-shadow: 0 0 15px rgba(192,132,252,0.2);
         }
         
         /* 右键菜单样式 */
         .context-menu {
             position: absolute;
-            width: 140px;
-            background: #000;
-            border: 2px solid #7C3AED;
-            border-radius: 6px;
-            box-shadow: 0 2px 15px rgba(0,255,0,0.5);
+            width: 160px;
+            background: #fff;
+            border: 1px solid rgba(192,132,252,0.4);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(192,132,252,0.15);
             z-index: 1000;
             display: none;
         }
         .context-menu div {
-            padding: 8px;
+            padding: 10px 15px;
             cursor: pointer;
             font-size: 14px;
-            color: #00ff00;
+            color: #333;
+            transition: all 0.2s ease;
         }
         .context-menu div:hover {
-            background: #7C3AED;
-            color: #000;
+            background: rgba(192,132,252,0.1);
+            color: #C084FC;
         }
 
         /* 备注栏样式 */
@@ -979,19 +1061,19 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 6px;
             min-width: 0;
             width: 100%;
         }
         .remark-input {
             flex: none;
             padding: 6px 10px;
-            border: 1px solid #7C3AED;
-            border-radius: 4px;
-            background: #e0e0e0;
-            font-size: 15px;
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 10px;
+            background: #fff;
+            font-size: 14px;
             line-height: 20px;
-            min-height: 40px;
+            min-height: 36px;
             max-height: 120px;
             height: auto;
             width: 100%;
@@ -1000,8 +1082,13 @@
             overflow: auto;
             outline: none;
             resize: vertical;
-            color: #7C3AED;
+            color: #333;
             box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        .remark-input:focus {
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 15px rgba(192,132,252,0.2);
         }
 
         /* 备注栏容器支持换行 */
@@ -1020,25 +1107,30 @@
         .service-container {
             display: flex;
             flex-wrap: nowrap;
-            gap: 8px 15px;
-            padding: 8px 10px;
-            background: #1a1a1a;
-            border: 1px solid #7C3AED;
-            border-radius: 6px;
+            gap: 4px 8px;
+            padding: 6px 8px;
+            background: rgba(245,245,247,0.8);
+            border: 1px solid rgba(192,132,252,0.2);
+            border-radius: 10px;
             margin-top: 6px;
             width: 100%;
             box-sizing: border-box;
-            overflow-x: auto;
-            white-space: nowrap;
         }
         .service-item {
             display: flex;
             align-items: center;
             gap: 4px;
             cursor: pointer;
-            font-size: 13px;
-            color: #00ff00;
+            font-size: 12px;
+            color: #333;
             user-select: none;
+            transition: all 0.2s ease;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .service-item:hover {
+            background: rgba(192,132,252,0.08);
+            color: #C084FC;
         }
         .service-item input[type="checkbox"] {
             display: none;
@@ -1046,31 +1138,32 @@
         .service-item .svc-box {
             width: 16px;
             height: 16px;
-            border: 2px solid #7C3AED;
-            border-radius: 3px;
+            border: 1px solid rgba(192,132,252,0.4);
+            border-radius: 4px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #000;
+            background: #fff;
             transition: all 0.2s;
         }
         .service-item .svc-box::after {
             content: '✓';
-            color: #00ff00;
+            color: #C084FC;
             font-size: 12px;
             font-weight: bold;
             display: none;
         }
         .service-item input[type="checkbox"]:checked + .svc-box {
-            background: #7C3AED;
-            border-color: #7C3AED;
+            background: rgba(192,132,252,0.2);
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 10px rgba(192,132,252,0.3);
         }
         .service-item input[type="checkbox"]:checked + .svc-box::after {
             display: block;
         }
         .service-item:hover .svc-box {
-            border-color: #cc66ff;
-            box-shadow: 0 0 5px rgba(153, 0, 255, 0.5);
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 10px rgba(192,132,252,0.3);
         }
 
         /* WIFI提示区域样式 - 覆盖在输入栏上方 */
@@ -1111,118 +1204,135 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
         }
         .password-box {
-            background: #e0e0e0;
-            border-radius: 8px;
+            background: #fff;
+            border-radius: 16px;
             width: 90%;
-            max-width: 320px;
-            padding: 20px;
+            max-width: 340px;
+            padding: 24px;
             text-align: center;
-            border: 3px solid #00ff00;
-            box-shadow: 0 0 20px rgba(153,0,255,0.8);
+            border: 1px solid rgba(192,132,252,0.4);
+            box-shadow: 0 0 30px rgba(192,132,252,0.2);
         }
         .password-box h3{
-            color: #7C3AED;
-            margin-bottom: 12px;
+            color: #C084FC;
+            margin-bottom: 15px;
+            font-size: 20px;
         }
         .password-box p {
             margin-bottom: 12px;
-            color: #000;
+            color: #333;
             line-height: 1.5;
+            font-size: 14px;
         }
         .password-box .tips {
-            color: #ff0000;
+            color: #ff6666;
             font-weight: bold;
-            margin: 8px 0;
+            margin: 10px 0;
+            font-size: 13px;
         }
         .password-box input {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #7C3AED;
-            border-radius: 6px;
-            margin: 8px 0;
+            padding: 14px;
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 10px;
+            margin: 10px 0;
             font-size: 16px;
             text-align: center;
-            background: #000;
-            color: #00ff00;
+            background: #fff;
+            color: #333;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        .password-box input:focus {
+            border-color: rgba(192,132,252,0.6);
+            box-shadow: 0 0 15px rgba(192,132,252,0.15);
+            outline: none;
         }
         .password-box button {
             width: 100%;
-            padding: 10px;
+            padding: 14px;
             border: none;
-            border-radius: 6px;
-            background: #000;
-            color: #00ff00;
+            border-radius: 10px;
+            background: rgba(245,245,247,0.9);
+            color: #C084FC;
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 4px;
-            border: 1px solid #7C3AED;
+            margin-top: 8px;
+            border: 1px solid rgba(192,132,252,0.4);
+            transition: all 0.2s ease;
         }
         .password-box button:hover {
-            background: #330066;
-            box-shadow: 0 0 8px rgba(0,255,0,0.8);
+            border-color: rgba(192,132,252,0.8);
+            box-shadow: 0 0 20px rgba(192,132,252,0.15);
+            transform: translateY(-2px);
         }
         
-        /* 机箱图片容器样式 - 调整位置到总价区域内上方 */
+        /* 机箱图片容器样式 */
         .product-images-container {
             position: absolute;
-            left: 5px;
-            top: 5px;
-            bottom: 5px;
+            left: 10px;
+            top: 10px;
+            bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
             z-index: 2;
         }
 
         .case-image-container {
             width: 120px;
             height: 120px;
-            background: #000;
-            border: 2px solid #7C3AED;
-            border-radius: 6px;
+            background: rgba(245,245,247,0.9);
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            box-shadow: 0 0 10px rgba(192,132,252,0.1);
         }
 
         .cooler-image-container {
             width: 120px;
             height: 120px;
-            background: #000;
-            border: 2px solid #7C3AED;
-            border-radius: 6px;
+            background: rgba(245,245,247,0.9);
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            box-shadow: 0 0 10px rgba(192,132,252,0.1);
         }
 
         .vga-image-container {
             width: 120px;
             height: 120px;
-            background: #000;
-            border: 2px solid #7C3AED;
-            border-radius: 6px;
+            background: rgba(245,245,247,0.9);
+            border: 1px solid rgba(192,132,252,0.3);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            box-shadow: 0 0 10px rgba(192,132,252,0.1);
         }
 
         .image-separator {
-            font-size: 20px;
-            color: #7C3AED;
+            font-size: 24px;
+            color: #C084FC;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(153,0,255,0.8);
+            text-shadow: 0 0 15px rgba(192,132,252,0.6);
         }
 
         .case-image, .cooler-image, .vga-image {
@@ -1464,7 +1574,7 @@
     <div class="modal-box">
         <h4>更新产品报价</h4>
         <div class="update-area">
-            <p style="font-size:13px;color:#7C3AED;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
+            <p style="font-size:13px;color:#C084FC;margin-bottom:4px">格式：品类,型号,新价格（每行一个）</p>
             <p style="font-size:12px;color:#ff0000;margin-bottom:4px">示例：内存,金士顿 8G DDR4 3200,530 或 ram,金士顿 8G DDR4 3200,530</p>
             <textarea id="updateText" placeholder="请按格式输入更新内容"></textarea>
             <button onclick="doUpdate()">执行更新</button>
@@ -1528,7 +1638,7 @@
             case 'success': bgColor = '#00ff00'; textColor = '#000'; break;
             case 'error': bgColor = '#ff0000'; textColor = '#fff'; break;
             case 'warning': bgColor = '#ff9900'; textColor = '#000'; break;
-            default: bgColor = '#7C3AED'; textColor = '#fff';
+            default: bgColor = '#C084FC'; textColor = '#fff';
         }
         
         toast.style.background = bgColor;
@@ -1741,8 +1851,8 @@
         ram: [
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:700},
             {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1200},
-            {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲",p:630},
-            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲",p:1130},
+            {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲",p:600},
+            {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲",p:1100},
             {n:"光威 天策 16G（8*2）3200 白色 ",p:710},
             {n:"光威 天策 32G（16*2）3200 白色 ",p:1200},
             {n:"金百达 银爵 16G 8x2 3200 D4 C16",p:710},
@@ -3858,7 +3968,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #7C3AED;
+            border: 2px solid #C084FC;
             border-radius: 12px;
             padding: 20px;
             z-index: 10000;
@@ -3887,7 +3997,7 @@
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 10px;
-            border: 1px solid #7C3AED;
+            border: 1px solid #C084FC;
         `;
         container.appendChild(progressBg);
         
@@ -3895,7 +4005,7 @@
         downloadProgressBar = document.createElement('div');
         downloadProgressBar.style.cssText = `
             height: 100%;
-            background: linear-gradient(90deg, #7C3AED, #00ff00);
+            background: linear-gradient(90deg, #C084FC, #00ff00);
             border-radius: 8px;
             transition: width 0.3s ease;
             width: 0%;
@@ -4967,156 +5077,64 @@
             // 获取要截图的容器
             const container = document.querySelector('.container');
             
-            // 临时隐藏所有按钮容器
-            const allBtnContainer = document.querySelector('.all-btn-container');
-            const allBtnContainerDisplay = allBtnContainer.style.display;
-            allBtnContainer.style.display = 'none';
-
-            // 使用html2canvas生成截图
-            // 获取完整的文档高度（修复手机端截不全的问题）
-            const fullHeight = Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight,
-                container.scrollHeight,
-                container.offsetHeight
-            );
-            
-            // 临时设置容器为block布局，确保能获取完整高度
-            container.style.display = 'block';
-            container.style.position = 'static';
-            container.style.overflow = 'visible';
-            container.style.height = 'auto';
-            
             // 等待一小段时间确保页面完全渲染
             setTimeout(function() {
                 html2canvas(container, {
-                backgroundColor: '#e0e0e0',
-                scale: 2, // 提高清晰度
-                useCORS: true, // 允许跨域图片
-                logging: false, // 关闭日志
-                allowTaint: true, // 允许跨域图片污染canvas
-                foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
-                removeContainer: true, // 自动移除临时容器
-                imageTimeout: 15000, // 图片加载超时时间（15秒）
-                // 移除手动设置的宽高和坐标，让html2canvas自动计算
+                backgroundColor: '#ffffff',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                foreignObjectRendering: false,
+                removeContainer: true,
+                imageTimeout: 15000,
                 onclone: function(clonedDoc) {
-                    // 在克隆的文档中调整样式
                     const clonedContainer = clonedDoc.querySelector('.container');
-                    const clonedRemark = clonedDoc.querySelector('.remark-input');
-                    
-                    // 将图标转换为灰色（修复截图时filter不生效的问题）
+                    if (clonedContainer) {
+                        clonedContainer.style.background = '#ffffff';
+                        clonedContainer.style.backdropFilter = 'none';
+                        clonedContainer.style.border = '1px solid rgba(192,132,252,0.3)';
+                        clonedContainer.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 0 30px rgba(192,132,252,0.1)';
+                    }
+
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
-                        // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
-                            // 使用克隆文档创建canvas，避免影响原始文档样式
                             const canvas = clonedDoc.createElement('canvas');
                             const ctx = canvas.getContext('2d');
                             
-                            // 设置canvas大小
                             canvas.width = 48;
                             canvas.height = 48;
                             
-                            // 绘制emoji
                             ctx.font = '36px serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
                             
-                            // 获取图像数据并转换为灰度
                             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                             const data = imageData.data;
                             
                             for (let i = 0; i < data.length; i += 4) {
-                                // 计算灰度值（使用标准的亮度公式）
                                 const gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-                                data[i] = gray;     // red
-                                data[i + 1] = gray; // green
-                                data[i + 2] = gray; // blue
-                                // alpha保持不变
+                                data[i] = gray;
+                                data[i + 1] = gray;
+                                data[i + 2] = gray;
                             }
                             
                             ctx.putImageData(imageData, 0, 0);
                             
-                            // 将canvas转换为data URL并替换span内容
                             const grayEmojiUrl = canvas.toDataURL('image/png');
                             span.innerHTML = `<img src="${grayEmojiUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
                         }
                         
-                        // 移除所有filter样式，避免干扰canvas生成的灰度图片
                         span.style.filter = 'none';
                         span.style.webkitFilter = 'none';
                         span.style.MozFilter = 'none';
                         span.style.msFilter = 'none';
                         span.style.OFilter = 'none';
-                        span.style.fontSize = '22px';
-                        span.style.padding = '0';
-                        span.style.borderRadius = '0';
-                        span.style.opacity = '1';
                     });
-                    
-                    // 确保容器宽度和高度正确（修复手机端截不全的问题）
-                    if (clonedContainer) {
-                        clonedContainer.style.width = '100%';
-                        clonedContainer.style.maxWidth = '760px';
-                        clonedContainer.style.minWidth = '320px';
-                        clonedContainer.style.display = 'block';
-                        clonedContainer.style.margin = '0 auto';
-                        clonedContainer.style.height = 'auto';
-                        clonedContainer.style.minHeight = 'auto';
-                        clonedContainer.style.overflow = 'visible';
-                        clonedContainer.style.position = 'static';
-                    }
-                    
-                    // 确保备注栏样式正确
-                    if (clonedRemark) {
-                        clonedRemark.style.whiteSpace = 'pre-wrap';
-                        clonedRemark.style.wordWrap = 'break-word';
-                        clonedRemark.style.overflow = 'hidden';
-                        clonedRemark.style.height = 'auto';
-                        clonedRemark.style.minHeight = '36px';
-                        clonedRemark.style.maxHeight = '150px';
-                        clonedRemark.style.maxWidth = '100%';
-                        clonedRemark.style.width = '100%';
-                        clonedRemark.style.display = 'block';
-                        clonedRemark.style.resize = 'none';
-                        clonedRemark.style.lineHeight = '18px';
-                        clonedRemark.style.padding = '4px 8px';
-                        clonedRemark.style.boxSizing = 'border-box';
-                        // 确保备注栏高度能够显示所有内容（不产生空白行）
-                        const remarkText = clonedRemark.value || clonedRemark.innerText || '';
-                        // 创建临时元素计算实际高度（使用克隆文档，避免影响原始文档）
-                        const tempDiv = clonedDoc.createElement('div');
-                        tempDiv.style.position = 'absolute';
-                        tempDiv.style.visibility = 'hidden';
-                        tempDiv.style.whiteSpace = 'pre-wrap';
-                        tempDiv.style.wordWrap = 'break-word';
-                        tempDiv.style.lineHeight = '18px';
-                        tempDiv.style.padding = '4px 8px';
-                        tempDiv.style.fontSize = '12px';
-                        tempDiv.style.width = clonedRemark.offsetWidth + 'px';
-                        tempDiv.textContent = remarkText;
-                        clonedDoc.body.appendChild(tempDiv);
-                        const actualHeight = Math.max(tempDiv.offsetHeight, 36);
-                        clonedDoc.body.removeChild(tempDiv);
-                        clonedRemark.style.height = actualHeight + 'px';
-                    }
-                    
-                    // 直接为所有输入框设置正确的背景色（彻底修复截图显示错误）
-                    const comboInputs = clonedDoc.querySelectorAll('input.combo');
-                    comboInputs.forEach(function(input) {
-                        input.style.backgroundColor = '#e8e8e8';
-                        input.style.background = '#e8e8e8';
-                    });
-                    
-                    const priceInputs = clonedDoc.querySelectorAll('input.price');
-                    priceInputs.forEach(function(input) {
-                        input.style.backgroundColor = '#e0e0e0';
-                        input.style.background = '#e0e0e0';
-                    });
-                    
-                    // 移除所有动画效果和边框，修复布局问题
+
                     const style = clonedDoc.createElement('style');
                     style.textContent = `
                         * {
@@ -5124,319 +5142,71 @@
                             transition: none !important;
                             float: none !important;
                         }
-                        html, body {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            min-width: 320px !important;
-                            height: auto !important;
-                            min-height: 100% !important;
-                            display: block !important;
-                            overflow: visible !important;
+                        .dropdown, .clear-btn, .user-clear-btn, .dropdown-delete {
+                            display: none !important;
                         }
-                        .container {
-                            width: 100% !important;
-                            max-width: 760px !important;
-                            min-width: 320px !important;
-                            display: block !important;
-                            margin: 0 auto !important;
-                            box-shadow: none !important;
-                            border: 2px solid #7C3AED !important;
-                            overflow: visible !important;
+                        .all-btn-container, .btn-screenshot, .invoice-btn-row {
+                            display: none !important;
                         }
                         .item {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            align-items: center !important;
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            height: auto !important;
-                            min-height: auto !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border-radius: 4px !important;
-                            border: 1px solid #000 !important;
-                            overflow: visible !important;
+                            overflow: hidden !important;
                         }
-                        .user {
-                            display: flex !important;
-                            align-items: center !important;
-                            gap: 8px !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border-radius: 4px !important;
-                            border: 1px solid #000 !important;
-                            overflow: visible !important;
-                        }
-                        .item-label {
-                            width: 80px !important;
-                            flex-shrink: 0 !important;
-                            font-weight: bold !important;
-                            font-size: 20px !important;
-                            text-align: right !important;
-                            padding-right: 5px !important;
-                            line-height: 28px !important;
-                            display: flex !important;
-                            align-items: center !important;
-                            justify-content: flex-end !important;
-                        }
-                        .icon-gray {
-                            display: inline-block !important;
-                            margin-right: 4px !important;
-                            line-height: 1 !important;
-                            font-size: 22px !important;
-                            filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                            -webkit-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                            -moz-filter: grayscale(100%) saturate(0%) brightness(0.5) !important;
-                            -ms-filter: grayscale(100%) saturate(0%) brightness(0.5) !important;
-                            -o-filter: grayscale(100%) saturate(0%) brightness(0.5) !important;
-                        }
-                        .item-input {
-                            flex: 1 !important;
-                            position: relative !important;
-                            min-width: 0 !important;
-                        }
-                        .item-price {
-                            width: 100px !important;
-                            flex-shrink: 0 !important;
-                            position: relative !important;
-                        }
-                        .total {
-                            box-shadow: none !important;
-                            border: 3px solid #7C3AED !important;
-                        }
-                        .total::before {
-                            display: none !important;
-                        }
-                        .dropdown {
-                            display: none !important;
-                        }
-                        .clear-btn {
-                            display: none !important;
-                        }
-                        .user-clear-btn {
-                            display: none !important;
-                        }
-                        .dropdown-delete {
-                            display: none !important;
-                        }
-                        .btn-screenshot {
-                            display: none !important;
-                        }
-                        .invoice-btn-row {
-                            display: none !important;
-                        }
-                        .title {
-                            box-shadow: none !important;
-                            border: 2px solid #7C3AED !important;
-                        }
-                        .datetime-display {
-                            box-shadow: none !important;
-                            border: 1px solid #7C3AED !important;
-                        }
-                        input.combo {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            box-sizing: border-box !important;
-                            font-size: 14px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.5 !important;
-                            background-color: #e8e8e8 !important;
-                            background: #e8e8e8 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
-                            border-radius: 4px !important;
-                            padding: 8px 25px 8px 8px !important;
-                        }
-                        input.price {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            box-sizing: border-box !important;
-                            font-size: 16px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.5 !important;
-                            background-color: #e0e0e0 !important;
-                            background: #e0e0e0 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
-                            border-radius: 4px !important;
-                            text-align: right !important;
-                            padding: 8px 8px 8px 20px !important;
-                        }
-                        select {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                        }
-                        textarea.remark-input {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            min-height: 40px !important;
-                            max-height: 120px !important;
-                            height: auto !important;
-                            white-space: pre-wrap !important;
-                            word-break: break-all !important;
-                            overflow: auto !important;
-                            resize: vertical !important;
-                            flex: none !important;
-                            align-self: flex-start !important;
-                            line-height: 20px !important;
-                            padding: 6px 10px !important;
-                            box-sizing: border-box !important;
-                            font-family: "Microsoft YaHei", Arial !important;
-                            font-size: 15px !important;
-                        }
-                        .item:has(.remark-input) {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            flex-wrap: wrap !important;
-                            align-items: flex-start !important;
-                            width: 100% !important;
-                            overflow: visible !important;
-                        }
-                        .item:has(.remark-input) .item-label {
-                            width: 80px !important;
-                            flex-shrink: 0 !important;
-                        }
-                        .item:has(.remark-input) .remark-input {
-                            flex: 1 !important;
-                            min-width: 0 !important;
-                            min-height: 40px !important;
-                            max-height: 120px !important;
-                            height: auto !important;
-                            line-height: 20px !important;
-                            white-space: pre-wrap !important;
-                            word-wrap: break-word !important;
-                            overflow: auto !important;
-                            resize: vertical !important;
-                            padding: 6px 10px !important;
-                            box-sizing: border-box !important;
-                        }
-                        .item.has-service:has(.remark-input) {
-                            flex-wrap: wrap !important;
-                        }
-                        .item.has-service:has(.remark-input) .remark-container {
-                            flex: 1 !important;
-                            width: calc(100% - 90px) !important;
-                        }
-                        .item.has-service:has(.remark-input) .remark-input {
-                            width: 100% !important;
-                        }
-                        .item:has(.remark-input) .btn-screenshot {
-                            width: 100px !important;
-                            flex-shrink: 0 !important;
-                            align-self: flex-start !important;
-                        }
-                        .btn-screenshot {
-                            display: none !important;
-                        }
-                        .invoice-btn-row {
-                            display: none !important;
-                        }
-                        /* 修复配件列表字体大小不一的问题 - 确保所有文字元素字体统一 */
-                        .user input, .item input, .combo {
-                            font-size: 16px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e8e8e8 !important;
-                        }
-                        /* 价格输入框保持不同的背景色 */
-                        input.price {
-                            font-size: 16px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e0e0e0 !important;
-                            background-color: #e0e0e0 !important;
-                        }
-                        /* 客户名称输入框特殊处理 - 保持黑色背景和绿色文字 */
-                        #user {
-                            color: #00ff00 !important;
-                            background: #000 !important;
-                            font-size: 15px !important;
-                        }
-                        .user label, .item-label {
-                            font-size: 20px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: bold !important;
-                            line-height: 1.5 !important;
-                        }
-                        /* 确保下拉列表中的文字也统一 */
-                        .dropdown div {
-                            font-size: 14px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                        }
-                        /* 覆盖selected状态的字体大小，确保所有输入框字体统一 */
-                        input.combo.selected {
-                            font-size: 16px !important;
-                            font-weight: normal !important;
-                        }
-                        /* 确保客户名称区域正确显示 */
-                        .user {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            align-items: center !important;
-                            gap: 8px !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border: 1px solid #000 !important;
-                            border-radius: 4px !important;
-                            width: 100% !important;
-                        }
-                        .user label {
-                            width: 80px !important;
-                            font-weight: bold !important;
-                            font-size: 18px !important;
-                            color: #7C3AED !important;
-                            text-align: center !important;
-                            white-space: nowrap !important;
-                        }
-                        .user-input-container {
-                            flex: 1 !important;
-                            position: relative !important;
-                            min-width: 0 !important;
-                        }
-                        /* 禁用所有hover和focus状态效果 */
                         input:focus, input:hover, select:focus, select:hover {
                             box-shadow: none !important;
                             outline: none !important;
                         }
-                        /* 移除移动端特有的样式，确保截图在手机端正确显示 */
-                        @media screen and (max-width: 480px) {
-                            html, body, .container {
-                                width: 480px !important;
-                                min-width: 480px !important;
-                                max-width: 480px !important;
-                                height: auto !important;
-                                min-height: 100% !important;
-                                overflow: visible !important;
-                            }
-                            .item-label {
-                                width: 80px !important;
-                                font-size: 20px !important;
-                            }
-                            .item-price {
-                                width: 100px !important;
-                            }
-                            .user, .item {
-                                height: auto !important;
-                                min-height: auto !important;
-                                overflow: visible !important;
-                            }
+                        .total {
+                            border: 1px solid rgba(192,132,252,0.4) !important;
+                            background: rgba(245,245,247,0.9) !important;
+                            padding: 16px !important;
+                            border-radius: 12px !important;
+                            margin: 0 !important;
+                            min-height: auto !important;
+                        }
+                        .total::before {
+                            display: none !important;
+                        }
+                        .total-final {
+                            text-shadow: none !important;
+                            -webkit-text-stroke: none !important;
+                            text-stroke: none !important;
+                        }
+                        .case-image-container, .cooler-image-container, .vga-image-container {
+                            border: 1px solid rgba(192,132,252,0.3) !important;
+                            border-radius: 8px !important;
+                            background: rgba(245,245,247,0.9) !important;
+                        }
+                        .datetime-display {
+                            padding: 8px 12px !important;
+                            background: rgba(245,245,247,0.9) !important;
+                            border-radius: 4px !important;
+                            font-size: 14px !important;
+                            color: #666 !important;
+                            white-space: nowrap !important;
+                            border: 1px solid rgba(192,132,252,0.2) !important;
+                        }
+                        .user, .item {
+                            background: rgba(245,245,247,0.8) !important;
+                            border: 1px solid rgba(192,132,252,0.2) !important;
+                        }
+                        input.combo, input.price, .remark-input {
+                            background: #ffffff !important;
+                            color: #333 !important;
+                        }
+                        .dropdown div {
+                            color: #333 !important;
+                        }
+                        .modal-item {
+                            color: #333 !important;
+                            background: rgba(245,245,247,0.8) !important;
+                        }
+                        .service-item {
+                            color: #333 !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
                 }
             }).then(canvas => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-
                 // 生成文件名（使用当前日期时间）
                 const now = new Date();
                 const year = now.getFullYear();
@@ -5471,9 +5241,6 @@
                     alert(`截图已保存：${fileName}`);
                 }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
             }).catch(error => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-                
                 throw error;
             });
             }, 100); // 100ms延迟确保页面渲染
@@ -5500,26 +5267,9 @@
         try {
             const container = document.querySelector('.container');
             
-            // 临时隐藏所有按钮容器
-            const allBtnContainer = document.querySelector('.all-btn-container');
-            const allBtnContainerDisplay = allBtnContainer.style.display;
-            allBtnContainer.style.display = 'none';
-
-            const fullHeight = Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight,
-                container.scrollHeight,
-                container.offsetHeight
-            );
-            
-            container.style.display = 'block';
-            container.style.position = 'static';
-            container.style.overflow = 'visible';
-            container.style.height = 'auto';
-            
             setTimeout(function() {
                 html2canvas(container, {
-                backgroundColor: '#e0e0e0',
+                backgroundColor: '#ffffff',
                 scale: 2,
                 useCORS: true,
                 logging: false,
@@ -5529,6 +5279,12 @@
                 imageTimeout: 15000,
                 onclone: function(clonedDoc) {
                     const clonedContainer = clonedDoc.querySelector('.container');
+                    if (clonedContainer) {
+                        clonedContainer.style.background = '#ffffff';
+                        clonedContainer.style.backdropFilter = 'none';
+                        clonedContainer.style.border = '1px solid rgba(192,132,252,0.3)';
+                        clonedContainer.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 0 30px rgba(192,132,252,0.1)';
+                    }
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
                     // 将图标转换为灰色
@@ -5657,18 +5413,6 @@
                         clonedRemark.style.height = actualHeight + 'px';
                     }
                     
-                    const comboInputs = clonedDoc.querySelectorAll('input.combo');
-                    comboInputs.forEach(function(input) {
-                        input.style.backgroundColor = '#e8e8e8';
-                        input.style.background = '#e8e8e8';
-                    });
-                    
-                    const priceInputs2 = clonedDoc.querySelectorAll('input.price');
-                    priceInputs2.forEach(function(input) {
-                        input.style.backgroundColor = '#e0e0e0';
-                        input.style.background = '#e0e0e0';
-                    });
-                    
                     const style = clonedDoc.createElement('style');
                     style.textContent = `
                         * {
@@ -5676,314 +5420,71 @@
                             transition: none !important;
                             float: none !important;
                         }
-                        html, body {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            min-width: 320px !important;
-                            height: auto !important;
-                            min-height: 100% !important;
-                            display: block !important;
-                            overflow: visible !important;
+                        .dropdown, .clear-btn, .user-clear-btn, .dropdown-delete {
+                            display: none !important;
                         }
-                        .container {
-                            width: 100% !important;
-                            max-width: 760px !important;
-                            min-width: 320px !important;
-                            display: block !important;
-                            margin: 0 auto !important;
-                            box-shadow: none !important;
-                            border: 2px solid #7C3AED !important;
-                            overflow: visible !important;
+                        .all-btn-container, .btn-screenshot, .invoice-btn-row {
+                            display: none !important;
                         }
                         .item {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            align-items: center !important;
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            height: auto !important;
-                            min-height: auto !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border-radius: 4px !important;
-                            border: 1px solid #000 !important;
-                            overflow: visible !important;
-                        }
-                        .user {
-                            display: flex !important;
-                            align-items: center !important;
-                            gap: 8px !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border-radius: 4px !important;
-                            border: 1px solid #000 !important;
-                            overflow: visible !important;
-                        }
-                        .item-label {
-                            width: 80px !important;
-                            flex-shrink: 0 !important;
-                            font-weight: bold !important;
-                            font-size: 20px !important;
-                            text-align: right !important;
-                            padding-right: 5px !important;
-                            line-height: 28px !important;
-                            display: flex !important;
-                            align-items: center !important;
-                            justify-content: flex-end !important;
-                        }
-                        .icon-gray {
-                            display: inline-block !important;
-                            margin-right: 4px !important;
-                            line-height: 1 !important;
-                            font-size: 22px !important;
-                            filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                            -webkit-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                            -moz-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                            -ms-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                            -o-filter: grayscale(100%) saturate(0%) brightness(0.5) contrast(1.2) !important;
-                        }
-                        .item-input {
-                            flex: 1 !important;
-                            position: relative !important;
-                            min-width: 0 !important;
-                        }
-                        .item-price {
-                            width: 100px !important;
-                            flex-shrink: 0 !important;
-                            position: relative !important;
-                        }
-                        .total {
-                            box-shadow: none !important;
-                            border: 3px solid #7C3AED !important;
-                        }
-                        .total::before {
-                            display: none !important;
-                        }
-                        .dropdown {
-                            display: none !important;
-                        }
-                        .clear-btn {
-                            display: none !important;
-                        }
-                        .user-clear-btn {
-                            display: none !important;
-                        }
-                        .dropdown-delete {
-                            display: none !important;
-                        }
-                        .btn-screenshot {
-                            display: none !important;
-                        }
-                        .invoice-btn-row {
-                            display: none !important;
-                        }
-                        .screenshot-btn-container {
-                            display: none !important;
-                        }
-                        .title {
-                            box-shadow: none !important;
-                            border: 2px solid #7C3AED !important;
-                        }
-                        .datetime-display {
-                            box-shadow: none !important;
-                            border: 1px solid #7C3AED !important;
-                        }
-                        input.combo {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            box-sizing: border-box !important;
-                            font-size: 14px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.5 !important;
-                            background-color: #e8e8e8 !important;
-                            background: #e8e8e8 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
-                            border-radius: 4px !important;
-                            padding: 8px 25px 8px 8px !important;
-                        }
-                        input.price {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            box-sizing: border-box !important;
-                            font-size: 16px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.5 !important;
-                            background-color: #e0e0e0 !important;
-                            background: #e0e0e0 !important;
-                            color: #000 !important;
-                            border: 1px solid #888 !important;
-                            border-radius: 4px !important;
-                            text-align: right !important;
-                            padding: 8px 8px 8px 20px !important;
-                        }
-                        select {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                        }
-                        textarea.remark-input {
-                            width: 100% !important;
-                            max-width: 100% !important;
-                            min-height: 40px !important;
-                            max-height: 120px !important;
-                            height: auto !important;
-                            white-space: pre-wrap !important;
-                            word-break: break-all !important;
-                            overflow: auto !important;
-                            resize: vertical !important;
-                            flex: none !important;
-                            align-self: flex-start !important;
-                            line-height: 20px !important;
-                            padding: 6px 10px !important;
-                            box-sizing: border-box !important;
-                            font-family: "Microsoft YaHei", Arial !important;
-                            font-size: 15px !important;
-                        }
-                        .item:has(.remark-input) {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            flex-wrap: wrap !important;
-                            align-items: flex-start !important;
-                            width: 100% !important;
-                            overflow: visible !important;
-                        }
-                        .item:has(.remark-input) .item-label {
-                            width: 80px !important;
-                            flex-shrink: 0 !important;
-                        }
-                        .item:has(.remark-input) .remark-input {
-                            flex: 1 !important;
-                            min-width: 0 !important;
-                            min-height: 40px !important;
-                            max-height: 120px !important;
-                            height: auto !important;
-                            line-height: 20px !important;
-                            white-space: pre-wrap !important;
-                            word-wrap: break-word !important;
-                            overflow: auto !important;
-                            resize: vertical !important;
-                            padding: 6px 10px !important;
-                            box-sizing: border-box !important;
-                        }
-                        .item.has-service:has(.remark-input) {
-                            flex-wrap: wrap !important;
-                        }
-                        .item.has-service:has(.remark-input) .remark-container {
-                            flex: 1 !important;
-                            width: calc(100% - 90px) !important;
-                        }
-                        .item.has-service:has(.remark-input) .remark-input {
-                            width: 100% !important;
-                        }
-                        .item:has(.remark-input) .btn-screenshot {
-                            width: 100px !important;
-                            flex-shrink: 0 !important;
-                            align-self: flex-start !important;
-                        }
-                        .btn-screenshot {
-                            display: none !important;
-                        }
-                        .invoice-btn-row {
-                            display: none !important;
-                        }
-                        .user input, .item input, .combo {
-                            font-size: 16px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e8e8e8 !important;
-                        }
-                        input.price {
-                            font-size: 16px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: normal !important;
-                            line-height: 1.6 !important;
-                            color: #000 !important;
-                            background: #e0e0e0 !important;
-                            background-color: #e0e0e0 !important;
-                        }
-                        #user {
-                            color: #00ff00 !important;
-                            background: #000 !important;
-                            font-size: 15px !important;
-                        }
-                        .user label, .item-label {
-                            font-size: 20px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                            font-weight: bold !important;
-                            line-height: 1.5 !important;
-                        }
-                        .dropdown div {
-                            font-size: 14px !important;
-                            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif !important;
-                        }
-                        input.combo.selected {
-                            font-size: 16px !important;
-                            font-weight: normal !important;
-                        }
-                        .user {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            align-items: center !important;
-                            gap: 8px !important;
-                            margin-bottom: 8px !important;
-                            padding: 4px !important;
-                            background: #d0d0d0 !important;
-                            border: 1px solid #000 !important;
-                            border-radius: 4px !important;
-                            width: 100% !important;
-                        }
-                        .user label {
-                            width: 80px !important;
-                            font-weight: bold !important;
-                            font-size: 18px !important;
-                            color: #7C3AED !important;
-                            text-align: center !important;
-                            white-space: nowrap !important;
-                        }
-                        .user-input-container {
-                            flex: 1 !important;
-                            position: relative !important;
-                            min-width: 0 !important;
+                            overflow: hidden !important;
                         }
                         input:focus, input:hover, select:focus, select:hover {
                             box-shadow: none !important;
                             outline: none !important;
                         }
-                        @media screen and (max-width: 480px) {
-                            html, body, .container {
-                                width: 480px !important;
-                                min-width: 480px !important;
-                                max-width: 480px !important;
-                                height: auto !important;
-                                min-height: 100% !important;
-                                overflow: visible !important;
-                            }
-                            .item-label {
-                                width: 80px !important;
-                                font-size: 20px !important;
-                            }
-                            .item-price {
-                                width: 100px !important;
-                            }
-                            .user, .item {
-                                height: auto !important;
-                                min-height: auto !important;
-                                overflow: visible !important;
-                            }
+                        .total {
+                            border: 1px solid rgba(192,132,252,0.4) !important;
+                            background: rgba(245,245,247,0.9) !important;
+                            padding: 16px !important;
+                            border-radius: 12px !important;
+                            margin: 0 !important;
+                            min-height: auto !important;
+                        }
+                        .total::before {
+                            display: none !important;
+                        }
+                        .total-final {
+                            text-shadow: none !important;
+                            -webkit-text-stroke: none !important;
+                            text-stroke: none !important;
+                        }
+                        .case-image-container, .cooler-image-container, .vga-image-container {
+                            border: 1px solid rgba(192,132,252,0.3) !important;
+                            border-radius: 8px !important;
+                            background: rgba(245,245,247,0.9) !important;
+                        }
+                        .datetime-display {
+                            padding: 8px 12px !important;
+                            background: rgba(245,245,247,0.9) !important;
+                            border-radius: 4px !important;
+                            font-size: 14px !important;
+                            color: #666 !important;
+                            white-space: nowrap !important;
+                            border: 1px solid rgba(192,132,252,0.2) !important;
+                        }
+                        .user, .item {
+                            background: rgba(245,245,247,0.8) !important;
+                            border: 1px solid rgba(192,132,252,0.2) !important;
+                        }
+                        input.combo, input.price, .remark-input {
+                            background: #ffffff !important;
+                            color: #333 !important;
+                        }
+                        .dropdown div {
+                            color: #333 !important;
+                        }
+                        .modal-item {
+                            color: #333 !important;
+                            background: rgba(245,245,247,0.8) !important;
+                        }
+                        .service-item {
+                            color: #333 !important;
                         }
                     `;
                     clonedDoc.head.appendChild(style);
                 }
             }).then(canvas => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -6013,9 +5514,6 @@
                     alert(`匿名截图已保存：${fileName}`);
                 }, 'image/jpeg', 0.95);
             }).catch(error => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-                
                 throw error;
             });
             }, 100);
@@ -6560,7 +6058,7 @@
         let h="";
         if(list.length===0)h="<div style='padding:10px;text-align:center;color:#000'>暂无保存</div>";
         else list.forEach((i,j)=>{
-            h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#7C3AED'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
+            h+=`<div class='modal-item'><div>${i.name}</div><div style='font-size:12px;color:#C084FC'>${i.time}</div><button onclick="load(${j})">加载</button></div>`;
         });
         document.getElementById("mlist").innerHTML=h;
         document.getElementById("loadModal").style.display="flex";
