@@ -6993,6 +6993,12 @@
         // 如果有选项才显示
         if (dropdown.children.length > 0) {
             dropdown.style.display = "block";
+            dropdown.style.zIndex = 999999;
+            // 设置.user的z-index，确保下拉列表可以覆盖其他元素
+            const userContainer = document.querySelector('.user');
+            if (userContainer) {
+                userContainer.style.zIndex = 1000;
+            }
             // 过滤匹配当前输入的内容
             filterUserDropdown();
         }
@@ -7017,6 +7023,11 @@
     function hideUserDropdown() {
         setTimeout(() => {
             document.getElementById("userDropdown").style.display = "none";
+            // 恢复.user的z-index
+            const userContainer = document.querySelector('.user');
+            if (userContainer) {
+                userContainer.style.zIndex = '';
+            }
         }, 150);
     }
 
