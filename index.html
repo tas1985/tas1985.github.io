@@ -13,28 +13,28 @@
     <!-- 预加载关键资源 -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
-    <!-- html2canvas库用于截图功能 - 异步加载 -->
+    <!-- html2canvas库用于截图功能 - 优先使用CDN加载 -->
     <script>
-        // 异步加载html2canvas，不阻塞页面渲染
+        // 异步加载html2canvas，不阻塞页面渲染，优先使用CDN
         function loadHtml2canvas() {
             var script = document.createElement('script');
-            script.src = 'html2canvas.min.js';
+            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
             script.async = true;
             script.onload = function() {
                 window.html2canvasLoaded = true;
             };
             script.onerror = function() {
-                // 如果本地加载失败，尝试CDN
-                var cdnScript = document.createElement('script');
-                cdnScript.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-                cdnScript.async = true;
-                cdnScript.onload = function() {
+                // 如果CDN加载失败，尝试本地文件
+                var localScript = document.createElement('script');
+                localScript.src = 'html2canvas.min.js';
+                localScript.async = true;
+                localScript.onload = function() {
                     window.html2canvasLoaded = true;
                 };
-                cdnScript.onerror = function() {
+                localScript.onerror = function() {
                     console.error('html2canvas库加载失败，截图功能不可用');
                 };
-                document.head.appendChild(cdnScript);
+                document.head.appendChild(localScript);
             };
             document.head.appendChild(script);
         }
@@ -5085,7 +5085,7 @@
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
-                foreignObjectRendering: false,
+                foreignObjectRendering: true,
                 removeContainer: true,
                 imageTimeout: 15000,
                 onclone: function(clonedDoc) {
@@ -5140,7 +5140,6 @@
                         * {
                             animation: none !important;
                             transition: none !important;
-                            float: none !important;
                         }
                         .dropdown, .clear-btn, .user-clear-btn, .dropdown-delete {
                             display: none !important;
@@ -5188,6 +5187,8 @@
                         .user, .item {
                             background: rgba(245,245,247,0.8) !important;
                             border: 1px solid rgba(192,132,252,0.2) !important;
+                            display: flex !important;
+                            align-items: center !important;
                         }
                         input.combo, input.price, .remark-input {
                             background: #ffffff !important;
@@ -5274,7 +5275,7 @@
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
-                foreignObjectRendering: false,
+                foreignObjectRendering: true,
                 removeContainer: true,
                 imageTimeout: 15000,
                 onclone: function(clonedDoc) {
@@ -5418,7 +5419,6 @@
                         * {
                             animation: none !important;
                             transition: none !important;
-                            float: none !important;
                         }
                         .dropdown, .clear-btn, .user-clear-btn, .dropdown-delete {
                             display: none !important;
@@ -5466,6 +5466,8 @@
                         .user, .item {
                             background: rgba(245,245,247,0.8) !important;
                             border: 1px solid rgba(192,132,252,0.2) !important;
+                            display: flex !important;
+                            align-items: center !important;
                         }
                         input.combo, input.price, .remark-input {
                             background: #ffffff !important;
