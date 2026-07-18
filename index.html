@@ -6168,8 +6168,14 @@
             sum+=parseFloat(document.getElementById(k+"-p").value)||0;
         });
         document.getElementById("total").innerText=sum.toFixed(2);
-        // 更新成本合计显示（所有配件成本 + 450元运营成本）
-        document.getElementById("costTotal").innerText=Math.round(sum + 450);
+        // 更新成本合计显示（所有配件成本 + 450元运营成本），根据发票类型上浮
+        let costTotal = sum + 450;
+        if (invoiceType === 'pu') {
+            costTotal = costTotal * 1.025;
+        } else if (invoiceType === 'zhuan') {
+            costTotal = costTotal * 1.13;
+        }
+        document.getElementById("costTotal").innerText=Math.round(costTotal);
         // 修改：最终报价四舍五入为整数，去掉小数点
         let finalPrice = Math.round(sum / 0.9415);
         
