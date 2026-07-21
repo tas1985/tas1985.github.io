@@ -296,12 +296,54 @@ def fetch_mb_prices():
 def fetch_raw_ram_prices():
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         ram_dict = {}
-        for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            feat = extract_ram_feature(name)
-            if feat:
-                ram_dict[feat] = price
+        
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        feat = extract_ram_feature(name)
+                        if feat:
+                            ram_dict[feat] = str(price)
+        
+        # 方法2：如果列表提取失败，尝试正则从文本中提取
+        if not ram_dict:
+            for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+                feat = extract_ram_feature(name)
+                if feat:
+                    ram_dict[feat] = price
+        
         return ram_dict
     except Exception:
         return {}
@@ -313,22 +355,79 @@ def fetch_processed_ram():
         soup = BeautifulSoup(res.text, "html.parser")
         ram_list = []
         
-        # 查找所有产品名称标签
-        product_names = soup.find_all('span', class_='product-name')
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                # 获取产品名称（优先使用 data-fullname 属性）
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    # 获取价格（优先使用 data-original 属性）
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        # 优先使用 data-original 属性
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            # 从 price-text 子标签获取
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        # 排除列表中的品牌
+                        if any(w in name for w in RAM_EXCLUDE_LIST):
+                            continue
+                        
+                        # 阿斯加特品牌价格增加
+                        final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                        ram_list.append({"name": name, "price": final_p})
         
-        for name_span in product_names:
-            # 获取产品名称（优先使用 data-fullname 属性）
-            name = name_span.get('data-fullname', '').strip()
-            if not name:
-                name = name_span.get_text(strip=True)
+        # 方法2：如果列表提取失败，尝试旧方法（查找产品名称标签）
+        if not ram_list:
+            product_names = soup.find_all('span', class_='product-name')
             
-            # 查找紧邻的价格标签
-            price_span = name_span.find_next_sibling('span', class_='product-price')
-            if price_span:
-                price_text = price_span.get_text(strip=True)
-                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
-                if price_match:
-                    price = price_match.group(1)
+            for name_span in product_names:
+                # 获取产品名称（优先使用 data-fullname 属性）
+                name = name_span.get('data-fullname', '').strip()
+                if not name:
+                    name = name_span.get_text(strip=True)
+                
+                # 查找紧邻的价格标签
+                price_span = name_span.find_next_sibling('span', class_='product-price')
+                if price_span:
+                    # 优先使用 data-original 属性
+                    original_price = price_span.get('data-original', '')
+                    if original_price:
+                        try:
+                            price = int(float(original_price))
+                        except:
+                            original_price = ''
+                    
+                    if not original_price:
+                        price_text = price_span.get_text(strip=True)
+                        price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
+                        if price_match:
+                            price = price_match.group(1)
+                        else:
+                            continue
                     
                     # 排除列表中的品牌
                     if any(w in name for w in RAM_EXCLUDE_LIST):
@@ -337,6 +436,19 @@ def fetch_processed_ram():
                     # 阿斯加特品牌价格增加
                     final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
                     ram_list.append({"name": name, "price": final_p})
+        
+        # 方法3：如果以上方法都失败，尝试使用正则从文本中提取
+        if not ram_list:
+            text = soup.get_text()
+            for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", text):
+                if len(name.strip()) > 3:
+                    if any(w in name for w in RAM_EXCLUDE_LIST):
+                        continue
+                    try:
+                        final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                        ram_list.append({"name": name.strip(), "price": final_p})
+                    except:
+                        pass
         
         print(f"🔍 爬取到 {len(ram_list)} 个内存型号")
         if ram_list:
@@ -1314,22 +1426,86 @@ def fetch_raw_ram_prices_with_details():
         ram_list = []
         all_items = []
         
-        # 查找所有产品名称标签
-        product_names = soup.find_all('span', class_='product-name')
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                # 获取产品名称（优先使用 data-fullname 属性）
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    # 获取价格（优先使用 data-original 属性）
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        # 优先使用 data-original 属性
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = str(int(float(original_price)))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            # 从 price-text 子标签获取
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    price = price_match.group(1)
+                                else:
+                                    continue
+                            else:
+                                continue
+                        
+                        all_items.append((name, price))
+                        
+                        # 提取四要素
+                        brand, series, cas, capacity, freq = extract_ram_four_key(name)
+                        
+                        # 阿斯加特品牌价格增加
+                        final_price = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                        
+                        # 所有爬取到的数据都加入列表（不管是否能提取四要素）
+                        ram_list.append({
+                            'name': name,
+                            'key': (brand, series, cas, capacity, freq),
+                            'price': final_price
+                        })
         
-        for name_span in product_names:
-            # 获取产品名称（优先使用 data-fullname 属性）
-            name = name_span.get('data-fullname', '').strip()
-            if not name:
-                name = name_span.get_text(strip=True)
+        # 方法2：如果列表提取失败，尝试旧方法（查找产品名称标签）
+        if not ram_list:
+            product_names = soup.find_all('span', class_='product-name')
             
-            # 查找紧邻的价格标签
-            price_span = name_span.find_next_sibling('span', class_='product-price')
-            if price_span:
-                price_text = price_span.get_text(strip=True)
-                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
-                if price_match:
-                    price = price_match.group(1)
+            for name_span in product_names:
+                # 获取产品名称（优先使用 data-fullname 属性）
+                name = name_span.get('data-fullname', '').strip()
+                if not name:
+                    name = name_span.get_text(strip=True)
+                
+                # 查找紧邻的价格标签
+                price_span = name_span.find_next_sibling('span', class_='product-price')
+                if price_span:
+                    # 优先使用 data-original 属性
+                    original_price = price_span.get('data-original', '')
+                    if original_price:
+                        try:
+                            price = str(int(float(original_price)))
+                        except:
+                            original_price = ''
+                    
+                    if not original_price:
+                        price_text = price_span.get_text(strip=True)
+                        price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
+                        if price_match:
+                            price = price_match.group(1)
+                        else:
+                            continue
+                    
                     all_items.append((name, price))
                     
                     # 提取四要素
@@ -1341,6 +1517,25 @@ def fetch_raw_ram_prices_with_details():
                     # 所有爬取到的数据都加入列表（不管是否能提取四要素）
                     ram_list.append({
                         'name': name,
+                        'key': (brand, series, cas, capacity, freq),
+                        'price': final_price
+                    })
+        
+        # 方法3：如果以上方法都失败，尝试使用正则从文本中提取
+        if not ram_list:
+            text = soup.get_text()
+            for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", text):
+                if len(name.strip()) > 3:
+                    all_items.append((name.strip(), price))
+                    
+                    # 提取四要素
+                    brand, series, cas, capacity, freq = extract_ram_four_key(name.strip())
+                    
+                    # 阿斯加特品牌价格增加
+                    final_price = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                    
+                    ram_list.append({
+                        'name': name.strip(),
                         'key': (brand, series, cas, capacity, freq),
                         'price': final_price
                     })
@@ -1556,32 +1751,106 @@ def fetch_all_ram_from_source():
         
         ram_dict = {}
         
-        # 查找所有产品名称标签
-        product_names = soup.find_all('span', class_='product-name')
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                # 获取产品名称（优先使用 data-fullname 属性）
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    # 获取价格（优先使用 data-original 属性）
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        # 优先使用 data-original 属性
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            # 从 price-text 子标签获取
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        # 排除列表中的品牌
+                        if any(w in name for w in RAM_EXCLUDE_LIST):
+                            continue
+                        
+                        # 阿斯加特品牌价格增加
+                        if "阿斯加特" in name:
+                            price += RAM_ASC_TECH_ADD
+                        
+                        ram_dict[name] = price
         
-        for name_span in product_names:
-            # 获取产品名称
-            name = name_span.get('data-fullname', '').strip()
-            if not name:
-                name = name_span.get_text(strip=True)
+        # 方法2：如果列表提取失败，尝试旧方法（查找产品名称标签）
+        if not ram_dict:
+            product_names = soup.find_all('span', class_='product-name')
             
-            # 排除列表中的品牌
-            if any(w in name for w in RAM_EXCLUDE_LIST):
-                continue
-            
-            # 查找价格
-            price_span = name_span.find_next_sibling('span', class_='product-price')
-            if price_span:
-                price_text = price_span.get_text(strip=True)
-                price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
-                if price_match:
-                    price = int(float(price_match.group(1)))
+            for name_span in product_names:
+                # 获取产品名称
+                name = name_span.get('data-fullname', '').strip()
+                if not name:
+                    name = name_span.get_text(strip=True)
+                
+                # 排除列表中的品牌
+                if any(w in name for w in RAM_EXCLUDE_LIST):
+                    continue
+                
+                # 查找价格
+                price_span = name_span.find_next_sibling('span', class_='product-price')
+                if price_span:
+                    # 优先使用 data-original 属性
+                    original_price = price_span.get('data-original', '')
+                    if original_price:
+                        try:
+                            price = int(float(original_price))
+                        except:
+                            original_price = ''
+                    
+                    if not original_price:
+                        price_text = price_span.get_text(strip=True)
+                        price_match = re.search(r'￥(\d+(?:\.\d+)?)', price_text)
+                        if price_match:
+                            price = int(float(price_match.group(1)))
+                        else:
+                            continue
                     
                     # 阿斯加特品牌价格增加
                     if "阿斯加特" in name:
                         price += RAM_ASC_TECH_ADD
                     
                     ram_dict[name] = price
+        
+        # 方法3：如果以上方法都失败，尝试使用正则从文本中提取
+        if not ram_dict:
+            text = soup.get_text()
+            for name, price in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", text):
+                if len(name.strip()) > 3:
+                    if any(w in name for w in RAM_EXCLUDE_LIST):
+                        continue
+                    try:
+                        price_val = int(float(price))
+                        if "阿斯加特" in name:
+                            price_val += RAM_ASC_TECH_ADD
+                        ram_dict[name.strip()] = price_val
+                    except:
+                        pass
         
         return ram_dict
     except Exception as e:
