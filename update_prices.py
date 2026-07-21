@@ -1905,8 +1905,14 @@ def fetch_raw_ram_prices_with_details():
 
 # -------------------------- 主板/内存 自动更新 --------------------------
 def update_mb_accurate():
+    """主板更新逻辑：保留现有型号，只更新价格，不删除，新型号追加"""
+    print("\n" + "="*50)
+    print("🔄 开始主板价格更新")
+    print("="*50)
+    
     try:
-        # 先获取新的主板数据，只有获取成功才进行更新
+        # ========== 第一步：爬取源网站数据 ==========
+        print("\n📥 第一步：爬取源网站数据...")
         mb_list = fetch_mb_prices()
         
         # 如果获取失败或返回空列表，不删除原有数据，直接返回
@@ -1914,20 +1920,149 @@ def update_mb_accurate():
             print("⚠️ 主板数据获取失败或为空，保留原有主板数据")
             return
         
+        # 将列表转换为字典，方便查找
+        mb_dict = {mb["name"]: mb["price"] for mb in mb_list}
+        print(f"   爬取到 {len(mb_dict)} 个主板型号")
+        
+        # 打印部分爬取数据用于调试
+        print("\n   📋 部分爬取数据:")
+        for i, (name, price) in enumerate(list(mb_dict.items())[:10]):
+            print(f"      {name[:45]}... -> ￥{price}")
+        
+        # ========== 第二步：读取HTML中的主板数据 ==========
+        print("\n📖 第二步：读取HTML主板数据...")
         with open(HTML_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        idx = next((i for i, l in enumerate(lines) if MB_TARGET_LINE in l), -1)
-        if idx == -1:
+            content = f.read()
+            lines = content.split('\n')
+        
+        # 找到主板区域开始和结束位置
+        mb_start_idx = -1
+        mb_end_idx = -1
+        for i, line in enumerate(lines):
+            if 'board: [' in line:
+                mb_start_idx = i
+            elif mb_start_idx != -1 and mb_end_idx == -1 and line.strip() == '],':
+                # 确认是主板数组的结束（检查后面是否是其他硬件）
+                if i + 1 < len(lines) and ('ssd: [' in lines[i + 1] or 'gpu: [' in lines[i + 1]):
+                    mb_end_idx = i
+                    break
+        
+        if mb_start_idx == -1 or mb_end_idx == -1:
+            print("❌ 未找到主板区域")
             return
-        pos = idx + 1
-        while pos < len(lines) and lines[pos].startswith(INDENT) and '{n:"' in lines[pos]:
-            del lines[pos]
-        lines.insert(pos, generate_mb_content(mb_list))
+        
+        print(f"   主板区域：第{mb_start_idx + 1}行 - 第{mb_end_idx + 1}行")
+        
+        # 解析HTML中的主板数据
+        html_mbs = {}  # {型号名: (价格, 行索引)}
+        for i in range(mb_start_idx + 1, mb_end_idx):
+            line = lines[i]
+            match = re.search(r'{n:"([^"]+)",p:(\d+(?:\.\d+)?)}', line)
+            if match:
+                name = match.group(1)
+                price = int(float(match.group(2)))
+                html_mbs[name] = (price, i)
+        
+        print(f"   HTML中现有 {len(html_mbs)} 个主板型号")
+        
+        # ========== 第三步：匹配和更新 ==========
+        print("\n🔄 第三步：匹配和更新...")
+        
+        update_count = 0
+        no_change_count = 0
+        new_add_count = 0
+        
+        # 记录已匹配的源网站型号
+        matched_source = set()
+        
+        # 首先进行精确匹配
+        for scraped_name, scraped_price in mb_dict.items():
+            if scraped_name in html_mbs:
+                old_price, line_idx = html_mbs[scraped_name]
+                if scraped_price != old_price:
+                    lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{scraped_price}', lines[line_idx])
+                    print(f"   ✓ 更新: {scraped_name[:35]}... ￥{old_price} -> ￥{scraped_price}")
+                    update_count += 1
+                else:
+                    no_change_count += 1
+                matched_source.add(scraped_name)
+        
+        # 进行模糊匹配（处理名称略有差异的情况）
+        for scraped_name, scraped_price in mb_dict.items():
+            if scraped_name in matched_source:
+                continue
+            
+            for html_name, (html_price, line_idx) in html_mbs.items():
+                # 使用简单的包含匹配：如果爬取的名称包含HTML名称的核心部分
+                # 或者HTML名称包含爬取名称的核心部分
+                scraped_lower = scraped_name.lower().replace(" ", "")
+                html_lower = html_name.lower().replace(" ", "")
+                
+                # 去掉常见后缀进行比较
+                def remove_common_suffixes(name):
+                    suffixes = ['wifi', 'd4', 'd5', 'argb', 'pro', 'gaming', 'plus', 'm', 'ti']
+                    for suffix in suffixes:
+                        name = name.replace(suffix, '')
+                    return name
+                
+                core_scraped = remove_common_suffixes(scraped_lower)
+                core_html = remove_common_suffixes(html_lower)
+                
+                # 如果核心部分相互包含，则认为匹配
+                if core_scraped in core_html or core_html in core_scraped:
+                    if scraped_price != html_price:
+                        lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{scraped_price}', lines[line_idx])
+                        print(f"   🔗 模糊匹配: {scraped_name[:35]}... ≈ {html_name[:35]}... ￥{html_price} -> ￥{scraped_price}")
+                        update_count += 1
+                    else:
+                        no_change_count += 1
+                    matched_source.add(scraped_name)
+                    break
+        
+        # 追加新型号（源网站中有但HTML中没有的型号）
+        new_items = []
+        for scraped_name, scraped_price in mb_dict.items():
+            if scraped_name not in matched_source:
+                # 检查是否已经在HTML中（作为手动添加的型号）
+                found_in_html = False
+                for line in lines:
+                    if f'{{n:"{scraped_name}"' in line:
+                        found_in_html = True
+                        break
+                if not found_in_html:
+                    new_items.append((scraped_name, scraped_price))
+        
+        # 在主板区域末尾追加新型号
+        if new_items:
+            print(f"\n   📌 追加 {len(new_items)} 个新型号:")
+            new_lines = []
+            for name, price in new_items:
+                new_line = f'            {{n:"{name}",p:{price}}},\n'
+                new_lines.append(new_line)
+                print(f"   + 新增: {name[:40]}... ￥{price}")
+                new_add_count += 1
+            
+            # 在主板区域末尾追加
+            lines[mb_end_idx] = '\n'.join(new_lines) + '\n' + lines[mb_end_idx]
+        
+        # ========== 第四步：保存文件 ==========
+        print("\n💾 第四步：保存文件...")
         with open(HTML_FILE, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-        print(f"✅ 主板价格自动更新完成，共更新 {len(mb_list)} 个主板型号")
+            f.write('\n'.join(lines))
+        
+        # ========== 输出统计 ==========
+        print("\n" + "="*50)
+        print(f"📊 更新统计:")
+        print(f"   - 价格更新: {update_count} 个型号")
+        print(f"   - 新型号追加: {new_add_count} 个型号")
+        print(f"   - 价格不变: {no_change_count} 个型号")
+        print("="*50)
+        print("✅ 主板更新完成!")
+        
     except Exception as e:
         print(f"❌ 主板更新失败：{e}")
+        import traceback
+        traceback.print_exc()
 
 def update_ram_new():
     """内存更新逻辑（简洁版）：
