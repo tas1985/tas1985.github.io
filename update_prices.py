@@ -2634,44 +2634,176 @@ def update_ram_accurate():
 
 # 新增机箱自动更新函数
 def update_case_accurate():
+    """机箱更新逻辑：保留现有型号，只更新价格，不删除，新型号追加"""
+    print("\n" + "="*50)
+    print("🔄 开始机箱价格更新")
+    print("="*50)
+    
     try:
-        with open(HTML_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        # 爬取机箱数据，创建型号到价格的映射
+        # ========== 第一步：爬取源网站数据 ==========
+        print("\n📥 第一步：爬取源网站数据...")
         case_list = fetch_case_prices()
-        # 只使用完整名称进行精确匹配，避免错误匹配
-        case_map = {case["name"]: case["price"] for case in case_list}
         
-        # 找到机箱区域的开始位置
-        idx = next((i for i, l in enumerate(lines) if CASE_TARGET_LINE in l), -1)
-        if idx == -1:
-            print("❌ 未找到机箱目标行：{n:\"乔思伯 TK1 星舰仓\",p:499},")
+        # 如果获取失败或返回空列表，不删除原有数据，直接返回
+        if not case_list:
+            print("⚠️ 机箱数据获取失败或为空，保留原有机箱数据")
             return
         
-        # 从目标行的下一行开始，查找机箱数据行
-        pos = idx + 1
-        updated = 0
+        # 将列表转换为字典，方便查找
+        case_dict = {case["name"]: case["price"] for case in case_list}
+        print(f"   爬取到 {len(case_dict)} 个机箱型号")
         
-        # 遍历机箱数据行
-        while pos < len(lines) and lines[pos].startswith(CASE_INDENT) and '{n:"' in lines[pos]:
-            line = lines[pos]
-            # 提取机箱名称
-            match = re.search(r'{n:"([^"]+)"', line)
+        # 打印部分爬取数据用于调试
+        print("\n   📋 部分爬取数据:")
+        for i, (name, price) in enumerate(list(case_dict.items())[:10]):
+            print(f"      {name[:45]}... -> ￥{price}")
+        
+        # ========== 第二步：读取HTML中的机箱数据 ==========
+        print("\n📖 第二步：读取HTML机箱数据...")
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+            lines = content.split('\n')
+        
+        # 找到机箱区域开始和结束位置
+        case_start_idx = -1
+        case_end_idx = -1
+        for i, line in enumerate(lines):
+            if 'case: [' in line:
+                case_start_idx = i
+            elif case_start_idx != -1 and case_end_idx == -1 and line.strip() == '],':
+                # 确认是机箱数组的结束（机箱后面是注释或其他配件）
+                if i + 1 < len(lines) and ('// 新增其他配件' in lines[i + 1] or 'fan: [' in lines[i + 1]):
+                    case_end_idx = i
+                    break
+        
+        if case_start_idx == -1 or case_end_idx == -1:
+            print("❌ 未找到机箱区域")
+            return
+        
+        print(f"   机箱区域：第{case_start_idx + 1}行 - 第{case_end_idx + 1}行")
+        
+        # 解析HTML中的机箱数据
+        html_cases = {}  # {型号名: (价格, 行索引)}
+        for i in range(case_start_idx + 1, case_end_idx):
+            line = lines[i]
+            match = re.search(r'{n:"([^"]+)",p:(\d+(?:\.\d+)?)}', line)
             if match:
                 name = match.group(1)
-                # 只使用完整名称精确匹配
-                if name in case_map:
-                    new_price = case_map[name]
-                    lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
-                    updated += 1
-            pos += 1
+                price = int(float(match.group(2)))
+                html_cases[name] = (price, i)
         
-        # 写入文件
+        print(f"   HTML中有 {len(html_cases)} 个机箱型号")
+        
+        # ========== 第三步：比对并更新 ==========
+        print("\n📝 第三步：比对并更新...")
+        
+        update_count = 0
+        new_add_count = 0
+        no_change_count = 0
+        no_match_count = 0
+        
+        # 收集需要更新的数据
+        updates = []  # [(行索引, 新的价格, 型号名, 旧价格)]
+        new_items = []  # [(型号名, 价格)] - 需要追加的新型号
+        matched_html = set()  # 已匹配的HTML型号
+        matched_scraped = set()  # 已匹配的爬取型号
+        
+        # 精确匹配（机箱使用精确匹配，因为颜色版本价格不同，模糊匹配可能导致错误）
+        for scraped_name, scraped_price in case_dict.items():
+            if scraped_name in html_cases:
+                old_price, line_idx = html_cases[scraped_name]
+                if scraped_price != old_price:
+                    updates.append((line_idx, scraped_price, scraped_name, old_price))
+                else:
+                    no_change_count += 1
+                matched_html.add(scraped_name)
+                matched_scraped.add(scraped_name)
+            else:
+                # 尝试简单的空格/标点差异匹配
+                scraped_name_clean = scraped_name.replace(' ', '').replace('_', '').replace('*', 'x').replace('（', '(').replace('）', ')')
+                for html_name, (html_price, line_idx) in html_cases.items():
+                    if html_name in matched_html:
+                        continue
+                    html_name_clean = html_name.replace(' ', '').replace('_', '').replace('*', 'x').replace('（', '(').replace('）', ')')
+                    if scraped_name_clean == html_name_clean:
+                        if scraped_price != html_price:
+                            updates.append((line_idx, scraped_price, scraped_name, html_price))
+                            print(f"   🔗 格式匹配: {scraped_name[:35]}... ≈ {html_name[:35]}...")
+                        else:
+                            no_change_count += 1
+                        matched_html.add(html_name)
+                        matched_scraped.add(scraped_name)
+                        break
+        
+        # 统计未匹配的HTML型号
+        no_match_count = len(html_cases) - len(matched_html)
+        
+        # 执行更新
+        for line_idx, new_price, name, old_price in updates:
+            lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
+            print(f"   ✓ 更新: {name[:35]}... ￥{old_price} -> ￥{new_price}")
+            update_count += 1
+        
+        # 追加新型号（只有确实没匹配上的才追加）
+        for scraped_name, price in case_dict.items():
+            if scraped_name not in matched_scraped:
+                # 检查是否已经在HTML中（作为手动添加的型号）
+                found_in_html = False
+                for line in lines:
+                    if f'{{n:"{scraped_name}"' in line:
+                        found_in_html = True
+                        break
+                if not found_in_html:
+                    new_items.append((scraped_name, price))
+        
+        if new_items:
+            print(f"\n   📌 追加 {len(new_items)} 个新型号:")
+            new_lines = []
+            for name, price in new_items:
+                new_line = f'            {{n:"{name}",p:{price}}},'
+                new_lines.append(new_line)
+                print(f"   + 新增: {name[:40]}... ￥{price}")
+                new_add_count += 1
+            
+            # 在机箱区域末尾追加
+            lines[case_end_idx] = '\n'.join(new_lines) + '\n' + lines[case_end_idx]
+        
+        # ========== 第四步：保存文件 ==========
+        print("\n💾 第四步：保存文件...")
+        # 保存前验证行数是否合理（防止意外删除大量数据）
+        original_line_count = len(lines)
+        if original_line_count < 1000:
+            print(f"⚠️ 异常：行数过少({original_line_count}行)，可能数据丢失，跳过保存")
+            return
+        
         with open(HTML_FILE, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-        print(f"✅ 机箱价格自动更新完成，共更新 {updated} 个型号")
+            f.write('\n'.join(lines))
+        
+        # 保存后验证文件完整性
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # 验证机箱区域是否完整
+        if 'case: [' not in content or '],' not in content:
+            print("❌ 验证失败：机箱区域标记丢失！")
+            return
+        
+        print("   ✅ 文件验证通过")
+        
+        # ========== 输出统计 ==========
+        print("\n" + "="*50)
+        print(f"📊 更新统计:")
+        print(f"   - 价格更新: {update_count} 个型号")
+        print(f"   - 新型号追加: {new_add_count} 个型号")
+        print(f"   - 价格不变: {no_change_count} 个型号")
+        print(f"   - 未匹配(保留): {no_match_count} 个型号")
+        print("="*50)
+        print("✅ 机箱更新完成!")
+        
     except Exception as e:
         print(f"❌ 机箱更新失败：{e}")
+        import traceback
+        traceback.print_exc()
 
 # 新增电源自动更新函数
 def update_power_accurate():
