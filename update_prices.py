@@ -218,11 +218,54 @@ def generate_cpu_content(cpu_list):
 def fetch_gpu_exact_dict():
     try:
         res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         gpu_map = {}
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            k = extract_gpu_exact_key(n)
-            gpu_map[k] = int(float(p))
+        
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        k = extract_gpu_exact_key(name)
+                        if k:
+                            gpu_map[k] = price
+        
+        # 方法2：如果列表提取失败，尝试正则从文本中提取
+        if not gpu_map:
+            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+                k = extract_gpu_exact_key(n)
+                if k:
+                    gpu_map[k] = int(float(p))
+        
         return gpu_map
     except Exception:
         return {}
@@ -236,26 +279,66 @@ def fetch_gpu_prices():
         
         gpu_list = []
         
-        # 方法1：尝试从表格中提取数据（最可靠）
-        tables = soup.find_all('table')
-        print(f"🔍 找到 {len(tables)} 个表格")
-        
-        for table in tables:
-            rows = table.find_all('tr')
-            for row in rows:
-                cells = row.find_all(['td', 'th'])
-                if len(cells) >= 2:
-                    name = cells[0].get_text(strip=True)
-                    price_text = cells[-1].get_text(strip=True)
-                    price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
-                    if price_match and name and len(name) > 3:
-                        price = int(float(price_match.group(1)))
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
                         # 白色显卡价格+100
                         if "白" in name:
                             price += 100
+                        
                         gpu_list.append({"name": name, "price": price})
         
-        # 方法2：如果表格提取失败，尝试使用正则从文本中提取
+        # 方法2：如果列表提取失败，尝试从表格中提取数据（兼容旧页面结构）
+        if not gpu_list:
+            tables = soup.find_all('table')
+            print(f"🔍 找到 {len(tables)} 个表格")
+            
+            for table in tables:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    if len(cells) >= 2:
+                        name = cells[0].get_text(strip=True)
+                        price_text = cells[-1].get_text(strip=True)
+                        price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
+                        if price_match and name and len(name) > 3:
+                            price = int(float(price_match.group(1)))
+                            # 白色显卡价格+100
+                            if "白" in name:
+                                price += 100
+                            gpu_list.append({"name": name, "price": price})
+        
+        # 方法3：如果以上方法都失败，尝试使用正则从文本中提取
         if not gpu_list:
             print("⚠️ 表格提取失败，尝试正则提取...")
             text = soup.get_text()
@@ -288,8 +371,58 @@ def fetch_gpu_prices():
 def fetch_mb_prices():
     try:
         res = requests.get(MB_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
-        return [{"name": n, "price": p} for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()) if MB_EXCLUDE not in n]
+        mb_list = []
+        
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    if MB_EXCLUDE in name:
+                        continue
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        mb_list.append({"name": name, "price": price})
+        
+        # 方法2：如果列表提取失败，尝试正则从文本中提取
+        if not mb_list:
+            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+                if MB_EXCLUDE not in n:
+                    try:
+                        mb_list.append({"name": n.strip(), "price": int(float(p))})
+                    except:
+                        pass
+        
+        return mb_list
     except Exception:
         return []
 
@@ -479,27 +612,67 @@ def fetch_ssd_exact_data():
         ssd_map = {}
         ssd_list = []
         
-        # 方法1：尝试从表格中提取数据（最可靠）
-        tables = soup.find_all('table')
-        print(f"🔍 SSD页面找到 {len(tables)} 个表格")
-        
-        for table in tables:
-            rows = table.find_all('tr')
-            for row in rows:
-                cells = row.find_all(['td', 'th'])
-                if len(cells) >= 2:
-                    name = cells[0].get_text(strip=True)
-                    price_text = cells[-1].get_text(strip=True)
-                    price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
-                    if price_match and name and len(name) > 3:
-                        price = int(float(price_match.group(1)))
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
                         # 排除列表中的品牌
                         if not any(ex in name for ex in SSD_EXCLUDE_LIST):
                             key = extract_ssd_exact_key(name)
                             ssd_map[key] = price
                             ssd_list.append({"name": name, "price": price})
         
-        # 方法2：如果表格提取失败，尝试使用正则从文本中提取
+        # 方法2：如果列表提取失败，尝试从表格中提取数据（兼容旧页面结构）
+        if not ssd_list:
+            tables = soup.find_all('table')
+            print(f"🔍 SSD页面找到 {len(tables)} 个表格")
+            
+            for table in tables:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    if len(cells) >= 2:
+                        name = cells[0].get_text(strip=True)
+                        price_text = cells[-1].get_text(strip=True)
+                        price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
+                        if price_match and name and len(name) > 3:
+                            price = int(float(price_match.group(1)))
+                            # 排除列表中的品牌
+                            if not any(ex in name for ex in SSD_EXCLUDE_LIST):
+                                key = extract_ssd_exact_key(name)
+                                ssd_map[key] = price
+                                ssd_list.append({"name": name, "price": price})
+        
+        # 方法3：如果以上方法都失败，尝试使用正则从文本中提取
         if not ssd_list:
             print("⚠️ SSD表格提取失败，尝试正则提取...")
             raw_text = soup.get_text()
@@ -532,12 +705,53 @@ def fetch_ssd_exact_data():
 def fetch_case_prices():
     try:
         res = requests.get(CASE_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         case_list = []
-        # 提取机箱名称和价格，格式和其他硬件保持一致
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            # 价格转为整数，保持和其他硬件统一格式
-            case_list.append({"name": n.strip(), "price": int(float(p))})
+        
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        case_list.append({"name": name, "price": price})
+        
+        # 方法2：如果列表提取失败，尝试正则从文本中提取
+        if not case_list:
+            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+                try:
+                    case_list.append({"name": n.strip(), "price": int(float(p))})
+                except:
+                    pass
+        
         return case_list
     except Exception as e:
         print(f"❌ 机箱数据爬取失败：{e}")
@@ -547,15 +761,60 @@ def fetch_case_prices():
 def fetch_power_prices():
     try:
         res = requests.get(POWER_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         power_list = []
-        # 提取电源名称和价格，排除玄武、Tt
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            # 排除包含玄武、Tt的电源
-            if any(ex in n for ex in POWER_EXCLUDE_LIST):
-                continue
-            # 价格转为整数，保持格式统一
-            power_list.append({"name": n.strip(), "price": int(float(p))})
+        
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    # 排除包含玄武、Tt的电源
+                    if any(ex in name for ex in POWER_EXCLUDE_LIST):
+                        continue
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        power_list.append({"name": name, "price": price})
+        
+        # 方法2：如果列表提取失败，尝试正则从文本中提取
+        if not power_list:
+            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+                # 排除包含玄武、Tt的电源
+                if any(ex in n for ex in POWER_EXCLUDE_LIST):
+                    continue
+                try:
+                    power_list.append({"name": n.strip(), "price": int(float(p))})
+                except:
+                    pass
+        
         return power_list
     except Exception as e:
         print(f"❌ 电源数据爬取失败：{e}")
@@ -565,14 +824,59 @@ def fetch_power_prices():
 def fetch_cooler_prices():
     try:
         res = requests.get(COOLER_SOURCE_URL, headers=HEADERS, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, "html.parser")
         cooler_list = []
-        # 提取散热器名称和价格，只包含指定品牌
-        for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
-            # 只包含指定品牌的散热器
-            if any(brand in n for brand in COOLER_BRANDS):
-                # 价格转为整数，保持格式统一
-                cooler_list.append({"name": n.strip(), "price": int(float(p))})
+        
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                    
+                    # 只包含指定品牌的散热器
+                    if not any(brand in name for brand in COOLER_BRANDS):
+                        continue
+                    
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                            except:
+                                original_price = ''
+                        
+                        if not original_price:
+                            price_text_span = price_span.find('span', class_='price-text')
+                            if price_text_span:
+                                price_text = price_text_span.get_text(strip=True)
+                                price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                if price_match:
+                                    try:
+                                        price = int(float(price_match.group(1)))
+                                    except:
+                                        continue
+                            else:
+                                continue
+                        
+                        cooler_list.append({"name": name, "price": price})
+        
+        # 方法2：如果列表提取失败，尝试正则从文本中提取
+        if not cooler_list:
+            for n, p in re.findall(r"([^\n￥]+?)[：\s]*￥(\d+(?:\.\d+)?)", soup.get_text()):
+                # 只包含指定品牌的散热器
+                if any(brand in n for brand in COOLER_BRANDS):
+                    try:
+                        cooler_list.append({"name": n.strip(), "price": int(float(p))})
+                    except:
+                        pass
+        
         return cooler_list
     except Exception as e:
         print(f"❌ 散热器数据爬取失败：{e}")
@@ -879,7 +1183,7 @@ def update_cpu_accurate():
 
 # -------------------------- 修改后的显卡更新逻辑 --------------------------
 def update_gpu_accurate():
-    """显卡更新逻辑：保留现有型号，只更新价格，不删除用户手动添加的型号"""
+    """显卡更新逻辑：保留现有型号，只更新价格，不删除用户手动添加的型号，新型号追加"""
     try:
         print("\n=== 开始更新显卡数据 ===")
         # 先获取新的显卡数据，只有获取成功才进行更新
@@ -916,6 +1220,10 @@ def update_gpu_accurate():
         update_count = 0
         same_count = 0
         no_match_count = 0
+        new_add_count = 0
+        
+        # 记录已匹配的源网站型号
+        matched_source = set()
         
         # 更新现有显卡型号的价格（保留原有型号，只更新价格）
         pos = start_idx + 1
@@ -927,10 +1235,27 @@ def update_gpu_accurate():
                 if match:
                     model_name = match.group(1)
                     old_price = int(match.group(2))
+                    new_price = None
                     
-                    # 在源网站查找匹配的价格
+                    # 方法1：精确匹配
                     if model_name in gpu_dict:
                         new_price = gpu_dict[model_name]
+                        matched_source.add(model_name)
+                        print(f"  ✅ 精确匹配: {model_name[:40]}...")
+                    else:
+                        # 方法2：使用显卡关键字进行模糊匹配
+                        html_key = extract_gpu_exact_key(model_name)
+                        if html_key:
+                            for source_name, price in gpu_dict.items():
+                                source_key = extract_gpu_exact_key(source_name)
+                                if source_key and html_key == source_key:
+                                    new_price = price
+                                    matched_source.add(source_name)
+                                    print(f"  ✅ 模糊匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
+                                    break
+                    
+                    if new_price is not None:
+                        new_price = int(new_price)
                         if new_price != old_price:
                             # 更新价格
                             new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
@@ -947,11 +1272,37 @@ def update_gpu_accurate():
             else:
                 pos += 1
         
+        # 追加新型号（源网站中有但HTML中没有的型号）
+        new_items = []
+        for source_name, price in gpu_dict.items():
+            if source_name not in matched_source:
+                # 检查是否已经在HTML中（作为手动添加的型号）
+                found_in_html = False
+                for line in lines:
+                    if f'{{n:"{source_name}"' in line:
+                        found_in_html = True
+                        break
+                if not found_in_html:
+                    new_items.append((source_name, price))
+        
+        # 在显卡区域末尾追加新型号
+        if new_items:
+            print(f"\n   📌 追加 {len(new_items)} 个新型号:")
+            new_lines = []
+            for name, price in new_items:
+                new_line = f'{INDENT}{{n:"{name}",p:{price}}},\n'
+                new_lines.append(new_line)
+                print(f"   + 新增: {name[:40]}... ￥{price}")
+                new_add_count += 1
+            
+            # 在结束标记前一行追加
+            lines[end_idx] = '\n'.join(new_lines) + lines[end_idx]
+        
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个")
+        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个，新型号追加 {new_add_count} 个")
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
         import traceback
