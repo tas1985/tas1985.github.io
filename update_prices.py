@@ -4,17 +4,17 @@ from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
 # -------------------------- 全局配置项 --------------------------
-SOURCE_URL = "http://0532.name/diy_pjhq?zd2=CPU"
-GPU_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%98%BE%E5%8D%A1"
-MB_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E4%B8%BB%E6%9D%BF"
-RAM_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E5%86%85%E5%AD%98"
-SSD_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E5%9B%BA%E6%80%81%E7%9B%98"
+SOURCE_URL = "https://0532.name/diy_pjhq?zd2=CPU"
+GPU_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E6%98%BE%E5%8D%A1"
+MB_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E4%B8%BB%E6%9D%BF"
+RAM_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E5%86%85%E5%AD%98"
+SSD_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E5%9B%BA%E6%80%81%E7%9B%98"
 # 新增机箱URL配置
-CASE_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%9C%BA%E7%AE%B1"
+CASE_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E6%9C%BA%E7%AE%B1"
 # 新增电源URL配置
-POWER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E7%94%B5%E6%BA%90"
+POWER_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E7%94%B5%E6%BA%90"
 # 新增散热器URL配置
-COOLER_SOURCE_URL = "http://0532.name/diy_pjhq?zd2=%E6%95%A3%E7%83%AD%E5%99%A8"
+COOLER_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E6%95%A3%E7%83%AD%E5%99%A8"
 HTML_FILE = "index.html"
 START_LINE = 1055
 END_LINE = 1110
@@ -135,21 +135,59 @@ def fetch_cpu_prices():
         
         cpu_list = []
         
-        # 尝试从表格中提取数据
-        tables = soup.find_all('table')
-        for table in tables:
-            rows = table.find_all('tr')
-            for row in rows:
-                cells = row.find_all(['td', 'th'])
-                if len(cells) >= 2:
-                    name = cells[0].get_text(strip=True)
-                    price_text = cells[-1].get_text(strip=True)
-                    price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
-                    if price_match and name and len(name) > 3:
-                        price = int(float(price_match.group(1)))
-                        cpu_list.append({"name": name, "price": price})
+        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', class_='parts-list')
+        if parts_list:
+            items = parts_list.find_all('li')
+            for item in items:
+                # 获取产品名称（优先使用 data-fullname 属性）
+                name_span = item.find('span', class_='product-name')
+                if name_span:
+                    name = name_span.get('data-fullname', '').strip()
+                    if not name:
+                        name = name_span.get_text(strip=True)
+                
+                    # 获取价格（优先使用 data-original 属性，也可以从 price-text 获取）
+                    price_span = item.find('span', class_='product-price')
+                    if price_span:
+                        # 优先使用 data-original 属性
+                        original_price = price_span.get('data-original', '')
+                        if original_price:
+                            try:
+                                price = int(float(original_price))
+                                cpu_list.append({"name": name, "price": price})
+                                continue
+                            except:
+                                pass
+                        
+                        # 从 price-text 子标签获取
+                        price_text_span = price_span.find('span', class_='price-text')
+                        if price_text_span:
+                            price_text = price_text_span.get_text(strip=True)
+                            price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                            if price_match:
+                                try:
+                                    price = int(float(price_match.group(1)))
+                                    cpu_list.append({"name": name, "price": price})
+                                except:
+                                    pass
         
-        # 如果表格提取失败，尝试使用正则从文本中提取
+        # 方法2：如果列表提取失败，尝试从表格中提取数据（兼容旧页面结构）
+        if not cpu_list:
+            tables = soup.find_all('table')
+            for table in tables:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    if len(cells) >= 2:
+                        name = cells[0].get_text(strip=True)
+                        price_text = cells[-1].get_text(strip=True)
+                        price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
+                        if price_match and name and len(name) > 3:
+                            price = int(float(price_match.group(1)))
+                            cpu_list.append({"name": name, "price": price})
+        
+        # 方法3：如果表格提取失败，尝试使用正则从文本中提取
         if not cpu_list:
             text = soup.get_text()
             matches = re.findall(r'([^\n￥]+?)[：:\s]*[￥¥](\d+(?:\.\d+)?)', text)
@@ -689,10 +727,18 @@ def update_cpu_accurate():
                 if match:
                     model_name = match.group(1)
                     old_price = int(match.group(2))
+                    new_price = None
                     
-                    # 在源网站查找匹配的价格
+                    # 方法1：精确匹配
                     if model_name in cpu_dict:
                         new_price = cpu_dict[model_name]
+                        print(f"  ✅ 精确匹配: {model_name[:30]}...")
+                    else:
+                        # 方法2：使用CPU核心型号关键字进行模糊匹配
+                        new_price = fuzzy_match_price(model_name, cpu_dict)
+                    
+                    if new_price is not None:
+                        new_price = int(new_price)
                         if new_price != old_price:
                             # 更新价格
                             new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
@@ -1975,10 +2021,11 @@ def extract_cpu_key(text):
         result = f"r{amd_match.group(1)}{amd_match.group(2)}{amd_match.group(3)}"
         return result
     
-    # Intel Ultra型号
-    ultra_match = re.search(r'ultra(\d+)', text_lower)
+    # Intel Ultra型号（支持 "ultra" 或 "酷睿u" 两种格式）
+    ultra_pattern = r'(?:ultra|酷睿u)(\d+)([a-z0-9]*)'
+    ultra_match = re.search(ultra_pattern, text_lower)
     if ultra_match:
-        return f"ultra{ultra_match.group(1)}"
+        return f"ultra{ultra_match.group(1)}{ultra_match.group(2)}"
     
     return None
 
@@ -1997,8 +2044,9 @@ def fuzzy_match_price(name, price_dict):
     print(f"  📌 HTML型号: {name[:40]}...")
     print(f"  🔑 提取关键字: {html_key}")
     
-    # 判断是否需要散片
-    is_retail = "散" in name
+    # 判断HTML中的包装类型
+    html_has_retail = "散" in name
+    html_has_box = "盒" in name
     
     # 遍历源网站价格字典
     for source_name, price in price_dict.items():
@@ -2019,14 +2067,15 @@ def fuzzy_match_price(name, price_dict):
         source_has_retail = "散" in source_name.lower()
         source_has_box = "盒" in source_name.lower()
         
-        # 如果HTML要求散片，但源网站是盒装，跳过
-        if is_retail and source_has_box and not source_has_retail:
+        # 如果HTML明确要求散片，但源网站是纯盒装，跳过
+        if html_has_retail and source_has_box and not source_has_retail:
             print(f"     ✗ 跳过: 需要散片，但源网站是盒装")
             continue
-        # 如果HTML要求盒装，但源网站是散片，跳过
-        if not is_retail and source_has_retail and not source_has_box:
+        # 如果HTML明确要求盒装，但源网站是纯散片，跳过
+        if html_has_box and source_has_retail and not source_has_box:
             print(f"     ✗ 跳过: 需要盒装，但源网站是散片")
             continue
+        # 如果HTML既没有散也没有盒，则接受任何包装类型
         
         # 找到匹配！
         result = str(int(float(price)))
