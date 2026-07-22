@@ -96,10 +96,10 @@ def extract_ram_feature(name):
 
 def extract_gpu_exact_key(name):
     name = name.strip().replace(" ", "").upper()
-    brand = re.search(r"(七彩虹|微星)", name)
-    model = re.search(r"(RTX\d+TI|RTX\d+)", name)
+    brand = re.search(r"(七彩虹|微星|华硕|技嘉|影驰|蓝宝石|蓝戟|索泰|映众|双敏|盈通|撼讯|旌宇|磐正|磐镭|电竞判客|英伟达)", name)
+    model = re.search(r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+)", name)
     vram = re.search(r"(\d+G)", name)
-    series = re.search(r"(战斧|ULTRA|万图师|ADVANCED|银鲨)", name)
+    series = re.search(r"(战斧|ULTRA|万图师|ADVANCED|银鲨|DUO|VENTUS|GAMING|TRIO|VULCAN|PHOTON|INDEX|脉动|氮动|极地|金属大师|星曜|圣刃|魔刃|FIRE|ATS|DUAL|TUF|ROG|AORUS|EAGLE|AERO|雪鹰|猎鹰|魔鹰|小雕|超级雕|幻影师|月影|星夜|开天|毁灭者)", name)
     key_parts = []
     if brand: key_parts.append(brand.group(1))
     if model: key_parts.append(model.group(1))
@@ -1310,6 +1310,9 @@ def update_gpu_accurate():
                     price = gpu_info["price"]
                     image_url = gpu_info.get("image_url", "")
                     new_items.append((source_name, int(price), image_url))
+                    print(f"   🆕 检测到新型号: {source_name[:40]}... ￥{price}")
+        
+        print(f"\n   总计检测到 {len(new_items)} 个新型号需要追加")
         
         # 在显卡区域末尾追加新型号
         if new_items:
@@ -3202,13 +3205,15 @@ if __name__ == "__main__":
 def add_image_mappings(new_items, mapping_type):
     """
     自动添加图片映射
-    :param new_items: 新添加的配件列表，格式为 [(名称, 价格), ...]
+    :param new_items: 新添加的配件列表，格式为 [(名称, 价格, 图片URL), ...]
     :param mapping_type: 映射类型，'case'、'cooler'、'vga'
     """
     if not new_items:
+        print(f"\n📷 {mapping_type}图片映射：无新型号需要添加")
         return
     
     print(f"\n📷 自动添加{mapping_type}图片映射...")
+    print(f"   待处理新型号数量: {len(new_items)}")
     
     # 确定映射表名称和位置
     mapping_names = {
@@ -3234,13 +3239,17 @@ def add_image_mappings(new_items, mapping_type):
     for i, line in enumerate(lines):
         if f'const {mapping_name} = {{' in line:
             map_start_idx = i
+            print(f"   找到映射表开始位置: 第 {i+1} 行")
         elif map_start_idx != -1 and map_end_idx == -1 and line.strip() == '};':
             map_end_idx = i
+            print(f"   找到映射表结束位置: 第 {i+1} 行")
             break
     
     if map_start_idx == -1 or map_end_idx == -1:
-        print(f"❌ 未找到{mapping_name}映射表")
+        print(f"❌ 未找到{mapping_name}映射表 (start={map_start_idx}, end={map_end_idx})")
         return
+    
+    print(f"   映射表范围: 第 {map_start_idx+1} 行 - 第 {map_end_idx+1} 行")
     
     # 解析现有映射
     existing_keys = set()
