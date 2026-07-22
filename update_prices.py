@@ -271,7 +271,7 @@ def fetch_gpu_exact_dict():
         return {}
 
 def fetch_gpu_prices():
-    """爬取显卡价格，返回列表格式"""
+    """爬取显卡价格，返回列表格式（包含图片URL）"""
     try:
         res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=15)
         res.encoding = res.apparent_encoding
@@ -312,11 +312,19 @@ def fetch_gpu_prices():
                             else:
                                 continue
                         
+                        # 提取图片URL
+                        img_url = ""
+                        img_tag = item.find('img', class_='product-image')
+                        if img_tag:
+                            img_url = img_tag.get('data-full-src', '')
+                            if not img_url:
+                                img_url = img_tag.get('src', '')
+                        
                         # 白色显卡价格+100
                         if "白" in name:
                             price += 100
                         
-                        gpu_list.append({"name": name, "price": price})
+                        gpu_list.append({"name": name, "price": price, "image_url": img_url})
         
         # 方法2：如果列表提取失败，尝试从表格中提取数据（兼容旧页面结构）
         if not gpu_list:
@@ -742,7 +750,15 @@ def fetch_case_prices():
                             else:
                                 continue
                         
-                        case_list.append({"name": name, "price": price})
+                        # 提取图片URL
+                        img_url = ""
+                        img_tag = item.find('img', class_='product-image')
+                        if img_tag:
+                            img_url = img_tag.get('data-full-src', '')
+                            if not img_url:
+                                img_url = img_tag.get('src', '')
+                        
+                        case_list.append({"name": name, "price": price, "image_url": img_url})
         
         # 方法2：如果列表提取失败，尝试正则从文本中提取
         if not case_list:
@@ -865,7 +881,15 @@ def fetch_cooler_prices():
                             else:
                                 continue
                         
-                        cooler_list.append({"name": name, "price": price})
+                        # 提取图片URL
+                        img_url = ""
+                        img_tag = item.find('img', class_='product-image')
+                        if img_tag:
+                            img_url = img_tag.get('data-full-src', '')
+                            if not img_url:
+                                img_url = img_tag.get('src', '')
+                        
+                        cooler_list.append({"name": name, "price": price, "image_url": img_url})
         
         # 方法2：如果列表提取失败，尝试正则从文本中提取
         if not cooler_list:
@@ -1194,8 +1218,8 @@ def update_gpu_accurate():
             print("⚠️ 显卡数据获取失败或为空，保留原有显卡数据")
             return
         
-        # 将列表转换为字典，方便查找
-        gpu_dict = {gpu["name"]: gpu["price"] for gpu in gpu_list}
+        # 将列表转换为字典，方便查找（保存完整信息包括图片URL）
+        gpu_dict = {gpu["name"]: gpu for gpu in gpu_list}
         print(f"✅ 成功获取 {len(gpu_dict)} 个显卡数据")
         
         # 获取成功后再打开文件进行更新
@@ -1239,17 +1263,17 @@ def update_gpu_accurate():
                     
                     # 方法1：精确匹配
                     if model_name in gpu_dict:
-                        new_price = gpu_dict[model_name]
+                        new_price = gpu_dict[model_name]["price"]
                         matched_source.add(model_name)
                         print(f"  ✅ 精确匹配: {model_name[:40]}...")
                     else:
                         # 方法2：使用显卡关键字进行模糊匹配
                         html_key = extract_gpu_exact_key(model_name)
                         if html_key:
-                            for source_name, price in gpu_dict.items():
+                            for source_name, gpu_info in gpu_dict.items():
                                 source_key = extract_gpu_exact_key(source_name)
                                 if source_key and html_key == source_key:
-                                    new_price = price
+                                    new_price = gpu_info["price"]
                                     matched_source.add(source_name)
                                     print(f"  ✅ 模糊匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
                                     break
@@ -1274,7 +1298,7 @@ def update_gpu_accurate():
         
         # 追加新型号（源网站中有但HTML中没有的型号）
         new_items = []
-        for source_name, price in gpu_dict.items():
+        for source_name, gpu_info in gpu_dict.items():
             if source_name not in matched_source:
                 # 检查是否已经在HTML中（作为手动添加的型号）
                 found_in_html = False
@@ -1283,7 +1307,9 @@ def update_gpu_accurate():
                         found_in_html = True
                         break
                 if not found_in_html:
-                    new_items.append((source_name, price))
+                    price = gpu_info["price"]
+                    image_url = gpu_info.get("image_url", "")
+                    new_items.append((source_name, int(price), image_url))
         
         # 在显卡区域末尾追加新型号
         if new_items:
@@ -1301,6 +1327,9 @@ def update_gpu_accurate():
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
+        
+        # 自动添加图片映射
+        add_image_mappings(new_items, 'vga')
         
         print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个，新型号追加 {new_add_count} 个")
     except Exception as e:
@@ -2649,14 +2678,14 @@ def update_case_accurate():
             print("⚠️ 机箱数据获取失败或为空，保留原有机箱数据")
             return
         
-        # 将列表转换为字典，方便查找
-        case_dict = {case["name"]: case["price"] for case in case_list}
+        # 将列表转换为字典，方便查找（保存完整信息包括图片URL）
+        case_dict = {case["name"]: case for case in case_list}
         print(f"   爬取到 {len(case_dict)} 个机箱型号")
         
         # 打印部分爬取数据用于调试
         print("\n   📋 部分爬取数据:")
-        for i, (name, price) in enumerate(list(case_dict.items())[:10]):
-            print(f"      {name[:45]}... -> ￥{price}")
+        for i, (name, case_info) in enumerate(list(case_dict.items())[:10]):
+            print(f"      {name[:45]}... -> ￥{case_info['price']}")
         
         # ========== 第二步：读取HTML中的机箱数据 ==========
         print("\n📖 第二步：读取HTML机箱数据...")
@@ -2709,7 +2738,8 @@ def update_case_accurate():
         matched_scraped = set()  # 已匹配的爬取型号
         
         # 精确匹配（机箱使用精确匹配，因为颜色版本价格不同，模糊匹配可能导致错误）
-        for scraped_name, scraped_price in case_dict.items():
+        for scraped_name, case_info in case_dict.items():
+            scraped_price = case_info["price"]
             if scraped_name in html_cases:
                 old_price, line_idx = html_cases[scraped_name]
                 if scraped_price != old_price:
@@ -2745,7 +2775,7 @@ def update_case_accurate():
             update_count += 1
         
         # 追加新型号（只有确实没匹配上的才追加）
-        for scraped_name, price in case_dict.items():
+        for scraped_name, case_info in case_dict.items():
             if scraped_name not in matched_scraped:
                 # 检查是否已经在HTML中（作为手动添加的型号）
                 found_in_html = False
@@ -2754,7 +2784,9 @@ def update_case_accurate():
                         found_in_html = True
                         break
                 if not found_in_html:
-                    new_items.append((scraped_name, price))
+                    price = case_info["price"]
+                    image_url = case_info.get("image_url", "")
+                    new_items.append((scraped_name, price, image_url))
         
         if new_items:
             print(f"\n   📌 追加 {len(new_items)} 个新型号:")
@@ -2789,6 +2821,9 @@ def update_case_accurate():
             return
         
         print("   ✅ 文件验证通过")
+        
+        # 自动添加图片映射
+        add_image_mappings(new_items, 'case')
         
         # ========== 输出统计 ==========
         print("\n" + "="*50)
@@ -2841,65 +2876,214 @@ def update_power_accurate():
 
 # 新增散热器自动更新函数
 def update_cooler_accurate():
+    """散热器更新逻辑：保留现有型号，只更新价格，不删除，新型号追加"""
+    print("\n" + "="*50)
+    print("🔄 开始散热器价格更新")
+    print("="*50)
+    
     try:
-        with open(HTML_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        # 爬取散热器数据，创建型号到价格的映射
+        # ========== 第一步：爬取源网站数据 ==========
+        print("\n📥 第一步：爬取源网站数据...")
         cooler_list = fetch_cooler_prices()
-        cooler_map = {}
-        for cooler in cooler_list:
-            # 提取型号关键字，用于匹配
-            name = cooler["name"]
-            # 移除品牌名称，只保留型号部分
-            for brand in COOLER_BRANDS:
-                if brand in name:
-                    model = name.replace(brand, "").strip()
-                    # 创建映射，使用型号关键字作为键
-                    cooler_map[model] = cooler["price"]
-                    # 同时使用完整名称作为键，提高匹配成功率
-                    cooler_map[name] = cooler["price"]
-                    break
         
-        # 找到散热器区域的开始位置
-        idx = next((i for i, l in enumerate(lines) if COOLER_TARGET_LINE in l), -1)
-        if idx == -1:
-            print(f"❌ 未找到散热器目标行：{COOLER_TARGET_LINE}")
+        # 如果获取失败或返回空列表，不删除原有数据，直接返回
+        if not cooler_list:
+            print("⚠️ 散热器数据获取失败或为空，保留原有散热器数据")
             return
         
-        # 从目标行的下一行开始，查找散热器数据行
-        pos = idx + 1
-        updated = 0
+        # 将列表转换为字典，方便查找
+        cooler_dict = {cooler["name"]: cooler for cooler in cooler_list}
+        print(f"   爬取到 {len(cooler_dict)} 个散热器型号")
         
-        # 遍历散热器数据行
-        while pos < len(lines) and lines[pos].startswith(COOLER_INDENT) and '{n:"' in lines[pos]:
-            line = lines[pos]
-            # 提取散热器名称
-            match = re.search(r'{n:"([^"]+)"', line)
+        # 打印部分爬取数据用于调试
+        print("\n   📋 部分爬取数据:")
+        for i, (name, cooler_info) in enumerate(list(cooler_dict.items())[:10]):
+            print(f"      {name[:45]}... -> ￥{cooler_info['price']}")
+        
+        # ========== 第二步：读取HTML中的散热器数据 ==========
+        print("\n📖 第二步：读取HTML散热器数据...")
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+            lines = content.split('\n')
+        
+        # 找到散热器区域开始和结束位置
+        cooler_start_idx = -1
+        cooler_end_idx = -1
+        for i, line in enumerate(lines):
+            if 'cooler: [' in line:
+                cooler_start_idx = i
+            elif cooler_start_idx != -1 and cooler_end_idx == -1 and line.strip() == '],':
+                # 确认是散热器数组的结束（散热器后面是fan）
+                if i + 1 < len(lines) and 'fan: [' in lines[i + 1]:
+                    cooler_end_idx = i
+                    break
+        
+        if cooler_start_idx == -1 or cooler_end_idx == -1:
+            print("❌ 未找到散热器区域")
+            return
+        
+        print(f"   散热器区域：第{cooler_start_idx + 1}行 - 第{cooler_end_idx + 1}行")
+        
+        # 解析HTML中的散热器数据
+        html_coolers = {}  # {型号名: (价格, 行索引)}
+        for i in range(cooler_start_idx + 1, cooler_end_idx):
+            line = lines[i]
+            match = re.search(r'{n:"([^"]+)",p:(\d+(?:\.\d+)?)}', line)
             if match:
                 name = match.group(1)
-                # 尝试匹配型号
-                matched = False
-                # 首先尝试完整名称匹配
-                if name in cooler_map:
-                    new_price = cooler_map[name]
-                    lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
-                    updated += 1
-                    matched = True
-                else:
-                    # 尝试型号关键字匹配
-                    for model in cooler_map:
-                        if model in name:
-                            new_price = cooler_map[model]
-                            lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', line)
-                            updated += 1
-                            matched = True
-                            break
-            pos += 1
+                price = int(float(match.group(2)))
+                html_coolers[name] = (price, i)
         
-        # 写入文件
+        print(f"   HTML中有 {len(html_coolers)} 个散热器型号")
+        
+        # ========== 第三步：比对并更新 ==========
+        print("\n📝 第三步：比对并更新...")
+        
+        update_count = 0
+        new_add_count = 0
+        no_change_count = 0
+        no_match_count = 0
+        
+        # 收集需要更新的数据
+        updates = []  # [(行索引, 新的价格, 型号名, 旧价格)]
+        new_items = []  # [(型号名, 价格)] - 需要追加的新型号
+        matched_html = set()  # 已匹配的HTML型号
+        matched_scraped = set()  # 已匹配的爬取型号
+        
+        # 精确匹配
+        for scraped_name, cooler_info in cooler_dict.items():
+            scraped_price = cooler_info["price"]
+            if scraped_name in html_coolers:
+                old_price, line_idx = html_coolers[scraped_name]
+                if scraped_price != old_price:
+                    updates.append((line_idx, scraped_price, scraped_name, old_price))
+                else:
+                    no_change_count += 1
+                matched_html.add(scraped_name)
+                matched_scraped.add(scraped_name)
+        
+        # 型号关键字匹配（移除品牌名称）
+        def normalize_model(model):
+            """标准化型号名称，便于模糊匹配"""
+            # 移除空格、下划线、连字符、特殊字符，转为小写
+            n = model.replace(' ', '').replace('_', '').replace('-', '').replace('(', '').replace(')', '')
+            n = n.replace('ARGB', 'RGB').replace('RGB', '')
+            return n.lower()
+        
+        for scraped_name, cooler_info in cooler_dict.items():
+            if scraped_name in matched_scraped:
+                continue
+            
+            scraped_price = cooler_info["price"]
+            
+            # 移除品牌名称，只保留型号部分
+            scraped_model = scraped_name
+            for brand in COOLER_BRANDS:
+                if brand in scraped_name:
+                    scraped_model = scraped_name.replace(brand, "").strip()
+                    break
+            
+            # 型号太短不进行匹配，避免误匹配（至少5个字符）
+            if len(scraped_model) < 5:
+                continue
+            
+            # 标准化型号
+            scraped_norm = normalize_model(scraped_model)
+            
+            for html_name, (html_price, line_idx) in html_coolers.items():
+                if html_name in matched_html:
+                    continue
+                
+                # 移除品牌名称
+                html_model = html_name
+                for brand in COOLER_BRANDS:
+                    if brand in html_name:
+                        html_model = html_name.replace(brand, "").strip()
+                        break
+                
+                # 标准化型号
+                html_norm = normalize_model(html_model)
+                
+                # 精确匹配或标准化匹配
+                if scraped_model == html_model or scraped_norm == html_norm:
+                    if scraped_price != html_price:
+                        updates.append((line_idx, scraped_price, scraped_name, html_price))
+                        print(f"   🔗 型号匹配: {scraped_name[:35]}... ≈ {html_name[:35]}...")
+                    else:
+                        no_change_count += 1
+                    matched_html.add(html_name)
+                    matched_scraped.add(scraped_name)
+                    break
+        
+        # 统计未匹配的HTML型号
+        no_match_count = len(html_coolers) - len(matched_html)
+        
+        # 执行更新
+        for line_idx, new_price, name, old_price in updates:
+            lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
+            print(f"   ✓ 更新: {name[:35]}... ￥{old_price} -> ￥{new_price}")
+            update_count += 1
+        
+        # 追加新型号（只有确实没匹配上的才追加）
+        for scraped_name, cooler_info in cooler_dict.items():
+            if scraped_name not in matched_scraped:
+                # 检查是否已经在HTML中（作为手动添加的型号）
+                found_in_html = False
+                for line in lines:
+                    if f'{{n:"{scraped_name}"' in line:
+                        found_in_html = True
+                        break
+                if not found_in_html:
+                    price = cooler_info["price"]
+                    image_url = cooler_info.get("image_url", "")
+                    new_items.append((scraped_name, price, image_url))
+        
+        if new_items:
+            print(f"\n   📌 追加 {len(new_items)} 个新型号:")
+            new_lines = []
+            for name, price in new_items:
+                new_line = f'            {{n:"{name}",p:{price}}},'
+                new_lines.append(new_line)
+                print(f"   + 新增: {name[:40]}... ￥{price}")
+                new_add_count += 1
+            
+            # 在散热器区域末尾追加
+            lines[cooler_end_idx] = '\n'.join(new_lines) + '\n' + lines[cooler_end_idx]
+        
+        # ========== 第四步：保存文件 ==========
+        print("\n💾 第四步：保存文件...")
+        # 保存前验证行数是否合理（防止意外删除大量数据）
+        original_line_count = len(lines)
+        if original_line_count < 1000:
+            print(f"⚠️ 异常：行数过少({original_line_count}行)，可能数据丢失，跳过保存")
+            return
+        
         with open(HTML_FILE, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-        print(f"✅ 散热器价格自动更新完成，共更新 {updated} 个型号")
+            f.write('\n'.join(lines))
+        
+        # 保存后验证文件完整性
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # 验证散热器区域是否完整
+        if 'cooler: [' not in content or '],' not in content:
+            print("❌ 验证失败：散热器区域标记丢失！")
+            return
+        
+        print("   ✅ 文件验证通过")
+        
+        # 自动添加图片映射
+        add_image_mappings(new_items, 'cooler')
+        
+        # ========== 输出统计 ==========
+        print("\n" + "="*50)
+        print(f"📊 更新统计:")
+        print(f"   - 价格更新: {update_count} 个型号")
+        print(f"   - 新型号追加: {new_add_count} 个型号")
+        print(f"   - 价格不变: {no_change_count} 个型号")
+        print(f"   - 未匹配(保留): {no_match_count} 个型号")
+        print("="*50)
+        print("✅ 散热器更新完成!")
     except Exception as e:
         print(f"❌ 散热器更新失败：{e}")
 
@@ -3011,4 +3195,172 @@ if __name__ == "__main__":
     update_power_accurate()
     # 新增执行散热器更新
     update_cooler_accurate()
+    
     print("===== 全部执行完成 =====")
+
+
+def add_image_mappings(new_items, mapping_type):
+    """
+    自动添加图片映射
+    :param new_items: 新添加的配件列表，格式为 [(名称, 价格), ...]
+    :param mapping_type: 映射类型，'case'、'cooler'、'vga'
+    """
+    if not new_items:
+        return
+    
+    print(f"\n📷 自动添加{mapping_type}图片映射...")
+    
+    # 确定映射表名称和位置
+    mapping_names = {
+        'case': 'caseImageMap',
+        'cooler': 'coolerImageMap',
+        'vga': 'vgaImageMap'
+    }
+    
+    mapping_name = mapping_names.get(mapping_type)
+    if not mapping_name:
+        print(f"❌ 未知映射类型: {mapping_type}")
+        return
+    
+    # 读取HTML文件
+    with open(HTML_FILE, "r", encoding="utf-8") as f:
+        content = f.read()
+        lines = content.split('\n')
+    
+    # 找到映射表的位置
+    map_start_idx = -1
+    map_end_idx = -1
+    
+    for i, line in enumerate(lines):
+        if f'const {mapping_name} = {{' in line:
+            map_start_idx = i
+        elif map_start_idx != -1 and map_end_idx == -1 and line.strip() == '};':
+            map_end_idx = i
+            break
+    
+    if map_start_idx == -1 or map_end_idx == -1:
+        print(f"❌ 未找到{mapping_name}映射表")
+        return
+    
+    # 解析现有映射
+    existing_keys = set()
+    for i in range(map_start_idx + 1, map_end_idx):
+        line = lines[i]
+        match = re.search(r"'([^']+)':", line)
+        if match:
+            existing_keys.add(match.group(1))
+    
+    # 添加新映射
+    added_count = 0
+    new_mappings = []
+    
+    for name, _ in new_items:
+        if name not in existing_keys:
+            # 转义单引号，避免JavaScript语法错误
+            escaped_name = name.replace("'", "\\'")
+            # 图片名称与配件名称一致
+            new_mappings.append(f"        '{escaped_name}': '{escaped_name}',")
+            print(f"   + 添加映射: '{name}' -> '{name}'")
+            added_count += 1
+    
+    # 在映射表末尾添加新映射
+    if new_mappings:
+        lines[map_end_idx] = '\n'.join(new_mappings) + '\n' + lines[map_end_idx]
+        
+        # 保存前验证行数是否合理
+        if len(lines) < 1000:
+            print(f"⚠️ 异常：行数过少({len(lines)}行)，可能数据丢失，跳过保存")
+            return
+        
+        # 保存文件
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.write('\n'.join(lines))
+        
+        # 保存后验证文件完整性
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # 验证映射表是否完整
+        if f'const {mapping_name} = {{' not in content or '};' not in content:
+            print(f"❌ 验证失败：{mapping_name}映射表标记丢失！")
+            return
+        
+        print(f"✅ 成功添加 {added_count} 个{mapping_type}图片映射")
+        
+        # 自动下载新添加配件的图片
+        download_images(new_items, mapping_type)
+    else:
+        print("   无需添加新映射")
+
+
+def download_images(new_items, mapping_type):
+    """
+    自动下载新添加配件的图片并重命名
+    :param new_items: 新添加的配件列表，格式为 [(名称, 价格, 图片URL), ...]
+    :param mapping_type: 映射类型，'case'、'cooler'、'vga'
+    """
+    import os
+    
+    # 确定图片保存目录
+    save_dirs = {
+        'case': 'tas1985.github.io/PNG',
+        'cooler': 'tas1985.github.io/PNG_SR',
+        'vga': 'tas1985.github.io/PNG_VGA'
+    }
+    
+    save_dir = save_dirs.get(mapping_type)
+    if not save_dir:
+        print(f"❌ 未知映射类型: {mapping_type}")
+        return
+    
+    # 创建目录（如果不存在）
+    os.makedirs(save_dir, exist_ok=True)
+    
+    downloaded_count = 0
+    skipped_count = 0
+    
+    for item in new_items:
+        if len(item) >= 3:
+            name, _, img_url = item[0], item[1], item[2]
+        else:
+            name = item[0]
+            img_url = ""
+        
+        if not img_url:
+            print(f"   ⚠️ 无图片URL: {name}")
+            skipped_count += 1
+            continue
+        
+        # 构建完整的图片URL
+        if not img_url.startswith('http'):
+            img_url = 'https://0532.name' + img_url
+        
+        # 构建保存文件名（图片名称与配件名称一致）
+        safe_name = name.replace('\\', '_').replace('/', '_').replace(':', '_').replace('*', '_').replace('?', '_')
+        safe_name = safe_name.replace('"', '_').replace('<', '_').replace('>', '_').replace('|', '_')
+        filename = f"{safe_name}.png"
+        filepath = os.path.join(save_dir, filename)
+        
+        # 检查文件是否已存在
+        if os.path.exists(filepath):
+            print(f"   ≡ 图片已存在: {filename}")
+            skipped_count += 1
+            continue
+        
+        try:
+            # 下载图片
+            print(f"   📥 下载图片: {img_url} -> {filename}")
+            response = requests.get(img_url, headers=HEADERS, timeout=10)
+            response.raise_for_status()
+            
+            # 保存图片
+            with open(filepath, 'wb') as f:
+                f.write(response.content)
+            
+            downloaded_count += 1
+            print(f"   ✅ 图片保存成功: {filename}")
+        except Exception as e:
+            print(f"   ❌ 图片下载失败: {name} - {e}")
+            skipped_count += 1
+    
+    print(f"   📊 图片下载完成：成功 {downloaded_count} 个，跳过 {skipped_count} 个")
