@@ -135,8 +135,8 @@ def fetch_cpu_prices():
         
         cpu_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -147,30 +147,30 @@ def fetch_cpu_prices():
                     if not name:
                         name = name_span.get_text(strip=True)
                 
-                    # 获取价格（优先使用 data-original 属性，也可以从 price-text 获取）
-                    price_span = item.find('span', class_='product-price')
-                    if price_span:
-                        # 优先使用 data-original 属性
-                        original_price = price_span.get('data-original', '')
-                        if original_price:
+                # 获取价格（优先使用 data-original 属性，也可以从 price-text 获取）
+                price_span = item.find('span', class_='product-price')
+                if price_span:
+                    # 优先使用 data-original 属性
+                    original_price = price_span.get('data-original', '')
+                    if original_price:
+                        try:
+                            price = int(float(original_price))
+                            cpu_list.append({"name": name, "price": price})
+                            continue
+                        except:
+                            pass
+                    
+                    # 从 price-text 子标签获取
+                    price_text_span = price_span.find('span', class_='price-text')
+                    if price_text_span:
+                        price_text = price_text_span.get_text(strip=True)
+                        price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                        if price_match:
                             try:
-                                price = int(float(original_price))
+                                price = int(float(price_match.group(1)))
                                 cpu_list.append({"name": name, "price": price})
-                                continue
                             except:
                                 pass
-                        
-                        # 从 price-text 子标签获取
-                        price_text_span = price_span.find('span', class_='price-text')
-                        if price_text_span:
-                            price_text = price_text_span.get_text(strip=True)
-                            price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
-                            if price_match:
-                                try:
-                                    price = int(float(price_match.group(1)))
-                                    cpu_list.append({"name": name, "price": price})
-                                except:
-                                    pass
         
         # 方法2：如果列表提取失败，尝试从表格中提取数据（兼容旧页面结构）
         if not cpu_list:
@@ -222,8 +222,8 @@ def fetch_gpu_exact_dict():
         soup = BeautifulSoup(res.text, "html.parser")
         gpu_map = {}
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -279,8 +279,8 @@ def fetch_gpu_prices():
         
         gpu_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -383,8 +383,8 @@ def fetch_mb_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         mb_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -441,8 +441,8 @@ def fetch_raw_ram_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         ram_dict = {}
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -496,8 +496,8 @@ def fetch_processed_ram():
         soup = BeautifulSoup(res.text, "html.parser")
         ram_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -620,8 +620,8 @@ def fetch_ssd_exact_data():
         ssd_map = {}
         ssd_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -717,8 +717,8 @@ def fetch_case_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         case_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -781,8 +781,8 @@ def fetch_power_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         power_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
@@ -844,8 +844,8 @@ def fetch_cooler_prices():
         soup = BeautifulSoup(res.text, "html.parser")
         cooler_list = []
         
-        # 方法1：尝试从 parts-list ul 列表中提取数据（当前页面结构）
-        parts_list = soup.find('ul', class_='parts-list')
+        # 方法1：尝试从 id="list" ul 列表中提取数据（当前页面结构）
+        parts_list = soup.find('ul', id='list')
         if parts_list:
             items = parts_list.find_all('li')
             for item in items:
