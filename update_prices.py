@@ -184,6 +184,30 @@ def match_core_keywords(name1, name2):
     
     return True
 
+def extract_gpu_chip_key(name):
+    name = name.strip().replace(" ", "").upper()
+    model = re.search(r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+|QUADRO)", name)
+    vram = re.search(r"(\d+G)", name)
+    if model and vram:
+        return f"{model.group(1)}|{vram.group(1)}"
+    if model:
+        return model.group(1)
+    return ""
+
+def find_chip_reference_price(gpu_dict, target_name):
+    target_chip = extract_gpu_chip_key(target_name)
+    if not target_chip:
+        return None, None
+    matched = []
+    for source_name, source_price in gpu_dict.items():
+        source_chip = extract_gpu_chip_key(source_name)
+        if source_chip and source_chip == target_chip:
+            matched.append((source_name, source_price))
+    if matched:
+        matched.sort(key=lambda x: x[1])
+        return matched[0][0], matched[0][1]
+    return None, None
+
 def extract_ssd_exact_key(name):
     """提取SSD型号的关键标识，用于匹配价格"""
     name = name.strip().replace(" ", "").upper()
@@ -1249,6 +1273,7 @@ def update_gpu_prices():
         update_count = 0
         same_count = 0
         no_match_count = 0
+        chip_ref_count = 0
         
         # 更新现有显卡型号的价格
         pos = start_idx + 1
@@ -1292,6 +1317,14 @@ def update_gpu_prices():
                             new_price = gpu_dict[best_match]
                             print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
                     
+                    # 方法5：芯片级参考匹配（跨品牌，同GPU芯片+同显存）
+                    if new_price is None:
+                        ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
+                        if ref_name and ref_price:
+                            new_price = ref_price
+                            chip_ref_count += 1
+                            print(f"  ✅ 芯片参考匹配: {model_name[:40]}... ← {ref_name[:40]}...")
+                    
                     if new_price is not None:
                         new_price = int(new_price)
                         if new_price != old_price:
@@ -1313,7 +1346,7 @@ def update_gpu_prices():
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个")
+        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，芯片参考匹配 {chip_ref_count} 个，未匹配(保留) {no_match_count} 个")
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
         import traceback
