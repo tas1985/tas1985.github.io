@@ -3,14 +3,13 @@ import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
-# -------------------------- 浏览器支持 --------------------------
+# -------------------------- 浏览器支持（可选）--------------------------
 try:
     from playwright.sync_api import sync_playwright
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
-    print("⚠️ WARNING: Playwright not installed! GPU price update may fail.")
-    print("⚠️ Please install with: pip install playwright && playwright install chromium")
+    print("ℹ️ Playwright not installed, using requests for page fetching.")
 
 _browser = None
 
@@ -291,45 +290,32 @@ def fetch_cpu_prices():
 def generate_cpu_content(cpu_list):
     return "".join([f'{INDENT}{{n:"{c["name"]}",p:{c["price"]}}},\n' for c in cpu_list])
 
-def fetch_gpu_exact_dict():
+
+
+def fetch_gpu_prices():
+    """爬取显卡价格，返回列表格式（不依赖Playwright）"""
     try:
-        text = fetch_page_content(GPU_SOURCE_URL)
-        gpu_map = {}
+        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=15)
+        res.encoding = res.apparent_encoding
+        text = res.text
+        soup = BeautifulSoup(text, "html.parser")
+        gpu_list = []
         
-        # 方法1：优先使用Markdown格式提取（网站返回Markdown格式）
-        lines = text.split('\n')
-        for line in lines:
-            line = line.strip()
-            if line.startswith('- '):
-                price_match = re.search(r'￥(\d+(?:\.\d+)?)', line)
-                if price_match:
-                    name = line[2:price_match.start()].strip()
-                    price = price_match.group(1)
-                    if len(name) > 3:
-                        try:
-                            k = extract_gpu_exact_key(name)
-                            if k:
-                                gpu_map[k] = int(float(price))
-                        except:
-                            pass
+        # 方法1：优先使用正则从文本中提取（网站返回纯文本/Markdown格式）
+        matches = re.findall(r'-\s*([^\n￥]+?)\￥(\d+(?:\.\d+)?)', text)
+        if matches:
+            for name, price in matches:
+                if len(name.strip()) > 3:
+                    try:
+                        gpu_list.append({"name": name.strip(), "price": int(float(price))})
+                    except:
+                        pass
         
-        # 方法2：如果Markdown解析失败，使用原始正则提取（兼容旧格式）
-        if not gpu_map:
-            matches = re.findall(r'-\s*([^\n￥]+?)\￥(\d+(?:\.\d+)?)', text)
-            if matches:
-                for name, price in matches:
-                    if len(name.strip()) > 3:
-                        try:
-                            k = extract_gpu_exact_key(name.strip())
-                            if k:
-                                gpu_map[k] = int(float(price))
-                        except:
-                            pass
-        
-        # 方法3：如果以上方法都失败，尝试从HTML中提取数据
-        if not gpu_map:
-            soup = BeautifulSoup(text, "html.parser")
-            parts_list = soup.find('ul', id='list')
+        # 方法2：如果正则提取失败，尝试从 ul.parts-list 中提取数据
+        if not gpu_list:
+            parts_list = soup.find('ul', class_='parts-list')
+            if not parts_list:
+                parts_list = soup.find('ul', id='list')
             if parts_list:
                 items = parts_list.find_all('li')
                 for item in items:
@@ -360,74 +346,13 @@ def fetch_gpu_exact_dict():
                                             continue
                                 else:
                                     continue
-                            
-                            k = extract_gpu_exact_key(name)
-                            if k:
-                                gpu_map[k] = price
+                        
+                        if len(name) > 3:
+                            gpu_list.append({"name": name, "price": price})
         
-        return gpu_map
-    except Exception:
-        return {}
-
-def fetch_gpu_prices():
-    """爬取显卡价格，返回列表格式（包含图片URL）"""
-    try:
-        text = fetch_page_content(GPU_SOURCE_URL)
-        
-        gpu_list = []
-        
-        # 方法1：优先使用正则从Markdown文本中提取（网站返回Markdown格式）
-        # 匹配格式：- 产品名称￥价格
-        # 下一行可能包含图片URL：![](图片URL)
-        lines = text.split('\n')
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
-            if line.startswith('- '):
-                price_match = re.search(r'￥(\d+(?:\.\d+)?)', line)
-                if price_match:
-                    name = line[2:price_match.start()].strip()
-                    price = price_match.group(1)
-                    if len(name) > 3:
-                        try:
-                            price_val = int(float(price))
-                            if "白" in name:
-                                price_val += 100
-                            
-                            img_url = ""
-                            if i + 1 < len(lines):
-                                next_line = lines[i + 1].strip()
-                                if next_line.startswith('![](') and next_line.endswith(')'):
-                                    img_url = next_line[4:-1]
-                            
-                            gpu_list.append({"name": name, "price": price_val, "image_url": img_url})
-                        except:
-                            pass
-            i += 1
-        
-        print(f"🔍 使用Markdown解析，找到 {len(gpu_list)} 个匹配")
-        
-        # 方法2：如果Markdown解析失败，使用原始正则提取（兼容旧格式）
+        # 方法3：从HTML表格中提取数据
         if not gpu_list:
-            matches = re.findall(r'-\s*([^\n￥]+?)\￥(\d+(?:\.\d+)?)', text)
-            if matches:
-                print(f"🔍 使用正则提取，找到 {len(matches)} 个匹配")
-                for name, price in matches:
-                    if len(name.strip()) > 3:
-                        try:
-                            price_val = int(float(price))
-                            if "白" in name:
-                                price_val += 100
-                            gpu_list.append({"name": name.strip(), "price": price_val, "image_url": ""})
-                        except:
-                            pass
-        
-        # 方法3：如果以上方法都失败，尝试从HTML表格中提取数据
-        if not gpu_list:
-            soup = BeautifulSoup(text, "html.parser")
             tables = soup.find_all('table')
-            print(f"🔍 找到 {len(tables)} 个表格")
-            
             for table in tables:
                 rows = table.find_all('tr')
                 for row in rows:
@@ -437,10 +362,11 @@ def fetch_gpu_prices():
                         price_text = cells[-1].get_text(strip=True)
                         price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
                         if price_match and name and len(name) > 3:
-                            price = int(float(price_match.group(1)))
-                            if "白" in name:
-                                price += 100
-                            gpu_list.append({"name": name, "price": price, "image_url": ""})
+                            try:
+                                price = int(float(price_match.group(1)))
+                                gpu_list.append({"name": name, "price": price})
+                            except:
+                                pass
         
         print(f"📊 爬取到 {len(gpu_list)} 个显卡型号")
         if gpu_list:
@@ -989,9 +915,6 @@ def fetch_cooler_prices():
         return []
 
 # -------------------------- 生成格式函数 --------------------------
-def generate_gpu_content(gpu_list):
-    return "".join([f'{INDENT}{{n:"{g["name"]}",p:{g["price"]}}},\n' for g in gpu_list])
-
 def generate_mb_content(mb_list):
     return "".join([f'{INDENT}{{n:"{m["name"]}",p:{m["price"]}}},\n' for m in mb_list])
 
@@ -1287,16 +1210,16 @@ def update_cpu_accurate():
         import traceback
         traceback.print_exc()
 
-# -------------------------- 新显卡爬取更新逻辑 --------------------------
-def update_gpu_new():
-    """新显卡更新逻辑：爬取源网站数据，返回列表后匹配更新HTML中显卡价格"""
+# -------------------------- 显卡更新函数 --------------------------
+def update_gpu_prices():
+    """爬取显卡价格并更新HTML中的显卡列表"""
     try:
         print("\n=== 开始更新显卡数据 ===")
         
         # 爬取源网站数据，返回列表格式
         gpu_list = fetch_gpu_prices()
         
-        # 如果获取失败或返回空列表，不删除原有数据，直接返回
+        # 如果获取失败或返回空列表，保留原有数据
         if not gpu_list:
             print("⚠️ 显卡数据获取失败或为空，保留原有显卡数据")
             return
@@ -1305,7 +1228,7 @@ def update_gpu_new():
         gpu_dict = {gpu["name"]: gpu["price"] for gpu in gpu_list}
         print(f"✅ 成功爬取 {len(gpu_dict)} 个显卡型号")
         
-        # 获取成功后再打开文件进行更新
+        # 读取HTML文件
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         print(f"📄 已读取 {len(lines)} 行 HTML 文件")
@@ -1326,13 +1249,6 @@ def update_gpu_new():
         update_count = 0
         same_count = 0
         no_match_count = 0
-        
-        # 特殊价格关系：华硕 RTX5060TI 16G DUAL 雪豹 黑色 必须比 技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇 高100
-        ASUS_5060TI_16G_DUAL = "华硕 RTX5060TI 16G DUAL 雪豹 黑色"
-        GIGABYTE_5060TI_EAGLE = "技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇"
-        
-        # 先收集需要特殊处理的显卡价格
-        gigabyte_price = None
         
         # 更新现有显卡型号的价格
         pos = start_idx + 1
@@ -1376,10 +1292,6 @@ def update_gpu_new():
                             new_price = gpu_dict[best_match]
                             print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
                     
-                    # 记录技嘉显卡价格用于后续特殊处理
-                    if model_name == GIGABYTE_5060TI_EAGLE and new_price is not None:
-                        gigabyte_price = new_price
-                    
                     if new_price is not None:
                         new_price = int(new_price)
                         if new_price != old_price:
@@ -1397,23 +1309,6 @@ def update_gpu_new():
             else:
                 pos += 1
         
-        # 处理特殊价格关系：华硕 RTX5060TI 16G DUAL 雪豹 黑色 = 技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇 + 100
-        if gigabyte_price is not None:
-            asus_target_price = gigabyte_price + 100
-            pos = start_idx + 1
-            while pos < end_idx:
-                line = lines[pos]
-                if ASUS_5060TI_16G_DUAL in line:
-                    match = re.search(r'p:(\d+)', line)
-                    if match:
-                        current_price = int(match.group(1))
-                        if current_price != asus_target_price:
-                            lines[pos] = re.sub(r'p:\d+', f'p:{asus_target_price}', line)
-                            update_count += 1
-                            print(f"  ✓ 特殊处理: {ASUS_5060TI_16G_DUAL[:40]}... ￥{current_price} -> ￥{asus_target_price} (技嘉+100)")
-                        break
-                pos += 1
-        
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
@@ -1423,57 +1318,6 @@ def update_gpu_new():
         print(f"❌ 显卡更新失败：{e}")
         import traceback
         traceback.print_exc()
-
-# -------------------------- 旧显卡更新逻辑（保留兼容）--------------------------
-def update_gpu_accurate():
-    """旧显卡更新逻辑：保留现有型号，只更新价格，不删除用户手动添加的型号，新型号追加"""
-    update_gpu_new()
-
-# -------------------------- 固定显卡精准更新（已废弃，保留原逻辑）--------------------------
-def update_fixed_gpu_prices():
-    try:
-        with open(HTML_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        gpu_map = fetch_gpu_exact_dict()
-        updated = 0
-        target_gpus = [
-            "七彩虹 RTX5050 8G 战斧 DUO 双扇",
-            "七彩虹 RTX5060 8G 战斧 DUO 双扇",
-            "微星 RTX5060 8G 万图师白色",
-            "微星 RTX3050 6G 万图师",
-            "七彩虹 RTX5050 8G ULTRA W DUO 白色双扇",
-            "七彩虹 RTX5060 8G ULTRA W OC 白色三扇",
-            "七彩虹 RTX5060ti 8G 战斧 DUO 双扇",
-            "七彩虹 RTX5060ti 16G 战斧 DUO 双扇",
-            "七彩虹 RTX5060TI 16G ULTRA W DUO OC 白色双扇",
-            "微星 RTX5070 VENTUS 2X OC 12G 万图师",
-            "七彩虹 RTX5070 12G ULTRA W OC 白色",
-            "七彩虹 RTX5070TI 16G 战斧豪华版 SFF",
-            "微星 RTX5080万图师3X OC PLUS",
-            "七彩虹 RTX5090D Advanced银鲨OC 24GB"
-        ]
-        for i in range(len(lines)):
-            line = lines[i]
-            if not re.search(r'p:\d+', line):
-                continue
-            for gpu_name in target_gpus:
-                if gpu_name in line:
-                    key = extract_gpu_exact_key(gpu_name)
-                    if key in gpu_map:
-                        price = gpu_map[key]
-                        # 🔥 白色显卡 +100
-                        if "白" in gpu_name:
-                            price += 100
-                        lines[i] = re.sub(r'p:\d+', f'p:{price}', line)
-                        updated += 1
-                    break
-        with open(HTML_FILE, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-        print(f"✅ 显卡价格自动更新完成：{updated} 个（白色显卡已+100）")
-        return updated
-    except Exception as e:
-        print(f"❌ 显卡更新失败：{e}")
-        return 0
 
 # -------------------------- 内存定制价格（四要素匹配） --------------------------
 def extract_ram_four_key(name):
@@ -3271,10 +3115,8 @@ if __name__ == "__main__":
     print("===== 硬件价格自动更新 =====")
     # 使用新的CPU更新逻辑
     update_cpu_accurate()
-    # 使用新的显卡更新逻辑
-    update_gpu_accurate()
-    # 旧的固定显卡更新逻辑已不再需要，可以注释掉
-    # update_fixed_gpu_prices()
+    # 显卡更新
+    update_gpu_prices()
     # 内存更新（使用新的简洁逻辑）
     update_ram_new()
     # 内存定制价格更新（处理金百达等特殊品牌）
