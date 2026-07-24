@@ -3,6 +3,46 @@ import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 
+# -------------------------- 浏览器支持 --------------------------
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
+_browser = None
+
+def get_browser():
+    global _browser
+    if _browser is None and PLAYWRIGHT_AVAILABLE:
+        try:
+            playwright = sync_playwright().start()
+            _browser = playwright.chromium.launch(headless=True)
+        except Exception:
+            pass
+    return _browser
+
+def fetch_page_content(url):
+    if PLAYWRIGHT_AVAILABLE:
+        browser = get_browser()
+        if browser:
+            try:
+                page = browser.new_page()
+                page.goto(url, wait_until="networkidle", timeout=30000)
+                page.wait_for_timeout(2000)
+                for _ in range(3):
+                    page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                    page.wait_for_timeout(1000)
+                content = page.inner_text('body')
+                page.close()
+                return content
+            except Exception as e:
+                print(f"⚠️ 浏览器获取内容失败，回退到requests: {e}")
+                pass
+    res = requests.get(url, headers=HEADERS, timeout=15)
+    res.encoding = res.apparent_encoding
+    return res.text
+
 # -------------------------- 全局配置项 --------------------------
 SOURCE_URL = "https://0532.name/diy_pjhq?zd2=CPU"
 GPU_SOURCE_URL = "https://0532.name/diy_pjhq?zd2=%E6%98%BE%E5%8D%A1"
@@ -215,9 +255,7 @@ def generate_cpu_content(cpu_list):
 
 def fetch_gpu_exact_dict():
     try:
-        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
-        text = res.text
+        text = fetch_page_content(GPU_SOURCE_URL)
         gpu_map = {}
         
         # 方法1：优先使用Markdown格式提取（网站返回Markdown格式）
@@ -296,9 +334,7 @@ def fetch_gpu_exact_dict():
 def fetch_gpu_prices():
     """爬取显卡价格，返回列表格式（包含图片URL）"""
     try:
-        res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=15)
-        res.encoding = res.apparent_encoding
-        text = res.text
+        text = fetch_page_content(GPU_SOURCE_URL)
         
         gpu_list = []
         
