@@ -1405,7 +1405,7 @@
     <div class="item">
         <div class="item-label"><span class="icon-gray">🔩</span> 配件</div>
         <div class="item-input">
-            <input class="combo" id="other" value="不含显示器键盘鼠标耳机，赠品：鼠标垫" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
+            <input class="combo" id="other" value="不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费2%" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
             <div class="clear-btn" onclick="clearItem('other')">×</div>
             <div class="dropdown" id="other-drop"></div>
         </div>
@@ -2823,7 +2823,7 @@
         ],
         // 新增其他配件默认数据
         other: [
-            {n:"不含显示器键盘鼠标耳机，赠品：鼠标垫",p:0},
+            {n:"不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费2%",p:0},
             {n:"AOC 27寸 2K 180HZ",p:879},
             {n:"赠送键鼠",p:0}
         ]
@@ -6652,7 +6652,7 @@
             case: { n: "黑色海景房", p: 129 },
             fan: { n: "棱镜4 7把", p: 140 },
             power: { n: "宏碁 额定550W 80PLUS铜牌全模组 3C", p: 229 },
-            other: { n: "不含显示器键盘鼠标耳机，赠品：鼠标垫", p: 0 }
+            other: { n: "不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费2%", p: 0 }
         };
         for (let key in defaults) {
             document.getElementById(key).value = defaults[key].n;
