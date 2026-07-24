@@ -1287,12 +1287,13 @@ def update_cpu_accurate():
         import traceback
         traceback.print_exc()
 
-# -------------------------- 修改后的显卡更新逻辑 --------------------------
-def update_gpu_accurate():
-    """显卡更新逻辑：保留现有型号，只更新价格，不删除用户手动添加的型号，新型号追加"""
+# -------------------------- 新显卡爬取更新逻辑 --------------------------
+def update_gpu_new():
+    """新显卡更新逻辑：爬取源网站数据，返回列表后匹配更新HTML中显卡价格"""
     try:
         print("\n=== 开始更新显卡数据 ===")
-        # 先获取新的显卡数据，只有获取成功才进行更新
+        
+        # 爬取源网站数据，返回列表格式
         gpu_list = fetch_gpu_prices()
         
         # 如果获取失败或返回空列表，不删除原有数据，直接返回
@@ -1300,23 +1301,22 @@ def update_gpu_accurate():
             print("⚠️ 显卡数据获取失败或为空，保留原有显卡数据")
             return
         
-        # 将列表转换为字典，方便查找（保存完整信息包括图片URL）
-        gpu_dict = {gpu["name"]: gpu for gpu in gpu_list}
-        print(f"✅ 成功获取 {len(gpu_dict)} 个显卡数据")
+        # 将列表转换为字典，方便查找
+        gpu_dict = {gpu["name"]: gpu["price"] for gpu in gpu_list}
+        print(f"✅ 成功爬取 {len(gpu_dict)} 个显卡型号")
         
         # 获取成功后再打开文件进行更新
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             lines = f.readlines()
         print(f"📄 已读取 {len(lines)} 行 HTML 文件")
         
-        # 找到GPU_START_MARK的位置
+        # 找到显卡自动更新区域
         start_idx = next((i for i, l in enumerate(lines) if GPU_START_MARK in l), -1)
         if start_idx == -1:
             print("❌ 未找到显卡自动更新区域开始标记")
             return
         print(f"📍 找到开始标记在第 {start_idx + 1} 行")
         
-        # 从开始标记的下一行开始查找结束标记
         end_idx = next((i for i, l in enumerate(lines[start_idx + 1:], start_idx + 1) if GPU_END_MARK in l), -1)
         if end_idx == -1:
             print("❌ 未找到显卡自动更新区域结束标记")
@@ -1326,17 +1326,19 @@ def update_gpu_accurate():
         update_count = 0
         same_count = 0
         no_match_count = 0
-        new_add_count = 0
         
-        # 记录已匹配的源网站型号
-        matched_source = set()
+        # 特殊价格关系：华硕 RTX5060TI 16G DUAL 雪豹 黑色 必须比 技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇 高100
+        ASUS_5060TI_16G_DUAL = "华硕 RTX5060TI 16G DUAL 雪豹 黑色"
+        GIGABYTE_5060TI_EAGLE = "技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇"
         
-        # 更新现有显卡型号的价格（保留原有型号，只更新价格）
+        # 先收集需要特殊处理的显卡价格
+        gigabyte_price = None
+        
+        # 更新现有显卡型号的价格
         pos = start_idx + 1
         while pos < end_idx:
             line = lines[pos]
             if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
-                # 提取型号名称和当前价格
                 match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
                 if match:
                     model_name = match.group(1)
@@ -1345,43 +1347,42 @@ def update_gpu_accurate():
                     
                     # 方法1：精确匹配
                     if model_name in gpu_dict:
-                        new_price = gpu_dict[model_name]["price"]
-                        matched_source.add(model_name)
+                        new_price = gpu_dict[model_name]
                         print(f"  ✅ 精确匹配: {model_name[:40]}...")
                     else:
-                        # 方法2：使用显卡关键字进行模糊匹配
+                        # 方法2：使用显卡关键字进行匹配
                         html_key = extract_gpu_exact_key(model_name)
                         if html_key:
-                            for source_name, gpu_info in gpu_dict.items():
+                            for source_name in gpu_dict:
                                 source_key = extract_gpu_exact_key(source_name)
                                 if source_key and html_key == source_key:
-                                    new_price = gpu_info["price"]
-                                    matched_source.add(source_name)
-                                    print(f"  ✅ 模糊匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
+                                    new_price = gpu_dict[source_name]
+                                    print(f"  ✅ 关键字匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
                                     break
                     
-                    # 方法3：使用fuzzywuzzy进行字符串相似度匹配
+                    # 方法3：基于核心关键字匹配（品牌+型号+显存）
+                    if new_price is None:
+                        for source_name in gpu_dict:
+                            if match_core_keywords(model_name, source_name):
+                                new_price = gpu_dict[source_name]
+                                print(f"  ✅ 核心匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
+                                break
+                    
+                    # 方法4：使用fuzzywuzzy进行字符串相似度匹配
                     if new_price is None:
                         source_names = list(gpu_dict.keys())
                         best_match, score = process.extractOne(model_name, source_names)
                         if score >= 80:
-                            new_price = gpu_dict[best_match]["price"]
-                            matched_source.add(best_match)
+                            new_price = gpu_dict[best_match]
                             print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
                     
-                    # 方法4：基于核心关键字匹配（品牌+型号+显存）
-                    if new_price is None:
-                        for source_name, gpu_info in gpu_dict.items():
-                            if match_core_keywords(model_name, source_name):
-                                new_price = gpu_info["price"]
-                                matched_source.add(source_name)
-                                print(f"  ✅ 关键字匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
-                                break
+                    # 记录技嘉显卡价格用于后续特殊处理
+                    if model_name == GIGABYTE_5060TI_EAGLE and new_price is not None:
+                        gigabyte_price = new_price
                     
                     if new_price is not None:
                         new_price = int(new_price)
                         if new_price != old_price:
-                            # 更新价格
                             new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
                             lines[pos] = new_line
                             update_count += 1
@@ -1396,49 +1397,37 @@ def update_gpu_accurate():
             else:
                 pos += 1
         
-        # 追加新型号（源网站中有但HTML中没有的型号）
-        new_items = []
-        for source_name, gpu_info in gpu_dict.items():
-            if source_name not in matched_source:
-                # 检查是否已经在HTML中（作为手动添加的型号）
-                found_in_html = False
-                for line in lines:
-                    if f'{{n:"{source_name}"' in line:
-                        found_in_html = True
+        # 处理特殊价格关系：华硕 RTX5060TI 16G DUAL 雪豹 黑色 = 技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇 + 100
+        if gigabyte_price is not None:
+            asus_target_price = gigabyte_price + 100
+            pos = start_idx + 1
+            while pos < end_idx:
+                line = lines[pos]
+                if ASUS_5060TI_16G_DUAL in line:
+                    match = re.search(r'p:(\d+)', line)
+                    if match:
+                        current_price = int(match.group(1))
+                        if current_price != asus_target_price:
+                            lines[pos] = re.sub(r'p:\d+', f'p:{asus_target_price}', line)
+                            update_count += 1
+                            print(f"  ✓ 特殊处理: {ASUS_5060TI_16G_DUAL[:40]}... ￥{current_price} -> ￥{asus_target_price} (技嘉+100)")
                         break
-                if not found_in_html:
-                    price = gpu_info["price"]
-                    image_url = gpu_info.get("image_url", "")
-                    new_items.append((source_name, int(price), image_url))
-                    print(f"   🆕 检测到新型号: {source_name[:40]}... ￥{price}")
-        
-        print(f"\n   总计检测到 {len(new_items)} 个新型号需要追加")
-        
-        # 在显卡区域末尾追加新型号
-        if new_items:
-            print(f"\n   📌 追加 {len(new_items)} 个新型号:")
-            new_lines = []
-            for name, price, _ in new_items:
-                new_line = f'{INDENT}{{n:"{name}",p:{price}}},\n'
-                new_lines.append(new_line)
-                print(f"   + 新增: {name[:40]}... ￥{price}")
-                new_add_count += 1
-            
-            # 在结束标记前一行追加
-            lines[end_idx] = '\n'.join(new_lines) + lines[end_idx]
+                pos += 1
         
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        # 自动添加图片映射
-        add_image_mappings(new_items, 'vga')
-        
-        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个，新型号追加 {new_add_count} 个")
+        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，未匹配(保留) {no_match_count} 个")
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
         import traceback
         traceback.print_exc()
+
+# -------------------------- 旧显卡更新逻辑（保留兼容）--------------------------
+def update_gpu_accurate():
+    """旧显卡更新逻辑：保留现有型号，只更新价格，不删除用户手动添加的型号，新型号追加"""
+    update_gpu_new()
 
 # -------------------------- 固定显卡精准更新（已废弃，保留原逻辑）--------------------------
 def update_fixed_gpu_prices():
