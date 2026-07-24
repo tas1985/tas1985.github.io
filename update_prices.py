@@ -9,6 +9,8 @@ try:
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
+    print("⚠️ WARNING: Playwright not installed! GPU price update may fail.")
+    print("⚠️ Please install with: pip install playwright && playwright install chromium")
 
 _browser = None
 
@@ -136,16 +138,52 @@ def extract_ram_feature(name):
 
 def extract_gpu_exact_key(name):
     name = name.strip().replace(" ", "").upper()
-    brand = re.search(r"(七彩虹|微星|华硕|技嘉|影驰|蓝宝石|蓝戟|索泰|映众|双敏|盈通|撼讯|旌宇|磐正|磐镭|电竞判客|英伟达)", name)
-    model = re.search(r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+)", name)
+    brand = re.search(r"(七彩虹|微星|华硕|技嘉|影驰|蓝宝石|蓝戟|索泰|映众|双敏|盈通|撼讯|旌宇|磐正|磐镭|电竞判客|英伟达|丽台|ELSA|PNY|耕升|翔升|铭瑄|梅捷)", name)
+    model = re.search(r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+|QUADRO)", name)
     vram = re.search(r"(\d+G)", name)
-    series = re.search(r"(战斧|ULTRA|万图师|ADVANCED|银鲨|DUO|VENTUS|GAMING|TRIO|VULCAN|PHOTON|INDEX|脉动|氮动|极地|金属大师|星曜|圣刃|魔刃|FIRE|ATS|DUAL|TUF|ROG|AORUS|EAGLE|AERO|雪鹰|猎鹰|魔鹰|小雕|超级雕|幻影师|月影|星夜|开天|毁灭者)", name)
+    series = re.search(r"(战斧|ULTRA|万图师|ADVANCED|银鲨|DUO|VENTUS|GAMING|TRIO|VULCAN|PHOTON|INDEX|脉动|氮动|极地|金属大师|星曜|圣刃|魔刃|FIRE|ATS|DUAL|TUF|ROG|AORUS|EAGLE|AERO|雪鹰|猎鹰|魔鹰|小雕|超级雕|幻影师|月影|星夜|开天|毁灭者|IGAME|GEFORCE|曜夜|红魔龙|暗黑犬|游骑兵|暗黑黑)", name)
     key_parts = []
     if brand: key_parts.append(brand.group(1))
     if model: key_parts.append(model.group(1))
     if vram: key_parts.append(vram.group(1))
     if series: key_parts.append(series.group(1))
     return "|".join(key_parts)
+
+def match_core_keywords(name1, name2):
+    name1_clean = name1.strip().replace(" ", "").upper()
+    name2_clean = name2.strip().replace(" ", "").upper()
+    
+    brand_pattern = r"(七彩虹|微星|华硕|技嘉|影驰|蓝宝石|蓝戟|索泰|映众|双敏|盈通|撼讯|旌宇|磐正|磐镭|电竞判客|英伟达|丽台|ELSA|PNY|耕升|翔升|铭瑄|梅捷)"
+    model_pattern = r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+|QUADRO)"
+    vram_pattern = r"(\d+G)"
+    series_pattern = r"(战斧|ULTRA|万图师|ADVANCED|银鲨|DUO|VENTUS|GAMING|TRIO|VULCAN|PHOTON|INDEX|脉动|氮动|极地|金属大师|星曜|圣刃|魔刃|FIRE|ATS|DUAL|TUF|ROG|AORUS|EAGLE|AERO|雪鹰|猎鹰|魔鹰|小雕|超级雕|幻影师|月影|星夜|开天|毁灭者|IGAME|GEFORCE|曜夜|红魔龙|暗黑犬|游骑兵|暗黑黑)"
+    
+    brand1 = re.search(brand_pattern, name1_clean)
+    brand2 = re.search(brand_pattern, name2_clean)
+    model1 = re.search(model_pattern, name1_clean)
+    model2 = re.search(model_pattern, name2_clean)
+    vram1 = re.search(vram_pattern, name1_clean)
+    vram2 = re.search(vram_pattern, name2_clean)
+    series1 = re.search(series_pattern, name1_clean)
+    series2 = re.search(series_pattern, name2_clean)
+    
+    if not (brand1 and brand2 and model1 and model2 and vram1 and vram2):
+        return False
+    
+    if brand1.group(1) != brand2.group(1):
+        return False
+    
+    if model1.group(1) != model2.group(1):
+        return False
+    
+    if vram1.group(1) != vram2.group(1):
+        return False
+    
+    if series1 and series2:
+        if series1.group(1) != series2.group(1):
+            return False
+    
+    return True
 
 def extract_ssd_exact_key(name):
     """提取SSD型号的关键标识，用于匹配价格"""
@@ -1321,6 +1359,24 @@ def update_gpu_accurate():
                                     matched_source.add(source_name)
                                     print(f"  ✅ 模糊匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
                                     break
+                    
+                    # 方法3：使用fuzzywuzzy进行字符串相似度匹配
+                    if new_price is None:
+                        source_names = list(gpu_dict.keys())
+                        best_match, score = process.extractOne(model_name, source_names)
+                        if score >= 80:
+                            new_price = gpu_dict[best_match]["price"]
+                            matched_source.add(best_match)
+                            print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
+                    
+                    # 方法4：基于核心关键字匹配（品牌+型号+显存）
+                    if new_price is None:
+                        for source_name, gpu_info in gpu_dict.items():
+                            if match_core_keywords(model_name, source_name):
+                                new_price = gpu_info["price"]
+                                matched_source.add(source_name)
+                                print(f"  ✅ 关键字匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
+                                break
                     
                     if new_price is not None:
                         new_price = int(new_price)
