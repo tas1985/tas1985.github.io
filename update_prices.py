@@ -1257,18 +1257,26 @@ def update_gpu_prices():
             lines = f.readlines()
         print(f"📄 已读取 {len(lines)} 行 HTML 文件")
         
-        # 找到显卡自动更新区域
-        start_idx = next((i for i, l in enumerate(lines) if GPU_START_MARK in l), -1)
+        # 找到vga数组区域（覆盖所有显卡型号，不依赖注释标记）
+        start_idx = -1
+        for i, l in enumerate(lines):
+            if 'vga: [' in l:
+                start_idx = i
+                break
         if start_idx == -1:
-            print("❌ 未找到显卡自动更新区域开始标记")
+            print("❌ 未找到vga数组开始位置")
             return
-        print(f"📍 找到开始标记在第 {start_idx + 1} 行")
+        print(f"📍 找到vga数组开始在第 {start_idx + 1} 行")
         
-        end_idx = next((i for i, l in enumerate(lines[start_idx + 1:], start_idx + 1) if GPU_END_MARK in l), -1)
+        end_idx = -1
+        for i in range(start_idx + 1, len(lines)):
+            if lines[i].strip() == '],':
+                end_idx = i
+                break
         if end_idx == -1:
-            print("❌ 未找到显卡自动更新区域结束标记")
+            print("❌ 未找到vga数组结束位置")
             return
-        print(f"📍 找到结束标记在第 {end_idx + 1} 行")
+        print(f"📍 找到vga数组结束在第 {end_idx + 1} 行")
         
         update_count = 0
         same_count = 0
@@ -1279,7 +1287,7 @@ def update_gpu_prices():
         pos = start_idx + 1
         while pos < end_idx:
             line = lines[pos]
-            if line.startswith(INDENT) and '{n:"' in line and '",p:' in line:
+            if '{n:"' in line and '",p:' in line:
                 match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
                 if match:
                     model_name = match.group(1)
