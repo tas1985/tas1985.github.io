@@ -70,7 +70,7 @@ MB_EXCLUDE = "铭瑄"
 RAM_EXIST_START = '{n:"金百达 银爵 16G 8x2 3200'
 RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
 RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（拆机内存到手30天质保）",p:249},'
-RAM_EXCLUDE_LIST = ["金百达", "金士顿", "科摩思", "现代", "梵想"]
+RAM_EXCLUDE_LIST = ["科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 0
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
@@ -1631,6 +1631,20 @@ def update_ram_prices_new():
         same_count = 0
         no_match_count = 0
         ref_match_count = 0
+        add_count = 0
+        
+        # 收集所有HTML中已有的内存型号名称
+        existing_models = set()
+        pos = start_idx + 1
+        while pos < end_idx:
+            line = lines[pos]
+            if '{n:"' in line and '",p:' in line:
+                match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if match:
+                    existing_models.add(match.group(1))
+            pos += 1
+        
+        print(f"📋 HTML中已有 {len(existing_models)} 个内存型号")
         
         # 更新现有内存型号的价格
         pos = start_idx + 1
@@ -1735,11 +1749,47 @@ def update_ram_prices_new():
             else:
                 pos += 1
         
+        # 自动追加新的内存型号
+        new_models_added = []
+        for source_name, source_price in ram_dict.items():
+            # 检查是否已存在于HTML中（精确匹配）
+            if source_name not in existing_models:
+                # 检查是否通过关键字匹配已存在
+                source_key = extract_ram_exact_key(source_name)
+                already_exists = False
+                for existing_model in existing_models:
+                    existing_key = extract_ram_exact_key(existing_model)
+                    if source_key and existing_key and source_key == existing_key:
+                        already_exists = True
+                        break
+                
+                # 检查是否通过核心匹配已存在
+                if not already_exists:
+                    for existing_model in existing_models:
+                        if match_ram_core_keywords(source_name, existing_model):
+                            already_exists = True
+                            break
+                
+                if not already_exists:
+                    # 追加新型号
+                    new_line = f'            {{n:"{source_name}",p:{source_price}}},\n'
+                    lines.insert(end_idx, new_line)
+                    end_idx += 1
+                    add_count += 1
+                    new_models_added.append(source_name)
+                    print(f"  ➕ 新增型号: {source_name[:40]}... ￥{source_price}")
+        
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"\n✅ 内存价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，参数参考匹配 {ref_match_count} 个，未匹配(保留) {no_match_count} 个")
+        print(f"\n✅ 内存价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，参数参考匹配 {ref_match_count} 个，未匹配(保留) {no_match_count} 个，新增 {add_count} 个")
+        if new_models_added:
+            print("📥 新增型号列表:")
+            for model in new_models_added[:10]:
+                print(f"   - {model[:50]}...")
+            if len(new_models_added) > 10:
+                print(f"   ... 还有 {len(new_models_added) - 10} 个新增型号")
     except Exception as e:
         print(f"❌ 内存更新失败：{e}")
         import traceback
