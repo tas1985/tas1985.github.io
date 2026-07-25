@@ -139,12 +139,12 @@ def extract_gpu_exact_key(name):
     name = name.strip().replace(" ", "").upper()
     brand = re.search(r"(七彩虹|微星|华硕|技嘉|影驰|蓝宝石|蓝戟|索泰|映众|双敏|盈通|撼讯|旌宇|磐正|磐镭|电竞判客|英伟达|丽台|ELSA|PNY|耕升|翔升|铭瑄|梅捷)", name)
     model = re.search(r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+|QUADRO)", name)
-    vram = re.search(r"(\d+G)", name)
+    vram = extract_gpu_vram(name)
     series = re.search(r"(战斧|ULTRA|万图师|ADVANCED|银鲨|DUO|VENTUS|GAMING|TRIO|VULCAN|PHOTON|INDEX|脉动|氮动|极地|金属大师|星曜|圣刃|魔刃|FIRE|ATS|DUAL|TUF|ROG|AORUS|EAGLE|AERO|雪鹰|猎鹰|魔鹰|小雕|超级雕|幻影师|月影|星夜|开天|毁灭者|IGAME|GEFORCE|曜夜|红魔龙|暗黑犬|游骑兵|暗黑黑)", name)
     key_parts = []
     if brand: key_parts.append(brand.group(1))
     if model: key_parts.append(model.group(1))
-    if vram: key_parts.append(vram.group(1))
+    if vram: key_parts.append(vram)
     if series: key_parts.append(series.group(1))
     return "|".join(key_parts)
 
@@ -154,15 +154,14 @@ def match_core_keywords(name1, name2):
     
     brand_pattern = r"(七彩虹|微星|华硕|技嘉|影驰|蓝宝石|蓝戟|索泰|映众|双敏|盈通|撼讯|旌宇|磐正|磐镭|电竞判客|英伟达|丽台|ELSA|PNY|耕升|翔升|铭瑄|梅捷)"
     model_pattern = r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+|QUADRO)"
-    vram_pattern = r"(\d+G)"
     series_pattern = r"(战斧|ULTRA|万图师|ADVANCED|银鲨|DUO|VENTUS|GAMING|TRIO|VULCAN|PHOTON|INDEX|脉动|氮动|极地|金属大师|星曜|圣刃|魔刃|FIRE|ATS|DUAL|TUF|ROG|AORUS|EAGLE|AERO|雪鹰|猎鹰|魔鹰|小雕|超级雕|幻影师|月影|星夜|开天|毁灭者|IGAME|GEFORCE|曜夜|红魔龙|暗黑犬|游骑兵|暗黑黑)"
     
     brand1 = re.search(brand_pattern, name1_clean)
     brand2 = re.search(brand_pattern, name2_clean)
     model1 = re.search(model_pattern, name1_clean)
     model2 = re.search(model_pattern, name2_clean)
-    vram1 = re.search(vram_pattern, name1_clean)
-    vram2 = re.search(vram_pattern, name2_clean)
+    vram1 = extract_gpu_vram(name1)
+    vram2 = extract_gpu_vram(name2)
     series1 = re.search(series_pattern, name1_clean)
     series2 = re.search(series_pattern, name2_clean)
     
@@ -175,7 +174,7 @@ def match_core_keywords(name1, name2):
     if model1.group(1) != model2.group(1):
         return False
     
-    if vram1.group(1) != vram2.group(1):
+    if vram1 != vram2:
         return False
     
     if series1 and series2:
@@ -184,12 +183,25 @@ def match_core_keywords(name1, name2):
     
     return True
 
+def extract_gpu_vram(name):
+    name_clean = name.strip().replace(" ", "").upper()
+    vram_patterns = [
+        r"(\d+)GB",
+        r"(\d+)G",
+        r"O(\d+)G",
+    ]
+    for pat in vram_patterns:
+        m = re.search(pat, name_clean)
+        if m:
+            return f"{m.group(1)}G"
+    return ""
+
 def extract_gpu_chip_key(name):
     name = name.strip().replace(" ", "").upper()
     model = re.search(r"(RTX\d+TI|RTX\d+|RX\d+XT|RX\d+GRE|RX\d+|ARC\d+|GTX\d+|GT\d+|QUADRO)", name)
-    vram = re.search(r"(\d+G)", name)
+    vram = extract_gpu_vram(name)
     if model and vram:
-        return f"{model.group(1)}|{vram.group(1)}"
+        return f"{model.group(1)}|{vram}"
     if model:
         return model.group(1)
     return ""
@@ -198,11 +210,18 @@ def find_chip_reference_price(gpu_dict, target_name):
     target_chip = extract_gpu_chip_key(target_name)
     if not target_chip:
         return None, None
+    target_vram = extract_gpu_vram(target_name)
     matched = []
     for source_name, source_price in gpu_dict.items():
         source_chip = extract_gpu_chip_key(source_name)
-        if source_chip and source_chip == target_chip:
-            matched.append((source_name, source_price))
+        if not source_chip:
+            continue
+        if source_chip != target_chip:
+            continue
+        source_vram = extract_gpu_vram(source_name)
+        if target_vram and source_vram and target_vram != source_vram:
+            continue
+        matched.append((source_name, source_price))
     if matched:
         matched.sort(key=lambda x: x[1])
         return matched[0][0], matched[0][1]
@@ -1317,21 +1336,30 @@ def update_gpu_prices():
                                 print(f"  ✅ 核心匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
                                 break
                     
-                    # 方法4：使用fuzzywuzzy进行字符串相似度匹配
-                    if new_price is None:
-                        source_names = list(gpu_dict.keys())
-                        best_match, score = process.extractOne(model_name, source_names)
-                        if score >= 80:
-                            new_price = gpu_dict[best_match]
-                            print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
-                    
-                    # 方法5：芯片级参考匹配（跨品牌，同GPU芯片+同显存）
+                    # 方法4：芯片级参考匹配（跨品牌，同GPU芯片+同显存）
                     if new_price is None:
                         ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
                         if ref_name and ref_price:
                             new_price = ref_price
                             chip_ref_count += 1
                             print(f"  ✅ 芯片参考匹配: {model_name[:40]}... ← {ref_name[:40]}...")
+                    
+                    # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需GPU芯片+显存都一致）
+                    if new_price is None:
+                        source_names = list(gpu_dict.keys())
+                        best_match, score = process.extractOne(model_name, source_names)
+                        if score >= 80:
+                            target_chip = extract_gpu_chip_key(model_name)
+                            match_chip = extract_gpu_chip_key(best_match)
+                            target_vram = extract_gpu_vram(model_name)
+                            match_vram = extract_gpu_vram(best_match)
+                            chip_ok = target_chip and match_chip and target_chip == match_chip
+                            vram_ok = (not target_vram) or (not match_vram) or (target_vram == match_vram)
+                            if chip_ok and vram_ok:
+                                new_price = gpu_dict[best_match]
+                                print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
+                            else:
+                                print(f"  ⚠️ 相似度匹配跳过(芯片/显存不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
                     
                     if new_price is not None:
                         new_price = int(new_price)
