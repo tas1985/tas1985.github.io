@@ -1199,6 +1199,15 @@ def find_next_non_ssd_line(lines, start_pos):
                 break
     return pos
 
+def get_ssd_capacity_bonus(name):
+    """根据SSD容量返回价格加成：1T+50，2T+100"""
+    name_upper = name.upper()
+    if '1T' in name_upper and not ('2T' in name_upper or '4T' in name_upper or '8T' in name_upper or '16T' in name_upper):
+        return 50
+    elif '2T' in name_upper and not ('4T' in name_upper or '8T' in name_upper or '16T' in name_upper):
+        return 100
+    return 0
+
 def update_ssd_prices():
     """修复后的SSD价格更新函数 - 使用模糊匹配"""
     try:
@@ -1244,15 +1253,18 @@ def update_ssd_prices():
             ssd_name = match.group(1)
             old_price = int(match.group(2))
             
+            # 获取容量加成
+            capacity_bonus = get_ssd_capacity_bonus(ssd_name)
+            
             # 检查是否是特殊型号
             if ssd_name in special_models:
                 special_info = special_models[ssd_name]
                 if special_info["base_price"] > 0:
-                    new_price = special_info["base_price"] + special_info["adjust"]
+                    new_price = special_info["base_price"] + special_info["adjust"] + capacity_bonus
                     if new_price != old_price:
                         lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
                         updated += 1
-                        print(f"  ✓ 特殊更新: {ssd_name[:30]}... ￥{old_price} -> ￥{new_price}")
+                        print(f"  ✓ 特殊更新: {ssd_name[:30]}... ￥{old_price} -> ￥{new_price} (容量加成:+{capacity_bonus})")
                     else:
                         same_count += 1
                 continue
@@ -1263,11 +1275,11 @@ def update_ssd_prices():
             
             # 先尝试精确匹配
             if ssd_name in ssd_dict:
-                new_price = ssd_dict[ssd_name]
+                new_price = ssd_dict[ssd_name] + capacity_bonus
                 if new_price != old_price:
                     lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
                     updated += 1
-                    print(f"  ✓ 精确匹配: {ssd_name[:30]}... ￥{old_price} -> ￥{new_price}")
+                    print(f"  ✓ 精确匹配: {ssd_name[:30]}... ￥{old_price} -> ￥{new_price} (容量加成:+{capacity_bonus})")
                 else:
                     same_count += 1
                 continue
@@ -1304,11 +1316,11 @@ def update_ssd_prices():
                     best_match = (crawled_name, crawled_price)
             
             if best_match:
-                new_price = best_match[1]
+                new_price = best_match[1] + capacity_bonus
                 if new_price != old_price:
                     lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
                     updated += 1
-                    print(f"  ✓ 模糊匹配({best_score}%): {ssd_name[:25]}... -> {best_match[0][:25]}... ￥{old_price} -> ￥{new_price}")
+                    print(f"  ✓ 模糊匹配({best_score}%): {ssd_name[:25]}... -> {best_match[0][:25]}... ￥{old_price} -> ￥{new_price} (容量加成:+{capacity_bonus})")
                 else:
                     same_count += 1
             else:
@@ -1338,7 +1350,10 @@ def update_ssd_prices():
             for ssd in ssd_list:
                 # 只添加不在HTML文件中的新SSD
                 if ssd["name"] not in existing_names:
-                    new_ssd_lines.append(f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{ssd["price"]}}},\n')
+                    # 应用容量加成
+                    bonus = get_ssd_capacity_bonus(ssd["name"])
+                    final_price = ssd["price"] + bonus
+                    new_ssd_lines.append(f'{SSD_APPEND_INDENT}{{n:"{ssd["name"]}",p:{final_price}}},\n')
             
             # 在目标位置后插入新的SSD数据
             if new_ssd_lines:
@@ -1349,14 +1364,14 @@ def update_ssd_prices():
             f.writelines(lines)
 
         # 计算调整后的价格
-        adjusted_2t_price = nv7400_2t_price - 300 if nv7400_2t_price > 0 else 0
-        adjusted_1t_price = nv7400_1t_price - 90 if nv7400_1t_price > 0 else 0
+        adjusted_2t_price = nv7400_2t_price - 300 + 100 if nv7400_2t_price > 0 else 0
+        adjusted_1t_price = nv7400_1t_price - 90 + 50 if nv7400_1t_price > 0 else 0
         
         print(f"✅ 固态硬盘更新完成")
         print(f"🧮 佰维 NV7400 2T 原始价格 = {nv7400_2t_price}")
-        print(f"🧮 佰维 NV7400 2T 调整后价格 = {adjusted_2t_price} (-300)")
+        print(f"🧮 佰维 NV7400 2T 调整后价格 = {adjusted_2t_price} (-300 + 容量加成+100)")
         print(f"🧮 佰维 NV7400 1T 原始价格 = {nv7400_1t_price} (2T × 0.53)")
-        print(f"🧮 佰维 NV7400 1T 调整后价格 = {adjusted_1t_price} (-90)")
+        print(f"🧮 佰维 NV7400 1T 调整后价格 = {adjusted_1t_price} (-90 + 容量加成+50)")
         print(f"🧮 更新了 {updated} 个SSD价格")
         print(f"🧮 价格不变 {same_count} 个")
         print(f"🧮 未匹配 {no_match_count} 个")
