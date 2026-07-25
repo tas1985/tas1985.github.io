@@ -1666,24 +1666,27 @@ def update_ram_prices_new():
                                 print(f"  ✅ 核心匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
                                 break
                     
-                    # 方法4：基于容量+频率+时序的参考匹配（跨品牌）
+                    # 方法4：基于品牌+容量+频率+时序的参考匹配（必须同品牌）
                     if new_price is None:
+                        target_brand = extract_ram_brand(model_name)
                         target_cap = extract_ram_capacity(model_name)
                         target_freq = extract_ram_freq(model_name)
                         target_cas = extract_ram_cas(model_name)
                         
-                        if target_cap and target_freq:
+                        if target_brand and target_cap and target_freq:
                             matched_prices = []
                             for source_name, source_price in ram_dict.items():
+                                source_brand = extract_ram_brand(source_name)
                                 source_cap = extract_ram_capacity(source_name)
                                 source_freq = extract_ram_freq(source_name)
                                 source_cas = extract_ram_cas(source_name)
                                 
+                                brand_match = target_brand == source_brand
                                 cap_match = target_cap == source_cap
                                 freq_match = target_freq == source_freq
                                 cas_match = (not target_cas) or (not source_cas) or (target_cas == source_cas)
                                 
-                                if cap_match and freq_match and cas_match:
+                                if brand_match and cap_match and freq_match and cas_match:
                                     matched_prices.append((source_name, source_price))
                             
                             if matched_prices:
@@ -1693,22 +1696,27 @@ def update_ram_prices_new():
                                 ref_match_count += 1
                                 print(f"  ✅ 参数参考匹配: {model_name[:40]}... ← {ref_name[:40]}...")
                     
-                    # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需容量+频率一致）
+                    # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需品牌+容量+频率一致）
                     if new_price is None:
                         source_names = list(ram_dict.keys())
                         best_match, score = process.extractOne(model_name, source_names)
-                        if score >= 75:
+                        if score >= 80:
+                            target_brand = extract_ram_brand(model_name)
+                            match_brand = extract_ram_brand(best_match)
                             target_cap = extract_ram_capacity(model_name)
                             match_cap = extract_ram_capacity(best_match)
                             target_freq = extract_ram_freq(model_name)
                             match_freq = extract_ram_freq(best_match)
+                            
+                            brand_ok = (not target_brand) or (not match_brand) or (target_brand == match_brand)
                             cap_ok = (not target_cap) or (not match_cap) or (target_cap == match_cap)
                             freq_ok = (not target_freq) or (not match_freq) or (target_freq == match_freq)
-                            if cap_ok and freq_ok:
+                            
+                            if brand_ok and cap_ok and freq_ok:
                                 new_price = ram_dict[best_match]
                                 print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
                             else:
-                                print(f"  ⚠️ 相似度匹配跳过(容量/频率不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
+                                print(f"  ⚠️ 相似度匹配跳过(品牌/容量/频率不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
                     
                     if new_price is not None:
                         new_price = int(new_price)
