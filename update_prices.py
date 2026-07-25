@@ -206,6 +206,103 @@ def extract_gpu_chip_key(name):
         return model.group(1)
     return ""
 
+# -------------------------- 内存关键字提取与匹配函数 --------------------------
+def extract_ram_exact_key(name):
+    name = name.strip().replace(" ", "").upper()
+    brand_pattern = r"(金百达|宏碁掠夺者|阿斯加特|芝奇|海盗船|金士顿|威刚|三星|科赋|光威|英睿达|十铨|宇瞻|影驰|海力士|镁光|佰维|雷克沙|金邦)"
+    series_pattern = r"(银爵|星刃|女武神|皇家戟|复仇者|铂胜|Ballistix|Trident|Vengeance|FURY|XPG|弗雷|雷神|海拉|海姆达尔|幻光戟|博拉琪|TUF|天策|冰刃|Pallas|炫光星舰|影锋|HT200|巨蟹)"
+    cas_pattern = r"(C\d+)"
+    
+    brand = re.search(brand_pattern, name)
+    series = re.search(series_pattern, name)
+    cas = re.search(cas_pattern, name)
+    capacity = re.search(r"(\d+)G", name)
+    freq = re.search(r"(\d{4,5})", name)
+    
+    key_parts = []
+    if brand: key_parts.append(brand.group(1))
+    if series: key_parts.append(series.group(1))
+    if capacity: key_parts.append(f"{capacity.group(1)}G")
+    if freq: key_parts.append(freq.group(1))
+    if cas: key_parts.append(cas.group(1))
+    
+    return "|".join(key_parts)
+
+def extract_ram_freq(name):
+    name_clean = name.strip().replace(" ", "").upper()
+    freq_match = re.search(r"(\d{4,5})", name_clean)
+    if freq_match:
+        return freq_match.group(1)
+    return ""
+
+def extract_ram_capacity(name):
+    name_clean = name.strip().replace(" ", "").upper()
+    cap_match = re.search(r"(\d+)G", name_clean)
+    if cap_match:
+        return f"{cap_match.group(1)}G"
+    return ""
+
+def extract_ram_cas(name):
+    name_clean = name.strip().replace(" ", "").upper()
+    cas_match = re.search(r"(C\d+)", name_clean)
+    if cas_match:
+        return cas_match.group(1)
+    return ""
+
+def extract_ram_brand(name):
+    name_clean = name.strip().replace(" ", "").upper()
+    brand_pattern = r"(金百达|宏碁掠夺者|阿斯加特|芝奇|海盗船|金士顿|威刚|三星|科赋|光威|英睿达|十铨|宇瞻|影驰|海力士|镁光|佰维|雷克沙|金邦)"
+    brand = re.search(brand_pattern, name_clean)
+    if brand:
+        return brand.group(1)
+    return ""
+
+def extract_ram_series(name):
+    name_clean = name.strip().replace(" ", "").upper()
+    series_pattern = r"(银爵|星刃|女武神|皇家戟|复仇者|铂胜|Ballistix|Trident|Vengeance|FURY|XPG|弗雷|雷神|海拉|海姆达尔|幻光戟|博拉琪|TUF|天策|冰刃|Pallas|炫光星舰|影锋|HT200|巨蟹)"
+    series = re.search(series_pattern, name_clean)
+    if series:
+        return series.group(1)
+    return ""
+
+def match_ram_core_keywords(name1, name2):
+    name1_clean = name1.strip().replace(" ", "").upper()
+    name2_clean = name2.strip().replace(" ", "").upper()
+    
+    brand_pattern = r"(金百达|宏碁掠夺者|阿斯加特|芝奇|海盗船|金士顿|威刚|三星|科赋|光威|英睿达|十铨|宇瞻|影驰|海力士|镁光|佰维|雷克沙|金邦)"
+    series_pattern = r"(银爵|星刃|女武神|皇家戟|复仇者|铂胜|Ballistix|Trident|Vengeance|FURY|XPG|弗雷|雷神|海拉|海姆达尔|幻光戟|博拉琪|TUF|天策|冰刃|Pallas|炫光星舰|影锋|HT200|巨蟹)"
+    
+    brand1 = re.search(brand_pattern, name1_clean)
+    brand2 = re.search(brand_pattern, name2_clean)
+    series1 = re.search(series_pattern, name1_clean)
+    series2 = re.search(series_pattern, name2_clean)
+    cap1 = extract_ram_capacity(name1)
+    cap2 = extract_ram_capacity(name2)
+    freq1 = extract_ram_freq(name1)
+    freq2 = extract_ram_freq(name2)
+    cas1 = extract_ram_cas(name1)
+    cas2 = extract_ram_cas(name2)
+    
+    if not (brand1 and brand2):
+        return False
+    
+    if brand1.group(1) != brand2.group(1):
+        return False
+    
+    if cap1 and cap2 and cap1 != cap2:
+        return False
+    
+    if freq1 and freq2 and freq1 != freq2:
+        return False
+    
+    if cas1 and cas2 and cas1 != cas2:
+        return False
+    
+    if series1 and series2 and series1.group(1) != series2.group(1):
+        return False
+    
+    return True
+
 def find_chip_reference_price(gpu_dict, target_name):
     target_chip = extract_gpu_chip_key(target_name)
     if not target_chip:
@@ -420,6 +517,104 @@ def fetch_gpu_prices():
         return gpu_list
     except Exception as e:
         print(f"❌ 显卡爬取失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+def fetch_ram_prices_new():
+    """爬取内存价格，返回列表格式（不依赖Playwright）"""
+    try:
+        res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=15)
+        res.encoding = res.apparent_encoding
+        text = res.text
+        soup = BeautifulSoup(text, "html.parser")
+        ram_list = []
+        
+        # 方法1：优先使用正则从文本中提取（网站返回纯文本/Markdown格式）
+        matches = re.findall(r'-\s*([^\n￥]+?)\￥(\d+(?:\.\d+)?)', text)
+        if matches:
+            for name, price in matches:
+                if len(name.strip()) > 3:
+                    if any(w in name for w in RAM_EXCLUDE_LIST):
+                        continue
+                    try:
+                        final_price = int(float(price)) + RAM_ASC_TECH_ADD if "阿斯加特" in name else int(float(price))
+                        ram_list.append({"name": name.strip(), "price": final_price})
+                    except:
+                        pass
+        
+        # 方法2：如果正则提取失败，尝试从 ul.parts-list 中提取数据
+        if not ram_list:
+            parts_list = soup.find('ul', class_='parts-list')
+            if not parts_list:
+                parts_list = soup.find('ul', id='list')
+            if parts_list:
+                items = parts_list.find_all('li')
+                for item in items:
+                    name_span = item.find('span', class_='product-name')
+                    if name_span:
+                        name = name_span.get('data-fullname', '').strip()
+                        if not name:
+                            name = name_span.get_text(strip=True)
+                        
+                        if any(w in name for w in RAM_EXCLUDE_LIST):
+                            continue
+                        
+                        price_span = item.find('span', class_='product-price')
+                        if price_span:
+                            original_price = price_span.get('data-original', '')
+                            if original_price:
+                                try:
+                                    price = int(float(original_price))
+                                except:
+                                    original_price = ''
+                            
+                            if not original_price:
+                                price_text_span = price_span.find('span', class_='price-text')
+                                if price_text_span:
+                                    price_text = price_text_span.get_text(strip=True)
+                                    price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+                                    if price_match:
+                                        try:
+                                            price = int(float(price_match.group(1)))
+                                        except:
+                                            continue
+                                else:
+                                    continue
+                        
+                        final_price = price + RAM_ASC_TECH_ADD if "阿斯加特" in name else price
+                        ram_list.append({"name": name, "price": final_price})
+        
+        # 方法3：从HTML表格中提取数据
+        if not ram_list:
+            tables = soup.find_all('table')
+            for table in tables:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    if len(cells) >= 2:
+                        name = cells[0].get_text(strip=True)
+                        price_text = cells[-1].get_text(strip=True)
+                        price_match = re.search(r'￥?(\d+(?:\.\d+)?)', price_text)
+                        if price_match and name and len(name) > 3:
+                            if any(w in name for w in RAM_EXCLUDE_LIST):
+                                continue
+                            try:
+                                price = int(float(price_match.group(1)))
+                                final_price = price + RAM_ASC_TECH_ADD if "阿斯加特" in name else price
+                                ram_list.append({"name": name, "price": final_price})
+                            except:
+                                pass
+        
+        print(f"📊 爬取到 {len(ram_list)} 个内存型号")
+        if ram_list:
+            print("📋 部分内存价格:")
+            for i, ram in enumerate(ram_list[:8]):
+                print(f"   {ram['name'][:40]}...: ￥{ram['price']}")
+        
+        return ram_list
+    except Exception as e:
+        print(f"❌ 内存爬取失败: {e}")
         import traceback
         traceback.print_exc()
         return []
@@ -1385,6 +1580,160 @@ def update_gpu_prices():
         print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，芯片参考匹配 {chip_ref_count} 个，未匹配(保留) {no_match_count} 个")
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
+        import traceback
+        traceback.print_exc()
+
+# -------------------------- 内存更新函数（新版） --------------------------
+def update_ram_prices_new():
+    """爬取内存价格并更新HTML中的内存列表（仿照显卡逻辑）"""
+    try:
+        print("\n=== 开始更新内存数据 ===")
+        
+        # 爬取源网站数据，返回列表格式
+        ram_list = fetch_ram_prices_new()
+        
+        # 如果获取失败或返回空列表，保留原有数据
+        if not ram_list:
+            print("⚠️ 内存数据获取失败或为空，保留原有内存数据")
+            return
+        
+        # 将列表转换为字典，方便查找
+        ram_dict = {ram["name"]: ram["price"] for ram in ram_list}
+        print(f"✅ 成功爬取 {len(ram_dict)} 个内存型号")
+        
+        # 读取HTML文件
+        with open(HTML_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        print(f"📄 已读取 {len(lines)} 行 HTML 文件")
+        
+        # 找到ram数组区域（覆盖所有内存型号）
+        start_idx = -1
+        for i, l in enumerate(lines):
+            if 'ram: [' in l:
+                start_idx = i
+                break
+        if start_idx == -1:
+            print("❌ 未找到ram数组开始位置")
+            return
+        print(f"📍 找到ram数组开始在第 {start_idx + 1} 行")
+        
+        end_idx = -1
+        for i in range(start_idx + 1, len(lines)):
+            if lines[i].strip() == '],':
+                end_idx = i
+                break
+        if end_idx == -1:
+            print("❌ 未找到ram数组结束位置")
+            return
+        print(f"📍 找到ram数组结束在第 {end_idx + 1} 行")
+        
+        update_count = 0
+        same_count = 0
+        no_match_count = 0
+        ref_match_count = 0
+        
+        # 更新现有内存型号的价格
+        pos = start_idx + 1
+        while pos < end_idx:
+            line = lines[pos]
+            if '{n:"' in line and '",p:' in line:
+                match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if match:
+                    model_name = match.group(1)
+                    old_price = int(match.group(2))
+                    new_price = None
+                    
+                    # 方法1：精确匹配
+                    if model_name in ram_dict:
+                        new_price = ram_dict[model_name]
+                        print(f"  ✅ 精确匹配: {model_name[:40]}...")
+                    else:
+                        # 方法2：使用内存关键字进行匹配
+                        html_key = extract_ram_exact_key(model_name)
+                        if html_key:
+                            for source_name in ram_dict:
+                                source_key = extract_ram_exact_key(source_name)
+                                if source_key and html_key == source_key:
+                                    new_price = ram_dict[source_name]
+                                    print(f"  ✅ 关键字匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
+                                    break
+                    
+                    # 方法3：基于核心关键字匹配（品牌+容量+频率+时序）
+                    if new_price is None:
+                        for source_name in ram_dict:
+                            if match_ram_core_keywords(model_name, source_name):
+                                new_price = ram_dict[source_name]
+                                print(f"  ✅ 核心匹配: {model_name[:40]}... ≈ {source_name[:40]}...")
+                                break
+                    
+                    # 方法4：基于容量+频率+时序的参考匹配（跨品牌）
+                    if new_price is None:
+                        target_cap = extract_ram_capacity(model_name)
+                        target_freq = extract_ram_freq(model_name)
+                        target_cas = extract_ram_cas(model_name)
+                        
+                        if target_cap and target_freq:
+                            matched_prices = []
+                            for source_name, source_price in ram_dict.items():
+                                source_cap = extract_ram_capacity(source_name)
+                                source_freq = extract_ram_freq(source_name)
+                                source_cas = extract_ram_cas(source_name)
+                                
+                                cap_match = target_cap == source_cap
+                                freq_match = target_freq == source_freq
+                                cas_match = (not target_cas) or (not source_cas) or (target_cas == source_cas)
+                                
+                                if cap_match and freq_match and cas_match:
+                                    matched_prices.append((source_name, source_price))
+                            
+                            if matched_prices:
+                                matched_prices.sort(key=lambda x: x[1])
+                                ref_name, ref_price = matched_prices[0]
+                                new_price = ref_price
+                                ref_match_count += 1
+                                print(f"  ✅ 参数参考匹配: {model_name[:40]}... ← {ref_name[:40]}...")
+                    
+                    # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需容量+频率一致）
+                    if new_price is None:
+                        source_names = list(ram_dict.keys())
+                        best_match, score = process.extractOne(model_name, source_names)
+                        if score >= 75:
+                            target_cap = extract_ram_capacity(model_name)
+                            match_cap = extract_ram_capacity(best_match)
+                            target_freq = extract_ram_freq(model_name)
+                            match_freq = extract_ram_freq(best_match)
+                            cap_ok = (not target_cap) or (not match_cap) or (target_cap == match_cap)
+                            freq_ok = (not target_freq) or (not match_freq) or (target_freq == match_freq)
+                            if cap_ok and freq_ok:
+                                new_price = ram_dict[best_match]
+                                print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
+                            else:
+                                print(f"  ⚠️ 相似度匹配跳过(容量/频率不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
+                    
+                    if new_price is not None:
+                        new_price = int(new_price)
+                        if new_price != old_price:
+                            new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            lines[pos] = new_line
+                            update_count += 1
+                            print(f"  ✓ 更新价格: {model_name[:40]}... ￥{old_price} -> ￥{new_price}")
+                        else:
+                            same_count += 1
+                            print(f"  ≡ 价格不变: {model_name[:40]}... ￥{old_price}")
+                    else:
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配(保留): {model_name[:40]}...")
+                pos += 1
+            else:
+                pos += 1
+        
+        # 写入文件
+        with open(HTML_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+        
+        print(f"\n✅ 内存价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，参数参考匹配 {ref_match_count} 个，未匹配(保留) {no_match_count} 个")
+    except Exception as e:
+        print(f"❌ 内存更新失败：{e}")
         import traceback
         traceback.print_exc()
 
@@ -3186,9 +3535,9 @@ if __name__ == "__main__":
     update_cpu_accurate()
     # 显卡更新
     update_gpu_prices()
-    # 内存更新（使用新的简洁逻辑）
-    update_ram_new()
-    # 内存定制价格更新（处理金百达等特殊品牌）
+    # 内存更新（使用新的匹配逻辑，仿照显卡更新）
+    update_ram_prices_new()
+    # 内存定制价格更新（处理金百达等特殊品牌，保留旧逻辑作为补充）
     update_exist_ram_prices()
     update_ssd_prices()
     update_mb_accurate()
