@@ -1573,6 +1573,9 @@ def update_gpu_prices():
                     
                     if new_price is not None:
                         new_price = int(new_price)
+                        if "撼讯" in model_name:
+                            new_price += 100
+                            print(f"  💰 撼讯加价100: {model_name[:40]}... 源价+100=￥{new_price}")
                         if new_price != old_price:
                             new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
                             lines[pos] = new_line
