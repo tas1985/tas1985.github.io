@@ -3174,12 +3174,19 @@ def update_case_accurate():
         matched_html = set()  # 已匹配的HTML型号
         matched_scraped = set()  # 已匹配的爬取型号
         
+        # 定义需要加价的机箱型号及加价幅度
+        CASE_MARKUP_MODELS = {
+            "爱国者 炫影G10海景房 黑色": 50,
+            "爱国者 炫影G10海景房 白色": 50,
+        }
+        
         # 精确匹配（机箱使用精确匹配，因为颜色版本价格不同，模糊匹配可能导致错误）
         for scraped_name, case_info in case_dict.items():
             scraped_price = case_info["price"]
             if scraped_name in html_cases:
                 old_price, line_idx = html_cases[scraped_name]
-                if scraped_price != old_price:
+                # 加价型号即使价格相同也需要更新（应用加价）
+                if scraped_price != old_price or scraped_name in CASE_MARKUP_MODELS:
                     updates.append((line_idx, scraped_price, scraped_name, old_price))
                 else:
                     no_change_count += 1
@@ -3193,7 +3200,8 @@ def update_case_accurate():
                         continue
                     html_name_clean = html_name.replace(' ', '').replace('_', '').replace('*', 'x').replace('（', '(').replace('）', ')')
                     if scraped_name_clean == html_name_clean:
-                        if scraped_price != html_price:
+                        # 加价型号即使价格相同也需要更新
+                        if scraped_price != html_price or html_name in CASE_MARKUP_MODELS:
                             updates.append((line_idx, scraped_price, scraped_name, html_price))
                             print(f"   🔗 格式匹配: {scraped_name[:35]}... ≈ {html_name[:35]}...")
                         else:
@@ -3207,8 +3215,13 @@ def update_case_accurate():
         
         # 执行更新
         for line_idx, new_price, name, old_price in updates:
-            lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
-            print(f"   ✓ 更新: {name[:35]}... ￥{old_price} -> ￥{new_price}")
+            final_price = new_price
+            if name in CASE_MARKUP_MODELS:
+                markup = CASE_MARKUP_MODELS[name]
+                final_price += markup
+                print(f"   💰 加价: {name[:35]}... +{markup}元")
+            lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{final_price}', lines[line_idx])
+            print(f"   ✓ 更新: {name[:35]}... ￥{old_price} -> ￥{final_price}")
             update_count += 1
         
         # 追加新型号（只有确实没匹配上的才追加）
@@ -3223,6 +3236,11 @@ def update_case_accurate():
                 if not found_in_html:
                     price = case_info["price"]
                     image_url = case_info.get("image_url", "")
+                    # 新型号也需要加价
+                    if scraped_name in CASE_MARKUP_MODELS:
+                        markup = CASE_MARKUP_MODELS[scraped_name]
+                        price += markup
+                        print(f"   💰 新型号加价: {scraped_name[:35]}... +{markup}元")
                     new_items.append((scraped_name, price, image_url))
         
         if new_items:
