@@ -1385,7 +1385,7 @@ def update_ssd_prices():
 
 # -------------------------- CPU 更新函数 --------------------------
 # 定义CPU目标行（插入位置的标记）
-CPU_TARGET_LINE = '{n:"i3-12100F 3.3G 四核",p:599},'
+CPU_TARGET_LINE = 'i3-12100F 3.3G 四核'
 
 def update_cpu_accurate():
     """CPU更新逻辑：保留现有型号，只更新价格，不删除"""
