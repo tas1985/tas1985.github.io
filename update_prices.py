@@ -1547,7 +1547,8 @@ def update_gpu_prices():
                                 break
                     
                     # 方法4：芯片级参考匹配（跨品牌，同GPU芯片+同显存）
-                    if new_price is None:
+                    # 微星-系列显卡不参与跨品牌匹配，避免被其他品牌价格影响
+                    if new_price is None and not model_name.startswith("微星-"):
                         ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
                         if ref_name and ref_price:
                             new_price = ref_price
@@ -1555,7 +1556,8 @@ def update_gpu_prices():
                             print(f"  ✅ 芯片参考匹配: {model_name[:40]}... ← {ref_name[:40]}...")
                     
                     # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需GPU芯片+显存都一致）
-                    if new_price is None:
+                    # 微星-系列显卡不参与跨品牌相似度匹配
+                    if new_price is None and not model_name.startswith("微星-"):
                         source_names = list(gpu_dict.keys())
                         best_match, score = process.extractOne(model_name, source_names)
                         if score >= 80:
