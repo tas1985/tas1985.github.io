@@ -41,7 +41,7 @@ def fetch_page_content(url):
                 print(f"⚠️ 浏览器获取内容失败，回退到requests: {e}")
                 pass
     res = requests.get(url, headers=HEADERS, timeout=15)
-    res.encoding = res.apparent_encoding
+    res.encoding = 'utf-8'
     return res.text
 
 # -------------------------- 全局配置项 --------------------------
@@ -61,6 +61,18 @@ START_LINE = 1055
 END_LINE = 1110
 MATCH_THRESHOLD = 60
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+
+def is_garbled(text):
+    """检测文本是否为乱码（包含不应出现在中文产品名中的西里尔/异常字符）"""
+    for ch in text:
+        cp = ord(ch)
+        # 西里尔字母范围（俄语等），正常中文产品名不应包含
+        if 0x0400 <= cp <= 0x04FF:
+            return True
+        # 制表符/方块绘制字符
+        if 0x2500 <= cp <= 0x259F:
+            return True
+    return False
 
 # 配置
 GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
@@ -347,7 +359,7 @@ def fetch_cpu_prices():
     """爬取CPU价格，返回列表格式"""
     try:
         res = requests.get(SOURCE_URL, headers=HEADERS, timeout=15)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         
@@ -436,7 +448,7 @@ def fetch_gpu_prices():
     """爬取显卡价格，返回列表格式（不依赖Playwright）"""
     try:
         res = requests.get(GPU_SOURCE_URL, headers=HEADERS, timeout=15)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         gpu_list = []
@@ -525,7 +537,7 @@ def fetch_ram_prices_new():
     """爬取内存价格，返回列表格式（不依赖Playwright）"""
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=15)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         ram_list = []
@@ -622,7 +634,7 @@ def fetch_ram_prices_new():
 def fetch_mb_prices():
     try:
         res = requests.get(MB_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         mb_list = []
@@ -631,7 +643,7 @@ def fetch_mb_prices():
         matches = re.findall(r'-\s*([^\n￥]+?)\￥(\d+(?:\.\d+)?)', text)
         if matches:
             for name, price in matches:
-                if len(name.strip()) > 3 and MB_EXCLUDE not in name:
+                if len(name.strip()) > 3 and MB_EXCLUDE not in name and not is_garbled(name):
                     try:
                         mb_list.append({"name": name.strip(), "price": int(float(price))})
                     except:
@@ -649,7 +661,7 @@ def fetch_mb_prices():
                         if not name:
                             name = name_span.get_text(strip=True)
                         
-                        if MB_EXCLUDE in name:
+                        if MB_EXCLUDE in name or is_garbled(name):
                             continue
                         
                         price_span = item.find('span', class_='product-price')
@@ -683,7 +695,7 @@ def fetch_mb_prices():
 def fetch_raw_ram_prices():
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         ram_dict = {}
@@ -745,7 +757,7 @@ def fetch_raw_ram_prices():
 def fetch_processed_ram():
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         ram_list = []
@@ -860,7 +872,7 @@ def fetch_ssd_exact_data():
     """爬取固态硬盘价格，返回字典和列表格式"""
     try:
         res = requests.get(SSD_SOURCE_URL, headers=HEADERS, timeout=15)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         ssd_map = {}
@@ -956,7 +968,7 @@ def fetch_ssd_exact_data():
 def fetch_case_prices():
     try:
         res = requests.get(CASE_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         case_list = []
@@ -1023,7 +1035,7 @@ def fetch_case_prices():
 def fetch_power_prices():
     try:
         res = requests.get(POWER_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         power_list = []
@@ -1086,7 +1098,7 @@ def fetch_power_prices():
 def fetch_cooler_prices():
     try:
         res = requests.get(COOLER_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         text = res.text
         soup = BeautifulSoup(text, "html.parser")
         cooler_list = []
@@ -2240,7 +2252,7 @@ def update_exist_ram_prices():
 def fetch_raw_ram_prices_with_details():
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         soup = BeautifulSoup(res.text, "html.parser")
         ram_list = []
         all_items = []
@@ -2718,7 +2730,7 @@ def fetch_all_ram_from_source():
     """从源网站爬取所有内存数据"""
     try:
         res = requests.get(RAM_SOURCE_URL, headers=HEADERS, timeout=10)
-        res.encoding = res.apparent_encoding
+        res.encoding = 'utf-8'
         soup = BeautifulSoup(res.text, "html.parser")
         
         ram_dict = {}
