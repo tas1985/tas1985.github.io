@@ -1315,17 +1315,22 @@
 
         /* 手机模式：仅显示客户名称、配件列表及价格、主机总价，加大栏目便于手指点击，缩小横向宽度 */
         body.mobile-mode{
-            padding: 5px;
+            padding: 0 !important;
         }
         body.mobile-mode .mobile-toggle-btn{
             background: #ff9900;
             top: 8px;
-            left: max(8px, calc((100vw - 770px) / 2 - 83px));
+            left: 8px;
         }
         body.mobile-mode .container{
-            max-width: 760px !important;
-            padding: 10px !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 8px !important;
             padding-top: 94px !important; /* 给加大的固定切换按钮留出空间 */
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         /* 隐藏非必要元素：标题、副标题、日期时间、产品图片、非主机总价行、发票按钮 */
         body.mobile-mode .title,
