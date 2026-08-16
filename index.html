@@ -6113,15 +6113,13 @@
                 allowTaint: true, // 允许跨域图片污染canvas
                 foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
                 removeContainer: true, // 自动移除临时容器
-                imageTimeout: 15000 // 图片加载超时时间（15秒）
+                imageTimeout: 15000, // 图片加载超时时间（15秒）
+                windowWidth: 800, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局
                 // 移除手动设置的宽高和坐标，让html2canvas自动计算
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
                     // 移除手机模式，确保截图按电脑模式效果生成
                     clonedDoc.body.classList.remove('mobile-mode');
-                    // 固定 body 宽度为电脑模式宽度，替代 windowWidth 选项（避免手机端 html2canvas 卡死）
-                    clonedDoc.body.style.width = '760px';
-                    clonedDoc.body.style.minWidth = '760px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -6179,9 +6177,9 @@
                     
                     // 确保容器宽度和高度正确（修复手机端截不全的问题）
                     if (clonedContainer) {
-                        clonedContainer.style.width = '760px';
+                        clonedContainer.style.width = '100%';
                         clonedContainer.style.maxWidth = '760px';
-                        clonedContainer.style.minWidth = '760px';
+                        clonedContainer.style.minWidth = '320px';
                         clonedContainer.style.display = 'block';
                         clonedContainer.style.margin = '0 auto';
                         clonedContainer.style.height = 'auto';
@@ -6709,12 +6707,10 @@
                 foreignObjectRendering: false,
                 removeContainer: true,
                 imageTimeout: 15000,
+                windowWidth: 800, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局
                 onclone: function(clonedDoc) {
                     // 移除手机模式，确保截图按电脑模式效果生成
                     clonedDoc.body.classList.remove('mobile-mode');
-                    // 固定 body 宽度为电脑模式宽度，替代 windowWidth 选项（避免手机端 html2canvas 卡死）
-                    clonedDoc.body.style.width = '760px';
-                    clonedDoc.body.style.minWidth = '760px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -6806,9 +6802,9 @@
                     }
                     
                     if (clonedContainer) {
-                        clonedContainer.style.width = '760px';
+                        clonedContainer.style.width = '100%';
                         clonedContainer.style.maxWidth = '760px';
-                        clonedContainer.style.minWidth = '760px';
+                        clonedContainer.style.minWidth = '320px';
                         clonedContainer.style.display = 'block';
                         clonedContainer.style.margin = '0 auto';
                         clonedContainer.style.height = 'auto';
