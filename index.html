@@ -1281,19 +1281,19 @@
         }
 
         /* ========== 手机操作模式 ========== */
-        /* 手机模式切换按钮 - 固定在右上角 */
+        /* 手机模式切换按钮 - 固定在左上角 */
         .mobile-toggle-btn{
             position: fixed;
             top: 12px;
-            right: 12px;
+            left: 12px;
             z-index: 9990;
-            width: 52px;
-            height: 52px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: #2563EB;
             color: #fff;
             border: 2px solid #fff;
-            font-size: 24px;
+            font-size: 38px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(37,99,235,0.4), 0 2px 6px rgba(0,0,0,0.15);
             display: flex;
@@ -1320,12 +1320,12 @@
         body.mobile-mode .mobile-toggle-btn{
             background: #ff9900;
             top: 8px;
-            right: 8px;
+            left: 8px;
         }
         body.mobile-mode .container{
             max-width: 680px !important;
             padding: 10px !important;
-            padding-top: 62px !important; /* 给固定切换按钮留出空间 */
+            padding-top: 94px !important; /* 给加大的固定切换按钮留出空间 */
         }
         /* 隐藏非必要元素：标题、副标题、日期时间、产品图片、非主机总价行、发票按钮 */
         body.mobile-mode .title,
