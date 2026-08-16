@@ -1400,8 +1400,8 @@
         }
         body.mobile-mode .user input{
             font-size: 18px !important;
-            padding: 14px 38px 14px 12px !important;
-            height: 60px !important;
+            padding: 10px 38px 10px 12px !important;
+            height: 45px !important;
         }
         body.mobile-mode .user-clear-btn{
             width: 36px !important;
@@ -1436,8 +1436,8 @@
         }
         body.mobile-mode input.combo{
             font-size: 18px !important;
-            padding: 14px 34px 14px 4px !important;
-            height: 60px !important;
+            padding: 10px 34px 10px 4px !important;
+            height: 45px !important;
         }
         body.mobile-mode input.combo.selected{
             font-size: 18px !important;
@@ -1452,8 +1452,8 @@
         }
         body.mobile-mode input.price{
             font-size: 10px !important;
-            padding: 14px 2px 14px 12px !important;
-            height: 60px !important;
+            padding: 10px 2px 10px 12px !important;
+            height: 45px !important;
         }
         body.mobile-mode .clear-btn{
             width: 36px !important;
@@ -6588,8 +6588,18 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
+                // 固定输出像素为 1520x2334
+                const targetW = 1520, targetH = 2334;
+                const resizedCanvas = document.createElement('canvas');
+                resizedCanvas.width = targetW;
+                resizedCanvas.height = targetH;
+                const rctx = resizedCanvas.getContext('2d');
+                rctx.fillStyle = '#f5f5f7';
+                rctx.fillRect(0, 0, targetW, targetH);
+                rctx.drawImage(canvas, 0, 0, targetW, targetH);
+
                 // 转换为图片并下载
-                canvas.toBlob(function(blob) {
+                resizedCanvas.toBlob(function(blob) {
                     if (!blob) {
                         throw new Error('图片生成失败');
                     }
@@ -7182,7 +7192,17 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                canvas.toBlob(function(blob) {
+                // 固定输出像素为 1520x2334
+                const targetW = 1520, targetH = 2334;
+                const resizedCanvas = document.createElement('canvas');
+                resizedCanvas.width = targetW;
+                resizedCanvas.height = targetH;
+                const rctx = resizedCanvas.getContext('2d');
+                rctx.fillStyle = '#f5f5f7';
+                rctx.fillRect(0, 0, targetW, targetH);
+                rctx.drawImage(canvas, 0, 0, targetW, targetH);
+
+                resizedCanvas.toBlob(function(blob) {
                     if (!blob) {
                         throw new Error('图片生成失败');
                     }
