@@ -1415,7 +1415,7 @@
         body.mobile-mode .item{
             padding: 8px !important;
             margin-bottom: 10px !important;
-            gap: 6px !important;
+            gap: 2px !important;
             min-width: 0 !important;
             flex-wrap: nowrap !important;
         }
@@ -1423,7 +1423,7 @@
             width: 44px !important;
             font-size: 10px !important;
             line-height: 18px !important;
-            padding-right: 2px !important;
+            padding-right: 0 !important;
             text-align: left !important;
             justify-content: flex-start !important;
         }
@@ -1436,23 +1436,23 @@
         }
         body.mobile-mode input.combo{
             font-size: 18px !important;
-            padding: 14px 38px 14px 12px !important;
+            padding: 14px 34px 14px 4px !important;
             height: 60px !important;
         }
         body.mobile-mode input.combo.selected{
             font-size: 18px !important;
         }
         body.mobile-mode .item-price{
-            width: 68px !important;
+            width: 48px !important;
             flex-shrink: 0;
         }
         body.mobile-mode .item-price::before{
             font-size: 8px !important;
-            left: 3px !important;
+            left: 2px !important;
         }
         body.mobile-mode input.price{
             font-size: 10px !important;
-            padding: 14px 4px 14px 14px !important;
+            padding: 14px 2px 14px 12px !important;
             height: 60px !important;
         }
         body.mobile-mode .clear-btn{
@@ -1487,9 +1487,104 @@
         body.mobile-mode input.price,
         body.mobile-mode .clear-btn,
         body.mobile-mode .user-clear-btn,
-        body.mobile-mode .mobile-toggle-btn{
+        body.mobile-mode .mobile-toggle-btn,
+        body.mobile-mode .btn-save,
+        body.mobile-mode .btn-reset,
+        body.mobile-mode .btn-screenshot,
+        body.mobile-mode .btn-anonymous,
+        body.mobile-mode .item-label,
+        body.mobile-mode .user label{
             -webkit-tap-highlight-color: transparent !important;
             touch-action: manipulation !important;
+            -webkit-touch-callout: none !important;
+            user-select: none !important;
+        }
+        /* 按压反馈：配件项按下时轻微缩放+背景变化，提升点击确认感 */
+        body.mobile-mode .item:active{
+            transform: scale(0.985) !important;
+            background: rgba(37,99,235,0.06) !important;
+            transition: transform 0.08s ease, background 0.08s ease !important;
+        }
+        body.mobile-mode .item{
+            transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease !important;
+        }
+        /* 输入框聚焦时更醒目的高亮边框，提升操作聚焦感 */
+        body.mobile-mode input.combo:focus,
+        body.mobile-mode input.price:focus,
+        body.mobile-mode .user input:focus{
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.25), inset 0 1px 3px rgba(0,0,0,0.03) !important;
+            border-color: #2563EB !important;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease !important;
+        }
+        /* 清除按钮加大触控热区（视觉不变，点击区域扩大）+ 按压反馈 */
+        body.mobile-mode .clear-btn,
+        body.mobile-mode .user-clear-btn{
+            padding: 0 !important;
+        }
+        body.mobile-mode .clear-btn::before,
+        body.mobile-mode .user-clear-btn::before{
+            content: '';
+            position: absolute;
+            top: -10px;
+            bottom: -10px;
+            left: -10px;
+            right: -10px;
+        }
+        body.mobile-mode .clear-btn:active,
+        body.mobile-mode .user-clear-btn:active{
+            color: #2563EB !important;
+            transform: translateY(-50%) scale(0.85) !important;
+            transition: transform 0.1s ease, color 0.1s ease !important;
+        }
+        /* 切换按钮按压反馈 */
+        body.mobile-mode .mobile-toggle-btn:active{
+            transform: scale(0.9) !important;
+            transition: transform 0.1s ease !important;
+        }
+        /* 保存/截图按钮按压反馈 */
+        body.mobile-mode .btn-save:active,
+        body.mobile-mode .btn-reset:active,
+        body.mobile-mode .btn-screenshot:active,
+        body.mobile-mode .btn-anonymous:active{
+            transform: scale(0.96) !important;
+            background: rgba(37,99,235,0.15) !important;
+            transition: transform 0.08s ease, background 0.08s ease !important;
+        }
+        body.mobile-mode .btn-save,
+        body.mobile-mode .btn-reset,
+        body.mobile-mode .btn-screenshot,
+        body.mobile-mode .btn-anonymous{
+            transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease !important;
+        }
+        /* 下拉列表项按压反馈+悬停高亮，提升选择确认感 */
+        body.mobile-mode .dropdown div:active,
+        body.mobile-mode .user-dropdown div:active{
+            background: rgba(37,99,235,0.18) !important;
+            transform: scale(0.99) !important;
+            transition: background 0.08s ease, transform 0.08s ease !important;
+        }
+        body.mobile-mode .dropdown div,
+        body.mobile-mode .user-dropdown div{
+            transition: background 0.12s ease, transform 0.12s ease !important;
+        }
+        /* 下拉列表平滑出现 */
+        body.mobile-mode .dropdown,
+        body.mobile-mode .user-dropdown{
+            overscroll-behavior: contain !important;
+        }
+        /* 防止页面整体下拉刷新/滚动穿透，提升滚动顺畅感 */
+        body.mobile-mode{
+            overscroll-behavior-y: contain !important;
+            -webkit-text-size-adjust: 100% !important;
+        }
+        /* 适配刘海屏/全面屏安全区域 */
+        body.mobile-mode .container{
+            padding-left: max(8px, env(safe-area-inset-left)) !important;
+            padding-right: max(8px, env(safe-area-inset-right)) !important;
+            padding-top: max(94px, calc(80px + env(safe-area-inset-top))) !important;
+        }
+        body.mobile-mode .mobile-toggle-btn{
+            top: max(8px, env(safe-area-inset-top)) !important;
         }
     </style>
 </head>
@@ -2445,10 +2540,10 @@
             {n:"技嘉 B550M H ARGB",p:440},
         ],
         cooler: [
-            {n:"大镰刀 赤兔马单塔六铜管 解热功耗230W",p:98},
-            {n:"大镰刀绝影V620 双塔六热管 解热功耗275W",p:208},
             {n:"乔思伯_CR1000 MAX ARGB 六热管",p:95},
+            {n:"大镰刀 赤兔马单塔六铜管 解热功耗230W",p:98},
             {n:"乔思伯_CR3000 EVO ARGB 双塔六热管",p:189},
+            {n:"大镰刀绝影V620 双塔六热管 解热功耗275W",p:208},
             {n:"魔幻空间GT60OPRO 6热管镀镍双塔 解热功耗245W",p:189},
             {n:"瓦尔基里 A360 VK 一体式水冷散热器 ",p:359},
             {n:"创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕",p:1549},
