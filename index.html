@@ -1279,9 +1279,216 @@
             object-fit: contain;
             display: none;
         }
+
+        /* ========== 手机操作模式 ========== */
+        /* 手机模式切换按钮 - 固定在右上角 */
+        .mobile-toggle-btn{
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 9990;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #2563EB;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.4), 0 2px 6px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .mobile-toggle-btn:hover{
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.5), 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .mobile-toggle-btn:active{
+            transform: scale(0.95);
+        }
+
+        /* 手机模式：仅显示客户名称、配件列表及价格、主机总价，加大栏目便于手指点击，缩小横向宽度 */
+        body.mobile-mode{
+            padding: 5px;
+        }
+        body.mobile-mode .mobile-toggle-btn{
+            background: #ff9900;
+            top: 8px;
+            right: 8px;
+        }
+        body.mobile-mode .container{
+            max-width: 680px !important;
+            padding: 10px !important;
+            padding-top: 62px !important; /* 给固定切换按钮留出空间 */
+        }
+        /* 隐藏非必要元素：标题、副标题、日期时间、产品图片、非主机总价行、发票按钮 */
+        body.mobile-mode .title,
+        body.mobile-mode .subtitle,
+        body.mobile-mode .datetime-display,
+        body.mobile-mode .product-images-container,
+        body.mobile-mode .total-line:not(.total-final),
+        body.mobile-mode .invoice-btn-row{
+            display: none !important;
+        }
+        /* 备注栏：仅保留保存配置和截图按钮，隐藏备注输入、服务选项及其他按钮 */
+        body.mobile-mode .item.has-service{
+            flex-wrap: nowrap !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            margin-bottom: 0 !important;
+        }
+        body.mobile-mode .item.has-service > .item-label,
+        body.mobile-mode .item.has-service .remark-container,
+        body.mobile-mode .item.has-service .service-container{
+            display: none !important;
+        }
+        body.mobile-mode .item.has-service .all-btn-container{
+            width: 100% !important;
+            margin-top: 10px !important;
+        }
+        /* 隐藏不需要的按钮：成本合计、清空重置、下载图片缓存 */
+        body.mobile-mode .item.has-service .cost-display,
+        body.mobile-mode .item.has-service .btn-reset,
+        body.mobile-mode .item.has-service .btn-download-images{
+            display: none !important;
+        }
+        /* 保存配置和截图按钮加大便于手指点击 */
+        body.mobile-mode .all-btn-container .action-btn-row,
+        body.mobile-mode .all-btn-container .screenshot-btn-row{
+            gap: 8px !important;
+        }
+        body.mobile-mode .all-btn-container .btn-save,
+        body.mobile-mode .all-btn-container .btn-screenshot,
+        body.mobile-mode .all-btn-container .btn-anonymous{
+            flex: 1 !important;
+            padding: 14px 8px !important;
+            font-size: 17px !important;
+            min-height: 52px !important;
+            border-width: 2px !important;
+        }
+        /* 主机总价区域紧凑显示 */
+        body.mobile-mode .total{
+            padding: 14px !important;
+            min-height: auto !important;
+            margin-top: 10px !important;
+        }
+        body.mobile-mode .total-final{
+            font-size: 30px !important;
+        }
+        /* 客户名称输入栏加大 */
+        body.mobile-mode .user{
+            padding: 8px !important;
+            margin-bottom: 10px !important;
+            gap: 6px !important;
+        }
+        body.mobile-mode .user label{
+            font-size: 20px !important;
+            width: 95px !important;
+        }
+        body.mobile-mode .user input{
+            font-size: 18px !important;
+            padding: 14px 38px 14px 12px !important;
+            height: 60px !important;
+        }
+        body.mobile-mode .user-clear-btn{
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 24px !important;
+            display: block !important;
+            right: 10px !important;
+        }
+        /* 配件列表输入栏加大，允许窄屏自适应不强制横向滚动 */
+        body.mobile-mode .item{
+            padding: 8px !important;
+            margin-bottom: 10px !important;
+            gap: 6px !important;
+            min-width: 0 !important;
+            flex-wrap: nowrap !important;
+        }
+        body.mobile-mode .item-label{
+            width: 72px !important;
+            font-size: 20px !important;
+            line-height: 32px !important;
+            padding-right: 4px !important;
+        }
+        body.mobile-mode .item-label .icon-gray{
+            display: none !important;
+        }
+        body.mobile-mode .item-input{
+            min-width: 140px;
+            flex: 1;
+        }
+        body.mobile-mode input.combo{
+            font-size: 18px !important;
+            padding: 14px 38px 14px 12px !important;
+            height: 60px !important;
+        }
+        body.mobile-mode input.combo.selected{
+            font-size: 18px !important;
+        }
+        body.mobile-mode .item-price{
+            width: 105px !important;
+            flex-shrink: 0;
+        }
+        body.mobile-mode .item-price::before{
+            font-size: 16px !important;
+            left: 6px !important;
+        }
+        body.mobile-mode input.price{
+            font-size: 20px !important;
+            padding: 14px 10px 14px 26px !important;
+            height: 60px !important;
+        }
+        body.mobile-mode .clear-btn{
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 24px !important;
+            display: block !important;
+            right: 10px !important;
+        }
+        /* 下拉列表项加大便于手指点击，加长至可显示12个型号 */
+        body.mobile-mode .dropdown,
+        body.mobile-mode .user-dropdown{
+            max-height: 624px !important;
+            z-index: 2000 !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        body.mobile-mode .dropdown div,
+        body.mobile-mode .user-dropdown div{
+            padding: 14px 12px !important;
+            font-size: 18px !important;
+            min-height: 52px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        body.mobile-mode .dropdown-price{
+            font-size: 18px !important;
+        }
+        /* 输入框、按钮去除点击高亮，优化触控 */
+        body.mobile-mode input.combo,
+        body.mobile-mode input.price,
+        body.mobile-mode .clear-btn,
+        body.mobile-mode .user-clear-btn,
+        body.mobile-mode .mobile-toggle-btn{
+            -webkit-tap-highlight-color: transparent !important;
+            touch-action: manipulation !important;
+        }
     </style>
 </head>
 <body>
+<!-- 手机操作模式切换按钮 -->
+<button id="mobileToggleBtn" class="mobile-toggle-btn" onclick="toggleMobileMode()" title="切换到手机模式">📱</button>
 <!-- 密码验证弹窗（默认隐藏，验证不通过时显示） -->
 <div id="passwordModal" class="password-modal" style="display: none;">
     <div class="password-box">
@@ -5788,6 +5995,8 @@
                 // 移除手动设置的宽高和坐标，让html2canvas自动计算
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
+                    // 移除手机模式，确保截图按电脑模式效果生成
+                    clonedDoc.body.classList.remove('mobile-mode');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -6358,6 +6567,8 @@
                 removeContainer: true,
                 imageTimeout: 15000,
                 onclone: function(clonedDoc) {
+                    // 移除手机模式，确保截图按电脑模式效果生成
+                    clonedDoc.body.classList.remove('mobile-mode');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -7930,6 +8141,21 @@
 
         // 清空显卡图片
         showVgaImage(null);
+    }
+
+    // ========== 手机操作模式 ==========
+    // 一键切换手机模式 / 切换回原模式
+    function toggleMobileMode() {
+        const body = document.body;
+        body.classList.toggle('mobile-mode');
+        const isMobile = body.classList.contains('mobile-mode');
+        const btn = document.getElementById('mobileToggleBtn');
+        if (btn) {
+            btn.innerHTML = isMobile ? '💻' : '📱';
+            btn.title = isMobile ? '退出手机模式' : '切换到手机模式';
+        }
+        // 切换后重新计算总价，确保主机总价显示同步
+        try { calc(); } catch(e) {}
     }
 </script>
 </body>
