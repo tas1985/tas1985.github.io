@@ -6094,6 +6094,7 @@
                 foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
+                windowWidth: 800, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局
                 // 移除手动设置的宽高和坐标，让html2canvas自动计算
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
@@ -6588,7 +6589,7 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 固定输出像素为 1520x2334
+                // 固定输出像素为 1520x2334，按宽度等比缩放不拉伸变形
                 const targetW = 1520, targetH = 2334;
                 const resizedCanvas = document.createElement('canvas');
                 resizedCanvas.width = targetW;
@@ -6596,7 +6597,10 @@
                 const rctx = resizedCanvas.getContext('2d');
                 rctx.fillStyle = '#f5f5f7';
                 rctx.fillRect(0, 0, targetW, targetH);
-                rctx.drawImage(canvas, 0, 0, targetW, targetH);
+                // 宽高同比例缩放，确保不变形；高度超出则裁剪，不足则保留背景色
+                const scaleRatio = targetW / canvas.width;
+                const scaledHeight = canvas.height * scaleRatio;
+                rctx.drawImage(canvas, 0, 0, targetW, scaledHeight);
 
                 // 转换为图片并下载
                 resizedCanvas.toBlob(function(blob) {
@@ -6678,6 +6682,7 @@
                 foreignObjectRendering: false,
                 removeContainer: true,
                 imageTimeout: 15000,
+                windowWidth: 800, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局
                 onclone: function(clonedDoc) {
                     // 移除手机模式，确保截图按电脑模式效果生成
                     clonedDoc.body.classList.remove('mobile-mode');
@@ -7192,7 +7197,7 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 固定输出像素为 1520x2334
+                // 固定输出像素为 1520x2334，按宽度等比缩放不拉伸变形
                 const targetW = 1520, targetH = 2334;
                 const resizedCanvas = document.createElement('canvas');
                 resizedCanvas.width = targetW;
@@ -7200,7 +7205,10 @@
                 const rctx = resizedCanvas.getContext('2d');
                 rctx.fillStyle = '#f5f5f7';
                 rctx.fillRect(0, 0, targetW, targetH);
-                rctx.drawImage(canvas, 0, 0, targetW, targetH);
+                // 宽高同比例缩放，确保不变形；高度超出则裁剪，不足则保留背景色
+                const scaleRatio = targetW / canvas.width;
+                const scaledHeight = canvas.height * scaleRatio;
+                rctx.drawImage(canvas, 0, 0, targetW, scaledHeight);
 
                 resizedCanvas.toBlob(function(blob) {
                     if (!blob) {
