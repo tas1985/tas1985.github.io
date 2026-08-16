@@ -1285,7 +1285,7 @@
         .mobile-toggle-btn{
             position: fixed;
             top: 12px;
-            left: 12px;
+            left: max(8px, calc((100vw - 790px) / 2 - 73px));
             z-index: 9990;
             width: 80px;
             height: 80px;
@@ -1320,7 +1320,7 @@
         body.mobile-mode .mobile-toggle-btn{
             background: #ff9900;
             top: 8px;
-            left: 8px;
+            left: max(8px, calc((100vw - 690px) / 2 - 83px));
         }
         body.mobile-mode .container{
             max-width: 680px !important;
@@ -1354,18 +1354,18 @@
             width: 100% !important;
             margin-top: 10px !important;
         }
-        /* 隐藏不需要的按钮：成本合计、清空重置、下载图片缓存 */
+        /* 隐藏不需要的按钮：成本合计、下载图片缓存 */
         body.mobile-mode .item.has-service .cost-display,
-        body.mobile-mode .item.has-service .btn-reset,
         body.mobile-mode .item.has-service .btn-download-images{
             display: none !important;
         }
-        /* 保存配置和截图按钮加大便于手指点击 */
+        /* 保存配置、清空重置和截图按钮加大便于手指点击 */
         body.mobile-mode .all-btn-container .action-btn-row,
         body.mobile-mode .all-btn-container .screenshot-btn-row{
             gap: 8px !important;
         }
         body.mobile-mode .all-btn-container .btn-save,
+        body.mobile-mode .all-btn-container .btn-reset,
         body.mobile-mode .all-btn-container .btn-screenshot,
         body.mobile-mode .all-btn-container .btn-anonymous{
             flex: 1 !important;
