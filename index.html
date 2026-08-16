@@ -6612,16 +6612,23 @@
                 rctx.fillStyle = '#f5f5f7';
                 rctx.fillRect(0, 0, targetW, targetH);
                 // 宽高同比例缩放，确保不变形；高度超出则裁剪，不足则保留背景色
-                const scaleRatio = targetW / canvas.width;
-                const scaledHeight = canvas.height * scaleRatio;
-                rctx.drawImage(canvas, 0, 0, targetW, scaledHeight);
+                const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
+                const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
+                const scaleRatio = targetW / srcW;
+                const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
+                rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
 
                 // 转换为图片并下载
                 resizedCanvas.toBlob(function(blob) {
+                    // 恢复按钮状态
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+
                     if (!blob) {
-                        throw new Error('图片生成失败');
+                        alert('图片生成失败，请重试');
+                        return;
                     }
-                    
+
                     // 创建下载链接
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -6632,18 +6639,16 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
-                    // 恢复按钮状态
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                    
                     // 显示成功提示
                     alert(`截图已保存：${fileName}`);
                 }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
             }).catch(error => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-                
-                throw error;
+                console.error('保存截图失败:', error);
+                // 恢复所有按钮容器显示及按钮状态
+                try { allBtnContainer.style.display = allBtnContainerDisplay; } catch(e) {}
+                btn.innerText = originalText;
+                btn.disabled = false;
+                alert('截图失败：' + (error && error.message ? error.message : String(error)) + '\n请刷新页面重试');
             });
             }, 100); // 100ms延迟确保页面渲染
         } catch (error) {
@@ -7220,13 +7225,19 @@
                 rctx.fillStyle = '#f5f5f7';
                 rctx.fillRect(0, 0, targetW, targetH);
                 // 宽高同比例缩放，确保不变形；高度超出则裁剪，不足则保留背景色
-                const scaleRatio = targetW / canvas.width;
-                const scaledHeight = canvas.height * scaleRatio;
-                rctx.drawImage(canvas, 0, 0, targetW, scaledHeight);
+                const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
+                const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
+                const scaleRatio = targetW / srcW;
+                const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
+                rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
 
                 resizedCanvas.toBlob(function(blob) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+
                     if (!blob) {
-                        throw new Error('图片生成失败');
+                        alert('图片生成失败，请重试');
+                        return;
                     }
                     
                     const url = URL.createObjectURL(blob);
@@ -7238,16 +7249,14 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                    
                     alert(`匿名截图已保存：${fileName}`);
                 }, 'image/jpeg', 0.95);
             }).catch(error => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-                
-                throw error;
+                console.error('匿名截图失败:', error);
+                try { allBtnContainer.style.display = allBtnContainerDisplay; } catch(e) {}
+                btn.innerText = originalText;
+                btn.disabled = false;
+                alert('匿名截图失败：' + (error && error.message ? error.message : String(error)) + '\n请刷新页面重试');
             });
             }, 100);
         } catch (error) {
