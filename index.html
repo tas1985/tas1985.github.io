@@ -1467,7 +1467,7 @@
         body.mobile-mode .dropdown,
         body.mobile-mode .user-dropdown{
             max-height: 480px !important;
-            z-index: 2000 !important;
+            z-index: 999999 !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch !important;
         }
@@ -1586,11 +1586,24 @@
         body.mobile-mode .mobile-toggle-btn{
             top: max(8px, env(safe-area-inset-top)) !important;
         }
+        /* 手机模式下拉项触摸后的幽灵点击屏蔽层，防止点击穿透到下方按钮 */
+        body.mobile-mode .mobile-click-shield{
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9999999;
+            background: transparent;
+            display: none;
+        }
+        body.mobile-mode .mobile-click-shield.active{
+            display: block;
+        }
     </style>
 </head>
 <body>
 <!-- 手机操作模式切换按钮 -->
 <button id="mobileToggleBtn" class="mobile-toggle-btn" onclick="toggleMobileMode()" title="切换到手机模式">📱</button>
+<!-- 手机模式幽灵点击屏蔽层（下拉选项触摸后临时激活，避免合成点击穿透到下方按钮） -->
+<div id="mobileClickShield" class="mobile-click-shield"></div>
 <!-- 密码验证弹窗（默认隐藏，验证不通过时显示） -->
 <div id="passwordModal" class="password-modal" style="display: none;">
     <div class="password-box">
@@ -6010,6 +6023,7 @@
     });
 
     function hideDrop(key){
+        const isMobile = document.body.classList.contains('mobile-mode');
         setTimeout(()=>{
             const drop = document.getElementById(key+"-drop");
             if (drop) {
@@ -6020,7 +6034,7 @@
             if (item) {
                 item.style.zIndex = '';
             }
-        }, 150);
+        }, isMobile ? 400 : 150);
     }
 
     // 发票类型切换功能
@@ -8242,6 +8256,7 @@
 
     // 隐藏客户名称下拉列表
     function hideUserDropdown() {
+        const isMobile = document.body.classList.contains('mobile-mode');
         setTimeout(() => {
             document.getElementById("userDropdown").style.display = "none";
             // 恢复.user的z-index
@@ -8249,7 +8264,7 @@
             if (userContainer) {
                 userContainer.style.zIndex = '';
             }
-        }, 150);
+        }, isMobile ? 400 : 150);
     }
 
     // 新增：清空客户名称输入框的功能
@@ -8274,6 +8289,25 @@
     }
 
     // ========== 手机操作模式 ==========
+    // 激活幽灵点击屏蔽层（350ms），防止手机触摸下拉项后合成的点击穿透到下方按钮
+    function activateMobileClickShield() {
+        const shield = document.getElementById('mobileClickShield');
+        if (!shield) return;
+        shield.classList.add('active');
+        setTimeout(function(){ shield.classList.remove('active'); }, 380);
+    }
+    // 全局监听：手机模式下，任何下拉选项（.dropdown div / .user-dropdown div）上的touchend，激活屏蔽层
+    (function installMobileDropdownShield(){
+        document.addEventListener('touchend', function(e){
+            if (!document.body.classList.contains('mobile-mode')) return;
+            const t = e.target;
+            if (!t) return;
+            const inDrop = t.closest && (t.closest('.dropdown div') || t.closest('.user-dropdown div'));
+            if (inDrop) {
+                activateMobileClickShield();
+            }
+        }, {passive: true});
+    })();
     // 一键切换手机模式 / 切换回原模式
     function toggleMobileMode() {
         const body = document.body;
