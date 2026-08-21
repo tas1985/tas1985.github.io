@@ -8262,13 +8262,26 @@
     function filterUserDropdown() {
         const inputVal = document.getElementById("user").value.toLowerCase();
         const dropdown = document.getElementById("userDropdown");
+
+        // 手机模式下若因 onclick 延迟/未触发导致下拉列表未显示，输入时自动弹出
+        if (inputVal && dropdown.children.length > 0 && dropdown.style.display !== "block") {
+            dropdown.style.display = "block";
+            dropdown.style.zIndex = 999999;
+            const userContainer = document.querySelector('.user');
+            if (userContainer) {
+                userContainer.style.zIndex = 1000;
+            }
+        }
+
         const items = dropdown.getElementsByTagName("div");
-        
+
         Array.from(items).forEach(item => {
             if (item.innerText.toLowerCase().includes(inputVal)) {
-                item.style.display = "block";
+                // 显示匹配项：清除内联 display，让 CSS 的 display:flex(手机模式) 或默认 block 生效
+                item.style.removeProperty('display');
             } else {
-                item.style.display = "none";
+                // 隐藏不匹配项：用 !important 覆盖手机模式 CSS 的 display:flex !important
+                item.style.setProperty('display', 'none', 'important');
             }
         });
     }
