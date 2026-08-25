@@ -1559,18 +1559,27 @@ def update_gpu_prices():
                                 break
                     
                     # 方法4：芯片级参考匹配（跨品牌，同GPU芯片+同显存）
-                    # 微星-、撼讯系列显卡不参与跨品牌匹配，避免被其他品牌价格影响
-                    if new_price is None and not (model_name.startswith("微星-") or model_name.startswith("撼讯")):
-                        ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
+                    # 微星-系列显卡不参与跨品牌匹配，避免被其他品牌价格影响
+                    # 撼讯系列显卡参考蓝宝石对应型号匹配
+                    if new_price is None and not model_name.startswith("微星-"):
+                        if model_name.startswith("撼讯"):
+                            filtered_dict = {k: v for k, v in gpu_dict.items() if k.startswith("蓝宝石")}
+                        else:
+                            filtered_dict = gpu_dict
+                        ref_name, ref_price = find_chip_reference_price(filtered_dict, model_name)
                         if ref_name and ref_price:
                             new_price = ref_price
                             chip_ref_count += 1
                             print(f"  ✅ 芯片参考匹配: {model_name[:40]}... ← {ref_name[:40]}...")
-                    
+
                     # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需GPU芯片+显存都一致）
-                    # 微星-、撼讯系列显卡不参与跨品牌相似度匹配
-                    if new_price is None and not (model_name.startswith("微星-") or model_name.startswith("撼讯")):
-                        source_names = list(gpu_dict.keys())
+                    # 微星-系列显卡不参与跨品牌相似度匹配
+                    # 撼讯系列显卡参考蓝宝石对应型号匹配
+                    if new_price is None and not model_name.startswith("微星-"):
+                        if model_name.startswith("撼讯"):
+                            source_names = [k for k in gpu_dict.keys() if k.startswith("蓝宝石")]
+                        else:
+                            source_names = list(gpu_dict.keys())
                         best_match, score = process.extractOne(model_name, source_names)
                         if score >= 80:
                             target_chip = extract_gpu_chip_key(model_name)
@@ -1584,7 +1593,12 @@ def update_gpu_prices():
                                 print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
                             else:
                                 print(f"  ⚠️ 相似度匹配跳过(芯片/显存不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
-                    
+
+                    # 撼讯显卡：源网站无此品牌数据时，使用现有价格作为基础价格
+                    if new_price is None and model_name.startswith("撼讯"):
+                        new_price = old_price
+                        print(f"  💡 撼讯无源数据，使用现有价格为基础: {model_name[:40]}... ￥{old_price}")
+
                     if new_price is not None:
                         new_price = int(new_price)
                         if "撼讯" in model_name:
