@@ -1596,7 +1596,16 @@ def update_gpu_prices():
                             if "暗黑犬" in model_name:
                                 new_price += 250
                                 markup += 250
+                            if "游荡者" in model_name and "黑" in model_name:
+                                new_price += 100
+                                markup += 100
+                            if "游荡者" in model_name and "白" in model_name:
+                                new_price += 170
+                                markup += 170
                             print(f"  💰 撼讯加价+{markup}: {model_name[:40]}... 源价+{markup}=￥{new_price}")
+                        if "微星 RTX5060 8G VENTUS 2X OC WHITE白色" in model_name:
+                            new_price += 150
+                            print(f"  💰 微星白色版加价+150: {model_name[:40]}... ￥{new_price}")
                         if new_price != old_price:
                             new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
                             lines[pos] = new_line
