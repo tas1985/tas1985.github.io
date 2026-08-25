@@ -1684,7 +1684,7 @@ def update_ram_prices_new():
             pos += 1
         
         print(f"📋 HTML中已有 {len(existing_models)} 个内存型号")
-        
+
         # 更新现有内存型号的价格
         pos = start_idx + 1
         while pos < end_idx:
@@ -1695,12 +1695,36 @@ def update_ram_prices_new():
                     model_name = match.group(1)
                     old_price = int(match.group(2))
                     new_price = None
-                    
+
+                    # 特殊处理：光威 天策 16G/32G 3200 白色 参考阿斯加特 TUF联名价格
+                    if "光威 天策 16G（8*2）3200 白色" in model_name:
+                        ref_price_from_html = 0
+                        for temp_line in lines:
+                            if "阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲" in temp_line:
+                                price_match = re.search(r'p:(\d+)', temp_line)
+                                if price_match:
+                                    ref_price_from_html = int(price_match.group(1))
+                                    break
+                        if ref_price_from_html > 0:
+                            new_price = ref_price_from_html
+                            print(f"  ★ 特殊更新：光威 天策 16G 白色 = 阿斯加特 TUF联名(￥{ref_price_from_html})")
+                    elif "光威 天策 32G（16*2）3200 白色" in model_name:
+                        ref_price_from_html = 0
+                        for temp_line in lines:
+                            if "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲" in temp_line:
+                                price_match = re.search(r'p:(\d+)', temp_line)
+                                if price_match:
+                                    ref_price_from_html = int(price_match.group(1))
+                                    break
+                        if ref_price_from_html > 0:
+                            new_price = ref_price_from_html
+                            print(f"  ★ 特殊更新：光威 天策 32G 白色 = 阿斯加特 TUF联名(￥{ref_price_from_html})")
+
                     # 方法1：精确匹配
-                    if model_name in ram_dict:
+                    if new_price is None and model_name in ram_dict:
                         new_price = ram_dict[model_name]
                         print(f"  ✅ 精确匹配: {model_name[:40]}...")
-                    else:
+                    elif new_price is None:
                         # 方法2：使用内存关键字进行匹配
                         html_key = extract_ram_exact_key(model_name)
                         if html_key:
@@ -2004,13 +2028,13 @@ def update_exist_ram_prices():
                     special_handled = True
                 continue
 
-            # 特殊处理：光威 天策 16G（8*2）3200 白色 参考金百达_银爵 16G 8x2 3200 D4 C16 的价格
+            # 特殊处理：光威 天策 16G（8*2）3200 白色 参考阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲 的价格
             if "光威 天策 16G（8*2）3200 白色" in ram_name:
-                print(f"  🔍 查找: 光威 天策 16G（8*2）3200 白色 = 金百达_银爵 16G 8x2 3200 D4 C16")
+                print(f"  🔍 查找: 光威 天策 16G（8*2）3200 白色 = 阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲")
                 
                 ref_price = 0
-                for j in range(start, end + 1):
-                    if "金百达 银爵 16G 8x2 3200 D4 C16" in lines[j]:
+                for j in range(len(lines)):
+                    if "阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲" in lines[j]:
                         price_match = re.search(r'p:(\d+)', lines[j])
                         if price_match:
                             ref_price = float(price_match.group(1))
@@ -2020,19 +2044,19 @@ def update_exist_ram_prices():
                 if ref_price > 0:
                     final_price = ref_price
                     special_handled = True
-                    print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 16G 8x2 3200 D4 C16 = {int(final_price)}")
+                    print(f"  ★ 匹配成功: {ram_name} -> 阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲 = {int(final_price)}")
                 else:
-                    print(f"  ⚠ 金百达_银爵 16G 8x2 3200 D4 C16 价格未获取到，跳过更新")
+                    print(f"  ⚠ 阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲 价格未获取到，跳过更新")
                     special_handled = True
                 continue
 
-            # 特殊处理：光威 天策 32G（16*2）3200 白色 参考金百达_银爵 32G 16x2 3200 D4 C16 的价格
+            # 特殊处理：光威 天策 32G（16*2）3200 白色 参考阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲 的价格
             if "光威 天策 32G（16*2）3200 白色" in ram_name:
-                print(f"  🔍 查找: 光威 天策 32G（16*2）3200 白色 = 金百达_银爵 32G 16x2 3200 D4 C16")
+                print(f"  🔍 查找: 光威 天策 32G（16*2）3200 白色 = 阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲")
                 
                 ref_price = 0
-                for j in range(start, end + 1):
-                    if "金百达 银爵 32G 16x2 3200 D4 C16" in lines[j]:
+                for j in range(len(lines)):
+                    if "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲" in lines[j]:
                         price_match = re.search(r'p:(\d+)', lines[j])
                         if price_match:
                             ref_price = float(price_match.group(1))
@@ -2042,9 +2066,9 @@ def update_exist_ram_prices():
                 if ref_price > 0:
                     final_price = ref_price
                     special_handled = True
-                    print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 16x2 3200 D4 C16 = {int(final_price)}")
+                    print(f"  ★ 匹配成功: {ram_name} -> 阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲 = {int(final_price)}")
                 else:
-                    print(f"  ⚠ 金百达_银爵 32G 16x2 3200 D4 C16 价格未获取到，跳过更新")
+                    print(f"  ⚠ 阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲 价格未获取到，跳过更新")
                     special_handled = True
                 continue
 
@@ -2988,48 +3012,48 @@ def update_ram_accurate():
                             print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵(￥{ref_price_from_html}) × 2 = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 64G 白色 缺少参考价格，跳过更新")
-                    # 特殊处理：光威 天策 16G（8*2）3200 白色 = 金百达_银爵 16G 8x2 3200 D4 C16
+                    # 特殊处理：光威 天策 16G（8*2）3200 白色 = 阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲
                     elif "光威 天策 16G（8*2）3200 白色" in model_name:
                         print(f"  🔍 匹配到光威 天策 16G 白色，尝试从HTML获取参考价格")
                         ref_price_from_html = 0
-                        temp_pos = idx + 1
+                        temp_pos = 0
                         while temp_pos < len(lines):
                             temp_line = lines[temp_pos]
                             if '{n:"' in temp_line and '",p:' in temp_line:
                                 temp_match = re.search(r'{n:"([^"]+)",p:(\d+)}', temp_line)
                                 if temp_match:
                                     temp_name = temp_match.group(1)
-                                    if "金百达 银爵 16G 8x2 3200 D4 C16" in temp_name:
+                                    if "阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲" in temp_name:
                                         ref_price_from_html = int(temp_match.group(2))
-                                        print(f"     从HTML获取参考价格: 金百达_银爵 16G 8x2 3200 D4 C16 = ￥{ref_price_from_html}")
+                                        print(f"     从HTML获取参考价格: 阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲 = ￥{ref_price_from_html}")
                                         break
                             temp_pos += 1
-                        
+
                         if ref_price_from_html > 0:
                             new_price = str(ref_price_from_html)
-                            print(f"  ★ 特殊更新：光威 天策 16G 白色 = 金百达_银爵(￥{ref_price_from_html}) = ￥{new_price}")
+                            print(f"  ★ 特殊更新：光威 天策 16G 白色 = 阿斯加特 TUF联名(￥{ref_price_from_html}) = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 16G 白色 缺少参考价格，跳过更新")
-                    # 特殊处理：光威 天策 32G（16*2）3200 白色 = 金百达_银爵 32G 16x2 3200 D4 C16
+                    # 特殊处理：光威 天策 32G（16*2）3200 白色 = 阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲
                     elif "光威 天策 32G（16*2）3200 白色" in model_name:
                         print(f"  🔍 匹配到光威 天策 32G 白色，尝试从HTML获取参考价格")
                         ref_price_from_html = 0
-                        temp_pos = idx + 1
+                        temp_pos = 0
                         while temp_pos < len(lines):
                             temp_line = lines[temp_pos]
                             if '{n:"' in temp_line and '",p:' in temp_line:
                                 temp_match = re.search(r'{n:"([^"]+)",p:(\d+)}', temp_line)
                                 if temp_match:
                                     temp_name = temp_match.group(1)
-                                    if "金百达 银爵 32G 16x2 3200 D4 C16" in temp_name:
+                                    if "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲" in temp_name:
                                         ref_price_from_html = int(temp_match.group(2))
-                                        print(f"     从HTML获取参考价格: 金百达_银爵 32G 16x2 3200 D4 C16 = ￥{ref_price_from_html}")
+                                        print(f"     从HTML获取参考价格: 阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲 = ￥{ref_price_from_html}")
                                         break
                             temp_pos += 1
-                        
+
                         if ref_price_from_html > 0:
                             new_price = str(ref_price_from_html)
-                            print(f"  ★ 特殊更新：光威 天策 32G 白色 = 金百达_银爵(￥{ref_price_from_html}) = ￥{new_price}")
+                            print(f"  ★ 特殊更新：光威 天策 32G 白色 = 阿斯加特 TUF联名(￥{ref_price_from_html}) = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 32G 白色 缺少参考价格，跳过更新")
                     # 特殊处理：阿斯加特 弗雷 16G 8*2 3200（不区分是否黑甲）使用爬取到的弗雷 16G 价格
