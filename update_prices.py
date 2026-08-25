@@ -1602,8 +1602,7 @@ def update_gpu_prices():
                     if new_price is not None:
                         new_price = int(new_price)
                         if "撼讯" in model_name:
-                            markup = 100
-                            new_price += markup
+                            markup = 0
                             if "红魔" in model_name:
                                 new_price += 600
                                 markup += 600
@@ -1616,7 +1615,10 @@ def update_gpu_prices():
                             if "游荡者" in model_name and "白" in model_name:
                                 new_price += 170
                                 markup += 170
-                            print(f"  💰 撼讯加价+{markup}: {model_name[:40]}... 源价+{markup}=￥{new_price}")
+                            if markup > 0:
+                                print(f"  💰 撼讯加价+{markup}: {model_name[:40]}... 源价+{markup}=￥{new_price}")
+                            else:
+                                print(f"  💹 撼讯(无额外加价): {model_name[:40]}... 源价=￥{new_price}")
                         if "微星 RTX5060 8G VENTUS 2X OC WHITE白色" in model_name:
                             new_price += 150
                             print(f"  💰 微星白色版加价+150: {model_name[:40]}... ￥{new_price}")
