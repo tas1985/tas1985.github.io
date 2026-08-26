@@ -5932,63 +5932,56 @@
                 <span class="dropdown-delete" data-type="${key}" data-index="${origIdx}">×</span>
             `;
             
-            // 移动端触摸事件处理
+            // 选中该行配件的统一处理：touchend 快路径 + click 兜底（手机/桌面均可点空白区域选中）
+            let done = false;
             let touchStartTime = 0;
             let touchStartY = 0;
             let isScrolling = false;
-            
+            const selectRow = () => {
+                if (done) return;
+                done = true;
+                document.getElementById(key).value = i.n;
+                document.getElementById(key+"-p").value = i.p;
+                document.getElementById(key).classList.add('selected');
+                // 手机模式：高亮所选行并稍延后关闭下拉，给出"已选择该配件"的反馈
+                if (document.body.classList.contains('mobile-mode')) {
+                    d.classList.add('dropdown-row-selected');
+                    setTimeout(() => { box.style.display = "none"; }, 240);
+                } else {
+                    box.style.display = "none";
+                }
+                calc();
+                saveNow();
+
+                if(key === 'case') showCaseImage(i.n);
+                if(key === 'cooler') showCoolerImage(i.n);
+                if(key === 'vga') showVgaImage(i.n);
+            };
+
             d.addEventListener('touchstart', function(e) {
                 touchStartTime = Date.now();
                 touchStartY = e.touches[0].clientY;
                 isScrolling = false;
             }, {passive: true});
-            
+
             d.addEventListener('touchmove', function(e) {
                 if (Math.abs(e.touches[0].clientY - touchStartY) > 5) {
                     isScrolling = true;
                 }
             }, {passive: true});
-            
+
             d.addEventListener('touchend', function(e) {
                 const touchDuration = Date.now() - touchStartTime;
+                // 短时间点击且非滚动 → 选中（上滑下滑后再次轻点仍可触发）
                 if (!isScrolling && touchDuration < 300) {
-                    // 短时间点击，选择配件
-                    document.getElementById(key).value = i.n;
-                    document.getElementById(key+"-p").value = i.p;
-                    document.getElementById(key).classList.add('selected');
-                    // 手机模式：高亮所选行并稍延后关闭下拉，给出"已选择该配件"的反馈
-                    if (document.body.classList.contains('mobile-mode')) {
-                        d.classList.add('dropdown-row-selected');
-                        setTimeout(() => { box.style.display = "none"; }, 240);
-                    } else {
-                        box.style.display = "none";
-                    }
-                    calc();
-                    saveNow();
-
-                    if(key === 'case') showCaseImage(i.n);
-                    if(key === 'cooler') showCoolerImage(i.n);
-                    if(key === 'vga') showVgaImage(i.n);
+                    selectRow();
                 }
             }, {passive: true});
-            
-            // 桌面端点击事件
+
+            // 点击事件（桌面 + 手机兜底）：点击该行任意位置（含名称、价格与行内空白区域）均可选中
             d.addEventListener('click', function(e) {
-                if (!('ontouchstart' in window)) {
-                    // 阻止事件冒泡，避免触发删除按钮的点击
-                    if (e.target.classList.contains('dropdown-delete')) return;
-                    
-                    document.getElementById(key).value = i.n;
-                    document.getElementById(key+"-p").value = i.p;
-                    document.getElementById(key).classList.add('selected');
-                    box.style.display = "none";
-                    calc();
-                    saveNow();
-                    
-                    if(key === 'case') showCaseImage(i.n);
-                    if(key === 'cooler') showCoolerImage(i.n);
-                    if(key === 'vga') showVgaImage(i.n);
-                }
+                if (e.target.classList.contains('dropdown-delete')) return;
+                selectRow();
             });
             
             // 下拉列表删除按钮点击事件 - 已禁用
