@@ -1489,6 +1489,13 @@
         body.mobile-mode .dropdown-price{
             font-size: 12px !important;
         }
+        /* 手机模式：手指点击配件行后，该行高亮提示"已选择" */
+        body.mobile-mode .dropdown div.dropdown-row-selected{
+            background: rgba(37,99,235,0.2) !important;
+            box-shadow: inset 0 0 0 2px rgba(37,99,235,0.7) !important;
+            color: #2563EB !important;
+            font-weight: bold !important;
+        }
         /* 输入框、按钮去除点击高亮，优化触控 */
         body.mobile-mode input.combo,
         body.mobile-mode input.price,
@@ -5895,19 +5902,34 @@
         let val=document.getElementById(key).value.toLowerCase();
         let box=document.getElementById(key+"-drop");
         box.innerHTML="";
-        // 即使输入为空，点击也显示全部列表
-        let arr = val ? data[key].filter(i=>i.n.toLowerCase().includes(val)) : data[key];
+        const isMobile = document.body.classList.contains('mobile-mode');
+        // 手机模式：若输入框已选中某配件，展开完整列表并把当前已选配件置顶，保持至重新选择
+        let arr;
+        if (isMobile && val) {
+            const exactIdx = data[key].findIndex(i => i.n.toLowerCase() === val);
+            if (exactIdx >= 0) {
+                arr = data[key].slice();
+                const [sel] = arr.splice(exactIdx, 1);
+                arr.unshift(sel);
+            } else {
+                arr = data[key].filter(i => i.n.toLowerCase().includes(val));
+            }
+        } else {
+            // 即使输入为空，点击也显示全部列表
+            arr = val ? data[key].filter(i=>i.n.toLowerCase().includes(val)) : data[key];
+        }
         if(arr.length===0){
             box.style.display="none";
             return;
         }
         arr.forEach((i, idx)=>{
             let d=document.createElement("div");
+            const origIdx = data[key].indexOf(i); // 始终用原始数据索引，置顶/过滤后仍指向正确配件
             // 配件名称和价格布局
             d.innerHTML = `
                 <span>${i.n}</span>
                 <span class="dropdown-price">¥${i.p}</span>
-                <span class="dropdown-delete" data-type="${key}" data-index="${idx}">×</span>
+                <span class="dropdown-delete" data-type="${key}" data-index="${origIdx}">×</span>
             `;
             
             // 移动端触摸事件处理
@@ -5934,10 +5956,16 @@
                     document.getElementById(key).value = i.n;
                     document.getElementById(key+"-p").value = i.p;
                     document.getElementById(key).classList.add('selected');
-                    box.style.display = "none";
+                    // 手机模式：高亮所选行并稍延后关闭下拉，给出"已选择该配件"的反馈
+                    if (document.body.classList.contains('mobile-mode')) {
+                        d.classList.add('dropdown-row-selected');
+                        setTimeout(() => { box.style.display = "none"; }, 240);
+                    } else {
+                        box.style.display = "none";
+                    }
                     calc();
                     saveNow();
-                    
+
                     if(key === 'case') showCaseImage(i.n);
                     if(key === 'cooler') showCoolerImage(i.n);
                     if(key === 'vga') showVgaImage(i.n);
@@ -5975,7 +6003,7 @@
                 e.preventDefault();
                 // 存储选中的配件信息
                 selectedItem.type = key;
-                selectedItem.index = idx;
+                selectedItem.index = origIdx;
                 // 显示右键菜单
                 const menu = document.getElementById('contextMenu');
                 menu.style.display = 'block';
