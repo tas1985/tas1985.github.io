@@ -1333,7 +1333,7 @@
             width: 100% !important;
             margin: 0 !important;
             padding: 8px !important;
-            padding-top: 94px !important; /* 给加大的固定切换按钮留出空间 */
+            padding-top: 8px !important; /* 顶部空白已删除，内容顶到最上方 */
             border-radius: 0 !important;
             border: none !important;
             box-shadow: none !important;
@@ -1387,17 +1387,18 @@
         }
         /* 主机总价区域紧凑显示 */
         body.mobile-mode .total{
-            padding: 14px !important;
+            padding: 10px !important;
             min-height: auto !important;
-            margin-top: 10px !important;
+            margin-top: 6px !important;
         }
         body.mobile-mode .total-final{
             font-size: 30px !important;
         }
         /* 客户名称输入栏加大 */
         body.mobile-mode .user{
-            padding: 8px !important;
-            margin-bottom: 10px !important;
+            padding: 6px !important;
+            padding-left: 88px !important; /* 给左上角固定切换按钮让位，内容右移与之并排 */
+            margin-bottom: 14px !important; /* 增大与首行配件间距，避免被切换按钮底边遮挡 */
             gap: 6px !important;
         }
         body.mobile-mode .user label{
@@ -1410,25 +1411,25 @@
             height: 45px !important;
         }
         body.mobile-mode .user-clear-btn{
-            width: 36px !important;
-            height: 36px !important;
-            line-height: 36px !important;
-            font-size: 24px !important;
+            width: 30px !important;
+            height: 30px !important;
+            line-height: 30px !important;
+            font-size: 20px !important;
             display: block !important;
             right: 10px !important;
         }
         /* 配件列表输入栏加大，允许窄屏自适应不强制横向滚动 */
         body.mobile-mode .item{
-            padding: 8px !important;
-            margin-bottom: 10px !important;
+            padding: 4px !important;
+            margin-bottom: 5px !important;
             gap: 2px !important;
             min-width: 0 !important;
             flex-wrap: nowrap !important;
         }
         body.mobile-mode .item-label{
-            width: 44px !important;
+            width: 40px !important;
             font-size: 10px !important;
-            line-height: 18px !important;
+            line-height: 14px !important;
             padding-right: 0 !important;
             text-align: left !important;
             justify-content: flex-start !important;
@@ -1437,37 +1438,37 @@
             display: none !important;
         }
         body.mobile-mode .item-input{
-            min-width: 140px;
+            min-width: 120px;
             flex: 1;
         }
         body.mobile-mode input.combo{
             font-size: 14px !important;
-            padding: 10px 34px 10px 4px !important;
-            height: 45px !important;
+            padding: 5px 30px 5px 4px !important;
+            height: 36px !important;
         }
         body.mobile-mode input.combo.selected{
             font-size: 14px !important;
         }
         body.mobile-mode .item-price{
-            width: 48px !important;
+            width: 76px !important;
             flex-shrink: 0;
         }
         body.mobile-mode .item-price::before{
-            font-size: 18px !important;
-            left: 2px !important;
+            font-size: 16px !important;
+            left: 4px !important;
         }
         body.mobile-mode input.price{
-            font-size: 10px !important;
-            padding: 10px 2px 10px 12px !important;
-            height: 45px !important;
+            font-size: 16px !important;
+            padding: 5px 4px 5px 18px !important;
+            height: 36px !important;
         }
         body.mobile-mode .clear-btn{
-            width: 36px !important;
-            height: 36px !important;
-            line-height: 36px !important;
-            font-size: 24px !important;
+            width: 30px !important;
+            height: 30px !important;
+            line-height: 30px !important;
+            font-size: 20px !important;
             display: block !important;
-            right: 10px !important;
+            right: 8px !important;
         }
         /* 下拉列表项加大便于手指点击，加长至可显示12个型号 */
         body.mobile-mode .dropdown,
@@ -1479,9 +1480,9 @@
         }
         body.mobile-mode .dropdown div,
         body.mobile-mode .user-dropdown div{
-            padding: 6px 8px !important;
+            padding: 3px 8px !important;
             font-size: 12px !important;
-            min-height: 40px !important;
+            min-height: 30px !important;
             display: flex !important;
             align-items: center !important;
         }
@@ -1587,7 +1588,7 @@
         body.mobile-mode .container{
             padding-left: max(8px, env(safe-area-inset-left)) !important;
             padding-right: max(8px, env(safe-area-inset-right)) !important;
-            padding-top: max(94px, calc(80px + env(safe-area-inset-top))) !important;
+            padding-top: max(8px, env(safe-area-inset-top)) !important;
         }
         body.mobile-mode .mobile-toggle-btn{
             top: max(8px, env(safe-area-inset-top)) !important;
@@ -8357,6 +8358,11 @@
             btn.innerHTML = isMobile ? '💻' : '📱';
             btn.title = isMobile ? '退出手机模式' : '切换到手机模式';
         }
+        // 手机模式下价格输入框唤起数字小键盘，便于手指修改价格数字
+        document.querySelectorAll('input.price').forEach(function(inp){
+            if(isMobile){ inp.setAttribute('inputmode','decimal'); }
+            else { inp.removeAttribute('inputmode'); }
+        });
         // 切换后重新计算总价，确保主机总价显示同步
         try { calc(); } catch(e) {}
     }
