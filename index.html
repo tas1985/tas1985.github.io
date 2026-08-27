@@ -506,11 +506,12 @@
             position: absolute;
             left: 8px;
             top: 50%;
-            transform: translateY(-50%);
+            margin-top: -9px;
             color: #2563EB; /* 紫色¥符号，匹配价格文字颜色 */
             font-size: 18px !important;
             font-weight: bold;
             z-index: 1;
+            line-height: 18px;
         }
         /* 新增：备注栏价格框 - 与配件价格栏一致，保留¥符号 */
         .item-price.remark-price {
@@ -1567,6 +1568,8 @@
         body.mobile-mode .item-price::before{
             font-size: 16px !important;
             left: 4px !important;
+            margin-top: -8px !important;
+            line-height: 16px !important;
         }
         body.mobile-mode input.price{
             font-size: 16px !important;
