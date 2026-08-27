@@ -447,7 +447,12 @@
             }
             .total {
                 padding: 18px !important;
-                min-height: 160px !important;
+                min-height: 0 !important;
+            }
+            .case-image-container,
+            .cooler-image-container,
+            .vga-image-container {
+                width: 100px !important;
             }
             .total-final .kan-discount {
                 font-size: 28px !important;
@@ -874,7 +879,7 @@
             border: 2px solid #2563EB;
             position: relative;
             z-index: 1;
-            min-height: 148px;
+            min-height: 0;
             box-shadow: 0 4px 12px rgba(37,99,235,0.15), 0 2px 6px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
             transition: all 0.3s ease;
         }
@@ -1298,18 +1303,18 @@
         /* 机箱图片容器样式 - 调整位置到总价区域内上方 */
         .product-images-container {
             position: absolute;
-            left: 5px;
-            top: 5px;
-            bottom: 5px;
+            left: 12px;
+            top: 15px;
+            bottom: 15px;
             display: flex;
-            align-items: center;
+            align-items: stretch;
             gap: 4px;
             z-index: 2;
         }
 
         .case-image-container {
-            width: 120px;
-            height: 120px;
+            width: 132px;
+            height: 100%;
             background: #fff;
             border: 1px solid rgba(37,99,235,0.4);
             border-radius: 6px;
@@ -1320,8 +1325,8 @@
         }
 
         .cooler-image-container {
-            width: 120px;
-            height: 120px;
+            width: 132px;
+            height: 100%;
             background: #fff;
             border: 1px solid rgba(37,99,235,0.4);
             border-radius: 6px;
@@ -1332,8 +1337,8 @@
         }
 
         .vga-image-container {
-            width: 120px;
-            height: 120px;
+            width: 132px;
+            height: 100%;
             background: #fff;
             border: 1px solid rgba(37,99,235,0.4);
             border-radius: 6px;
@@ -6739,19 +6744,18 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 固定输出像素为 1520x2370，按宽度等比缩放不拉伸变形
-                const targetW = 1520, targetH = 2370;
-                const resizedCanvas = document.createElement('canvas');
-                resizedCanvas.width = targetW;
-                resizedCanvas.height = targetH;
-                const rctx = resizedCanvas.getContext('2d');
-                rctx.fillStyle = '#f5f5f7';
-                rctx.fillRect(0, 0, targetW, targetH);
-                // 宽高同比例缩放，确保不变形；高度超出则裁剪，不足则保留背景色
+                // 固定宽度1520，高度按内容自适应，底部刚好到白色背景（不留多余灰底）
+                const targetW = 1520;
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
                 const scaleRatio = targetW / srcW;
                 const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
+                const resizedCanvas = document.createElement('canvas');
+                resizedCanvas.width = targetW;
+                resizedCanvas.height = scaledHeight;
+                const rctx = resizedCanvas.getContext('2d');
+                rctx.fillStyle = '#f5f5f7';
+                rctx.fillRect(0, 0, targetW, scaledHeight);
                 rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
 
                 // 转换为图片并下载
@@ -7354,19 +7358,18 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 固定输出像素为 1520x2370，按宽度等比缩放不拉伸变形
-                const targetW = 1520, targetH = 2370;
-                const resizedCanvas = document.createElement('canvas');
-                resizedCanvas.width = targetW;
-                resizedCanvas.height = targetH;
-                const rctx = resizedCanvas.getContext('2d');
-                rctx.fillStyle = '#f5f5f7';
-                rctx.fillRect(0, 0, targetW, targetH);
-                // 宽高同比例缩放，确保不变形；高度超出则裁剪，不足则保留背景色
+                // 固定宽度1520，高度按内容自适应，底部刚好到白色背景（不留多余灰底）
+                const targetW = 1520;
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
                 const scaleRatio = targetW / srcW;
                 const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
+                const resizedCanvas = document.createElement('canvas');
+                resizedCanvas.width = targetW;
+                resizedCanvas.height = scaledHeight;
+                const rctx = resizedCanvas.getContext('2d');
+                rctx.fillStyle = '#f5f5f7';
+                rctx.fillRect(0, 0, targetW, scaledHeight);
                 rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
 
                 resizedCanvas.toBlob(function(blob) {
