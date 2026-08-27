@@ -512,15 +512,11 @@
             font-weight: bold;
             z-index: 1;
         }
-        /* 新增：备注栏价格框 - 取消¥符号 */
-.item-price.remark-price::before {
-    content: ''; /* 清空¥符号 */
-}
-
-/* 同步调整备注栏价格输入框的内边距（避免左侧空白） */
-.remark-price input.price {
-    padding: 8px 8px 8px 8px !important; /* 覆盖原20px的左侧内边距 */
-}
+        /* 新增：备注栏价格框 - 与配件价格栏一致，保留¥符号 */
+        .item-price.remark-price {
+            width: 100px;
+            flex: none;
+        }
         input.combo{
             width:100%;
             padding: 8px 25px 8px 8px;
@@ -1133,6 +1129,26 @@
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.03), 0 0 8px rgba(37,99,235,0.4);
             border-color: #2563EB;
         }
+        /* 备注栏第一行：输入栏 + 利润价格栏 并排布局 */
+        .remark-row {
+            display: flex;
+            gap: 6px;
+            align-items: stretch;
+            width: 100%;
+        }
+        .remark-row .remark-text {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            max-height: 40px;
+            resize: none;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .remark-row .item-price.remark-price {
+            width: 100px;
+            flex: none;
+        }
 
         /* 备注栏容器支持换行 */
         .item.has-service {
@@ -1353,6 +1369,8 @@
             color: #2563EB;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(153,0,255,0.8);
+            display: flex;
+            align-items: center;
         }
 
         .case-image, .cooler-image, .vga-image {
@@ -1857,8 +1875,11 @@
     <div class="item has-service">
         <div class="item-label"><span class="icon-gray">📝</span> 备注</div>
         <div class="remark-container">
-            <textarea class="remark-input" id="remark1" oninput="saveNow()" rows="1">总价含装机走线系统调试三年售后，诚心下单可小刀。德邦到付约80含保价。</textarea>
-            <textarea class="remark-input" id="remark2" oninput="saveNow()" rows="1">全新正品行货视频验货直播装机，主板、内存、固态、显卡等包装盒一起发货。</textarea>
+            <div class="remark-row">
+                <input class="remark-input remark-text" id="remark1" oninput="saveNow()" value="总价含6%装机利润及店铺运营、三年一对一售后成本">
+                <div class="item-price remark-price"><input class="price" id="remark1-p" readonly></div>
+            </div>
+            <textarea class="remark-input" id="remark2" oninput="saveNow()" rows="1">盒装CPU、主板、内存、固态、显卡等包装盒一起发货，运费到付80左右含保价</textarea>
         </div>
         <div class="service-container">
             <label class="service-item"><input type="checkbox" id="svc-videolive" checked onchange="updateServiceText()"> <span class="svc-box"></span>视频验货/直播装机</label>
@@ -1916,7 +1937,7 @@
             </div>
         </div>
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
-        <div class="total-line"><span>利润率：</span><span>+5.75%（÷0.9425）</span></div>
+        <div class="total-line"><span>利润率：</span><span>+6%（×1.06）</span></div>
         <div class="total-line total-final">
             <div class="kan-row-original">
                 <span class="total-final-label">主机总价：</span>
@@ -7424,7 +7445,7 @@
         }
         document.getElementById("costTotal").innerText=Math.round(costTotal);
         // 修改：最终报价四舍五入为整数，去掉小数点
-        let finalPrice = Math.round(sum / 0.9415);
+        let finalPrice = Math.round(sum * 1.06);
         
         // 根据发票类型应用税率
         let taxRate = 1;
@@ -7436,6 +7457,11 @@
         finalPrice = Math.round(finalPrice * taxRate);
 
         document.getElementById("final").innerText=`${finalPrice} 元`;
+
+        // 计算备注栏利润：主机总价 - 所有配件价格成本
+        let remarkProfit = finalPrice - sum;
+        const remarkPriceEl = document.getElementById("remark1-p");
+        if (remarkPriceEl) remarkPriceEl.value = remarkProfit;
 
         // 砍一刀优惠：根据主机总价区间计算优惠金额
         // 5000元以内砍39元，5000-10000砍59元，10000-20000砍99元，20000以上砍189元
@@ -7774,6 +7800,16 @@
         localStorage.setItem("last",JSON.stringify(o));
     }
 
+    // 备注默认文字迁移：将旧的默认备注文字替换为新版默认文字
+    function migrateRemarkDefaults() {
+        const newR1 = "总价含6%装机利润及店铺运营、三年一对一售后成本";
+        const newR2 = "盒装CPU、主板、内存、固态、显卡等包装盒一起发货，运费到付80左右含保价";
+        const r1 = document.getElementById("remark1");
+        const r2 = document.getElementById("remark2");
+        if (r1) r1.value = newR1;
+        if (r2) r2.value = newR2;
+    }
+
     // 获取选中的服务项目
     function getSelectedServices() {
         const services = [];
@@ -7869,6 +7905,7 @@
                 if (parts[0]) document.getElementById("remark1").value = parts[0];
                 if (parts[1]) document.getElementById("remark2").value = parts[1];
             }
+            migrateRemarkDefaults();
             // 加载服务项目勾选状态
             if (d.services) {
                 loadServices(d.services);
@@ -8043,6 +8080,7 @@
             if (parts[0]) document.getElementById("remark1").value = parts[0];
             if (parts[1]) document.getElementById("remark2").value = parts[1];
         }
+        migrateRemarkDefaults();
         // 加载服务项目勾选状态
         if (d.services) {
             loadServices(d.services);
@@ -8364,6 +8402,7 @@
                 if (parts[0]) document.getElementById("remark1").value = parts[0];
                 if (parts[1]) document.getElementById("remark2").value = parts[1];
             }
+            migrateRemarkDefaults();
             // 加载服务项目勾选状态
             if (config.services) {
                 loadServices(config.services);
