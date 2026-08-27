@@ -7467,16 +7467,22 @@
         if (remarkPriceEl) remarkPriceEl.value = remarkProfit;
 
         // 砍一刀优惠：根据主机总价区间计算优惠金额
-        // 5000元以内砍39元，5000-10000砍59元，10000-20000砍99元，20000以上砍189元
+        // 5000以内39，5000-7500砍59，7500-10000砍79，10000-15000砍99，15000-20000砍199，20000-25000砍299，25000以上砍399
         let kanDiscount = 0;
         if (finalPrice < 5000) {
             kanDiscount = 39;
-        } else if (finalPrice < 10000) {
+        } else if (finalPrice < 7500) {
             kanDiscount = 59;
-        } else if (finalPrice < 20000) {
+        } else if (finalPrice < 10000) {
+            kanDiscount = 79;
+        } else if (finalPrice < 15000) {
             kanDiscount = 99;
+        } else if (finalPrice < 20000) {
+            kanDiscount = 199;
+        } else if (finalPrice < 25000) {
+            kanDiscount = 299;
         } else {
-            kanDiscount = 189;
+            kanDiscount = 399;
         }
         let kanPrice = finalPrice - kanDiscount;
         document.getElementById("finalDiscount").innerText=`${kanPrice} 元`;
