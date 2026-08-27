@@ -449,12 +449,23 @@
                 padding: 18px !important;
                 min-height: 160px !important;
             }
-            .total-final {
-                font-size: 32px !important;
+            .total-final .kan-discount {
+                font-size: 28px !important;
+            }
+            .total-final .kan-original,
+            .total-final .total-final-label {
+                font-size: 18px !important;
+            }
+            .total-final .kan-badge {
+                font-size: 12px !important;
+                padding: 2px 7px !important;
             }
             .ludashi-score,
             .power-consumption {
-                font-size: 16px !important;
+                font-size: 13px !important;
+            }
+            .rebate-info {
+                font-size: 11px !important;
             }
             .remark-input {
                 font-size: 16px !important;
@@ -876,41 +887,101 @@
             color: #333;
         }
         .total-final{
-            font-size: 28px;
-            font-weight:bold;
-            color: #2563EB;
             margin:0;
             padding:0;
             border:none;
             display:block !important;
         }
+        /* 第一行：主机总价原价（缩小） */
+        .kan-row-original{
+            display:flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+        /* 第二行：砍一刀优惠价（放大） */
+        .kan-row-discount{
+            display:flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .total-final-label{
+            font-size: 22px;
+            font-weight: bold;
+            color: #2563EB;
+        }
+        /* 砍一刀 - 原价（缩小 + 斜切删除效果） */
+        .kan-original{
+            position: relative;
+            display: inline-block;
+            padding: 0 6px;
+            font-size: 22px;
+            font-weight: normal;
+            color: #9aa3b3;
+        }
+        .kan-original::after{
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff3b3b 12%, #ff6a3b 50%, #ff3b3b 88%, transparent);
+            transform: rotate(-7deg) translateY(-50%);
+            transform-origin: left center;
+            box-shadow: 0 0 8px rgba(255,59,59,0.55);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+        /* 砍一刀 - 徽标 */
+        .kan-badge{
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #ff5a3c, #ff2d55);
+            padding: 2px 9px;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(255,45,85,0.35);
+            line-height: 1.5;
+            white-space: nowrap;
+        }
+        /* 砍一刀 - 优惠后总价（放大） */
+        .kan-discount{
+            font-size: 30px;
+            font-weight: bold;
+            color: #ff2d55;
+            text-shadow: 0 2px 6px rgba(255,45,85,0.22);
+        }
 
         /* 鲁大师跑分样式 */
         .ludashi-score{
-            font-size: 18px;
+            font-size: 15px;
             font-weight:bold;
             color: #2563EB;
-            margin: 8px 0 0 0;
+            margin: 5px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
         }
         /* 功耗显示样式 */
         .power-consumption{
-            font-size: 18px;
+            font-size: 15px;
             font-weight:bold;
             color: #2563EB;
-            margin: 8px 0 0 0;
+            margin: 5px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
         }
         /* 返现信息样式 */
         .rebate-info{
-            font-size: 14px;
+            font-size: 12px;
             font-weight:normal;
             color: #ff9900;
-            margin: 8px 0 0 0;
+            margin: 5px 0 0 0;
             padding:0;
             border:none;
             display:block !important;
@@ -1391,8 +1462,25 @@
             min-height: auto !important;
             margin-top: 6px !important;
         }
-        body.mobile-mode .total-final{
+        body.mobile-mode .total-final .kan-discount{
             font-size: 30px !important;
+        }
+        body.mobile-mode .total-final .kan-original{
+            font-size: 20px !important;
+        }
+        body.mobile-mode .total-final .total-final-label{
+            font-size: 22px !important;
+        }
+        body.mobile-mode .total-final .kan-badge{
+            font-size: 13px !important;
+            padding: 2px 8px !important;
+        }
+        body.mobile-mode .ludashi-score,
+        body.mobile-mode .power-consumption{
+            font-size: 13px !important;
+        }
+        body.mobile-mode .rebate-info{
+            font-size: 11px !important;
         }
         /* 客户名称输入栏加大 */
         body.mobile-mode .user{
@@ -1824,7 +1912,16 @@
         </div>
         <div class="total-line"><span>配件总价：</span><span id="total">0.00</span></div>
         <div class="total-line"><span>利润率：</span><span>+5.75%（÷0.9425）</span></div>
-        <div class="total-line total-final"><span>主机总价：</span><span id="final">0 元</span></div>
+        <div class="total-line total-final">
+            <div class="kan-row-original">
+                <span class="total-final-label">主机总价：</span>
+                <span class="kan-original" id="final">0 元</span>
+            </div>
+            <div class="kan-row-discount">
+                <span class="kan-badge">砍一刀</span>
+                <span class="kan-discount" id="finalDiscount">0 元</span>
+            </div>
+        </div>
         <div class="total-line ludashi-score"><span>鲁大师跑分：</span><span id="ludashiScore">0 分</span></div>
         <div class="total-line power-consumption"><span>主机默认功耗：</span><span id="totalPower">0 W</span></div>
         <div class="total-line rebate-info"><span>确认收货后凭图文好评可返现10元</span></div>
@@ -6806,10 +6903,10 @@
                         input.value = '???';
                     });
                     
-                    // 匿名化处理：总价仅显示第一位数字，其余替换为X
-                    const finalTotal = clonedDoc.querySelector('#final');
-                    if (finalTotal) {
-                        const originalText = finalTotal.textContent;
+                    // 匿名化处理：总价仅显示第一位数字，其余替换为X（原价与砍一刀优惠价均打码）
+                    function maskPrice(el){
+                        if(!el) return;
+                        const originalText = el.textContent;
                         const match = originalText.match(/(\d+)(\s*元)/);
                         if (match) {
                             const digits = match[1];
@@ -6817,10 +6914,12 @@
                             if (digits.length > 0) {
                                 const firstDigit = digits[0];
                                 const maskedDigits = firstDigit + 'X'.repeat(digits.length - 1);
-                                finalTotal.textContent = maskedDigits + suffix;
+                                el.textContent = maskedDigits + suffix;
                             }
                         }
                     }
+                    maskPrice(clonedDoc.querySelector('#final'));
+                    maskPrice(clonedDoc.querySelector('#finalDiscount'));
                     
                     // 匿名化处理：配件总价隐藏
                     const totalPrice = clonedDoc.querySelector('#total');
@@ -7332,8 +7431,23 @@
             taxRate = 1.13;
         }
         finalPrice = Math.round(finalPrice * taxRate);
-        
+
         document.getElementById("final").innerText=`${finalPrice} 元`;
+
+        // 砍一刀优惠：根据主机总价区间计算优惠金额
+        // 5000元以内砍39元，5000-10000砍59元，10000-20000砍99元，20000以上砍189元
+        let kanDiscount = 0;
+        if (finalPrice < 5000) {
+            kanDiscount = 39;
+        } else if (finalPrice < 10000) {
+            kanDiscount = 59;
+        } else if (finalPrice < 20000) {
+            kanDiscount = 99;
+        } else {
+            kanDiscount = 189;
+        }
+        let kanPrice = finalPrice - kanDiscount;
+        document.getElementById("finalDiscount").innerText=`${kanPrice} 元`;
         
         // 计算鲁大师跑分
         calculateLudashiScore();
