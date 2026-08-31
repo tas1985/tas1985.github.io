@@ -1167,8 +1167,8 @@
         .service-container {
             display: flex;
             flex-wrap: nowrap;
-            gap: 8px 15px;
-            padding: 8px 10px;
+            gap: 6px 10px;
+            padding: 5px 8px;
             background: #fff;
             border: 2px solid rgba(37,99,235,0.4);
             border-radius: 6px;
@@ -1182,9 +1182,9 @@
         .service-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             color: #333;
             user-select: none;
         }
@@ -1192,8 +1192,8 @@
             display: none;
         }
         .service-item .svc-box {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border: 2px solid rgba(37,99,235,0.6);
             border-radius: 3px;
             display: inline-flex;
@@ -1205,7 +1205,7 @@
         .service-item .svc-box::after {
             content: '✓';
             color: #2563EB;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             display: none;
         }
@@ -1889,7 +1889,8 @@
             <label class="service-item"><input type="checkbox" id="svc-boxing" checked onchange="updateServiceText()"> <span class="svc-box"></span>寄包装盒</label>
             <label class="service-item"><input type="checkbox" id="svc-win10" checked onchange="updateServiceText()"> <span class="svc-box"></span>WIN10</label>
             <label class="service-item"><input type="checkbox" id="svc-win11" onchange="updateServiceText()"> <span class="svc-box"></span>WIN11</label>
-            <label class="service-item"><input type="checkbox" id="svc-design" onchange="updateServiceText()"> <span class="svc-box"></span>设计软件</label>
+            <label class="service-item"><input type="checkbox" id="svc-ubuntu" onchange="updateServiceText()"> <span class="svc-box"></span>Ubuntu</label>
+            <label class="service-item"><input type="checkbox" id="svc-design" onchange="updateServiceText()"> <span class="svc-box"></span>软件</label>
             <label class="service-item"><input type="checkbox" id="svc-light" onchange="updateServiceText()"> <span class="svc-box"></span>关灯</label>
             <label class="service-item"><input type="checkbox" id="svc-burntest" checked onchange="updateServiceText()"> <span class="svc-box"></span>烤机测试</label>
         </div>
@@ -7826,7 +7827,8 @@
         if (document.getElementById("svc-boxing").checked) services.push("包装盒寄出");
         if (document.getElementById("svc-win10").checked) services.push("WIN10");
         if (document.getElementById("svc-win11").checked) services.push("WIN11");
-        if (document.getElementById("svc-design").checked) services.push("安装设计软件");
+        if (document.getElementById("svc-ubuntu").checked) services.push("Ubuntu");
+        if (document.getElementById("svc-design").checked) services.push("安装软件");
         if (document.getElementById("svc-light").checked) services.push("关灯");
         if (document.getElementById("svc-burntest").checked) services.push("烤机测试");
         return services;
@@ -7853,7 +7855,8 @@
         document.getElementById("svc-boxing").checked = services.includes("包装盒寄出");
         document.getElementById("svc-win10").checked = services.includes("WIN10");
         document.getElementById("svc-win11").checked = services.includes("WIN11");
-        document.getElementById("svc-design").checked = services.includes("安装设计软件");
+        document.getElementById("svc-ubuntu").checked = services.includes("Ubuntu");
+        document.getElementById("svc-design").checked = services.includes("安装软件");
         document.getElementById("svc-light").checked = services.includes("关灯");
         document.getElementById("svc-burntest").checked = services.includes("烤机测试");
     }
