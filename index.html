@@ -855,6 +855,62 @@
             transform: translateY(-3px) scale(1.02) !important;
             box-shadow: 0 6px 15px rgba(22,163,74,0.25), 0 3px 6px rgba(0,0,0,0.08) !important;
         }
+        /* 全自动云同步状态指示 pill */
+        .auto-sync-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            align-self: center;
+            font-size: 13px;
+            color: #16a34a;
+            cursor: pointer;
+            user-select: none;
+            padding: 5px 14px;
+            border-radius: 999px;
+            background: linear-gradient(#ffffff, #eefaf2);
+            border: 1px solid #bfe6cd;
+            box-shadow: 0 2px 5px rgba(22,163,74,0.18), inset 0 1px 0 #fff;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .auto-sync-state:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(22,163,74,0.28), inset 0 1px 0 #fff;
+        }
+        .auto-sync-state .dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: #16a34a;
+            box-shadow: 0 0 6px rgba(22,163,74,0.8);
+            flex: none;
+        }
+        .auto-sync-state.syncing { color: #2563EB; border-color: #c7d7f5; background: linear-gradient(#ffffff,#eef4ff); }
+        .auto-sync-state.syncing .dot { background: #2563EB; box-shadow: 0 0 6px rgba(37,99,235,0.8); animation: autoSyncPulse 1s ease-in-out infinite; }
+        .auto-sync-state.pending { color: #d97706; border-color: #f5d9a8; background: linear-gradient(#ffffff,#fef6e7); }
+        .auto-sync-state.pending .dot { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.8); }
+        .auto-sync-state.error { color: #dc2626; border-color: #f3c2c2; background: linear-gradient(#ffffff,#fdeeee); }
+        .auto-sync-state.error .dot { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.8); }
+        .auto-sync-state.off, .auto-sync-state.disabled { color: #8a8f99; border-color: #e0e2e6; background: linear-gradient(#ffffff,#f6f7f9); }
+        .auto-sync-state.off .dot, .auto-sync-state.disabled .dot { background: #b6bac2; box-shadow: none; }
+        @keyframes autoSyncPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        body.mobile-mode .all-btn-container .auto-sync-state {
+            font-size: 12px;
+            padding: 8px 12px;
+            min-height: 40px;
+        }
+        /* 弹窗内全自动同步区块 */
+        .sync-auto-box {
+            border: 1px solid #d8e6fb;
+            background: linear-gradient(#ffffff, #f4f8ff);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 12px;
+            text-align: left;
+        }
+        .sync-auto-box label {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 15px; color: #1f2937; font-weight: 600; cursor: pointer;
+        }
+        .sync-auto-box .sync-tip { margin-top: 6px; line-height: 1.6; }
         .btn-cost-toggle {
             border-color: #ff9900;
             color: #ff9900;
@@ -2009,6 +2065,7 @@
                 <button class="btn-reset" onclick="reset()">清空重置</button>
                 <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
                 <button class="btn-sync" id="btnSync" type="button" onclick="SyncModule.open()">同步数据</button>
+                <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
             </div>
             <div class="screenshot-btn-row">
                 <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
@@ -2095,6 +2152,14 @@
                 <button type="button" onclick="SyncModule.showSettings()">同步设置</button>
                 <button type="button" onclick="SyncModule.close()">关闭</button>
             </div>
+            <div class="sync-auto-box">
+                <label><input type="checkbox" id="sync-auto-toggle" onchange="SyncModule.setAuto(this.checked)"> 开启全自动同步</label>
+                <div class="sync-tip">保存配置后<strong>自动上传云端</strong>；打开本页面时自动拉取，之后每 1 分钟自动同步一次。手机或其他设备只需在「同步设置」中填写<strong>同一个仓库名和令牌</strong>，即可自动调取全部客户配置单，无需同步码。</div>
+                <div id="sync-auto-status" class="sync-tip" style="font-weight:600;"></div>
+                <div class="sync-btn-row" style="margin-top:8px;">
+                    <button type="button" class="primary" onclick="SyncModule.syncNow(this)">立即同步一次</button>
+                </div>
+            </div>
         </div>
         <!-- 发送面板 -->
         <div id="sync-send" class="sync-area" style="display:none">
@@ -2120,7 +2185,7 @@
         </div>
         <!-- 设置面板 -->
         <div id="sync-settings" class="sync-area" style="display:none">
-            <p class="sync-tip">仅需设置一次。请在 Gitee 创建<strong>私有</strong>仓库（建议勾选「使用 Readme 初始化」），并在「设置-私人令牌」生成 token（勾选 projects 权限）。</p>
+            <p class="sync-tip">仅需设置一次。请在 Gitee 创建<strong>私有</strong>仓库（建议勾选「使用 Readme 初始化」），并在「设置-私人令牌」生成 token（勾选 projects 权限）。<br>手机/其他设备上填写<strong>完全相同</strong>的仓库名和令牌，即可实现全自动同步。</p>
             <input type="text" id="sync-repo" placeholder="仓库名（如：yourname/pc-sync）">
             <input type="password" id="sync-token" placeholder="私人令牌 token">
             <input type="text" id="sync-branch" placeholder="分支（留空自动获取默认分支）">
@@ -8116,6 +8181,9 @@
         
         // 预加载所有机箱图片到缓存
         preloadImages();
+
+        // 启动全自动云同步：自动拉取云端配置并开启每分钟轮询（未配置仓库时静默跳过）
+        try { if(window.SyncModule && SyncModule.start) SyncModule.start(); } catch(e){}
     }
 
     function save(){
@@ -8151,6 +8219,9 @@
             o.remark1 = document.getElementById("remark1").value;
             o.remark2 = document.getElementById("remark2").value;
             o.services = getSelectedServices();
+            // 自动同步用：唯一ID + 毫秒时间戳（不影响任何现有功能）
+            o._ut = Date.now();
+            o._id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
             list.push(o);
             
             console.log("即将保存的配置数量:", list.length);
@@ -8173,6 +8244,7 @@
                                 localStorage.setItem("list",JSON.stringify(list));
                                 showToast("缓存已清理，保存成功！", "success");
                                 initUserDropdown();
+                                try { if(window.SyncModule && SyncModule.notifyLocalChanged) SyncModule.notifyLocalChanged(); } catch(e){}
                                 return;
                             } catch(e2) {
                                 showToast("保存失败：清理后仍空间不足", "error", 5000);
@@ -8191,6 +8263,8 @@
             
             initUserDropdown();
             showToast("保存成功！当前共 " + list.length + " 个配置", "success");
+            // 保存成功后触发全自动云同步（防抖 2.5 秒，未配置仓库时自动跳过）
+            try { if(window.SyncModule && SyncModule.notifyLocalChanged) SyncModule.notifyLocalChanged(); } catch(e){}
         } catch(e) {
             console.error("保存配置时发生错误:",e);
             showToast("保存失败：系统错误，请重试", "error");
@@ -8771,8 +8845,9 @@
             for(let i=0;i<bytes.length;i+=CH) bin += String.fromCharCode.apply(null, bytes.subarray(i, i+CH));
             return btoa(bin);
         }
-        // 解包：base64 → XOR还原 → UTF8 → JSON
-        function unpackData(dataB64){
+        // 解包：base64 → XOR还原 → UTF8 → JSON（ver=1 同步码文件，ver=2 全自动同步文件）
+        function unpackData(dataB64, ver){
+            ver = ver || 1;
             let bin;
             try { bin = atob((dataB64||'').replace(/\s/g,'')); }
             catch(e){ throw new Error('数据格式错误'); }
@@ -8781,8 +8856,8 @@
             for(let i=0;i<bytes.length;i++) bytes[i] = bytes[i] ^ XOR_KEY.charCodeAt(i % XOR_KEY.length);
             let obj;
             try { obj = JSON.parse(new TextDecoder('utf-8').decode(bytes)); }
-            catch(e){ throw new Error('数据内容无效或同步码不匹配'); }
-            if(!obj || obj.v !== 1 || !Array.isArray(obj.items)) throw new Error('数据版本不兼容');
+            catch(e){ throw new Error(ver === 2 ? '云端数据内容无效' : '数据内容无效或同步码不匹配'); }
+            if(!obj || obj.v !== ver || !Array.isArray(obj.items)) throw new Error('数据版本不兼容');
             return obj;
         }
         function utf8ToB64(str){
@@ -8861,6 +8936,49 @@
                 });
             } catch(e){ /* 清理失败不影响主流程 */ }
         }
+        // 读取文件并返回 sha（自动同步更新文件时需要）；404 返回 null
+        async function giteeStat(c, path){
+            const url = apiBase(c) + path + '?access_token=' + encodeURIComponent(c.token);
+            const r = await req(url);
+            if(r.status === 404) return null;
+            if(!r.ok) throw new Error('Gitee 返回 ' + r.status);
+            const j = await r.json();
+            if(!j || !j.content) return null;
+            return { sha: j.sha || null, content: (j.content || '').replace(/\s/g,'') };
+        }
+        // 创建(POST)或更新(PUT，需 sha)文件；POST 冲突时自动转 PUT 重试一次
+        async function giteeWrite(c, path, contentB64, message, branch, sha){
+            const br = branch || c.branch || 'master';
+            async function doWrite(method, useSha){
+                const o = {content: contentB64, message: message, branch: br};
+                if(useSha) o.sha = useSha;
+                return await req(apiBase(c) + path + '?access_token=' + encodeURIComponent(c.token), {
+                    method: method,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(o)
+                });
+            }
+            function explain(r, t){
+                let m = '';
+                try { m = JSON.parse(t).message || ''; } catch(e){ m = (t || '').slice(0, 120); }
+                let hint = '';
+                if(r.status === 400 && /branch/i.test(m)) hint = '（分支不存在，可在同步设置里留空分支自动获取）';
+                else if(r.status === 401) hint = '（token 无效或权限不足）';
+                else if(r.status === 404) hint = '（仓库不存在，请检查同步设置）';
+                return '上传失败(' + r.status + ') ' + hint + ' ' + m;
+            }
+            let r = await doWrite(sha ? 'PUT' : 'POST', sha);
+            if(!r.ok && !sha && (r.status === 400 || r.status === 409 || r.status === 422)){
+                // 文件已存在（可能是其他设备刚创建）：取最新 sha 后转 PUT 重试
+                const st = await giteeStat(c, path);
+                if(st && st.sha){ r = await doWrite('PUT', st.sha); }
+            }
+            if(!r.ok){
+                const t = await r.text();
+                throw new Error(explain(r, t));
+            }
+            return true;
+        }
         // 清理超过 24 小时的过期同步文件（尽力而为，不阻塞，兼容 sync/ 目录与根目录）
         function cleanupExpired(c){
             Promise.resolve(giteeList(c, SYNC_DIR)).catch(()=>[]).then(a =>
@@ -8894,8 +9012,19 @@
             $('syncModal').style.display = 'flex';
             backMain();
             const c = cfg();
+            const tg = $('sync-auto-toggle');
+            if(tg) tg.checked = !!c.repo && !!c.token && c.auto !== false;
             if(!c.repo || !c.token){
                 status('尚未配置同步仓库，请先点击「同步设置」完成一次性配置');
+                setAutoStatus('off');
+            } else if(c.auto === false){
+                status('');
+                setAutoStatus('disabled');
+            } else {
+                status('');
+                setAutoStatus(autoBusy ? 'syncing' : 'ok');
+                // 打开弹窗时顺手同步一次（静默，失败只改状态指示）
+                autoCycle('modal').then(afterAutoCycle).catch(()=>{});
             }
         }
         function close(){ $('syncModal').style.display = 'none'; }
@@ -8920,10 +9049,11 @@
                 status('正在验证仓库与令牌...');
                 const info = await giteeRepoInfo({repo: repo, token: token});
                 const branch = branchInput || info.default_branch || 'master';
-                saveCfg({repo: repo, token: token, branch: branch});
+                const prevAuto = (typeof cfg().auto === 'boolean') ? cfg().auto : true;
+                saveCfg({repo: repo, token: token, branch: branch, auto: prevAuto});
                 status('验证通过！默认分支：' + info.default_branch + '，设置已保存（仅存于本设备）');
-                showToast('同步设置已保存并验证通过', 'success');
-                setTimeout(backMain, 1000);
+                showToast('同步设置已保存并验证通过，正在自动同步…', 'success');
+                setTimeout(() => { backMain(); start(); }, 1200);
             } catch(e){
                 status('验证失败：' + e.message + '（未保存，请检查后重试）', true);
             } finally {
@@ -9052,6 +9182,7 @@
                 try { initUserDropdown(); } catch(e){}
                 close();
                 showToast('已完全覆盖导入 ' + payload.count + ' 条配置', 'success');
+                try { notifyLocalChanged(); } catch(e){}
             } else {
                 const local = getList();
                 const tOf = it => it._st || Date.parse(it.time) || 0;
@@ -9074,7 +9205,262 @@
                 try { initUserDropdown(); } catch(e){}
                 close();
                 showToast('合并完成：新增 ' + added + ' 条，更新 ' + updated + ' 条，保持不变 ' + skipped + ' 条', 'success');
+                try { notifyLocalChanged(); } catch(e){}
             }
+        }
+
+        // ============================================================
+        // 全自动同步：固定云文件 + 双向合并
+        // 保存配置 → 防抖自动上传；打开页面/每分钟 → 自动拉取合并
+        // ============================================================
+        const AUTO_PREFIX = 'PCAUTOSYNC2.';                 // 自动同步文件前缀
+        const AUTO_PATHS = ['sync/auto/auto-data.json', 'PCAUTO_AUTO.json']; // 优先子目录，失败回退根目录
+        const AUTO_POLL_MS = 60000;                         // 后台轮询间隔：1 分钟
+        const AUTO_DEBOUNCE_MS = 2500;                      // 保存后防抖上传
+
+        let autoBusy = false;                               // 同步循环互斥
+        let autoQueued = false;                             // 忙时排队再跑一次
+        let autoStarted = false;                            // 定时器/监听是否已挂载
+        let autoDebounceTimer = null;
+        let autoLastOkAt = 0;                               // 上次成功同步时间
+
+        function autoConfigured(){
+            const c = cfg();
+            return !!(c.repo && c.token);
+        }
+        function autoEnabled(){
+            const c = cfg();
+            return !!(c.repo && c.token && c.auto !== false);
+        }
+        function hhmm(ms){
+            const d = new Date(ms || Date.now());
+            const p = n => String(n).padStart(2,'0');
+            return p(d.getHours()) + ':' + p(d.getMinutes());
+        }
+
+        // ---- 数据归一化：为每条配置生成稳定 _id 与数值时间戳 _ut ----
+        function fpId(it){
+            const keys = ['name','time','cpu','cpup','ram','ramp','board','boardp','cooler','coolerp',
+                'vga','vgap','ssd','ssdp','hdd','hddp','case','casep','fan','fanp','power','powerp',
+                'other','otherp','remark1','remark2'];
+            let s = keys.map(k => String(it[k] == null ? '' : it[k])).join('');
+            s += '' + (Array.isArray(it.services) ? it.services.join('') : '');
+            let h = 0x811c9dc5;
+            for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+            return 'f' + h.toString(36);
+        }
+        function normItem(it){
+            const o = Object.assign({}, it);
+            delete o._st;
+            if(!o._id) o._id = fpId(o);
+            if(typeof o._ut !== 'number' || !o._ut){
+                const t = Date.parse(o.time);
+                o._ut = isNaN(t) ? 0 : t;
+            }
+            return o;
+        }
+        function normList(list){ return (Array.isArray(list) ? list : []).map(normItem); }
+        function sigOf(list){
+            return list.map(i => i._id + ':' + i._ut).sort().join(';');
+        }
+        // 双向合并：按 _id 去重，同 id 取 _ut 较新者；结果按时间升序（保持 append 历史顺序）
+        function mergeLists(local, cloud){
+            const map = new Map();
+            cloud.forEach(it => { map.set(it._id, it); });
+            local.forEach(it => {
+                const ex = map.get(it._id);
+                if(!ex || (it._ut || 0) >= (ex._ut || 0)) map.set(it._id, it);
+            });
+            return Array.from(map.values()).sort((a,b) => (a._ut||0) - (b._ut||0));
+        }
+
+        // ---- 云端固定文件读写 ----
+        async function cloudRead(c){
+            for(let i=0;i<AUTO_PATHS.length;i++){
+                const st = await giteeStat(c, AUTO_PATHS[i]);
+                if(st && st.content){
+                    const text = atob(st.content);
+                    if(text.indexOf(AUTO_PREFIX) === 0){
+                        const obj = unpackData(text.slice(AUTO_PREFIX.length), 2);
+                        return { path: AUTO_PATHS[i], sha: st.sha, obj: obj };
+                    }
+                }
+            }
+            return null;
+        }
+        async function cloudWrite(c, path, b64, branch, sha){
+            const msg = 'auto sync ' + new Date().toISOString().slice(0,19).replace('T',' ');
+            try {
+                await giteeWrite(c, path, b64, msg, branch, sha);
+                return path;
+            } catch(e){
+                if(path === AUTO_PATHS[0]){
+                    // 子目录写入失败（个别仓库不支持自动建目录）→ 回退根目录
+                    const st2 = await giteeStat(c, AUTO_PATHS[1]).catch(()=>null);
+                    await giteeWrite(c, AUTO_PATHS[1], b64, msg, branch, st2 ? st2.sha : null);
+                    return AUTO_PATHS[1];
+                }
+                throw e;
+            }
+        }
+
+        // ---- 状态指示（按钮旁 pill + 弹窗内状态行）----
+        function setAutoStatus(state, msg){
+            const pill = $('autoSyncState');
+            if(pill){
+                const txt = pill.querySelector('.txt');
+                pill.className = 'auto-sync-state ' + state;
+                let label;
+                if(state === 'off') label = '云同步未配置';
+                else if(state === 'disabled') label = '自动同步已关闭';
+                else if(state === 'pending') label = '待同步…';
+                else if(state === 'syncing') label = '同步中…';
+                else if(state === 'error') label = '同步失败，点此重试';
+                else label = autoLastOkAt ? ('已同步 ' + hhmm(autoLastOkAt)) : '等待首次同步…';
+                if(txt) txt.textContent = label;
+            }
+            const m = $('sync-auto-status');
+            if(m){
+                m.style.color = state === 'error' ? '#dc2626'
+                    : (state === 'pending' || state === 'syncing') ? '#2563EB' : '#16a34a';
+                let text = msg;
+                if(!text){
+                    if(state === 'off') text = '尚未配置云仓库，请先点「同步设置」完成一次性配置。';
+                    else if(state === 'disabled') text = '全自动同步已关闭，勾选上方开关即可开启。';
+                    else if(state === 'pending') text = '本地有新配置，即将自动上传…';
+                    else if(state === 'syncing') text = '正在与云端同步…';
+                    else if(state === 'error') text = '同步遇到问题，将在下次保存或 1 分钟后自动重试。';
+                    else text = autoLastOkAt ? ('上次成功同步：' + new Date(autoLastOkAt).toLocaleString()) : '配置完成后将自动开始同步。';
+                }
+                m.textContent = text;
+            }
+        }
+
+        // ---- 核心同步循环：读云端 → 双向合并 → 写本地 → 写云端 ----
+        async function autoCycle(trigger){
+            if(!autoEnabled()) return { pulled: 0, pushed: 0 };
+            if(autoBusy){ autoQueued = true; return { pulled: 0, pushed: 0, queued: true }; }
+            autoBusy = true;
+            setAutoStatus('syncing');
+            try {
+                const c = cfg();
+                const info = await giteeRepoInfo(c);
+                const branch = c.branch || info.default_branch || 'master';
+
+                const local = normList(getList());
+                const localSig = sigOf(local);
+
+                const remote = await cloudRead(c);
+                const cloudItems = remote ? normList(remote.obj.items) : [];
+                const cloudSig = sigOf(cloudItems);
+
+                const merged = mergeLists(local, cloudItems);
+                const mergedSig = sigOf(merged);
+
+                // 统计云端/本地各自带来的条数
+                const localMap = new Map(local.map(i => [i._id, i]));
+                const cloudMap = new Map(cloudItems.map(i => [i._id, i]));
+                let pulled = 0, pushed = 0;
+                merged.forEach(i => {
+                    const lo = localMap.get(i._id), cl = cloudMap.get(i._id);
+                    if(cl && (!lo || (cl._ut||0) > (lo._ut||0))) pulled++;
+                    if(lo && (!cl || (lo._ut||0) > (cl._ut||0))) pushed++;
+                });
+
+                // 云端有新内容 → 更新本地存储与客户下拉（不影响当前正在编辑的表单）
+                if(mergedSig !== localSig){
+                    localStorage.setItem('list', JSON.stringify(merged));
+                    try { initUserDropdown(); } catch(e){}
+                }
+                // 本地有新内容 → 上传合并后的完整数据
+                if(mergedSig !== cloudSig){
+                    const payload = { v: 2, updatedAt: Date.now(), items: merged };
+                    const b64 = utf8ToB64(AUTO_PREFIX + packData(payload));
+                    await cloudWrite(c, remote ? remote.path : AUTO_PATHS[0], b64, branch, remote ? remote.sha : null);
+                }
+
+                autoLastOkAt = Date.now();
+                setAutoStatus('ok');
+                return { pulled: pulled, pushed: pushed, total: merged.length };
+            } catch(e){
+                setAutoStatus('error', '同步失败：' + e.message + '（将在下次保存或 1 分钟后自动重试）');
+                console.warn('[autoSync]', e);
+                return { pulled: 0, pushed: 0, error: e.message };
+            } finally {
+                autoBusy = false;
+                if(autoQueued){
+                    autoQueued = false;
+                    setTimeout(() => {
+                        autoCycle('queued').then(r => {
+                            if(r && r.pulled > 0 && document.visibilityState !== 'hidden'){
+                                try { showToast('已自动从云端同步 ' + r.pulled + ' 条配置', 'success'); } catch(e){}
+                            }
+                        }).catch(()=>{});
+                    }, 800);
+                }
+            }
+        }
+        function afterAutoCycle(r){
+            if(r && r.pulled > 0 && document.visibilityState !== 'hidden'){
+                try { showToast('已自动从云端同步 ' + r.pulled + ' 条配置', 'success'); } catch(e){}
+            }
+        }
+
+        // 保存配置后调用：防抖触发上传
+        function notifyLocalChanged(){
+            if(!autoEnabled()) return;
+            setAutoStatus('pending');
+            if(autoDebounceTimer) clearTimeout(autoDebounceTimer);
+            autoDebounceTimer = setTimeout(() => {
+                autoCycle('local-change').then(afterAutoCycle).catch(()=>{});
+            }, AUTO_DEBOUNCE_MS);
+        }
+
+        // 页面启动时调用：立即拉取一次 + 每分钟轮询 + 网络恢复自动重连
+        function start(){
+            if(!autoConfigured()){ setAutoStatus('off'); return; }
+            const c = cfg();
+            const tg = $('sync-auto-toggle');
+            if(tg) tg.checked = c.auto !== false;
+            if(c.auto === false){ setAutoStatus('disabled'); return; }
+            setAutoStatus('syncing');
+            if(!autoStarted){
+                autoStarted = true;
+                setInterval(() => {
+                    if(document.visibilityState !== 'hidden'){
+                        autoCycle('poll').then(afterAutoCycle).catch(()=>{});
+                    }
+                }, AUTO_POLL_MS);
+                window.addEventListener('online', () => {
+                    if(autoEnabled()) autoCycle('online').then(afterAutoCycle).catch(()=>{});
+                });
+            }
+            autoCycle('start').then(afterAutoCycle).catch(()=>{});
+        }
+
+        // 弹窗开关：开启/关闭全自动同步
+        function setAuto(on){
+            const c = cfg();
+            c.auto = !!on;
+            saveCfg(c);
+            if(on){ start(); }
+            else {
+                if(autoDebounceTimer) clearTimeout(autoDebounceTimer);
+                setAutoStatus('disabled');
+            }
+        }
+
+        // 「立即同步一次」按钮
+        function syncNow(btn){
+            if(!autoConfigured()){ status('请先完成同步设置', true); showSettings(); return; }
+            const restore = () => { if(btn){ btn.disabled = false; btn.textContent = '立即同步一次'; } };
+            if(btn){ btn.disabled = true; btn.textContent = '同步中...'; }
+            setAutoStatus('syncing');
+            autoCycle('manual').then(r => {
+                restore();
+                if(r && r.error){ setAutoStatus('error', '同步失败：' + r.error); showToast('同步失败：' + r.error, 'error'); return; }
+                showToast('同步完成：云端共 ' + (r.total || 0) + ' 条配置（新拉取 ' + (r.pulled||0) + ' 条，新上传 ' + (r.pushed||0) + ' 条）', 'success');
+            }).catch(e => { restore(); showToast('同步失败：' + e.message, 'error'); });
         }
 
         // ---------- 对外接口 ----------
@@ -9083,7 +9469,10 @@
             showSend: showSend, showReceive: showReceive,
             showSettings: showSettings, saveSettings: saveSettings,
             renderSendScope: renderSendScope,
-            doSend: doSend, doFetch: doFetch, doImport: doImport
+            doSend: doSend, doFetch: doFetch, doImport: doImport,
+            // 全自动同步
+            start: start, setAuto: setAuto, syncNow: syncNow,
+            notifyLocalChanged: notifyLocalChanged
         };
     })();
 </script>
