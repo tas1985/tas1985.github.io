@@ -730,7 +730,8 @@
         }
         .screenshot-btn-row,
         .action-btn-row,
-        .invoice-btn-row {
+        .invoice-btn-row,
+        .sync-footer-row {
             display: flex;
             gap: 4px;
             width: 100%;
@@ -795,6 +796,29 @@
         .invoice-btn-row button:active {
             transform: translateY(0);
             box-shadow: 0 1px 2px rgba(37,99,235,0.1);
+        }
+
+        /* 最底部云同步行：同步按钮 + 自动同步状态指示（发票行下一行） */
+        .sync-footer-row {
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .sync-footer-row .btn-sync {
+            flex: 1 1 auto;
+            min-width: 130px;
+            min-height: 42px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-style: solid;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        .sync-footer-row .auto-sync-state {
+            flex: 0 0 auto;
         }
 
         .btn-save {
@@ -892,7 +916,21 @@
         .auto-sync-state.off, .auto-sync-state.disabled { color: #8a8f99; border-color: #e0e2e6; background: linear-gradient(#ffffff,#f6f7f9); }
         .auto-sync-state.off .dot, .auto-sync-state.disabled .dot { background: #b6bac2; box-shadow: none; }
         @keyframes autoSyncPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        body.mobile-mode .all-btn-container .auto-sync-state {
+        /* 最底部云同步行（手机端：按钮与状态指示上下两行排布） */
+        body.mobile-mode .sync-footer-row {
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        body.mobile-mode .sync-footer-row .btn-sync {
+            flex: 1 1 100%;
+            min-height: 48px;
+            padding: 12px 8px !important;
+            font-size: 17px !important;
+        }
+        body.mobile-mode .sync-footer-row .auto-sync-state {
+            flex: 1 1 100%;
+            justify-content: center;
             font-size: 12px;
             padding: 8px 12px;
             min-height: 40px;
@@ -1631,7 +1669,6 @@
         }
         body.mobile-mode .all-btn-container .btn-save,
         body.mobile-mode .all-btn-container .btn-reset,
-        body.mobile-mode .all-btn-container .btn-sync,
         body.mobile-mode .all-btn-container .btn-screenshot,
         body.mobile-mode .all-btn-container .btn-anonymous{
             flex: 1 !important;
@@ -2064,8 +2101,6 @@
                 </div>
                 <button class="btn-reset" onclick="reset()">清空重置</button>
                 <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
-                <button class="btn-sync" id="btnSync" type="button" onclick="SyncModule.open()">同步数据</button>
-                <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
             </div>
             <div class="screenshot-btn-row">
                 <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
@@ -2122,6 +2157,12 @@
     <div class="invoice-btn-row">
         <button class="btn-invoice" id="btn-kai-pu" onclick="toggleInvoice('pu')">开普票</button>
         <button class="btn-invoice" id="btn-kai-zhuan" onclick="toggleInvoice('zhuan')">开专票</button>
+    </div>
+
+    <!-- 云同步：同步按钮 + 自动同步状态指示（置于页面最底部，发票行下一行） -->
+    <div class="sync-footer-row">
+        <button class="btn-sync" id="btnSync" type="button" onclick="SyncModule.open()">同步数据</button>
+        <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
 
 </div>
@@ -6734,7 +6775,8 @@
                         .btn-screenshot {
                             display: none !important;
                         }
-                        .invoice-btn-row {
+                        .invoice-btn-row,
+                        .sync-footer-row {
                             display: none !important;
                         }
                         .title {
@@ -6866,7 +6908,8 @@
                         .btn-screenshot {
                             display: none !important;
                         }
-                        .invoice-btn-row {
+                        .invoice-btn-row,
+                        .sync-footer-row {
                             display: none !important;
                         }
                         /* 修复配件列表字体大小不一的问题 - 确保所有文字元素字体统一 */
@@ -7355,7 +7398,8 @@
                         .btn-screenshot {
                             display: none !important;
                         }
-                        .invoice-btn-row {
+                        .invoice-btn-row,
+                        .sync-footer-row {
                             display: none !important;
                         }
                         .screenshot-btn-container {
@@ -7490,7 +7534,8 @@
                         .btn-screenshot {
                             display: none !important;
                         }
-                        .invoice-btn-row {
+                        .invoice-btn-row,
+                        .sync-footer-row {
                             display: none !important;
                         }
                         .user input, .item input, .combo {
