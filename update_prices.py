@@ -1637,6 +1637,33 @@ def update_gpu_prices():
             else:
                 pos += 1
         
+        # 特殊处理：所有RTX5060TI 16G型号价格按照"七彩虹 RTX5060TI 16G 战斧 DUO 双扇"统一更新
+        # 大小写不同的型号（RTX5060TI/Ti/ti）均需匹配，只更新16G版本（排除8G）
+        rtx5060ti_16g_ref_price = None
+        for ref_line in lines[start_idx:end_idx]:
+            if "七彩虹 RTX5060TI 16G 战斧 DUO 双扇" in ref_line:
+                ref_price_match = re.search(r'p:(\d+)', ref_line)
+                if ref_price_match:
+                    rtx5060ti_16g_ref_price = int(ref_price_match.group(1))
+                    break
+        if rtx5060ti_16g_ref_price is not None:
+            special_count = 0
+            for i in range(start_idx + 1, end_idx):
+                line = lines[i]
+                if '{n:"' in line and '",p:' in line:
+                    model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                    if model_match:
+                        model_name = model_match.group(1)
+                        old_price = int(model_match.group(2))
+                        model_lower = model_name.lower()
+                        # 大小写不敏感匹配 RTX5060TI/Ti/ti 且为 16G（含16GB），排除8G
+                        if "rtx5060ti" in model_lower and re.search(r'(?<!\d)16gb?', model_lower):
+                            if old_price != rtx5060ti_16g_ref_price:
+                                lines[i] = re.sub(r'p:\d+', f'p:{rtx5060ti_16g_ref_price}', line)
+                                special_count += 1
+                                print(f"  ★ RTX5060TI 16G 统价: {model_name[:40]}... ￥{old_price} -> ￥{rtx5060ti_16g_ref_price}")
+            print(f"✅ RTX5060TI 16G 统一按战斧DUO价格更新 {special_count} 个型号（参考价￥{rtx5060ti_16g_ref_price}）")
+
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
