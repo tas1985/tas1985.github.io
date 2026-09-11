@@ -8622,55 +8622,108 @@
     }
 
     // ========== 客户名称下拉列表功能 ==========
-    // 初始化客户名称下拉列表
+    // 懒加载优化：只缓存名称列表，点击输入框时仅渲染前 30 条匹配项，滚动到底部再加载更多，避免大量名称一次性渲染导致卡顿
+    const USER_DROPDOWN_PAGE_SIZE = 30;
+    let userNamesCache = [];
+    let userDropdownRenderedCount = 0;
+    let userDropdownEventsBound = false;
+
+    // 刷新客户名称缓存（不再一次性构建全部 DOM）
     function initUserDropdown() {
         const list = JSON.parse(localStorage.getItem("list")) || [];
         // 提取唯一的客户名称并去重
-        const userNames = Array.from(new Set(list.map(item => item.name).filter(name => name.trim())));
+        userNamesCache = Array.from(new Set(list.map(item => item.name).filter(name => name.trim())));
         const dropdown = document.getElementById("userDropdown");
-        dropdown.innerHTML = "";
-        
-        userNames.forEach(name => {
-            const div = document.createElement("div");
-            div.innerText = name;
-            
-            // 移动端触摸事件处理
-            let touchStartTime = 0;
-            let touchStartY = 0;
-            let isScrolling = false;
-            
-            div.addEventListener('touchstart', function(e) {
-                touchStartTime = Date.now();
-                touchStartY = e.touches[0].clientY;
-                isScrolling = false;
-            }, {passive: true});
-            
-            div.addEventListener('touchmove', function(e) {
-                if (Math.abs(e.touches[0].clientY - touchStartY) > 5) {
-                    isScrolling = true;
-                }
-            }, {passive: true});
-            
-            div.addEventListener('touchend', function(e) {
-                const touchDuration = Date.now() - touchStartTime;
-                if (!isScrolling && touchDuration < 300) {
-                    document.getElementById("user").value = name;
-                    dropdown.style.display = "none";
-                    loadConfigByName(name);
-                }
-            }, {passive: true});
-            
-            // 桌面端点击事件
-            div.onmousedown = () => {
-                if (!('ontouchstart' in window)) {
-                    document.getElementById("user").value = name;
-                    dropdown.style.display = "none";
-                    loadConfigByName(name);
-                }
-            };
-            
-            dropdown.appendChild(div);
+        if (dropdown) {
+            dropdown.innerHTML = "";
+            userDropdownRenderedCount = 0;
+        }
+        bindUserDropdownEvents();
+    }
+
+    // 事件委托：下拉容器上只绑定一次监听，替代给每条选项绑定事件
+    function bindUserDropdownEvents() {
+        if (userDropdownEventsBound) return;
+        const dropdown = document.getElementById("userDropdown");
+        if (!dropdown) return;
+        userDropdownEventsBound = true;
+
+        // 从事件目标定位到选项 div（选项是下拉容器的直接子元素）
+        function getItem(e) {
+            const t = e.target;
+            return (t && t.tagName === "DIV" && t.parentNode === dropdown) ? t : null;
+        }
+        function pickItem(item) {
+            const name = item.getAttribute("data-name");
+            document.getElementById("user").value = name;
+            dropdown.style.display = "none";
+            loadConfigByName(name);
+        }
+
+        // 移动端触摸事件处理
+        let touchStartTime = 0;
+        let touchStartY = 0;
+        let isScrolling = false;
+
+        dropdown.addEventListener('touchstart', function(e) {
+            touchStartTime = Date.now();
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
+        }, {passive: true});
+
+        dropdown.addEventListener('touchmove', function(e) {
+            if (Math.abs(e.touches[0].clientY - touchStartY) > 5) {
+                isScrolling = true;
+            }
+        }, {passive: true});
+
+        dropdown.addEventListener('touchend', function(e) {
+            const touchDuration = Date.now() - touchStartTime;
+            const item = getItem(e);
+            if (item && !isScrolling && touchDuration < 300) {
+                pickItem(item);
+            }
+        }, {passive: true});
+
+        // 桌面端点击事件
+        dropdown.addEventListener('mousedown', function(e) {
+            const item = getItem(e);
+            if (item && !('ontouchstart' in window)) {
+                pickItem(item);
+            }
         });
+
+        // 滚动到底部时懒加载下一页
+        dropdown.addEventListener('scroll', function() {
+            if (dropdown.scrollTop + dropdown.clientHeight >= dropdown.scrollHeight - 30) {
+                renderUserDropdownItems(false);
+            }
+        }, {passive: true});
+    }
+
+    // 按当前输入渲染匹配项（reset=true 重新渲染第一页，false 追加下一页）
+    function renderUserDropdownItems(reset) {
+        const dropdown = document.getElementById("userDropdown");
+        if (reset) {
+            dropdown.innerHTML = "";
+            userDropdownRenderedCount = 0;
+        }
+        const inputVal = document.getElementById("user").value.toLowerCase();
+        const matches = inputVal
+            ? userNamesCache.filter(name => name.toLowerCase().includes(inputVal))
+            : userNamesCache;
+        const start = userDropdownRenderedCount;
+        const end = Math.min(matches.length, start + USER_DROPDOWN_PAGE_SIZE);
+
+        const fragment = document.createDocumentFragment();
+        for (let i = start; i < end; i++) {
+            const div = document.createElement("div");
+            div.innerText = matches[i];
+            div.setAttribute("data-name", matches[i]);
+            fragment.appendChild(div);
+        }
+        dropdown.appendChild(fragment);
+        userDropdownRenderedCount = end;
     }
 
     // 根据客户名称加载对应的配置单
@@ -8723,7 +8776,8 @@
     // 显示客户名称下拉列表
     function showUserDropdown() {
         const dropdown = document.getElementById("userDropdown");
-        // 如果有选项才显示
+        // 先按当前输入懒渲染第一页匹配项，有选项才显示
+        renderUserDropdownItems(true);
         if (dropdown.children.length > 0) {
             dropdown.style.display = "block";
             dropdown.style.zIndex = 999999;
@@ -8732,8 +8786,6 @@
             if (userContainer) {
                 userContainer.style.zIndex = 1000;
             }
-            // 过滤匹配当前输入的内容
-            filterUserDropdown();
         }
     }
 
@@ -8743,7 +8795,7 @@
         const dropdown = document.getElementById("userDropdown");
 
         // 手机模式下若因 onclick 延迟/未触发导致下拉列表未显示，输入时自动弹出
-        if (inputVal && dropdown.children.length > 0 && dropdown.style.display !== "block") {
+        if (inputVal && userNamesCache.length > 0 && dropdown.style.display !== "block") {
             dropdown.style.display = "block";
             dropdown.style.zIndex = 999999;
             const userContainer = document.querySelector('.user');
@@ -8752,17 +8804,8 @@
             }
         }
 
-        const items = dropdown.getElementsByTagName("div");
-
-        Array.from(items).forEach(item => {
-            if (item.innerText.toLowerCase().includes(inputVal)) {
-                // 显示匹配项：清除内联 display，让 CSS 的 display:flex(手机模式) 或默认 block 生效
-                item.style.removeProperty('display');
-            } else {
-                // 隐藏不匹配项：用 !important 覆盖手机模式 CSS 的 display:flex !important
-                item.style.setProperty('display', 'none', 'important');
-            }
-        });
+        // 直接从缓存渲染前 30 条匹配项（替代遍历全部 DOM 节点）
+        renderUserDropdownItems(true);
     }
 
     // 隐藏客户名称下拉列表
