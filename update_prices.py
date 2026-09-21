@@ -1639,6 +1639,7 @@ def update_gpu_prices():
         
         # 特殊处理：所有RTX5060TI 16G型号价格按照"七彩虹 RTX5060TI 16G 战斧 DUO 双扇"统一更新
         # 大小写不同的型号（RTX5060TI/Ti/ti）均需匹配，只更新16G版本（排除8G）
+        # 微星品牌单独处理（见下方：8G=战斧DUO 8G+49，16G=战斧DUO 16G+599），此处排除
         rtx5060ti_16g_ref_price = None
         for ref_line in lines[start_idx:end_idx]:
             if "七彩虹 RTX5060TI 16G 战斧 DUO 双扇" in ref_line:
@@ -1656,13 +1657,66 @@ def update_gpu_prices():
                         model_name = model_match.group(1)
                         old_price = int(model_match.group(2))
                         model_lower = model_name.lower()
-                        # 大小写不敏感匹配 RTX5060TI/Ti/ti 且为 16G（含16GB），排除8G
-                        if "rtx5060ti" in model_lower and re.search(r'(?<!\d)16gb?', model_lower):
+                        # 大小写不敏感匹配 RTX5060TI/Ti/ti 且为 16G（含16GB），排除8G；排除微星
+                        if "微星" not in model_name and "rtx5060ti" in model_lower and re.search(r'(?<!\d)16gb?', model_lower):
                             if old_price != rtx5060ti_16g_ref_price:
                                 lines[i] = re.sub(r'p:\d+', f'p:{rtx5060ti_16g_ref_price}', line)
                                 special_count += 1
                                 print(f"  ★ RTX5060TI 16G 统价: {model_name[:40]}... ￥{old_price} -> ￥{rtx5060ti_16g_ref_price}")
             print(f"✅ RTX5060TI 16G 统一按战斧DUO价格更新 {special_count} 个型号（参考价￥{rtx5060ti_16g_ref_price}）")
+
+        # 特殊处理：微星 RTX5060TI 8G/16G 价格按"七彩虹 RTX5060TI 战斧 DUO 双扇"价格+加价更新
+        # 8G = 七彩虹 8G 战斧 DUO 双扇 + 49；16G = 七彩虹 16G 战斧 DUO 双扇 + 599
+        # 大小写不同（RTX5060TI/Ti/ti、8G/8g、16G/16g）与品牌前缀（"微星 "/"微星-"）均需匹配
+        msi_ref = {}
+        for ref_line in lines[start_idx:end_idx]:
+            ref_match = re.search(r'{n:"([^"]+)",p:(\d+)}', ref_line)
+            if not ref_match:
+                continue
+            ref_name = ref_match.group(1)
+            ref_lower = ref_name.lower()
+            if "七彩虹" in ref_name and "rtx5060ti" in ref_lower and "战斧" in ref_name and "duo" in ref_lower:
+                if re.search(r'(?<!\d)16gb?', ref_lower):
+                    msi_ref['16g'] = int(ref_match.group(2))
+                elif re.search(r'(?<!\d)8gb?', ref_lower):
+                    msi_ref['8g'] = int(ref_match.group(2))
+        msi_count = 0
+        if msi_ref:
+            for i in range(start_idx + 1, end_idx):
+                line = lines[i]
+                if '{n:"' in line and '",p:' in line:
+                    model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                    if model_match:
+                        model_name = model_match.group(1)
+                        old_price = int(model_match.group(2))
+                        model_lower = model_name.lower()
+                        if "微星" not in model_name or "rtx5060ti" not in model_lower:
+                            continue
+                        # 先匹配16G再匹配8G，避免误判
+                        if re.search(r'(?<!\d)16gb?', model_lower):
+                            ref_price = msi_ref.get('16g')
+                            add = 599
+                        elif re.search(r'(?<!\d)8gb?', model_lower):
+                            ref_price = msi_ref.get('8g')
+                            add = 49
+                        else:
+                            print(f"  ⚠️ 微星5060TI型号缺少显存标记，跳过: {model_name[:40]}...")
+                            continue
+                        if ref_price is None:
+                            print(f"  ⚠️ 未找到七彩虹战斧DUO {'16G' if add == 599 else '8G'} 参考价，跳过: {model_name[:40]}...")
+                            continue
+                        new_price = ref_price + add
+                        if old_price != new_price:
+                            lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                            msi_count += 1
+                            print(f"  ★ 微星RTX5060TI {'16G' if add == 599 else '8G'} 更新: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（七彩虹战斧DUO ￥{ref_price}+{add}）")
+                        else:
+                            print(f"  ≡ 微星RTX5060TI 价格已正确: {model_name[:40]}... ￥{old_price}")
+            ref8_str = f"￥{msi_ref['8g']}+49=￥{msi_ref['8g'] + 49}" if '8g' in msi_ref else "未找到"
+            ref16_str = f"￥{msi_ref['16g']}+599=￥{msi_ref['16g'] + 599}" if '16g' in msi_ref else "未找到"
+            print(f"✅ 微星 RTX5060TI 价格更新完成 {msi_count} 个（8G参考:七彩虹战斧DUO {ref8_str}；16G参考:七彩虹战斧DUO {ref16_str}）")
+        else:
+            print("⚠️ 未找到七彩虹 RTX5060TI 战斧 DUO 双扇 参考型号，微星价格未更新")
 
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
