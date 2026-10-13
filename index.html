@@ -2162,6 +2162,7 @@
     <!-- 云同步：同步按钮 + 自动同步状态指示（置于页面最底部，发票行下一行） -->
     <div class="sync-footer-row">
         <button class="btn-sync" id="btnSync" type="button" onclick="SyncModule.open()">同步数据</button>
+        <button class="btn-sync" id="btnPriceEdit" type="button" onclick="showPriceEdit()" style="border-color:#f59e0b !important;color:#d97706 !important;">改价</button>
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
 
@@ -2276,6 +2277,21 @@
             <button onclick="doAdd()">添加型号</button>
         </div>
         <button onclick="closeModal('addModal')">取消</button>
+    </div>
+</div>
+
+<!-- 改价弹窗：修改单个配件价格并直接写回 index.html 文件 -->
+<div class="modal" id="peModal">
+    <div class="modal-box">
+        <h4 style="color: #d97706; margin-bottom: 10px;">修改配件价格（写回文件）</h4>
+        <div class="add-area">
+            <select id="peType" onchange="peRenderModels()"></select>
+            <select id="peModel"></select>
+            <input type="number" id="peNewPrice" placeholder="输入新价格（数字）" min="0" step="0.01">
+            <div id="peFileStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
+            <button onclick="applyPriceEdit()" style="border-color:#d97706;color:#d97706;">确认改价并写入 index.html</button>
+        </div>
+        <button onclick="closeModal('peModal')">取消</button>
     </div>
 </div>
 
@@ -8564,11 +8580,269 @@
         typeInput.value = currentValue; // 恢复输入框原有内容
         
         alert("型号添加成功！");
-        
+
         // 如果是显卡类型，执行排序
         if(type === 'vga') {
             afterDataUpdate();
         }
+    }
+
+    // ===================== 改价写文件功能 =====================
+    // 直接修改某个配件的价格，并把修改写回 index.html 文件本身（刷新/重开页面后仍然生效）
+    // 电脑版 Chrome/Edge 支持 File System Access API：首次写入时选择一次 index.html，之后记住授权；
+    // 不支持的浏览器（Firefox/手机/微信内置）自动改为「读取原文件→打补丁→下载替换」方式。
+    let peFileHandle = null;
+
+    const PE_CATEGORIES = [["cpu","CPU"],["ram","内存"],["board","主板"],["cooler","散热器"],["fan","风扇"],["power","电源"],["other","其他配件"],["vga","显卡"],["ssd","固态硬盘"],["hdd","机械硬盘"],["case","机箱"]];
+
+    function peOpenDB(){
+        return new Promise((res,rej)=>{
+            const r = indexedDB.open("priceEditDB",1);
+            r.onupgradeneeded = ()=>{ r.result.createObjectStore("h"); };
+            r.onsuccess = ()=>res(r.result);
+            r.onerror = ()=>rej(r.error);
+        });
+    }
+    async function peSaveHandle(h){
+        try{
+            const db = await peOpenDB();
+            await new Promise((res,rej)=>{ const t=db.transaction("h","readwrite"); t.objectStore("h").put(h,"indexHtml"); t.oncomplete=res; t.onerror=()=>rej(t.error); });
+        }catch(e){ /* 记不住句柄不影响本次写入 */ }
+    }
+    async function peLoadHandle(){
+        try{
+            const db = await peOpenDB();
+            return await new Promise((res)=>{ const t=db.transaction("h","readonly"); const q=t.objectStore("h").get("indexHtml"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); });
+        }catch(e){ return null; }
+    }
+
+    function peEsc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+
+    function showPriceEdit(){
+        const typeSel = document.getElementById("peType");
+        if(!typeSel.options.length){
+            PE_CATEGORIES.forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; typeSel.appendChild(o); });
+        }
+        peRenderModels();
+        peUpdateFileStatus();
+        document.getElementById("peNewPrice").value = "";
+        document.getElementById("peModal").style.display = "flex";
+    }
+
+    function peRenderModels(){
+        const type = document.getElementById("peType").value;
+        const sel = document.getElementById("peModel");
+        sel.innerHTML = "";
+        (data[type]||[]).forEach(it=>{
+            const o = document.createElement("option");
+            o.value = it.n;
+            o.textContent = it.n + "（当前 ¥" + it.p + "）";
+            sel.appendChild(o);
+        });
+    }
+
+    async function peUpdateFileStatus(){
+        const el = document.getElementById("peFileStatus");
+        if(!window.showOpenFilePicker){
+            el.textContent = "当前浏览器不支持直接写文件（如微信/手机浏览器），确认后需选择原文件并下载替换。建议用电脑版 Chrome/Edge。";
+            return;
+        }
+        const saved = await peLoadHandle();
+        if(saved){ el.textContent = "已连接文件：" + (saved.name||"index.html") + "（写入时如需重新授权会再询问一次）"; }
+        else{ el.textContent = "首次使用：点「确认改价」后会让你选择本页面对应的 index.html 文件，之后会记住，无需重复选择。"; }
+    }
+
+    // 联动改价规则（与既定约定一致），返回 [{type,name,price,rule}]
+    function peLinkedChanges(type, name, price){
+        const out = [];
+        const eq = (a,b)=>a.trim()===b;
+        const push = (t,n,price2,rule)=>out.push({type:t,name:n,price:price2,rule});
+        if(type==="vga"){
+            if(eq(name,"技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇")){
+                push("vga","华硕 RTX5060TI 16G DUAL 雪豹 黑色", price+100, "雪豹=猎鹰+100");
+            }
+            if(eq(name,"技嘉 RTX5070TI GAMING OC 16G 魔鹰")){
+                push("vga","微星-RTX5070Ti 16G VENTUS  3X OC", price, "与魔鹰同价");
+            }
+            if(eq(name,"七彩虹 RTX5060TI 16G 战斧 DUO 双扇")){
+                data.vga.forEach(it=>{
+                    const nn = it.n.replace(/\s+/g,"").toUpperCase();
+                    if(!nn.includes("RTX5060TI") || !nn.includes("16G")) return;
+                    if(/^微星[\s-]?/.test(it.n)) push("vga", it.n, price+599, "微星16G=战斧+599");
+                    else if(eq(it.n,"华硕 RTX5060TI 16G DUAL 雪豹 黑色")) push("vga", it.n, price+100, "雪豹=猎鹰(统价)+100");
+                    else push("vga", it.n, price, "5060TI 16G统价");
+                });
+            }
+            if(eq(name,"七彩虹 RTX5060TI 8G 战斧 DUO 双扇")){
+                data.vga.forEach(it=>{
+                    const nn = it.n.replace(/\s+/g,"").toUpperCase();
+                    if(!nn.includes("RTX5060TI")) return;
+                    if(!/^微星[\s-]?/.test(it.n)) return;
+                    const m = nn.match(/(\d+)G/);
+                    if(m ? m[1]==="8" : true) push("vga", it.n, price+49, "微星8G=战斧+49");
+                });
+            }
+        }
+        if(type==="ram"){
+            if(eq(name,"金百达 银爵 16G 8x2 3200 D4 C16")){
+                push("ram","光威 天策 16G（8*2）3200 白色 ", price, "与银爵16G同价");
+                push("ram","阿斯加特 弗雷 16G 8*2 3200 黑甲", price, "与银爵16G同价");
+            }
+            if(eq(name,"金百达 银爵 32G 16x2 3200 D4 C16")){
+                push("ram","光威 天策 32G（16*2）3200 白色 ", price, "与银爵32G同价");
+                push("ram","阿斯加特 弗雷 32G 16*2 3200 黑甲", price, "与银爵32G同价");
+            }
+            if(eq(name,"金百达 银爵 32G 16x2 3600 D4 C18")){
+                push("ram","光威 天策 64G（32*2）3200 白色 ", price*2, "天策64G=银爵3600×2");
+            }
+        }
+        return out;
+    }
+
+    async function applyPriceEdit(){
+        const type = document.getElementById("peType").value;
+        const name = document.getElementById("peModel").value;
+        const newPrice = parseFloat(document.getElementById("peNewPrice").value);
+        if(!name){ alert("请选择型号！"); return; }
+        if(isNaN(newPrice) || newPrice < 0){ alert("请输入有效的价格（非负数）！"); return; }
+        const item = data[type].find(i=>i.n===name);
+        if(!item){ alert("型号未找到！"); return; }
+
+        // 汇总所有改动（主改动 + 联动），同名只保留第一条
+        const changes = [{type: type, name: name, newP: newPrice}];
+        peLinkedChanges(type, name, newPrice).forEach(l=>{
+            if(l.type===type && l.name===name) return;
+            const it = data[l.type].find(i=>i.n.trim()===l.name.trim());
+            if(!it) return; // 联动型号不存在则跳过
+            if(changes.some(c=>c.type===l.type && c.name===it.n)) return;
+            changes.push({type: l.type, name: it.n, newP: l.price});
+        });
+
+        // 应用到内存数据并生成报告
+        const reportLines = [];
+        changes.forEach(c=>{
+            const it = data[c.type].find(i=>i.n===c.name);
+            c.oldP = it.p;
+            it.p = c.newP;
+            reportLines.push(c.name + "：" + c.oldP + " → " + c.newP);
+        });
+
+        // 更新界面：已选中配件的价格框同步刷新 + 重新计算 + 修复排序
+        saveData();
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            const v = document.getElementById(k).value;
+            if(v){
+                const it = data[k].find(i=>i.n===v);
+                if(it) document.getElementById(k+"-p").value = it.p;
+            }
+        });
+        calc();
+        afterDataUpdate();
+        closeModal('peModal');
+
+        // 写回 index.html 文件
+        const writeResult = await peWriteToFile(changes);
+        alert("改价完成！\n\n" + reportLines.join("\n") + "\n\n" + writeResult + "\n\n提醒：下次运行爬虫 update_prices.py 会覆盖手动改价。");
+    }
+
+    // 用「型号名→p值」的正则给文件文本打补丁，只改匹配行的价格
+    function pePatchText(text, changes){
+        const misses = [];
+        changes.forEach(c=>{
+            const re = new RegExp('(\\{\\s*n:\\s*"' + peEsc(c.name) + '"\\s*,\\s*p:\\s*)(\\d+(?:\\.\\d+)?)');
+            if(re.test(text)){
+                text = text.replace(re, (m, pre)=> pre + c.newP);
+            }else{
+                misses.push(c.name);
+            }
+        });
+        return {text: text, misses: misses};
+    }
+
+    async function peWriteToFile(changes){
+        let handle = peFileHandle;
+        let how = "已连接文件";
+        if(!handle && window.showOpenFilePicker){
+            const saved = await peLoadHandle();
+            if(saved){
+                try{
+                    const opt = {mode:"readwrite"};
+                    let perm = await saved.queryPermission(opt);
+                    if(perm !== "granted") perm = await saved.requestPermission(opt);
+                    if(perm === "granted"){ handle = saved; how = "上次连接的文件"; }
+                }catch(e){ /* 授权失败则走重新选择 */ }
+            }
+        }
+        if(!handle && window.showOpenFilePicker){
+            try{
+                const picks = await window.showOpenFilePicker({
+                    multiple: false,
+                    types: [{description: "HTML 文件", accept: {"text/html": [".html",".htm"]}}]
+                });
+                handle = picks[0];
+                const txt = await (await handle.getFile()).text();
+                if(!txt.includes("defaultData")){
+                    alert("所选文件里没有找到报价数据（defaultData），请重新选择本页面所在的 index.html！");
+                    return "未写入文件。注意：内存中的价格已更新，但刷新后会丢失！";
+                }
+                peFileHandle = handle;
+                peSaveHandle(handle);
+                how = "新选择的文件";
+            }catch(e){
+                if(e && e.name === "AbortError") return "已取消文件选择，未写入文件。注意：内存中的价格已更新，但刷新后会丢失！";
+                handle = null;
+            }
+        }
+        if(handle){
+            try{
+                const text = await (await handle.getFile()).text();
+                const r = pePatchText(text, changes);
+                const w = await handle.createWritable();
+                await w.write(r.text);
+                await w.close();
+                return "已写入文件：" + (handle.name||"index.html") + "（" + how + "），刷新页面后依然生效。"
+                    + (r.misses.length ? "\n\n⚠ 以下型号在文件中未找到，未写入：\n" + r.misses.join("\n") : "");
+            }catch(e){
+                return "写入文件失败：" + (e && e.message ? e.message : e) + "。注意：内存中的价格已更新，但刷新后会丢失！";
+            }
+        }
+        // 浏览器不支持直接写文件：读原文件→打补丁→下载替换
+        if(!confirm("当前浏览器无法直接写文件。将让你选择原 index.html 文件，然后下载打好补丁的新文件，请用其替换原文件（同目录、同名）。是否继续？")){
+            return "已取消。注意：内存中的价格已更新，但刷新后会丢失！";
+        }
+        return await pePickAndDownload(changes);
+    }
+
+    function pePickAndDownload(changes){
+        return new Promise(resolve=>{
+            const inp = document.createElement("input");
+            inp.type = "file";
+            inp.accept = ".html,.htm";
+            inp.onchange = ()=>{
+                const f = inp.files[0];
+                if(!f){ resolve("已取消。注意：内存中的价格已更新，但刷新后会丢失！"); return; }
+                const r = new FileReader();
+                r.onload = ()=>{
+                    try{
+                        const res = pePatchText(String(r.result), changes);
+                        const blob = new Blob([res.text], {type:"text/html"});
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = "index.html";
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+                        resolve("已下载打好补丁的 index.html，请手动将其移动到原位置替换旧文件。"
+                            + (res.misses.length ? "\n\n⚠ 以下型号未找到，未写入：\n" + res.misses.join("\n") : ""));
+                    }catch(e){
+                        resolve("处理失败：" + (e && e.message ? e.message : e) + "。注意：内存中的价格已更新，但刷新后会丢失！");
+                    }
+                };
+                r.onerror = ()=>resolve("读取文件失败。注意：内存中的价格已更新，但刷新后会丢失！");
+                r.readAsText(f);
+            };
+            inp.click();
+        });
     }
 
     // 新增清空单个配件栏目的功能
