@@ -2289,7 +2289,22 @@
             <select id="peModel"></select>
             <input type="number" id="peNewPrice" placeholder="输入新价格（数字）" min="0" step="0.01">
             <div id="peFileStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
-            <button onclick="applyPriceEdit()" style="border-color:#d97706;color:#d97706;">确认改价并写入 index.html</button>
+            <div style="border-top:1px dashed #e5e7eb;margin-top:4px;padding-top:8px;">
+                <div id="peGhStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
+                <details>
+                    <summary style="font-size:12px;color:#2563EB;cursor:pointer;margin-bottom:6px;">GitHub 仓库设置（改价写入线上）</summary>
+                    <input type="text" id="peGhRepo" placeholder="仓库（如 tas1985/tas1985.github.io）">
+                    <input type="text" id="peGhBranch" placeholder="分支（默认 main）">
+                    <input type="text" id="peGhPath" placeholder="文件路径（默认 index.html）">
+                    <input type="password" id="peGhToken" placeholder="GitHub Token（需 Contents 读写权限）">
+                    <div style="display:flex;gap:6px;">
+                        <button type="button" onclick="peGhSaveCfg()">保存配置</button>
+                        <button type="button" onclick="peGhClearCfg()">清除</button>
+                    </div>
+                    <p style="font-size:11px;color:#9ca3af;margin:4px 0 0;">Token 仅保存在本机浏览器。生成位置：GitHub → Settings → Developer settings → Personal access tokens，需勾选仓库 Contents 读写权限。</p>
+                </details>
+            </div>
+            <button onclick="applyPriceEdit()" style="border-color:#d97706;color:#d97706;">确认改价并写入文件</button>
         </div>
         <button onclick="closeModal('peModal')">取消</button>
     </div>
@@ -2480,7 +2495,7 @@
     const defaultData = {
         cpu: [
             {n:"E5-2673V3 3.2GHz 12核24线程(拆机散片到手90天质保）",p:98},
-            {n:"AMD R5-5600 盒装（散片容易暴雷黑屏重启）",p:749},
+            {n:"AMD R5-5600 盒装（散片容易暴雷黑屏重启）",p:729},
             {n:"i9-14900KF 盒装 24核32线程",p:3090},
             {n:"i3-12100F 3.3G 四核",p:730},
             {n:"中文原盒 i3-12100F",p:830},
@@ -8625,6 +8640,7 @@
         }
         peRenderModels();
         peUpdateFileStatus();
+        peGhFillInputs();
         document.getElementById("peNewPrice").value = "";
         document.getElementById("peModal").style.display = "flex";
     }
@@ -8740,9 +8756,15 @@
         afterDataUpdate();
         closeModal('peModal');
 
-        // 写回 index.html 文件
-        const writeResult = await peWriteToFile(changes);
-        alert("改价完成！\n\n" + reportLines.join("\n") + "\n\n" + writeResult + "\n\n提醒：下次运行爬虫 update_prices.py 会覆盖手动改价。");
+        // 写入：GitHub 仓库（如已配置）+ 本地 index.html 文件
+        const ghCfg = peGhGetCfg();
+        let ghMsg = null, ghOk = false;
+        if(ghCfg){
+            const gh = await peWriteToGithub(changes, ghCfg);
+            ghOk = gh.ok; ghMsg = gh.msg;
+        }
+        const localResult = await peWriteToFile(changes, !ghOk);
+        alert("改价完成！\n\n" + reportLines.join("\n") + "\n\n" + (ghMsg ? ghMsg + "\n\n" : "") + localResult + "\n\n提醒：下次运行爬虫 update_prices.py 会覆盖手动改价。");
     }
 
     // 用「型号名→p值」的正则给文件文本打补丁，只改匹配行的价格
@@ -8759,7 +8781,8 @@
         return {text: text, misses: misses};
     }
 
-    async function peWriteToFile(changes){
+    async function peWriteToFile(changes, allowPrompt){
+        if(allowPrompt === undefined) allowPrompt = true;
         let handle = peFileHandle;
         let how = "已连接文件";
         if(!handle && window.showOpenFilePicker){
@@ -8768,12 +8791,12 @@
                 try{
                     const opt = {mode:"readwrite"};
                     let perm = await saved.queryPermission(opt);
-                    if(perm !== "granted") perm = await saved.requestPermission(opt);
+                    if(perm !== "granted" && allowPrompt) perm = await saved.requestPermission(opt);
                     if(perm === "granted"){ handle = saved; how = "上次连接的文件"; }
                 }catch(e){ /* 授权失败则走重新选择 */ }
             }
         }
-        if(!handle && window.showOpenFilePicker){
+        if(!handle && allowPrompt && window.showOpenFilePicker){
             try{
                 const picks = await window.showOpenFilePicker({
                     multiple: false,
@@ -8806,6 +8829,7 @@
                 return "写入文件失败：" + (e && e.message ? e.message : e) + "。注意：内存中的价格已更新，但刷新后会丢失！";
             }
         }
+        if(!allowPrompt) return "本地文件未写入（未连接本地文件）。";
         // 浏览器不支持直接写文件：读原文件→打补丁→下载替换
         if(!confirm("当前浏览器无法直接写文件。将让你选择原 index.html 文件，然后下载打好补丁的新文件，请用其替换原文件（同目录、同名）。是否继续？")){
             return "已取消。注意：内存中的价格已更新，但刷新后会丢失！";
@@ -8843,6 +8867,98 @@
             };
             inp.click();
         });
+    }
+
+    // ===================== 改价写入 GitHub 仓库 =====================
+    // 通过 GitHub Contents API 直接更新仓库里的 index.html（Pages 约 1 分钟后自动发布）
+    function peGhGetCfg(){
+        try{ return JSON.parse(localStorage.getItem("peGithubCfg")) || null; }catch(e){ return null; }
+    }
+    function peGhFillInputs(){
+        const cfg = peGhGetCfg() || {};
+        document.getElementById("peGhRepo").value = cfg.repo || "tas1985/tas1985.github.io";
+        document.getElementById("peGhBranch").value = cfg.branch || "main";
+        document.getElementById("peGhPath").value = cfg.path || "index.html";
+        document.getElementById("peGhToken").value = cfg.token || "";
+        peGhStatusRefresh();
+    }
+    function peGhSaveCfg(){
+        const cfg = {
+            repo: document.getElementById("peGhRepo").value.trim(),
+            branch: document.getElementById("peGhBranch").value.trim() || "main",
+            path: document.getElementById("peGhPath").value.trim() || "index.html",
+            token: document.getElementById("peGhToken").value.trim()
+        };
+        if(!cfg.repo || !cfg.token){ alert("请填写仓库名和 Token！"); return; }
+        localStorage.setItem("peGithubCfg", JSON.stringify(cfg));
+        peGhStatusRefresh();
+        alert("GitHub 配置已保存（仅保存在本机浏览器中）");
+    }
+    function peGhClearCfg(){
+        localStorage.removeItem("peGithubCfg");
+        peGhFillInputs();
+    }
+    function peGhStatusRefresh(){
+        const el = document.getElementById("peGhStatus");
+        if(!el) return;
+        const cfg = peGhGetCfg();
+        if(cfg && cfg.token){
+            el.textContent = "GitHub 已配置：" + cfg.repo + "（分支 " + cfg.branch + "）→ 改价将同时提交到线上仓库";
+            el.style.color = "#16a34a";
+        }else{
+            el.textContent = "GitHub 未配置：改价只写入本地文件。展开下方设置填写 Token 后可同时写入线上仓库。";
+            el.style.color = "#6b7280";
+        }
+    }
+    function peUtf8ToB64(str){
+        const bytes = new TextEncoder().encode(str);
+        let bin = "";
+        for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+    }
+    function peB64ToUtf8(b64){
+        const bin = atob(b64.replace(/\s/g,""));
+        const bytes = new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+    }
+    async function peWriteToGithub(changes, cfg){
+        try{
+            const api = "https://api.github.com/repos/" + cfg.repo + "/contents/" + cfg.path.replace(/^\/+/,"");
+            const headers = {
+                "Authorization": "Bearer " + cfg.token,
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28"
+            };
+            // 1. 读取远端文件（拿 sha + 最新内容）
+            const getRes = await fetch(api + "?ref=" + encodeURIComponent(cfg.branch), { headers: headers });
+            if(!getRes.ok){
+                const why = getRes.status===401 ? "Token 无效或过期" : getRes.status===404 ? "仓库/分支/文件路径不对" : getRes.status===403 ? "Token 无 Contents 写权限或触发速率限制" : "HTTP " + getRes.status;
+                return { ok:false, msg:"GitHub 读取失败（" + why + "）" };
+            }
+            const meta = await getRes.json();
+            const remoteText = peB64ToUtf8(meta.content || "");
+            // 2. 对远端最新内容打补丁
+            const r = pePatchText(remoteText, changes);
+            // 3. 提交
+            const putRes = await fetch(api, {
+                method: "PUT",
+                headers: headers,
+                body: JSON.stringify({
+                    message: "改价: " + changes.map(c => c.name + " " + c.oldP + "->" + c.newP).join("; "),
+                    content: peUtf8ToB64(r.text),
+                    sha: meta.sha,
+                    branch: cfg.branch
+                })
+            });
+            if(!putRes.ok){
+                return { ok:false, msg:"GitHub 写入失败（HTTP " + putRes.status + "，请检查 Token 权限或稍后重试）" };
+            }
+            return { ok:true, msg:"已提交到 GitHub 仓库 " + cfg.repo + "（分支 " + cfg.branch + "），GitHub Pages 约 1 分钟后自动更新线上页面。"
+                + (r.misses.length ? "\n⚠ 远端文件中未找到以下型号，未写入：\n" + r.misses.join("\n") : "") };
+        }catch(e){
+            return { ok:false, msg:"GitHub 写入异常：" + (e && e.message ? e.message : e) };
+        }
     }
 
     // 新增清空单个配件栏目的功能
