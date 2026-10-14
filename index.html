@@ -2286,6 +2286,7 @@
         <h4 style="color: #d97706; margin-bottom: 10px;">修改配件价格（写回文件）</h4>
         <div class="add-area">
             <select id="peType" onchange="peRenderModels()"></select>
+            <input type="text" id="peSearch" placeholder="输入关键字搜索型号（如：5060TI / 雪豹），不区分大小写" oninput="peRenderModels()">
             <select id="peModel"></select>
             <input type="number" id="peNewPrice" placeholder="输入新价格（数字）" min="0" step="0.01">
             <div id="peFileStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
@@ -8638,6 +8639,7 @@
         if(!typeSel.options.length){
             PE_CATEGORIES.forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; typeSel.appendChild(o); });
         }
+        document.getElementById("peSearch").value = "";
         peRenderModels();
         peUpdateFileStatus();
         peGhFillInputs();
@@ -8647,14 +8649,27 @@
 
     function peRenderModels(){
         const type = document.getElementById("peType").value;
+        // 关键字过滤：忽略空格、不区分大小写（与其他型号匹配规则一致）
+        const kw = (document.getElementById("peSearch").value||"").trim().toUpperCase().replace(/\s+/g,"");
         const sel = document.getElementById("peModel");
         sel.innerHTML = "";
+        let count = 0;
         (data[type]||[]).forEach(it=>{
+            const nn = (it.n||"").toUpperCase().replace(/\s+/g,"");
+            if(kw && !nn.includes(kw)) return;
             const o = document.createElement("option");
             o.value = it.n;
             o.textContent = it.n + "（当前 ¥" + it.p + "）";
             sel.appendChild(o);
+            count++;
         });
+        if(kw && !count){
+            const o = document.createElement("option");
+            o.disabled = true;
+            o.textContent = "无匹配型号";
+            sel.appendChild(o);
+        }
+        sel.title = count ? ("共 " + count + " 个匹配型号") : "";
     }
 
     async function peUpdateFileStatus(){
