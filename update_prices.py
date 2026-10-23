@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import time
+import math
 from urllib.parse import quote
 
 import requests
@@ -4308,6 +4309,425 @@ def download_images(new_items, mapping_type):
     print(f"   📊 图片处理完成：下载 {downloaded_count} 个，上传 {uploaded_count} 个，跳过 {skipped_count} 个")
 
 
+# -------------------------- 缺失图片联网补全 --------------------------
+FILL_IMAGE_DIRS = {'case': 'PNG', 'cooler': 'PNG_SR', 'vga': 'PNG_VGA'}
+FILL_IMAGE_MAPS = {'case': 'caseImageMap', 'cooler': 'coolerImageMap', 'vga': 'vgaImageMap'}
+FILL_SEARCH_SUFFIX = {'case': '机箱', 'cooler': '散热器', 'vga': '显卡'}
+# 这些映射值是占位符/纯粹的内部代号，不联网找图
+FILL_SKIP_NAMES = {
+    'intel_uhd_核显', 'amd_vega_核显', 'amd_radeon_graphics',
+}
+
+
+def _fill_norm(text):
+    """去掉空格、标点与商标符号，用于标题与型号的宽松比对"""
+    return re.sub(r"[\s\-_+/\\（）()【】\[\]·,，:：™®©°]+", "", text or "").lower()
+
+
+def _fill_safe_name(name):
+    return re.sub(r'[\\/:*?"<>|]', "_", name)
+
+
+def _fill_parse_map(content, map_name):
+    """解析 index.html 中某个图片映射表，返回 {型号: 图片名}"""
+    start = content.find(f"const {map_name} = {{")
+    if start < 0:
+        return {}
+    end = content.find("};", start)
+    if end < 0:
+        return {}
+    body = content[start:end]
+    return dict(re.findall(r"'((?:[^'\\]|\\.)*)'\s*:\s*'((?:[^'\\]|\\.)*)'", body))
+
+
+def _fill_repo_files(cfg, folder):
+    """列出仓库某目录下已有图片文件名（优先用 git trees 一次拉取）"""
+    try:
+        ref = requests.get(f"https://api.github.com/repos/{cfg['repo']}/git/ref/heads/{cfg['branch']}",
+                           headers=gh_api_headers(cfg), timeout=20).json()
+        sha = ref["object"]["sha"]
+        tree = requests.get(f"https://api.github.com/repos/{cfg['repo']}/git/trees/{sha}?recursive=1",
+                            headers=gh_api_headers(cfg), timeout=30).json()
+        prefix = folder + "/"
+        return {t["path"][len(prefix):] for t in tree.get("tree", [])
+                if t.get("type") == "blob" and t["path"].startswith(prefix)}
+    except Exception as e:
+        print(f"   ⚠️ 读取仓库文件列表失败，改用 contents API: {e}")
+    files = set()
+    page = 1
+    while True:
+        r = requests.get(gh_contents_url(cfg, folder), params={"ref": cfg["branch"], "per_page": 100, "page": page},
+                         headers=gh_api_headers(cfg), timeout=20)
+        if r.status_code != 200:
+            break
+        data = r.json()
+        if not data:
+            break
+        files.update(f["name"] for f in data if f.get("type") == "file")
+        if len(data) < 100:
+            break
+        page += 1
+    return files
+
+
+_FILL_SESSION = None
+
+
+def _fill_search_images(query):
+    """百度图片搜索，返回候选 [(图片直链, 标题, 来源站点, 宽, 高)]"""
+    global _FILL_SESSION
+    if _FILL_SESSION is None:
+        _FILL_SESSION = requests.Session()
+        try:
+            _FILL_SESSION.get("https://image.baidu.com/", headers=HEADERS, timeout=15)
+        except Exception:
+            pass
+    url = ("https://image.baidu.com/search/acjson?tn=resultjson_com&ipn=rj&ct=201326592&is=&fp=result"
+           "&queryWord=" + quote(query) + "&cl=2&lm=-1&ie=utf-8&oe=utf-8&st=-1&z=&ic=0"
+           "&word=" + quote(query) + "&face=0&istype=2&nc=1&pn=0&rn=30")
+    h = dict(HEADERS)
+    h["Referer"] = "https://image.baidu.com/search/index?tn=baiduimage&word=" + quote(query)
+    r = _FILL_SESSION.get(url, headers=h, timeout=20)
+    text = r.text.replace("\\/", "/")
+    text = re.sub(r",\s*\]\s*}\s*$", "]}", text)
+    try:
+        data = json.loads(text)
+    except Exception:
+        return []
+    out = []
+    for it in data.get("data") or []:
+        if not it or not it.get("thumbURL"):
+            continue
+        out.append((it["thumbURL"], it.get("fromPageTitleEnc", ""), it.get("fromURLHost", ""),
+                    int(it.get("width") or 0), int(it.get("height") or 0)))
+    return out
+
+
+FILL_GOOD_HOSTS = (
+    "jd.com", "taobao.com", "tmall.com", "1688.com", "京东", "淘宝", "天猫",
+    "msi.cn", "asus.com", "gigabyte", "colorful.cn", "sapphiretech", "powercolor",
+    "pccooler", "deepcool", "thermalright", "idcooling", "nvidia.cn", "intel.cn",
+)
+FILL_BAD_HOSTS = (
+    "zhihu.com", "baike.baidu.com", "aiqicha.baidu.com", "pconline.com.cn", "zol.com.cn",
+    "chinafix.com", "bilibili.com", "weibo.com", "sohu.com", "163.com", "sina.com.cn",
+    "toutiao.com", "csdn.net", "kdslife.com", "mbd.baidu.com", "haowallpaper.com",
+)
+FILL_BAD_WORDS = (
+    "gpu-z", "gpu z", "截图", "天梯", "排行", "参数", "跑分", "评测", "拆解", "清灰",
+    "维修", "壁纸", "开箱", "装机", "手抄报", "视频",
+    "拆机", "二手", "实拍", "实物", "现货", "库存", "批发", "到货", "矿卡", "网吧",
+)
+
+
+FILL_BRAND_ALIASES = {
+    '超频三': ('超频三', '超频3', 'pccooler'),
+    '微星': ('微星', 'msi'),
+    '华硕': ('华硕', 'asus'),
+    '技嘉': ('技嘉', 'gigabyte'),
+    '影驰': ('影驰', 'galax'),
+    '七彩虹': ('七彩虹', 'colorful'),
+    '铭瑄': ('铭瑄', 'maxsun'),
+    '盈通': ('盈通', 'yeston'),
+    '长城': ('长城', 'greatwall'),
+    '航嘉': ('航嘉', 'huntkey'),
+    '爱国者': ('爱国者', 'aigo'),
+    '乔思伯': ('乔思伯', 'jonsbo'),
+    '骨伽': ('骨伽', 'cougar', 'gouga'),
+    '安钛克': ('安钛克', 'antec', 'antek'),
+    '钛钽': ('钛钽', 'tcomas'),
+    '瓦尔基里': ('瓦尔基里', 'valkyrie', 'waljili'),
+    '利民': ('利民', 'thermalright'),
+    '九州风神': ('九州风神', 'deepcool'),
+    '追风者': ('追风者', 'phanteks'),
+    '恩杰': ('恩杰', 'nzxt'),
+    '联力': ('联力', 'lianli'),
+    '酷冷至尊': ('酷冷至尊', '酷冷', 'coolermaster'),
+    '鑫谷': ('鑫谷', 'segotep'),
+    '振华': ('振华', 'superflower'),
+    '海韵': ('海韵', 'seasonic'),
+    '酷里奥': ('酷里奥', 'culio'),
+    '雅浚': ('雅浚', 'proartist'),
+    '丽台': ('丽台', 'leadtek'),
+    '旌宇': ('旌宇', 'sparkle'),
+    '撼讯': ('撼讯', 'powercolor'),
+    '蓝宝石': ('蓝宝石', 'sapphire'),
+    '万丽': ('万丽', 'manli'),
+    '索泰': ('索泰', 'zotac'),
+    '映众': ('映众', 'inno3d'),
+}
+# 拼音品牌名 → 中文品牌
+FILL_PINYIN_BRANDS = {
+    'qiaosibo': '乔思伯', 'jonsbo': '乔思伯', 'gouga': '骨伽', 'guga': '骨伽',
+    'changcheng': '长城', 'aiguozhe': '爱国者', 'jijia': '技嘉', 'jiijia': '技嘉',
+    'antek': '安钛克', 'ante': '安钛克', 'waljili': '瓦尔基里', 'valkyrie': '瓦尔基里',
+    'yingchi': '影驰', 'huashuo': '华硕', 'qicaihong': '七彩虹', 'weixing': '微星',
+    'hangjia': '航嘉', 'lianli': '联力', 'enjie': '恩杰', 'titan': '钛钽',
+    'char42': '乔思伯', 'char': '乔思伯',
+}
+FILL_MODEL_WORDS = {'plus', 'pro', 'mini', 'mesh', 'atx', 'matx', 'itx', 'argb', 'rgb',
+                    'oc', 'max', 'evo', 'air', 'flow', 'se', 'gt', 'sff', 'v2', 'v3'}
+# 规格/描述类词，不用于区分型号
+FILL_SPEC_WORDS = {'120', '240', '280', '360', '420', 'argb', 'rgb', 'pwm', 'atx', 'matx', 'itx',
+                   'pro', 'max', 'oc', 'v2', 'v3', 'se', 'gt', 'evo', 'air', 'flow', 'plus',
+                   'mini', 'mesh', 'sff', 'fan', 'led', 'pwm'}
+
+
+def _fill_brand(name, parts=None):
+    """识别型号里的品牌（兼容“影驰RTX3060”这种品牌与型号粘连、以及拼音写法）"""
+    norm = _fill_norm(name)
+    for key in FILL_BRAND_ALIASES:
+        if norm.startswith(_fill_norm(key)):
+            return key
+    parts = parts if parts is not None else [p for p in re.split(r"[\s\-_+/\\]+", name) if p]
+    if parts:
+        p0 = parts[0]
+        mapped = FILL_PINYIN_BRANDS.get(p0.lower())
+        if mapped:
+            return mapped
+        m = re.match(r"[\u4e00-\u9fa5]{2,4}", p0)
+        if m:
+            return m.group(0)
+        return p0
+    return ""
+
+
+def _fill_tokens(name):
+    """从型号名中提取品牌别名列表 + 关键型号词（含数字的片段优先）"""
+    parts = [p for p in re.split(r"[\s\-_+/\\]+", re.sub(r"[（(].*?[)）]", " ", name)) if p]
+    brand = _fill_brand(name, parts)
+    aliases = FILL_BRAND_ALIASES.get(brand, (brand,))
+    aliases = tuple(_fill_norm(a) for a in aliases if a)
+    tokens = []
+    for p in parts:
+        for chunk in re.findall(r"[A-Za-z0-9][A-Za-z0-9+.]*", p):
+            low = chunk.lower()
+            if len(low) < 2:
+                continue
+            if any(ch.isdigit() for ch in low) or low in FILL_MODEL_WORDS:
+                tokens.append(_fill_norm(low))
+    # 去重保序；规格类词（360/argb 等）不参与型号区分，除非全是这类词
+    seen, uniq = set(), []
+    for t in tokens:
+        if t not in seen:
+            seen.add(t)
+            uniq.append(t)
+    core = [t for t in uniq if t not in FILL_SPEC_WORDS]
+    return brand, aliases, core or uniq
+
+
+def _fill_query(name, kind):
+    """把内部代号整理成可搜索的中文关键词"""
+    text = name.replace('_', ' ').replace('-', ' ')
+    text = re.sub(r'[（）()【】]', ' ', text)
+    text = re.sub(r'工包|定制', ' ', text)
+    text = re.sub(r'\bhaijing\b', '海景房', text, flags=re.I)
+    text = re.sub(r'\bwuguang\b', '无光', text, flags=re.I)
+    words = text.split()
+    if words and words[0].lower() in FILL_PINYIN_BRANDS:
+        words[0] = FILL_PINYIN_BRANDS[words[0].lower()]
+    # 结尾的 w/b 是颜色代号
+    if words and words[-1].lower() in ('w', 'b'):
+        words[-1] = '白色' if words[-1].lower() == 'w' else '黑色'
+    text = ' '.join(w for w in words if w)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return f"{text} {FILL_SEARCH_SUFFIX[kind]}"
+
+
+def _fill_has(text, token):
+    """型号词是否出现在标题中；k600 不能被 k6000、gtx1600 这类更长编号误命中"""
+    if re.fullmatch(r"[a-z]{1,2}\d{2,4}", token):
+        return re.search(r"(?<![0-9])" + re.escape(token) + r"(?![0-9])", text) is not None
+    return token in text
+
+
+def _fill_pick(candidates, name, kind):
+    """按品牌/型号词过滤候选图，优先电商商品图，避开评测截图/资讯配图"""
+    brand, aliases, tokens = _fill_tokens(name)
+    good, other, relaxed = [], [], []
+    for url, title, host, w, h in candidates:
+        n_title = _fill_norm(title)
+        host_l = (host or "").lower()
+        if any(b in host_l for b in FILL_BAD_HOSTS):
+            continue
+        if any(b in n_title for b in FILL_BAD_WORDS):
+            continue
+        if w and h and (w < 300 or h < 300):
+            continue
+        if w and h and not (0.55 <= w / h <= 2.2):
+            continue
+        hit = sum(1 for t in tokens if _fill_has(n_title, t))
+        good_host = any(g in host_l for g in FILL_GOOD_HOSTS)
+        has_brand = any(a and a in n_title for a in aliases)
+        # 商品图多为近方形，长条图基本是详情页截图，按接近方形优先
+        ratio = w / h if (w and h) else 1
+        square = int((1 - min(abs(math.log(ratio)), 1)) * 100)
+        if has_brand:
+            need = 1 if len(tokens) <= 2 else 2
+            if tokens and hit < need:
+                continue
+            score = (hit, 1 if good_host else 0, square, w * h)
+            (good if good_host else other).append((score, url))
+        elif good_host and tokens and hit == len(tokens):
+            # 电商标题常不带品牌（如京东“旌宇”商品），要求全部型号词命中
+            relaxed.append(((hit, 1, square, w * h), url))
+    good.sort(key=lambda x: x[0], reverse=True)
+    relaxed.sort(key=lambda x: x[0], reverse=True)
+    other.sort(key=lambda x: x[0], reverse=True)
+    return [u for _, u in good] + [u for _, u in relaxed] + [u for _, u in other]
+
+
+def _fill_to_png(content):
+    """把下载到的图片统一转成 PNG；没有 Pillow 时仅接受 PNG 原图"""
+    if content[:8] == b"\x89PNG\r\n\x1a\n":
+        return content
+    try:
+        import io
+        from PIL import Image
+    except ImportError:
+        return None
+    try:
+        img = Image.open(io.BytesIO(content))
+        img.load()
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGBA" if "A" in img.getbands() else "RGB")
+        w, h = img.size
+        if max(w, h) > 1400:
+            scale = 1400 / max(w, h)
+            img = img.resize((int(w * scale), int(h * scale)))
+        buf = io.BytesIO()
+        img.save(buf, format="PNG", optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return None
+
+
+def fill_missing_images(limit=15, kinds=('case', 'cooler', 'vga')):
+    """
+    检查机箱/散热器/显卡图片映射，缺失的图片联网搜索下载，转 PNG 后
+    按映射名保存到对应目录，并上传到仓库（PNG / PNG_SR / PNG_VGA）
+    :param limit: 本次最多补多少张，避免单次运行过久
+    """
+    cfg = load_github_config()
+    gh_ready = bool(cfg.get("token"))
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        print("   ℹ️ 未安装 Pillow，尝试自动安装（图片需转成 PNG）...")
+        try:
+            import subprocess
+            import sys
+            subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "Pillow"], timeout=180)
+        except Exception as e:
+            print(f"   ⚠️ Pillow 安装失败，只能使用本身就是 PNG 的图片: {e}")
+    with open(HTML_FILE, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    print("\n🖼  检查缺失的配件图片...")
+    tasks = []
+    for kind in kinds:
+        mapping = _fill_parse_map(content, FILL_IMAGE_MAPS[kind])
+        folder = FILL_IMAGE_DIRS[kind]
+        if gh_ready:
+            have = _fill_repo_files(cfg, folder)
+        elif os.path.isdir(folder):
+            have = {f for f in os.listdir(folder) if f.lower().endswith(".png")}
+        else:
+            have = set()
+        missing = []
+        seen = set()
+        for name in mapping.values():
+            if not name or name in seen or name in FILL_SKIP_NAMES or name.startswith("*"):
+                continue
+            seen.add(name)
+            if name + ".png" not in have:
+                missing.append(name)
+        print(f"   {kind}: 映射 {len(mapping)} 个，缺失图片 {len(missing)} 个")
+        tasks.extend((kind, folder, name) for name in missing)
+
+    if not tasks:
+        print("   ✅ 没有缺失图片")
+        return
+
+    # 连续失败 3 次的型号不再反复占用配额
+    state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "image_fill_state.json")
+    try:
+        with open(state_path, "r", encoding="utf-8") as f:
+            fail_state = json.load(f)
+    except Exception:
+        fail_state = {}
+    skipped_fail = [t for t in tasks if fail_state.get(t[2], 0) >= 3]
+    if skipped_fail:
+        print(f"   ℹ️ {len(skipped_fail)} 个型号多次未搜到，已跳过（可在 image_fill_state.json 中清除）")
+    tasks = [t for t in tasks if fail_state.get(t[2], 0) < 3]
+
+    todo = tasks[:limit]
+    if len(tasks) > limit:
+        print(f"   本次处理 {len(todo)} 个（剩余 {len(tasks) - limit} 个留到下次运行）")
+
+    done = 0
+    for idx, (kind, folder, name) in enumerate(todo, 1):
+        q = _fill_query(name, kind)
+        print(f"   [{idx}/{len(todo)}] 🔍 {q}")
+        try:
+            urls = _fill_pick(_fill_search_images(q), name, kind)
+            if not urls:
+                # 换更短的关键词再搜一次（品牌 + 核心型号）
+                brand, _aliases, tokens = _fill_tokens(name)
+                if tokens:
+                    q2 = f"{brand} {tokens[0]} {FILL_SEARCH_SUFFIX[kind]}"
+                    print(f"       ↻ 换关键词重搜: {q2}")
+                    urls = _fill_pick(_fill_search_images(q2), name, kind)
+        except Exception as e:
+            print(f"       搜索失败: {e}")
+            continue
+        urls = urls or []
+        if not urls:
+            print("       ✗ 没有匹配到可信的图片")
+            fail_state[name] = fail_state.get(name, 0) + 1
+            continue
+
+        png = None
+        for url in urls[:4]:
+            try:
+                r = requests.get(url, headers=HEADERS, timeout=20)
+                if r.status_code != 200 or len(r.content) < 5000:
+                    continue
+                png = _fill_to_png(r.content)
+                if png:
+                    break
+            except Exception:
+                continue
+        if not png:
+            print("       ✗ 候选图下载/转换失败")
+            fail_state[name] = fail_state.get(name, 0) + 1
+            continue
+
+        os.makedirs(folder, exist_ok=True)
+        local_path = os.path.join(folder, _fill_safe_name(name) + ".png")
+        with open(local_path, "wb") as f:
+            f.write(png)
+        print(f"       ✅ 已保存本地: {local_path}（{len(png) // 1024} KB）")
+        fail_state.pop(name, None)
+
+        if gh_ready:
+            try:
+                gh_upload_image(cfg, f"{folder}/{name}.png", png, f"补充{kind}图片: {name}")
+                print(f"       ☁️ 已上传: {folder}/{name}.png")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"       ❌ 上传失败: {e}")
+        done += 1
+        time.sleep(0.8)
+
+    try:
+        with open(state_path, "w", encoding="utf-8") as f:
+            json.dump(fail_state, f, ensure_ascii=False, indent=1)
+    except Exception:
+        pass
+    print(f"   📊 本次补图完成：成功 {done} 个，待补 {len(tasks) - done} 个")
+
+
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
     print("===== 硬件价格自动更新 =====")
@@ -4327,5 +4747,7 @@ if __name__ == "__main__":
     update_power_accurate()
     # 新增执行散热器更新
     update_cooler_accurate()
+    # 补充缺失的机箱/散热器/显卡图片（联网搜索，单次限量，可用环境变量 FILL_MISSING_IMAGES 调整）
+    fill_missing_images(limit=int(os.environ.get("FILL_MISSING_IMAGES", "15")))
     
     print("===== 全部执行完成 =====")
