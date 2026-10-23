@@ -1,4 +1,10 @@
 import re
+import base64
+import json
+import os
+import time
+from urllib.parse import quote
+
 import requests
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
@@ -1768,9 +1774,38 @@ def update_gpu_prices():
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        # 为新增型号添加图片映射（图片名称与型号一致）
-        if new_items:
-            add_image_mappings(new_items, 'vga')
+        # 补齐图片映射：新爬到的型号 + 列表里已有但缺映射的型号（图片名称与型号一致）
+        vga_map_keys = set()
+        map_start_idx = -1
+        for i, l in enumerate(lines):
+            if 'const vgaImageMap = {' in l:
+                map_start_idx = i
+                break
+        if map_start_idx != -1:
+            for i in range(map_start_idx + 1, len(lines)):
+                if lines[i].strip() == '};':
+                    break
+                m = re.search(r"'([^']+)':", lines[i])
+                if m:
+                    vga_map_keys.add(m.group(1))
+        
+        gpu_image_map = {g["name"]: g.get("image_url", "") for g in gpu_list}
+        html_gpu_list = []
+        for l in lines[start_idx + 1:end_idx]:
+            m = re.search(r'\{n:"([^"]+)"', l)
+            if m:
+                html_gpu_list.append(m.group(1))
+        mapping_items = [(name, 0, gpu_image_map.get(name, ""))
+                         for name in html_gpu_list if name not in vga_map_keys]
+        if mapping_items:
+            print(f"📌 需补齐图片映射 {len(mapping_items)} 个（含新增型号 {len(new_items)} 个）")
+            add_image_mappings(mapping_items, 'vga', download=False)
+        
+        # 下载并上传源网站所有型号的图片（本地/云端已存在则跳过）
+        image_items = [(g["name"], g.get("price", 0), g.get("image_url", ""))
+                       for g in gpu_list if g.get("image_url")]
+        if image_items:
+            download_images(image_items, 'vga')
         
         print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，新增 {len(new_items)} 个，芯片参考匹配 {chip_ref_count} 个，未匹配(保留) {no_match_count} 个")
     except Exception as e:
@@ -3908,7 +3943,7 @@ def fuzzy_match_price(name, price_dict):
     print(f"  ❌ 未匹配到: {name[:35]}... (关键字: {html_key})")
     return None
 
-def add_image_mappings(new_items, mapping_type):
+def add_image_mappings(new_items, mapping_type, download=True):
     """
     自动添加图片映射
     :param new_items: 新添加的配件列表，格式为 [(名称, 价格, 图片URL), ...]
@@ -4013,19 +4048,94 @@ def add_image_mappings(new_items, mapping_type):
         print(f"✅ 成功添加 {added_count} 个{mapping_type}图片映射")
         
         # 自动下载新添加配件的图片
-        download_images(new_items, mapping_type)
+        if download:
+            download_images(new_items, mapping_type)
     else:
         print("   无需添加新映射")
 
 
+# -------------------------- GitHub 图片上传 --------------------------
+GH_CONFIG_FILE = "github_config.json"
+_GH_CONFIG_CACHE = None
+
+
+def load_github_config():
+    """
+    读取 GitHub 上传配置（脚本同目录 github_config.json）
+    格式: {"repo": "tas1985/tas1985.github.io", "branch": "main", "token": "你的token"}
+    环境变量 GITHUB_TOKEN 可覆盖 token
+    """
+    global _GH_CONFIG_CACHE
+    if _GH_CONFIG_CACHE is not None:
+        return _GH_CONFIG_CACHE
+    
+    cfg = {"repo": "tas1985/tas1985.github.io", "branch": "main", "token": ""}
+    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), GH_CONFIG_FILE)
+    if os.path.exists(cfg_path):
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for k in ("repo", "branch", "token"):
+                if data.get(k):
+                    cfg[k] = data[k]
+        except Exception as e:
+            print(f"   ⚠️ 读取 {GH_CONFIG_FILE} 失败: {e}")
+    if os.environ.get("GITHUB_TOKEN"):
+        cfg["token"] = os.environ["GITHUB_TOKEN"]
+    
+    _GH_CONFIG_CACHE = cfg
+    return cfg
+
+
+def gh_api_headers(cfg):
+    return {
+        "Authorization": f"token {cfg['token']}",
+        "Accept": "application/vnd.github+json",
+    }
+
+
+def gh_contents_url(cfg, repo_path):
+    return f"https://api.github.com/repos/{cfg['repo']}/contents/{quote(repo_path)}"
+
+
+def gh_error_text(r):
+    return " ".join(r.text.split())[:120]
+
+
+def gh_remote_file(cfg, repo_path):
+    """查询仓库中文件信息，存在返回 dict（含 sha），不存在返回 None"""
+    r = requests.get(gh_contents_url(cfg, repo_path),
+                     params={"ref": cfg["branch"]},
+                     headers=gh_api_headers(cfg), timeout=15)
+    if r.status_code == 200:
+        return r.json()
+    if r.status_code == 404:
+        return None
+    raise Exception(f"查询失败 HTTP {r.status_code}: {gh_error_text(r)}")
+
+
+def gh_upload_image(cfg, repo_path, content, message):
+    """上传（或覆盖）图片到 GitHub 仓库"""
+    existing = gh_remote_file(cfg, repo_path)
+    payload = {
+        "message": message,
+        "content": base64.b64encode(content).decode("ascii"),
+        "branch": cfg["branch"],
+    }
+    if existing:
+        payload["sha"] = existing["sha"]
+    r = requests.put(gh_contents_url(cfg, repo_path), json=payload,
+                     headers=gh_api_headers(cfg), timeout=30)
+    if r.status_code not in (200, 201):
+        raise Exception(f"上传失败 HTTP {r.status_code}: {gh_error_text(r)}")
+
+
 def download_images(new_items, mapping_type):
     """
-    自动下载新添加配件的图片并重命名
-    :param new_items: 新添加的配件列表，格式为 [(名称, 价格, 图片URL), ...]
+    自动下载配件图片（名称与配件名称一致），vga 类型会同步上传到 GitHub
+    :param new_items: 配件列表，格式为 [(名称, 价格, 图片URL), ...]
     :param mapping_type: 映射类型，'case'、'cooler'、'vga'
     """
-    import os
-    
     # 确定图片保存目录
     save_dirs = {
         'case': 'tas1985.github.io/PNG',
@@ -4038,10 +4148,25 @@ def download_images(new_items, mapping_type):
         print(f"❌ 未知映射类型: {mapping_type}")
         return
     
+    # vga：优先使用 index.html 同级的 PNG_VGA，兼容旧的仓库嵌套目录
+    if mapping_type == 'vga':
+        for cand in ('tas1985.github.io/PNG_VGA', 'PNG_VGA'):
+            if os.path.isdir(cand):
+                save_dir = cand
+                break
+        else:
+            save_dir = 'PNG_VGA'
+    
     # 创建目录（如果不存在）
     os.makedirs(save_dir, exist_ok=True)
     
+    gh_cfg = load_github_config() if mapping_type == 'vga' else None
+    gh_ready = bool(gh_cfg and gh_cfg.get("token"))
+    if mapping_type == 'vga' and not gh_ready:
+        print(f"   ⚠️ 未配置 GitHub token（{GH_CONFIG_FILE}），图片只保存到本地: {save_dir}")
+    
     downloaded_count = 0
+    uploaded_count = 0
     skipped_count = 0
     
     for item in new_items:
@@ -4065,30 +4190,63 @@ def download_images(new_items, mapping_type):
         safe_name = safe_name.replace('"', '_').replace('<', '_').replace('>', '_').replace('|', '_')
         filename = f"{safe_name}.png"
         filepath = os.path.join(save_dir, filename)
+        repo_path = f"PNG_VGA/{name}.png"  # 网站按型号名请求图片
         
-        # 检查文件是否已存在
+        # vga：云端已有图片则跳过（避免重复下载）
+        if gh_ready:
+            try:
+                if gh_remote_file(gh_cfg, repo_path) is not None:
+                    print(f"   ☁️ 云端已存在: {repo_path}")
+                    skipped_count += 1
+                    continue
+            except Exception as e:
+                print(f"   ⚠️ 云端查询失败，继续下载: {e}")
+        
+        # 检查本地文件是否已存在
+        content = None
         if os.path.exists(filepath):
             print(f"   ≡ 图片已存在: {filename}")
-            skipped_count += 1
-            continue
+            with open(filepath, 'rb') as f:
+                content = f.read()
+        else:
+            try:
+                print(f"   📥 下载图片: {filename}")
+                # 源站图片偶发 502，重试几次
+                last_err = None
+                for attempt in range(3):
+                    try:
+                        response = requests.get(img_url, headers=HEADERS, timeout=15)
+                        response.raise_for_status()
+                        content = response.content
+                        break
+                    except Exception as e:
+                        last_err = e
+                        time.sleep(1.5)
+                if content is None:
+                    raise last_err
+                with open(filepath, 'wb') as f:
+                    f.write(content)
+                downloaded_count += 1
+                print(f"   ✅ 图片保存成功: {filename}")
+            except Exception as e:
+                print(f"   ❌ 图片下载失败: {name} - {e}")
+                skipped_count += 1
+                continue
         
-        try:
-            # 下载图片
-            print(f"   📥 下载图片: {img_url} -> {filename}")
-            response = requests.get(img_url, headers=HEADERS, timeout=10)
-            response.raise_for_status()
-            
-            # 保存图片
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
-            
-            downloaded_count += 1
-            print(f"   ✅ 图片保存成功: {filename}")
-        except Exception as e:
-            print(f"   ❌ 图片下载失败: {name} - {e}")
+        # vga：上传到 GitHub
+        if gh_ready and content:
+            try:
+                gh_upload_image(gh_cfg, repo_path, content, f"更新显卡图片: {name}")
+                uploaded_count += 1
+                print(f"   ☁️ 已上传: {repo_path}")
+                time.sleep(0.5)  # 避免连续提交触发 GitHub 频率限制
+            except Exception as e:
+                print(f"   ❌ 上传失败: {repo_path} - {e}")
+                skipped_count += 1
+        elif gh_ready:
             skipped_count += 1
     
-    print(f"   📊 图片下载完成：成功 {downloaded_count} 个，跳过 {skipped_count} 个")
+    print(f"   📊 图片处理完成：下载 {downloaded_count} 个，上传 {uploaded_count} 个，跳过 {skipped_count} 个")
 
 
 # -------------------------- 主函数 --------------------------
