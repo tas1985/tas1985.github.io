@@ -500,7 +500,13 @@ def fetch_gpu_prices():
                                     continue
                         
                         if len(name) > 3:
-                            gpu_list.append({"name": name, "price": price})
+                            img_url = ""
+                            img_tag = item.find('img', class_='product-image')
+                            if img_tag:
+                                img_url = img_tag.get('data-full-src', '')
+                                if not img_url:
+                                    img_url = img_tag.get('src', '')
+                            gpu_list.append({"name": name, "price": price, "image_url": img_url})
         
         # 方法3：从HTML表格中提取数据
         if not gpu_list:
@@ -1519,6 +1525,44 @@ def update_gpu_prices():
             return
         print(f"📍 找到vga数组结束在第 {end_idx + 1} 行")
         
+        # 收集现有显卡型号（用于识别源网站新增型号）
+        html_gpu_names = set()
+        for l in lines[start_idx + 1:end_idx]:
+            m = re.search(r'\{n:"([^"]+)"', l)
+            if m:
+                html_gpu_names.add(m.group(1))
+        existing_norm = {re.sub(r'\s+', '', n).upper() for n in html_gpu_names}
+        
+        # 源网站有、但显卡列表没有的型号：按现有格式追加
+        new_items = []
+        seen_new = set()
+        for gpu in gpu_list:
+            name = (gpu.get("name") or "").strip()
+            price = int(gpu.get("price") or 0)
+            if not name or price <= 0:
+                continue
+            norm_name = re.sub(r'\s+', '', name).upper()
+            if norm_name in existing_norm or norm_name in seen_new:
+                continue
+            seen_new.add(norm_name)
+            new_items.append((name, price, gpu.get("image_url", "")))
+        
+        if new_items:
+            # 原最后一条可能没有结尾逗号，追加新条目后需要补上
+            for k in range(end_idx - 1, start_idx, -1):
+                last_line = lines[k].strip()
+                if not last_line:
+                    continue
+                if not last_line.endswith(','):
+                    lines[k] = lines[k].rstrip('\r\n') + ',\n'
+                break
+            new_lines = [f'            {{n:"{name}",p:{price}}},\n' for name, price, _ in new_items]
+            lines[end_idx:end_idx] = new_lines
+            end_idx += len(new_lines)
+            print(f"📌 源网站新增 {len(new_items)} 个型号，已追加到显卡列表")
+            for name, price, _ in new_items:
+                print(f"   + 新增: {name[:40]}... ￥{price}")
+        
         update_count = 0
         same_count = 0
         no_match_count = 0
@@ -1580,8 +1624,10 @@ def update_gpu_prices():
                             source_names = [k for k in gpu_dict.keys() if k.startswith("蓝宝石")]
                         else:
                             source_names = list(gpu_dict.keys())
-                        best_match, score = process.extractOne(model_name, source_names)
-                        if score >= 80:
+                        best_match, score = (None, 0)
+                        if source_names:
+                            best_match, score = process.extractOne(model_name, source_names)
+                        if best_match and score >= 80:
                             target_chip = extract_gpu_chip_key(model_name)
                             match_chip = extract_gpu_chip_key(best_match)
                             target_vram = extract_gpu_vram(model_name)
@@ -1722,7 +1768,11 @@ def update_gpu_prices():
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
         
-        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，芯片参考匹配 {chip_ref_count} 个，未匹配(保留) {no_match_count} 个")
+        # 为新增型号添加图片映射（图片名称与型号一致）
+        if new_items:
+            add_image_mappings(new_items, 'vga')
+        
+        print(f"\n✅ 显卡价格自动更新完成：更新 {update_count} 个，价格不变 {same_count} 个，新增 {len(new_items)} 个，芯片参考匹配 {chip_ref_count} 个，未匹配(保留) {no_match_count} 个")
     except Exception as e:
         print(f"❌ 显卡更新失败：{e}")
         import traceback
@@ -3858,29 +3908,6 @@ def fuzzy_match_price(name, price_dict):
     print(f"  ❌ 未匹配到: {name[:35]}... (关键字: {html_key})")
     return None
 
-# -------------------------- 主函数 --------------------------
-if __name__ == "__main__":
-    print("===== 硬件价格自动更新 =====")
-    # 使用新的CPU更新逻辑
-    update_cpu_accurate()
-    # 显卡更新
-    update_gpu_prices()
-    # 内存更新（使用新的匹配逻辑，仿照显卡更新）
-    update_ram_prices_new()
-    # 内存定制价格更新（处理金百达等特殊品牌，保留旧逻辑作为补充）
-    update_exist_ram_prices()
-    update_ssd_prices()
-    update_mb_accurate()
-    # 机箱更新
-    update_case_accurate()
-    # 新增执行电源更新
-    update_power_accurate()
-    # 新增执行散热器更新
-    update_cooler_accurate()
-    
-    print("===== 全部执行完成 =====")
-
-
 def add_image_mappings(new_items, mapping_type):
     """
     自动添加图片映射
@@ -3942,7 +3969,8 @@ def add_image_mappings(new_items, mapping_type):
     added_count = 0
     new_mappings = []
     
-    for name, _ in new_items:
+    for item in new_items:
+        name = item[0]
         if name not in existing_keys:
             # 转义单引号，避免JavaScript语法错误
             escaped_name = name.replace("'", "\\'")
@@ -3953,6 +3981,15 @@ def add_image_mappings(new_items, mapping_type):
     
     # 在映射表末尾添加新映射
     if new_mappings:
+        # 原最后一条映射可能没有结尾逗号，需要补上，避免与新映射之间缺少分隔符
+        for k in range(map_end_idx - 1, map_start_idx, -1):
+            last_line = lines[k].strip()
+            if not last_line:
+                continue
+            if not last_line.endswith(','):
+                lines[k] = lines[k].rstrip() + ','
+            break
+        
         lines[map_end_idx] = '\n'.join(new_mappings) + '\n' + lines[map_end_idx]
         
         # 保存前验证行数是否合理
@@ -4052,3 +4089,26 @@ def download_images(new_items, mapping_type):
             skipped_count += 1
     
     print(f"   📊 图片下载完成：成功 {downloaded_count} 个，跳过 {skipped_count} 个")
+
+
+# -------------------------- 主函数 --------------------------
+if __name__ == "__main__":
+    print("===== 硬件价格自动更新 =====")
+    # 使用新的CPU更新逻辑
+    update_cpu_accurate()
+    # 显卡更新
+    update_gpu_prices()
+    # 内存更新（使用新的匹配逻辑，仿照显卡更新）
+    update_ram_prices_new()
+    # 内存定制价格更新（处理金百达等特殊品牌，保留旧逻辑作为补充）
+    update_exist_ram_prices()
+    update_ssd_prices()
+    update_mb_accurate()
+    # 机箱更新
+    update_case_accurate()
+    # 新增执行电源更新
+    update_power_accurate()
+    # 新增执行散热器更新
+    update_cooler_accurate()
+    
+    print("===== 全部执行完成 =====")
