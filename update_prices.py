@@ -3619,7 +3619,7 @@ def update_case_accurate():
         if new_items:
             print(f"\n   📌 追加 {len(new_items)} 个新型号:")
             new_lines = []
-            for name, price in new_items:
+            for name, price, _img in new_items:
                 new_line = f'            {{n:"{name}",p:{price}}},'
                 new_lines.append(new_line)
                 print(f"   + 新增: {name[:40]}... ￥{price}")
@@ -3869,7 +3869,7 @@ def update_cooler_accurate():
         if new_items:
             print(f"\n   📌 追加 {len(new_items)} 个新型号:")
             new_lines = []
-            for name, price in new_items:
+            for name, price, _img in new_items:
                 new_line = f'            {{n:"{name}",p:{price}}},'
                 new_lines.append(new_line)
                 print(f"   + 新增: {name[:40]}... ￥{price}")
