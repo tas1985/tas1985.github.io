@@ -1487,6 +1487,88 @@ def update_cpu_accurate():
         import traceback
         traceback.print_exc()
 
+# -------------------------- 撼讯显卡价格 --------------------------
+def hanxun_chip_key(name):
+    """提取芯片型号，例如 撼讯 RX9070XT 16G 红魔 -> RX9070XT"""
+    norm = name.replace(' ', '').upper()
+    m = re.search(r'RX\s?(\d{3,4})(XT|GRE)?', norm)
+    return m.group(0).replace(' ', '') if m else None
+
+
+def hanxun_vram_key(name):
+    """提取显存容量，例如 RX9070XT 16G -> 16G；无显存标识返回 None"""
+    m = re.search(r'(?<![0-9])(\d{1,2})G', name.replace(' ', '').upper())
+    return f"{m.group(1)}G" if m else None
+
+
+def update_hanxun_prices(lines, start_idx, end_idx):
+    """
+    撼讯显卡：源网站没有该品牌，改为参考其他品牌同型号（同芯片+同显存）的价格，
+    再叠加撼讯系列加价。每次运行都从参考价重算，避免在上次价格上反复累加。
+    :return: (更新数量, 保持数量)
+    """
+    items = []
+    for i in range(start_idx + 1, end_idx):
+        m = re.search(r'\{n:"([^"]+)",p:(\d+)\}', lines[i])
+        if m:
+            items.append((i, m.group(1), int(m.group(2))))
+    
+    # 收集其他品牌的参考价：按 (芯片, 显存) 分组
+    refs = {}
+    for _, name, price in items:
+        if name.startswith('撼讯'):
+            continue
+        chip = hanxun_chip_key(name)
+        if not chip:
+            continue
+        refs.setdefault((chip, hanxun_vram_key(name)), []).append((name, price))
+    
+    markup_rules = (('红魔', 600), ('暗黑犬', 250))
+    updated_count = 0
+    kept_count = 0
+    
+    for pos, name, old_price in items:
+        if not name.startswith('撼讯'):
+            continue
+        
+        candidates = refs.get((hanxun_chip_key(name), hanxun_vram_key(name)), [])
+        if not candidates:
+            kept_count += 1
+            print(f"  ⚠️ 撼讯无同型号参考，保留原价: {name[:40]}... ￥{old_price}")
+            continue
+        
+        # 优先参考蓝宝石（同为AMD核心合作伙伴），否则取其他品牌最低价
+        sapphire = [(n, p) for n, p in candidates if n.startswith('蓝宝石')]
+        pool = sapphire if sapphire else candidates
+        base_price = min(p for _, p in pool)
+        ref_name = next(n for n, p in pool if p == base_price)
+        
+        markup = 0
+        for kw, add in markup_rules:
+            if kw in name:
+                markup += add
+        if '游荡者' in name:
+            if '黑' in name:
+                markup += 100
+            if '白' in name:
+                markup += 170
+        
+        new_price = base_price + markup
+        if new_price != old_price:
+            lines[pos] = re.sub(r'p:\d+', f'p:{new_price}', lines[pos])
+            updated_count += 1
+            print(f"  ✓ 撼讯参考 {ref_name[:30]}... ￥{base_price}"
+                  f"{f'（{name.split()[0]}加价+{markup}）' if markup else ''}"
+                  f": {name[:40]}... ￥{old_price} -> ￥{new_price}")
+        else:
+            kept_count += 1
+            print(f"  ≡ 撼讯价格已正确: {name[:40]}... ￥{new_price}")
+    
+    if updated_count or kept_count:
+        print(f"✅ 撼讯价格更新完成：更新 {updated_count} 个，保持 {kept_count} 个")
+    return updated_count, kept_count
+
+
 # -------------------------- 显卡更新函数 --------------------------
 def update_gpu_prices():
     """爬取显卡价格并更新HTML中的显卡列表"""
@@ -1583,6 +1665,10 @@ def update_gpu_prices():
                 if match:
                     model_name = match.group(1)
                     old_price = int(match.group(2))
+                    # 撼讯：源站无该品牌，价格统一由 update_hanxun_prices() 按其他品牌同型号计算
+                    if model_name.startswith("撼讯"):
+                        pos += 1
+                        continue
                     new_price = None
                     
                     # 方法1：精确匹配
@@ -1610,13 +1696,8 @@ def update_gpu_prices():
                     
                     # 方法4：芯片级参考匹配（跨品牌，同GPU芯片+同显存）
                     # 微星-系列显卡不参与跨品牌匹配，避免被其他品牌价格影响
-                    # 撼讯系列显卡参考蓝宝石对应型号匹配
                     if new_price is None and not model_name.startswith("微星-"):
-                        if model_name.startswith("撼讯"):
-                            filtered_dict = {k: v for k, v in gpu_dict.items() if k.startswith("蓝宝石")}
-                        else:
-                            filtered_dict = gpu_dict
-                        ref_name, ref_price = find_chip_reference_price(filtered_dict, model_name)
+                        ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
                         if ref_name and ref_price:
                             new_price = ref_price
                             chip_ref_count += 1
@@ -1624,12 +1705,8 @@ def update_gpu_prices():
 
                     # 方法5：使用fuzzywuzzy进行字符串相似度匹配（需GPU芯片+显存都一致）
                     # 微星-系列显卡不参与跨品牌相似度匹配
-                    # 撼讯系列显卡参考蓝宝石对应型号匹配
                     if new_price is None and not model_name.startswith("微星-"):
-                        if model_name.startswith("撼讯"):
-                            source_names = [k for k in gpu_dict.keys() if k.startswith("蓝宝石")]
-                        else:
-                            source_names = list(gpu_dict.keys())
+                        source_names = list(gpu_dict.keys())
                         best_match, score = (None, 0)
                         if source_names:
                             best_match, score = process.extractOne(model_name, source_names)
@@ -1646,31 +1723,8 @@ def update_gpu_prices():
                             else:
                                 print(f"  ⚠️ 相似度匹配跳过(芯片/显存不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
 
-                    # 撼讯显卡：源网站无此品牌数据时，使用现有价格作为基础价格
-                    if new_price is None and model_name.startswith("撼讯"):
-                        new_price = old_price
-                        print(f"  💡 撼讯无源数据，使用现有价格为基础: {model_name[:40]}... ￥{old_price}")
-
                     if new_price is not None:
                         new_price = int(new_price)
-                        if "撼讯" in model_name:
-                            markup = 0
-                            if "红魔" in model_name:
-                                new_price += 600
-                                markup += 600
-                            if "暗黑犬" in model_name:
-                                new_price += 250
-                                markup += 250
-                            if "游荡者" in model_name and "黑" in model_name:
-                                new_price += 100
-                                markup += 100
-                            if "游荡者" in model_name and "白" in model_name:
-                                new_price += 170
-                                markup += 170
-                            if markup > 0:
-                                print(f"  💰 撼讯加价+{markup}: {model_name[:40]}... 源价+{markup}=￥{new_price}")
-                            else:
-                                print(f"  💹 撼讯(无额外加价): {model_name[:40]}... 源价=￥{new_price}")
                         if "微星 RTX5060 8G VENTUS 2X OC WHITE白色" in model_name:
                             new_price += 150
                             print(f"  💰 微星白色版加价+150: {model_name[:40]}... ￥{new_price}")
@@ -1769,6 +1823,11 @@ def update_gpu_prices():
             print(f"✅ 微星 RTX5060TI 价格更新完成 {msi_count} 个（8G参考:七彩虹战斧DUO {ref8_str}；16G参考:七彩虹战斧DUO {ref16_str}）")
         else:
             print("⚠️ 未找到七彩虹 RTX5060TI 战斧 DUO 双扇 参考型号，微星价格未更新")
+
+        # 撼讯：参考其他品牌同芯片同显存的价格（在其他品牌价格都更新完之后执行）
+        hx_updated, hx_kept = update_hanxun_prices(lines, start_idx, end_idx)
+        update_count += hx_updated
+        same_count += hx_kept
 
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
@@ -4138,9 +4197,9 @@ def download_images(new_items, mapping_type):
     """
     # 确定图片保存目录
     save_dirs = {
-        'case': 'tas1985.github.io/PNG',
-        'cooler': 'tas1985.github.io/PNG_SR',
-        'vga': 'tas1985.github.io/PNG_VGA'
+        'case': 'PNG',
+        'cooler': 'PNG_SR',
+        'vga': 'PNG_VGA'
     }
     
     save_dir = save_dirs.get(mapping_type)
@@ -4148,9 +4207,9 @@ def download_images(new_items, mapping_type):
         print(f"❌ 未知映射类型: {mapping_type}")
         return
     
-    # vga：优先使用 index.html 同级的 PNG_VGA，兼容旧的仓库嵌套目录
+    # vga：图片目录与 index.html 同级（网站按 /PNG_VGA/ 请求），兼容旧的仓库嵌套目录
     if mapping_type == 'vga':
-        for cand in ('tas1985.github.io/PNG_VGA', 'PNG_VGA'):
+        for cand in ('PNG_VGA', 'tas1985.github.io/PNG_VGA'):
             if os.path.isdir(cand):
                 save_dir = cand
                 break
