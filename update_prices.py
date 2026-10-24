@@ -5,6 +5,7 @@ import os
 import time
 import math
 import hashlib
+from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
 
 import requests
@@ -191,7 +192,7 @@ def jd_query_self_price(model_name):
         params = {
             "method": "jd.union.open.goods.query",
             "app_key": cfg["app_key"],
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S"),
             "format": "json",
             "v": "1.0",
             "sign_method": "md5",
