@@ -4,8 +4,6 @@ import json
 import os
 import time
 import math
-import hashlib
-from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
 
 import requests
@@ -70,189 +68,6 @@ START_LINE = 1055
 END_LINE = 1110
 MATCH_THRESHOLD = 60
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-
-# -------------------------- 京东自营价格回退 --------------------------
-JD_CONFIG_FILE = "jd_config.json"
-JD_API_URL = "https://api.jd.com/routerjson"
-JD_PRICE_DISCOUNT = 50  # 在京东自营价基础上减50元
-_JD_CONFIG_CACHE = None
-_JD_PRICE_CACHE = {}
-_JD_STATUS_PRINTED = False
-
-
-def load_jd_config():
-    """读取京东联盟API配置（脚本同目录 jd_config.json）
-    格式: {"app_key": "你的appkey", "app_secret": "你的secret"}
-    环境变量 JD_APP_KEY / JD_APP_SECRET 可覆盖（供 GitHub Actions 使用）
-    未配置时京东回退功能自动关闭，源站未匹配型号保持原价
-    """
-    global _JD_CONFIG_CACHE
-    if _JD_CONFIG_CACHE is not None:
-        return _JD_CONFIG_CACHE
-    cfg = {"app_key": "", "app_secret": ""}
-    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), JD_CONFIG_FILE)
-    if os.path.exists(cfg_path):
-        try:
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for k in ("app_key", "app_secret"):
-                if data.get(k):
-                    cfg[k] = data[k]
-        except Exception as e:
-            print(f"   ⚠️ 读取 {JD_CONFIG_FILE} 失败: {e}")
-    if os.environ.get("JD_APP_KEY"):
-        cfg["app_key"] = os.environ["JD_APP_KEY"]
-    if os.environ.get("JD_APP_SECRET"):
-        cfg["app_secret"] = os.environ["JD_APP_SECRET"]
-    _JD_CONFIG_CACHE = cfg if (cfg["app_key"] and cfg["app_secret"]) else None
-    return _JD_CONFIG_CACHE
-
-
-def jd_fallback_enabled():
-    """京东回退是否启用（状态只打印一次）"""
-    global _JD_STATUS_PRINTED
-    enabled = load_jd_config() is not None
-    if not _JD_STATUS_PRINTED:
-        if enabled:
-            print("🛒 京东自营回退已启用：源站未匹配型号将按 京东自营价-50 更新")
-        else:
-            print("ℹ️ 未配置京东联盟凭证（jd_config.json 或环境变量 JD_APP_KEY/JD_APP_SECRET），源站未匹配型号保持原价")
-        _JD_STATUS_PRINTED = True
-    return enabled
-
-
-def _jd_sign(params, secret):
-    """京东开放平台 MD5 签名：secret + 按key排序拼接 key+value + secret，取大写MD5"""
-    raw = secret + "".join(f"{k}{params[k]}" for k in sorted(params)) + secret
-    return hashlib.md5(raw.encode("utf-8")).hexdigest().upper()
-
-
-def _jd_extract_item_price(item):
-    """从商品对象中提取价格（兼容多种字段），失败返回 None"""
-    candidates = []
-    price_info = item.get("priceInfo") or {}
-    for v in (price_info.get("price"), price_info.get("lowestPrice"),
-              item.get("wlUnitPrice"), item.get("price"), item.get("lowestPrice")):
-        try:
-            if v is not None and str(v) != "":
-                candidates.append(float(v))
-        except (TypeError, ValueError):
-            continue
-    valid = [p for p in candidates if 10 <= p <= 100000]
-    return min(valid) if valid else None
-
-
-def jd_title_matches(model_name, title):
-    """校验京东商品标题是否对应该型号，避免张冠李戴：
-    1) 品牌中文段需出现在标题中
-    2) 型号里含数字的token（如 12400F/B760M/16G/3600/850W）命中率>=60%，且最长核心token必须命中
-    """
-    if not title:
-        return False
-    t = re.sub(r"\s+", "", str(title)).upper().replace("×", "X").replace("＊", "X").replace("*", "X")
-    # 品牌：取型号名中第一个长度>=2的连续中文段
-    brand_segs = [s for s in re.findall(r"[一-鿿]{2,}", model_name)
-                  if s not in ("自营", "旗舰店", "官方", "京东")]
-    if brand_segs and brand_segs[0] not in t:
-        return False
-    # 含数字token
-    tokens = []
-    norm_name = model_name.upper().replace("×", "X").replace("*", "X")
-    for tok in re.split(r"[\s_（）()\[\]\-]+", norm_name):
-        tok = re.sub(r"[^0-9A-Z一-鿿]", "", tok)
-        if len(tok) >= 2 and re.search(r"\d", tok):
-            tokens.append(tok)
-    if not tokens:
-        return True  # 没有可校验的型号token时只看品牌
-    hits = sum(1 for tok in tokens if tok in t)
-    if hits / len(tokens) < 0.6:
-        return False
-    # 核心token（最长且非 8X2/16X2 这类套装组成token，后者在标题中常写作 8GBX2 而误杀）必须命中
-    core_candidates = [tok for tok in tokens if not re.fullmatch(r"\d+X\d+", tok)]
-    if core_candidates:
-        core = max(core_candidates, key=len)
-        return core in t
-    return True
-
-
-def jd_query_self_price(model_name):
-    """调用京东联盟API查询京东自营最低价（标题需匹配型号），失败返回 None"""
-    cfg = load_jd_config()
-    if not cfg:
-        return None
-    try:
-        goods_req = {
-            "goodsReqDTO": {
-                "keyword": model_name,
-                "pageIndex": 1,
-                "pageSize": 20,
-                "owner": "g",  # g=京东自营
-            }
-        }
-        params = {
-            "method": "jd.union.open.goods.query",
-            "app_key": cfg["app_key"],
-            "timestamp": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S"),
-            "format": "json",
-            "v": "1.0",
-            "sign_method": "md5",
-            "360buy_param_json": json.dumps(goods_req, ensure_ascii=False),
-        }
-        params["sign"] = _jd_sign(params, cfg["app_secret"])
-        r = requests.post(JD_API_URL, data=params, timeout=15)
-        data = r.json()
-        resp = data.get("jd_union_open_goods_query_response") or {}
-        result_raw = resp.get("result")
-        if not result_raw:
-            err = data.get("error_response") or resp
-            print(f"  ⚠️ 京东接口无结果({model_name[:20]}...): {str(err)[:120]}")
-            return None
-        result = json.loads(result_raw) if isinstance(result_raw, str) else result_raw
-        items = result.get("data") or []
-        prices = []
-        for item in items:
-            owner = item.get("owner")
-            if owner not in (None, "", "g"):
-                continue  # 只要自营
-            title = item.get("skuName") or item.get("materialName") or ""
-            if not jd_title_matches(model_name, title):
-                continue
-            p = _jd_extract_item_price(item)
-            if p is not None:
-                prices.append(p)
-        if prices:
-            return min(prices)
-        print(f"  ⚠️ 京东无匹配商品: {model_name[:25]}...")
-        return None
-    except Exception as e:
-        print(f"  ⚠️ 京东查询失败({model_name[:20]}...): {e}")
-        return None
-
-
-def jd_fallback_price(model_name, kind=None):
-    """源站未匹配时的京东自营回退价：京东自营最低价-50；未启用/查询失败返回 None（保持原价）"""
-    if not jd_fallback_enabled():
-        return None
-    if model_name in _JD_PRICE_CACHE:
-        return _JD_PRICE_CACHE[model_name]
-    price = None
-    jd_price = jd_query_self_price(model_name)
-    if jd_price is not None:
-        new_price = int(round(jd_price)) - JD_PRICE_DISCOUNT
-        if new_price > 0:
-            price = new_price
-    _JD_PRICE_CACHE[model_name] = price
-    time.sleep(0.4)  # 限速，避免触发京东风控
-    return price
-
-
-def gpu_skip_jd_fallback(model_name):
-    """微星/撼讯/RTX5060TI 16G 显卡已有强制联动规则（主循环之后执行），跳过京东回退避免无效查询"""
-    if "微星" in model_name or "撼讯" in model_name:
-        return True
-    ml = model_name.lower()
-    return "rtx5060ti" in ml and re.search(r"(?<!\d)16gb?", ml) is not None
-
 
 def is_garbled(text):
     """检测文本是否为乱码（包含不应出现在中文产品名中的西里尔/异常字符）"""
@@ -1534,18 +1349,8 @@ def update_ssd_prices():
                 else:
                     same_count += 1
             else:
-                jd_price = jd_fallback_price(ssd_name, 'ssd')
-                if jd_price is not None:
-                    if jd_price != old_price:
-                        lines[i] = re.sub(r'p:\d+', f'p:{jd_price}', line)
-                        updated += 1
-                        print(f"  🛒 京东回退: {ssd_name[:25]}... ￥{old_price} -> ￥{jd_price}")
-                    else:
-                        same_count += 1
-                        print(f"  ≡ 京东回退价格不变: {ssd_name[:25]}... ￥{old_price}")
-                else:
-                    no_match_count += 1
-                    print(f"  ⚠️ 未匹配: {ssd_name[:30]}...")
+                no_match_count += 1
+                print(f"  ⚠️ 未匹配: {ssd_name[:30]}...")
 
         # 查找SSD目标位置和范围
         target_idx = find_ssd_target_position(lines, SSD_TARGET_LINE)
@@ -1667,18 +1472,8 @@ def update_cpu_accurate():
                             same_count += 1
                             print(f"  ≡ 价格不变: {model_name[:30]}... ￥{old_price}")
                     else:
-                        jd_price = jd_fallback_price(model_name, 'cpu')
-                        if jd_price is not None:
-                            if jd_price != old_price:
-                                lines[pos] = re.sub(r'p:\d+', f'p:{jd_price}', line)
-                                update_count += 1
-                                print(f"  🛒 京东回退: {model_name[:30]}... ￥{old_price} -> ￥{jd_price}")
-                            else:
-                                same_count += 1
-                                print(f"  ≡ 京东回退价格不变: {model_name[:30]}... ￥{old_price}")
-                        else:
-                            no_match_count += 1
-                            print(f"  ⚠️ 未匹配: {model_name[:30]}...")
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配: {model_name[:30]}...")
                 pos += 1
             else:
                 break
@@ -1943,19 +1738,8 @@ def update_gpu_prices():
                             same_count += 1
                             print(f"  ≡ 价格不变: {model_name[:40]}... ￥{old_price}")
                     else:
-                        # 微星/撼讯/RTX5060TI 16G 由后置联动规则定价，跳过京东回退
-                        jd_price = None if gpu_skip_jd_fallback(model_name) else jd_fallback_price(model_name, 'vga')
-                        if jd_price is not None:
-                            if jd_price != old_price:
-                                lines[pos] = re.sub(r'p:\d+', f'p:{jd_price}', line)
-                                update_count += 1
-                                print(f"  🛒 京东回退: {model_name[:40]}... ￥{old_price} -> ￥{jd_price}")
-                            else:
-                                same_count += 1
-                                print(f"  ≡ 京东回退价格不变: {model_name[:40]}... ￥{old_price}")
-                        else:
-                            no_match_count += 1
-                            print(f"  ⚠️ 未匹配(保留): {model_name[:40]}...")
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配(保留): {model_name[:40]}...")
                 pos += 1
             else:
                 pos += 1
@@ -2251,18 +2035,8 @@ def update_ram_prices_new():
                             same_count += 1
                             print(f"  ≡ 价格不变: {model_name[:40]}... ￥{old_price}")
                     else:
-                        jd_price = jd_fallback_price(model_name, 'ram')
-                        if jd_price is not None:
-                            if jd_price != old_price:
-                                lines[pos] = re.sub(r'p:\d+', f'p:{jd_price}', line)
-                                update_count += 1
-                                print(f"  🛒 京东回退: {model_name[:40]}... ￥{old_price} -> ￥{jd_price}")
-                            else:
-                                same_count += 1
-                                print(f"  ≡ 京东回退价格不变: {model_name[:40]}... ￥{old_price}")
-                        else:
-                            no_match_count += 1
-                            print(f"  ⚠️ 未匹配(保留): {model_name}...")
+                        no_match_count += 1
+                        print(f"  ⚠️ 未匹配(保留): {model_name}...")
                 pos += 1
             else:
                 pos += 1
@@ -3054,19 +2828,6 @@ def update_mb_accurate():
         # 统计未匹配的HTML型号
         no_match_count = len(html_mbs) - len(matched_html)
         
-        # 京东自营回退：源站未匹配的型号参考京东自营价(-50)更新
-        jd_updated = 0
-        for html_name, (html_price, line_idx) in html_mbs.items():
-            if html_name in matched_html:
-                continue
-            jd_price = jd_fallback_price(html_name, 'mb')
-            if jd_price is not None and jd_price != html_price:
-                lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{jd_price}', lines[line_idx])
-                print(f"   🛒 京东回退: {html_name[:35]}... ￥{html_price} -> ￥{jd_price}")
-                update_count += 1
-                jd_updated += 1
-        no_match_count -= jd_updated
-        
         # 执行更新
         for line_idx, new_price, name, old_price in updates:
             lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
@@ -3108,7 +2869,6 @@ def update_mb_accurate():
         print(f"   - 价格更新: {update_count} 个型号")
         print(f"   - 新型号追加: {new_add_count} 个型号")
         print(f"   - 价格不变: {no_change_count} 个型号")
-        print(f"   - 京东回退: {jd_updated} 个型号")
         print(f"   - 未匹配(保留): {no_match_count} 个型号")
         print("="*50)
         print("✅ 主板更新完成!")
@@ -3827,19 +3587,6 @@ def update_case_accurate():
         # 统计未匹配的HTML型号
         no_match_count = len(html_cases) - len(matched_html)
         
-        # 京东自营回退：源站未匹配的型号参考京东自营价(-50)更新
-        jd_updated = 0
-        for html_name, (html_price, line_idx) in html_cases.items():
-            if html_name in matched_html:
-                continue
-            jd_price = jd_fallback_price(html_name, 'case')
-            if jd_price is not None and jd_price != html_price:
-                lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{jd_price}', lines[line_idx])
-                print(f"   🛒 京东回退: {html_name[:35]}... ￥{html_price} -> ￥{jd_price}")
-                update_count += 1
-                jd_updated += 1
-        no_match_count -= jd_updated
-        
         # 执行更新
         for line_idx, new_price, name, old_price in updates:
             final_price = new_price
@@ -3913,7 +3660,6 @@ def update_case_accurate():
         print(f"   - 价格更新: {update_count} 个型号")
         print(f"   - 新型号追加: {new_add_count} 个型号")
         print(f"   - 价格不变: {no_change_count} 个型号")
-        print(f"   - 京东回退: {jd_updated} 个型号")
         print(f"   - 未匹配(保留): {no_match_count} 个型号")
         print("="*50)
         print("✅ 机箱更新完成!")
@@ -3943,14 +3689,6 @@ def update_power_accurate():
             return
         # 目标行的下一行开始插入
         pos = idx + 1
-        # 快照现有电源型号（源站缺失的型号后续用京东自营价保留）
-        old_power_items = []
-        scan = pos
-        while scan < len(lines) and lines[scan].startswith(POWER_INDENT) and '{n:"' in lines[scan]:
-            m = re.search(r'{n:"([^"]+)",p:(\d+)', lines[scan])
-            if m:
-                old_power_items.append((m.group(1), int(m.group(2))))
-            scan += 1
         # 先删除原有电源数据（避免重复）
         while pos < len(lines) and lines[pos].startswith(POWER_INDENT) and '{n:"' in lines[pos]:
             del lines[pos]
@@ -3958,31 +3696,10 @@ def update_power_accurate():
         power_content = generate_power_content(power_list)
         if power_content:
             lines.insert(pos, power_content)
-        # 京东自营回退：源站没有的老型号按 京东自营价-50 保留（未配置京东凭证时维持原行为：删除）
-        source_names = {p["name"] for p in power_list}
-        kept_lines = []
-        kept_count = 0
-        for name, old_price in old_power_items:
-            if name in source_names:
-                continue
-            jd_price = jd_fallback_price(name, 'power')
-            if jd_price is not None:
-                kept_lines.append(f'{POWER_INDENT}{{n:"{name}",p:{jd_price}}},\n')
-                kept_count += 1
-                if jd_price != old_price:
-                    print(f"  🛒 京东回退保留: {name[:35]}... ￥{old_price} -> ￥{jd_price}")
-                else:
-                    print(f"  ≡ 京东回退保留: {name[:35]}... ￥{old_price}")
-        if kept_lines:
-            insert_at = pos + (1 if power_content else 0)
-            lines[insert_at:insert_at] = kept_lines
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        msg = f"✅ 电源价格自动更新完成，共更新 {len(power_list)} 个电源型号"
-        if kept_count:
-            msg += f"，京东回退保留 {kept_count} 个"
-        print(msg)
+        print(f"✅ 电源价格自动更新完成，共更新 {len(power_list)} 个电源型号")
     except Exception as e:
         print(f"❌ 电源更新失败：{e}")
 
@@ -4130,19 +3847,6 @@ def update_cooler_accurate():
         # 统计未匹配的HTML型号
         no_match_count = len(html_coolers) - len(matched_html)
         
-        # 京东自营回退：源站未匹配的型号参考京东自营价(-50)更新
-        jd_updated = 0
-        for html_name, (html_price, line_idx) in html_coolers.items():
-            if html_name in matched_html:
-                continue
-            jd_price = jd_fallback_price(html_name, 'cooler')
-            if jd_price is not None and jd_price != html_price:
-                lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{jd_price}', lines[line_idx])
-                print(f"   🛒 京东回退: {html_name[:35]}... ￥{html_price} -> ￥{jd_price}")
-                update_count += 1
-                jd_updated += 1
-        no_match_count -= jd_updated
-        
         # 执行更新
         for line_idx, new_price, name, old_price in updates:
             lines[line_idx] = re.sub(r'p:\d+(?:\.\d+)?', f'p:{new_price}', lines[line_idx])
@@ -4206,7 +3910,6 @@ def update_cooler_accurate():
         print(f"   - 价格更新: {update_count} 个型号")
         print(f"   - 新型号追加: {new_add_count} 个型号")
         print(f"   - 价格不变: {no_change_count} 个型号")
-        print(f"   - 京东回退: {jd_updated} 个型号")
         print(f"   - 未匹配(保留): {no_match_count} 个型号")
         print("="*50)
         print("✅ 散热器更新完成!")
@@ -5028,7 +4731,6 @@ def fill_missing_images(limit=15, kinds=('case', 'cooler', 'vga')):
 # -------------------------- 主函数 --------------------------
 if __name__ == "__main__":
     print("===== 硬件价格自动更新 =====")
-    jd_fallback_enabled()  # 打印京东自营回退启用状态
     # 使用新的CPU更新逻辑
     update_cpu_accurate()
     # 显卡更新
