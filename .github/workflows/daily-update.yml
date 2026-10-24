@@ -31,6 +31,10 @@ jobs:
 
       - name: 运行价格更新脚本
         run: python update_prices.py
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          JD_APP_KEY: ${{ secrets.JD_APP_KEY }} 
+          JD_APP_SECRET: ${{ secrets.JD_APP_SECRET }}
 
       - name: 提交并推送修改
         uses: EndBug/add-and-commit@v9
