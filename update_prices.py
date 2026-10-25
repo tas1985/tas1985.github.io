@@ -1825,6 +1825,51 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到七彩虹 RTX5060TI 战斧 DUO 双扇 参考型号，微星价格未更新")
 
+        # 特殊处理：微星 RTX5060（非TI）8G 价格按"七彩虹 RTX5060 8G 战斧 DUO 双扇"价格+100更新
+        # 仅处理"微星-"前缀型号：这些型号不参与跨品牌匹配，源站无同型号时会一直停留在旧价
+        rtx5060_8g_ref_price = None
+        for ref_line in lines[start_idx:end_idx]:
+            ref_match = re.search(r'{n:"([^"]+)",p:(\d+)}', ref_line)
+            if not ref_match:
+                continue
+            ref_name = ref_match.group(1)
+            ref_compact = re.sub(r'\s+', '', ref_name).lower()
+            if ("七彩虹" in ref_name and "rtx5060" in ref_compact
+                    and "rtx5060ti" not in ref_compact
+                    and "战斧" in ref_name and "duo" in ref_compact):
+                rtx5060_8g_ref_price = int(ref_match.group(2))
+                break
+        if rtx5060_8g_ref_price is not None:
+            msi5060_count = 0
+            for i in range(start_idx + 1, end_idx):
+                line = lines[i]
+                if '{n:"' not in line or '",p:' not in line:
+                    continue
+                model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if not model_match:
+                    continue
+                model_name = model_match.group(1)
+                old_price = int(model_match.group(2))
+                model_lower = model_name.lower()
+                model_compact = re.sub(r'\s+', '', model_lower)
+                # 只处理"微星-"前缀、RTX5060（排除5060TI）、8G 显存
+                if not model_name.startswith("微星-"):
+                    continue
+                if "rtx5060" not in model_compact or "rtx5060ti" in model_compact:
+                    continue
+                if not re.search(r'(?<!\d)8g', model_lower):
+                    continue
+                new_price = rtx5060_8g_ref_price + 100
+                if old_price != new_price:
+                    lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    msi5060_count += 1
+                    print(f"  ★ 微星RTX5060 8G 更新: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（七彩虹战斧DUO ￥{rtx5060_8g_ref_price}+100）")
+                else:
+                    print(f"  ≡ 微星RTX5060 8G 价格已正确: {model_name[:40]}... ￥{old_price}")
+            print(f"✅ 微星 RTX5060 8G 价格更新完成 {msi5060_count} 个（参考:七彩虹 RTX5060 8G 战斧 DUO 双扇 ￥{rtx5060_8g_ref_price}+100=￥{rtx5060_8g_ref_price + 100}）")
+        else:
+            print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，微星 RTX5060 价格未更新")
+
         # 撼讯：参考其他品牌同芯片同显存的价格（在其他品牌价格都更新完之后执行）
         hx_updated, hx_kept = update_hanxun_prices(lines, start_idx, end_idx)
         update_count += hx_updated
