@@ -546,6 +546,105 @@ def fetch_gpu_prices():
         traceback.print_exc()
         return []
 
+def fetch_smzdm_gpu_prices(chip_keyword="RTX5090D"):
+    """从什么值得买(smzdm.com)搜索显卡价格，返回 [(title, price), ...]，用于源站无数据时的回退（如RTX5090D）"""
+    try:
+        url = "https://search.smzdm.com/?c=home&s=" + quote(chip_keyword + " 显卡")
+        smzdm_headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+            "Referer": "https://www.smzdm.com/",
+        }
+        # smzdm 有反爬验证，优先用 Playwright 渲染后获取完整 HTML
+        html = None
+        if PLAYWRIGHT_AVAILABLE:
+            browser = get_browser()
+            if browser:
+                try:
+                    page = browser.new_page()
+                    page.goto(url, wait_until="networkidle", timeout=30000)
+                    page.wait_for_timeout(3000)
+                    for _ in range(3):
+                        page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                        page.wait_for_timeout(1000)
+                    html = page.content()
+                    page.close()
+                except Exception as e:
+                    print(f"⚠️ smzdm Playwright渲染失败，回退requests: {e}")
+        if not html:
+            res = requests.get(url, headers=smzdm_headers, timeout=20)
+            res.encoding = 'utf-8'
+            html = res.text
+        soup = BeautifulSoup(html, "html.parser")
+        results = []
+        chip_compact = re.sub(r'\s+', '', chip_keyword).upper()
+        # smzdm 搜索结果每条在 div.feed-row-wide / li.feed-row-wide 中
+        items = soup.select("div.feed-row-wide, li.feed-row-wide")
+        if not items:
+            items = soup.select(".feed-block, .list_feed, .search-card")
+        for item in items:
+            # 提取标题
+            title = ""
+            for sel in ["h5.feed-block-title a", ".feed-block-title a", "a.feed-nowrap", "a.feed-block-title"]:
+                el = item.select_one(sel)
+                if el:
+                    title = el.get("title", "") or el.get_text(strip=True)
+                    break
+            if not title:
+                # 备选：取 item 内第一个 a 的 title
+                a = item.find("a", title=True)
+                if a:
+                    title = a["title"]
+            if not title or len(title) < 5:
+                continue
+            # 过滤：必须包含目标芯片，且排除整机/笔记本/台式机
+            title_compact = re.sub(r'\s+', '', title).upper()
+            if chip_compact not in title_compact:
+                # 兼容 5090D / 5090 D 写法
+                if chip_compact.replace("RTX", "") not in title_compact:
+                    continue
+            if any(w in title for w in ["笔记本", "游戏本", "台式机", "主机", "组装电脑", "整机", "电竞台", "设计师主机"]):
+                # 只保留明确是独立显卡的
+                if "显卡" not in title and "独显" not in title:
+                    continue
+            # 提取价格：优先 .z-highlight，其次全文搜索
+            price = None
+            price_el = item.select_one(".z-highlight, span.price, .feed-block-price, .price")
+            if price_el:
+                price_text = price_el.get_text(strip=True)
+            else:
+                price_text = item.get_text(" ", strip=True)
+            price_match = re.search(r"(\d{4,6}(?:\.\d+)?)", price_text)
+            if price_match:
+                try:
+                    price = int(float(price_match.group(1)))
+                except:
+                    price = None
+            if price and 2000 <= price <= 100000:
+                results.append((title, price))
+        print(f"🔍 smzdm 搜索「{chip_keyword}」获取到 {len(results)} 条显卡价格")
+        return results
+    except Exception as e:
+        print(f"⚠️ smzdm 获取失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+def match_smzdm_price(model_name, smzdm_results):
+    """从 smzdm 结果中用模糊匹配找到最接近型号的价格"""
+    if not smzdm_results:
+        return None, None
+    titles = [r[0] for r in smzdm_results]
+    best_title, score = (None, 0)
+    if titles:
+        best_title, score = process.extractOne(model_name, titles)
+    if best_title and score >= 55:
+        for t, p in smzdm_results:
+            if t == best_title:
+                return p, t
+    return None, None
+
 def fetch_ram_prices_new():
     """爬取内存价格，返回列表格式（不依赖Playwright）"""
     try:
@@ -1656,6 +1755,7 @@ def update_gpu_prices():
         same_count = 0
         no_match_count = 0
         chip_ref_count = 0
+        smzdm_5090d_cache = None  # smzdm RTX5090D 搜索结果缓存，只请求一次
         
         # 更新现有显卡型号的价格
         pos = start_idx + 1
@@ -1723,6 +1823,17 @@ def update_gpu_prices():
                                 print(f"  ✅ 相似度匹配({score}%): {model_name[:40]}... ≈ {best_match[:40]}...")
                             else:
                                 print(f"  ⚠️ 相似度匹配跳过(芯片/显存不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
+
+                    # 方法6：RTX5090D 源站无价格时，回退到什么值得买(smzdm.com)搜索价格
+                    if new_price is None:
+                        model_compact_check = re.sub(r'\s+', '', model_name.lower())
+                        if "rtx5090d" in model_compact_check:
+                            if smzdm_5090d_cache is None:
+                                smzdm_5090d_cache = fetch_smzdm_gpu_prices("RTX5090D")
+                            smzdm_price, smzdm_title = match_smzdm_price(model_name, smzdm_5090d_cache)
+                            if smzdm_price:
+                                new_price = smzdm_price
+                                print(f"  ✅ smzdm回退匹配: {model_name[:40]}... ← {smzdm_title[:40]}... ￥{smzdm_price}")
 
                     if new_price is not None:
                         new_price = int(new_price)
