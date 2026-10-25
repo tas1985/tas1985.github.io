@@ -9350,6 +9350,11 @@
                 showCoolerImage(config.cooler);
             }
 
+            // 如果加载了显卡，显示对应的图片
+            if(config.vga) {
+                showVgaImage(config.vga);
+            }
+
             alert(`成功加载【${name}】的配置单`);
         } else {
             alert(`未找到【${name}】的配置单`);
