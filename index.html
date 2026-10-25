@@ -1954,7 +1954,7 @@
     </div>
 
     <div class="user">
-        <label onclick="reset(true)" title="点击直接清空当前配置单">客户名称</label>
+        <label onclick="clearConfigOnly()" title="点击清空客户名称、备注、服务与发票，保留配件">客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -8488,6 +8488,27 @@
         // 保存服务项目勾选状态
         o.services = getSelectedServices();
         localStorage.setItem("last",JSON.stringify(o));
+    }
+
+    // 点击「客户名称」：清空配置单信息（客户名称、备注、服务勾选、发票类型），保留配件输入栏内容
+    function clearConfigOnly(){
+        document.getElementById("user").value = "";
+        const r1 = document.getElementById("remark1");
+        const r2 = document.getElementById("remark2");
+        if (r1) r1.value = "";
+        if (r2) r2.value = "";
+        ["svc-videolive","svc-boxing","svc-win10","svc-win11","svc-ubuntu","svc-design","svc-light","svc-burntest"].forEach(id=>{
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        });
+        invoiceType = null;
+        const btnPu = document.getElementById('btn-kai-pu');
+        const btnZhuan = document.getElementById('btn-kai-zhuan');
+        if (btnPu) btnPu.classList.remove('active');
+        if (btnZhuan) btnZhuan.classList.remove('active');
+        hideUserDropdown();
+        saveNow();
+        calc();
     }
 
     // 备注默认文字迁移：将旧的默认备注文字替换为新版默认文字
