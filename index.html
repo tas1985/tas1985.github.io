@@ -9182,10 +9182,21 @@
     let userDropdownEventsBound = false;
 
     // 刷新客户名称缓存（不再一次性构建全部 DOM）
+    // 按每个客户名称的最新更新时间(_ut)倒序排列，最近更新的排在最前面
     function initUserDropdown() {
         const list = JSON.parse(localStorage.getItem("list")) || [];
-        // 提取唯一的客户名称并去重
-        userNamesCache = Array.from(new Set(list.map(item => item.name).filter(name => name.trim())));
+        // 为每个客户名称记录最新的更新时间 _ut
+        const nameLatestTime = {};
+        list.forEach(item => {
+            const name = item.name;
+            if (!name || !name.trim()) return;
+            const t = item._ut || 0;
+            if (!nameLatestTime[name] || t > nameLatestTime[name]) {
+                nameLatestTime[name] = t;
+            }
+        });
+        // 按最新更新时间倒序排列
+        userNamesCache = Object.keys(nameLatestTime).sort((a, b) => nameLatestTime[b] - nameLatestTime[a]);
         const dropdown = document.getElementById("userDropdown");
         if (dropdown) {
             dropdown.innerHTML = "";
