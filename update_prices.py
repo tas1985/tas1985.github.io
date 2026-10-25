@@ -1870,6 +1870,81 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，微星 RTX5060 价格未更新")
 
+        # 特殊处理：微星-RTX5070/RTX5070TI/RTX5080 价格按源网站同芯片其他型号价格+50更新
+        # 仅处理"微星-"前缀型号：这些型号不参与跨品牌匹配，源站无同型号时会一直停留在旧价
+        msi_high_count = 0
+        for i in range(start_idx + 1, end_idx):
+            line = lines[i]
+            if '{n:"' not in line or '",p:' not in line:
+                continue
+            model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+            if not model_match:
+                continue
+            model_name = model_match.group(1)
+            old_price = int(model_match.group(2))
+            if not model_name.startswith("微星-"):
+                continue
+            chip_key = extract_gpu_chip_key(model_name)
+            if not chip_key:
+                continue
+            chip_model = chip_key.split("|")[0]
+            if chip_model not in ("RTX5070", "RTX5070TI", "RTX5080"):
+                continue
+            # 从源网站数据中查找同芯片同显存的其他型号（取最低价作为参考）
+            ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
+            if not ref_name or not ref_price:
+                print(f"  ⚠️ 微星{chip_model} 源网站无同芯片参考价，保留: {model_name[:40]}... ￥{old_price}")
+                continue
+            new_price = int(ref_price) + 50
+            if old_price != new_price:
+                lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                msi_high_count += 1
+                print(f"  ★ 微星{chip_model} 更新: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（源站参考 {ref_name[:28]}... ￥{ref_price}+50）")
+            else:
+                print(f"  ≡ 微星{chip_model} 价格已正确: {model_name[:40]}... ￥{old_price}")
+        if msi_high_count:
+            print(f"✅ 微星 RTX5070/5070TI/5080 价格更新完成 {msi_high_count} 个（源站同芯片参考价+50）")
+
+        # 特殊处理：所有RTX3050型号价格统一按"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲"价格+350更新
+        # 6G/8G、各品牌均统一；参考型号本身保持源站价格不动
+        rtx3050_ref_price = None
+        for ref_line in lines[start_idx:end_idx]:
+            if "磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲" in ref_line:
+                ref_price_match = re.search(r'p:(\d+)', ref_line)
+                if ref_price_match:
+                    rtx3050_ref_price = int(ref_price_match.group(1))
+                    break
+        if rtx3050_ref_price is not None:
+            rtx3050_count = 0
+            for i in range(start_idx + 1, end_idx):
+                line = lines[i]
+                if '{n:"' not in line or '",p:' not in line:
+                    continue
+                model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if not model_match:
+                    continue
+                model_name = model_match.group(1)
+                old_price = int(model_match.group(2))
+                # 参考型号本身不参与统价，保持源站价格
+                if model_name == "磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲":
+                    continue
+                chip_key = extract_gpu_chip_key(model_name)
+                if not chip_key:
+                    continue
+                chip_model = chip_key.split("|")[0]
+                if chip_model != "RTX3050":
+                    continue
+                new_price = rtx3050_ref_price + 350
+                if old_price != new_price:
+                    lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    rtx3050_count += 1
+                    print(f"  ★ RTX3050 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（磐镭黑鳞甲 ￥{rtx3050_ref_price}+350）")
+                else:
+                    print(f"  ≡ RTX3050 价格已正确: {model_name[:40]}... ￥{old_price}")
+            print(f"✅ RTX3050 统一按磐镭黑鳞甲价格+350更新 {rtx3050_count} 个型号（参考价￥{rtx3050_ref_price}+350=￥{rtx3050_ref_price + 350}）")
+        else:
+            print("⚠️ 未找到磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲 参考型号，RTX3050价格未更新")
+
         # 撼讯：参考其他品牌同芯片同显存的价格（在其他品牌价格都更新完之后执行）
         hx_updated, hx_kept = update_hanxun_prices(lines, start_idx, end_idx)
         update_count += hx_updated
