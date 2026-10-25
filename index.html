@@ -4917,6 +4917,7 @@
     let isLoadingImages = false;
     const STORAGE_KEY = 'tasi_image_cache';
     const CACHE_VERSION = '1.0';
+    const IMAGE_CACHE_TTL = 24 * 60 * 60 * 1000; // 图片缓存有效期24小时，过期后自动从仓库重新下载
     
     // 图片服务器基础URL配置
     const IMAGE_BASE_URL = 'https://tas1985.github.io';
@@ -4945,12 +4946,27 @@
                 
                 getAllRequest.onsuccess = function() {
                     const images = getAllRequest.result || [];
+                    const now = Date.now();
+                    const expiredKeys = [];
                     images.forEach((item) => {
                         if (item && item.base64) {
-                            imageCache[item.key] = { src: item.base64, loaded: true };
-                            loadedCount++;
+                            const cachedTime = item.timestamp || 0;
+                            if (now - cachedTime > IMAGE_CACHE_TTL) {
+                                expiredKeys.push(item.key);
+                            } else {
+                                imageCache[item.key] = { src: item.base64, loaded: true };
+                                loadedCount++;
+                            }
                         }
                     });
+                    // 删除过期缓存
+                    if (expiredKeys.length > 0) {
+                        try {
+                            const delTrans = db.transaction(['images'], 'readwrite');
+                            expiredKeys.forEach(k => delTrans.objectStore('images').delete(k));
+                            console.log('Cleared', expiredKeys.length, 'expired IndexedDB cache entries');
+                        } catch(e) {}
+                    }
                     console.log('Loaded', loadedCount, 'images from IndexedDB cache');
                     db.close();
                     resolve(loadedCount);
@@ -4981,11 +4997,23 @@
                 const cache = JSON.parse(cachedData);
                 if (cache.version === CACHE_VERSION && cache.images) {
                     let loadedCount = 0;
+                    let expiredCount = 0;
+                    const now = Date.now();
                     for (const [key, data] of Object.entries(cache.images)) {
                         if (data && data.base64) {
-                            imageCache[key] = { src: data.base64, loaded: true };
-                            loadedCount++;
+                            const cachedTime = data.timestamp || 0;
+                            if (now - cachedTime > IMAGE_CACHE_TTL) {
+                                delete cache.images[key];
+                                expiredCount++;
+                            } else {
+                                imageCache[key] = { src: data.base64, loaded: true };
+                                loadedCount++;
+                            }
                         }
+                    }
+                    if (expiredCount > 0) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+                        console.log('Cleared', expiredCount, 'expired localStorage cache entries');
                     }
                     console.log('Loaded', loadedCount, 'images from localStorage cache');
                     return loadedCount;
@@ -5103,6 +5131,19 @@
                 
                 getRequest.onsuccess = function() {
                     if (getRequest.result && getRequest.result.base64) {
+                        // 检查缓存是否过期
+                        const cachedTime = getRequest.result.timestamp || 0;
+                        if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
+                            console.log('IndexedDB cache expired, re-downloading:', key);
+                            // 删除过期缓存
+                            try {
+                                const delTrans = db.transaction(['images'], 'readwrite');
+                                delTrans.objectStore('images').delete(key);
+                            } catch(e) {}
+                            db.close();
+                            resolve(null);
+                            return;
+                        }
                         const base64 = getRequest.result.base64;
                         imageCache[key] = { src: base64, loaded: true };
                         db.close();
@@ -5136,6 +5177,14 @@
             if (cachedData) {
                 const cache = JSON.parse(cachedData);
                 if (cache.images && cache.images[key] && cache.images[key].base64) {
+                    // 检查缓存是否过期
+                    const cachedTime = cache.images[key].timestamp || 0;
+                    if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
+                        console.log('localStorage cache expired, re-downloading:', key);
+                        delete cache.images[key];
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+                        return null;
+                    }
                     const base64 = cache.images[key].base64;
                     imageCache[key] = { src: base64, loaded: true };
                     return base64;
