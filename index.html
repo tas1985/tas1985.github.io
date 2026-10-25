@@ -1954,7 +1954,7 @@
     </div>
 
     <div class="user">
-        <label onclick="reset()" title="点击清空当前配置单">客户名称</label>
+        <label onclick="reset(true)" title="点击直接清空当前配置单">客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -8812,8 +8812,8 @@
         document.getElementById(m).style.display="none";
     }
 
-    function reset(){
-        if(!confirm("确定清空？"))return;
+    function reset(skipConfirm){
+        if(!skipConfirm && !confirm("确定清空？"))return;
         localStorage.removeItem("last");
         invoiceType = null;
         const btnPu = document.getElementById('btn-kai-pu');
