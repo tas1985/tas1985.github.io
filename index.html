@@ -5550,6 +5550,19 @@
         downloadProgressText = null;
     }
 
+    // 统计本地图片缓存情况
+    function getImageCacheStats() {
+        const keys = new Set();
+        for (const [, name] of Object.entries(caseImageMap)) keys.add(name);
+        for (const [, name] of Object.entries(coolerImageMap)) keys.add('cooler_' + name);
+        for (const [, name] of Object.entries(vgaImageMap)) keys.add('vga_' + name);
+        let cached = 0;
+        keys.forEach((k) => {
+            if (imageCache[k] && imageCache[k].src) cached++;
+        });
+        return { cached: cached, total: keys.size };
+    }
+
     // 打开图片缓存下载选择弹窗
     function openImageDownloadDialog() {
         // 避免重复弹窗
@@ -5594,9 +5607,25 @@
             font-size: 13px;
             color: #6B7280;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         `;
         box.appendChild(desc);
+
+        // 本地缓存状态
+        const stats = getImageCacheStats();
+        const statsEl = document.createElement('div');
+        statsEl.style.cssText = `
+            font-size: 13px;
+            color: ${stats.cached === 0 ? '#DC2626' : '#2563EB'};
+            background: ${stats.cached === 0 ? '#FEF2F2' : '#EFF6FF'};
+            border-radius: 8px;
+            padding: 8px 10px;
+            text-align: center;
+            margin-bottom: 14px;
+        `;
+        statsEl.innerHTML = `本地已缓存：<strong>${stats.cached}</strong> / ${stats.total} 张` +
+            (stats.cached === 0 ? '<br><span style="font-size:11px">未检测到缓存，可能是浏览器禁用了存储或使用了隐私模式</span>' : '');
+        box.appendChild(statsEl);
 
         const btnWrap = document.createElement('div');
         btnWrap.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
@@ -5742,6 +5771,7 @@
         let completed = 0;
         let successCount = 0;
         let failCount = 0;
+        let skippedCount = 0;
         const maxConcurrent = 12; // 最大并发数
 
         // blob 转 base64（比 canvas 重绘快得多）—— 仅用于 localStorage 降级
@@ -5765,12 +5795,14 @@
         // 并发池模式：完成一个立即补充一个，不等待整批
         let index = 0;
         const activePromises = new Set();
+        const pendingSaves = [];
 
         async function downloadOne(item) {
             // 非强制模式：跳过已缓存的图片（loadCachedImages 已加载到内存）
             if (!forceRedownload && imageCache[item.key] && imageCache[item.key].src) {
                 completed++;
                 successCount++;
+                skippedCount++;
                 updateProgress(completed, allImages.length);
                 return;
             }
@@ -5784,7 +5816,7 @@
                 const objectURL = URL.createObjectURL(blob);
                 imageCache[item.key] = { src: objectURL, loaded: true };
                 // 异步写入 blob 到 IndexedDB（不转 base64，体积小33%，写入更快）
-                saveToCache(item.key, blob, true).catch(() => {});
+                pendingSaves.push(saveToCache(item.key, blob, true));
                 successCount++;
             } catch (e) {
                 failCount++;
@@ -5813,6 +5845,10 @@
         }
 
         await pool();
+        // 等待所有缓存写入完成，确保关闭页面前数据已落盘
+        if (pendingSaves.length > 0) {
+            await Promise.allSettled(pendingSaves);
+        }
         
         // 关闭进度显示
         closeProgressDisplay();
@@ -5831,9 +5867,18 @@
         
         // 显示结果
         if (failCount === 0) {
-            showToast(`全部下载完成！共 ${successCount} 张图片已缓存`, 'success', 5000);
+            if (!forceRedownload && skippedCount > 0) {
+                showToast(`下载完成！新增 ${successCount - skippedCount} 张，跳过已缓存 ${skippedCount} 张`, 'success', 5000);
+            } else {
+                showToast(`全部下载完成！共 ${successCount} 张图片已缓存`, 'success', 5000);
+            }
         } else {
             showToast(`下载完成！成功 ${successCount} 张，失败 ${failCount} 张`, 'warning', 5000);
+        }
+        // 缓存未成功写入时给出提示
+        const finalStats = getImageCacheStats();
+        if (finalStats.cached < finalStats.total * 0.9) {
+            showToast(`注意：本地仅缓存 ${finalStats.cached}/${finalStats.total} 张，浏览器的存储可能被限制`, 'warning', 6000);
         }
     }
 
