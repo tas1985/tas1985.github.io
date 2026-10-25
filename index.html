@@ -2100,7 +2100,7 @@
                     <span>元</span>
                 </div>
                 <button class="btn-reset" onclick="reset()">清空重置</button>
-                <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
+                <button class="btn-download-images" style="display:none" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
                 <button class="btn-download-images" onclick="if(confirm('确定要清空本地缓存并重新从仓库下载所有图片吗？\\n这将删除当前缓存的所有图片，然后从仓库重新下载最新版本。')) downloadAllImages(true)">清空重下</button>
             </div>
             <div class="screenshot-btn-row">
