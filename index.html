@@ -4919,6 +4919,24 @@
     const STORAGE_KEY = 'tasi_image_cache';
     const CACHE_VERSION = '1.0';
     const IMAGE_CACHE_TTL = 24 * 60 * 60 * 1000; // 图片缓存有效期24小时，过期后自动从仓库重新下载
+
+    // 共享 IndexedDB 连接（避免每次保存都重新 open）
+    let sharedDB = null;
+    const dbOpenPromise = new Promise((resolve) => {
+        const request = indexedDB.open('ImageCacheDB', 1);
+        request.onerror = () => resolve(null);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('images')) {
+                const store = db.createObjectStore('images', { keyPath: 'key' });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+        };
+        request.onsuccess = (event) => {
+            sharedDB = event.target.result;
+            resolve(sharedDB);
+        };
+    });
     
     // 图片服务器基础URL配置
     const IMAGE_BASE_URL = 'https://tas1985.github.io';
@@ -5197,48 +5215,32 @@
         return null;
     }
 
-    // 保存图片到IndexedDB缓存
+    // 保存图片到IndexedDB缓存（复用共享连接）
     async function saveToCache(key, imageData) {
-        return new Promise((resolve) => {
-            const request = indexedDB.open('ImageCacheDB', 1);
-            
-            request.onerror = function() {
-                console.warn('IndexedDB not available, falling back to localStorage');
+        return new Promise(async (resolve) => {
+            const db = sharedDB || await dbOpenPromise;
+            if (!db) {
                 saveToCacheLocalStorage(key, imageData);
                 resolve();
-            };
-            
-            request.onsuccess = function(event) {
-                const db = event.target.result;
+                return;
+            }
+            try {
                 const transaction = db.transaction(['images'], 'readwrite');
                 const store = transaction.objectStore('images');
-                const putRequest = store.put({
+                store.put({
                     key: key,
                     base64: imageData,
                     timestamp: Date.now()
                 });
-                
-                putRequest.onsuccess = function() {
-                    db.close();
-                    console.log('Saved to IndexedDB:', key);
-                    resolve();
-                };
-                
-                putRequest.onerror = function() {
-                    db.close();
-                    console.warn('Failed to save to IndexedDB, falling back to localStorage');
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => {
                     saveToCacheLocalStorage(key, imageData);
                     resolve();
                 };
-            };
-            
-            request.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('images')) {
-                    const store = db.createObjectStore('images', { keyPath: 'key' });
-                    store.createIndex('timestamp', 'timestamp', { unique: false });
-                }
-            };
+            } catch (e) {
+                saveToCacheLocalStorage(key, imageData);
+                resolve();
+            }
         });
     }
     
@@ -5586,7 +5588,7 @@
         let completed = 0;
         let successCount = 0;
         let failCount = 0;
-        const batchSize = 8; // 每批下载8张图片，提高并发
+        const maxConcurrent = 12; // 最大并发数
 
         // blob 转 base64（比 canvas 重绘快得多）
         function blobToBase64(blob) {
@@ -5598,43 +5600,59 @@
             });
         }
 
-        for (let i = 0; i < allImages.length; i += batchSize) {
-            const batch = allImages.slice(i, i + batchSize);
-            const promises = batch.map(async (item) => {
-                // 检查是否已缓存（强制重下时跳过缓存检查）
-                if (!forceRedownload && await hasCachedImageAsync(item.key)) {
-                    completed++;
-                    updateProgress(completed, allImages.length);
-                    successCount++;
-                    return;
-                }
-
-                try {
-                    // 用 fetch 直接获取 blob，跳过 canvas 重绘，大幅提速
-                    const encodedSrc = encodeURI(item.src);
-                    const resp = await fetch(encodedSrc, { mode: 'cors' });
-                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                    const blob = await resp.blob();
-                    const base64 = await blobToBase64(blob);
-                    if (base64) {
-                        imageCache[item.key] = { src: base64, loaded: true };
-                        await saveToCache(item.key, base64);
-                    }
-                    completed++;
-                    successCount++;
-                    updateProgress(completed, allImages.length);
-                } catch (e) {
-                    completed++;
-                    failCount++;
-                    updateProgress(completed, allImages.length);
-                    console.warn('Failed to download:', item.key, '-', item.src, e);
-                    if (!window.failedImages) window.failedImages = [];
-                    window.failedImages.push({ key: item.key, src: item.src, type: item.type });
-                }
-            });
-
-            await Promise.all(promises);
+        // 带超时的 fetch，避免单张卡死
+        function fetchWithTimeout(url, options, timeout = 15000) {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
+            ]);
         }
+
+        // 并发池模式：完成一个立即补充一个，不等待整批
+        let index = 0;
+        const activePromises = new Set();
+
+        async function downloadOne(item) {
+            try {
+                // 用 fetch 直接获取 blob，跳过 canvas 重绘，大幅提速
+                const encodedSrc = encodeURI(item.src);
+                const resp = await fetchWithTimeout(encodedSrc, { mode: 'cors' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const blob = await resp.blob();
+                const base64 = await blobToBase64(blob);
+                if (base64) {
+                    imageCache[item.key] = { src: base64, loaded: true };
+                    // 异步写入缓存，不阻塞下载流程
+                    saveToCache(item.key, base64).catch(() => {});
+                }
+                successCount++;
+            } catch (e) {
+                failCount++;
+                console.warn('Failed to download:', item.key, '-', item.src, e);
+                if (!window.failedImages) window.failedImages = [];
+                window.failedImages.push({ key: item.key, src: item.src, type: item.type });
+            }
+            completed++;
+            updateProgress(completed, allImages.length);
+        }
+
+        async function pool() {
+            while (index < allImages.length) {
+                // 控制并发数
+                while (activePromises.size >= maxConcurrent) {
+                    await Promise.race(activePromises);
+                }
+                const item = allImages[index++];
+                const p = downloadOne(item).then(() => {
+                    activePromises.delete(p);
+                });
+                activePromises.add(p);
+            }
+            // 等待所有活跃任务完成
+            await Promise.all(activePromises);
+        }
+
+        await pool();
         
         // 关闭进度显示
         closeProgressDisplay();
