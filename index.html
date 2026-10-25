@@ -2100,8 +2100,7 @@
                     <span>元</span>
                 </div>
                 <button class="btn-reset" onclick="reset()">清空重置</button>
-                <button class="btn-download-images" style="display:none" onclick="if(confirm('确定要下载新增图片吗？已缓存的图片将跳过，只下载缺失的图片。')) downloadAllImages()">下载图片缓存</button>
-                <button class="btn-download-images" onclick="if(confirm('确定要清空本地缓存并重新从仓库下载所有图片吗？\\n这将删除当前缓存的所有图片，然后从仓库重新下载最新版本。')) downloadAllImages(true)">清空重下</button>
+                <button class="btn-download-images" onclick="openImageDownloadDialog()">图片缓存</button>
             </div>
             <div class="screenshot-btn-row">
                 <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
@@ -4922,21 +4921,26 @@
 
     // 共享 IndexedDB 连接（避免每次保存都重新 open）
     let sharedDB = null;
-    const dbOpenPromise = new Promise((resolve) => {
-        const request = indexedDB.open('ImageCacheDB', 1);
-        request.onerror = () => resolve(null);
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains('images')) {
-                const store = db.createObjectStore('images', { keyPath: 'key' });
-                store.createIndex('timestamp', 'timestamp', { unique: false });
-            }
-        };
-        request.onsuccess = (event) => {
-            sharedDB = event.target.result;
-            resolve(sharedDB);
-        };
-    });
+    let dbOpenPromise = null;
+    function openImageDB() {
+        dbOpenPromise = new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            request.onerror = () => resolve(null);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+            request.onsuccess = (event) => {
+                sharedDB = event.target.result;
+                resolve(sharedDB);
+            };
+        });
+        return dbOpenPromise;
+    }
+    openImageDB();
     
     // 图片服务器基础URL配置
     const IMAGE_BASE_URL = 'https://tas1985.github.io';
@@ -5546,6 +5550,125 @@
         downloadProgressText = null;
     }
 
+    // 打开图片缓存下载选择弹窗
+    function openImageDownloadDialog() {
+        // 避免重复弹窗
+        if (document.getElementById('imageDownloadDialogMask')) return;
+
+        const mask = document.createElement('div');
+        mask.id = 'imageDownloadDialogMask';
+        mask.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        const box = document.createElement('div');
+        box.style.cssText = `
+            background: #fff;
+            border-radius: 12px;
+            padding: 22px 20px;
+            width: 86%;
+            max-width: 380px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        `;
+
+        const title = document.createElement('div');
+        title.textContent = '图片缓存';
+        title.style.cssText = `
+            font-size: 17px;
+            font-weight: bold;
+            color: #111827;
+            text-align: center;
+            margin-bottom: 6px;
+        `;
+        box.appendChild(title);
+
+        const desc = document.createElement('div');
+        desc.textContent = '请选择下载方式：';
+        desc.style.cssText = `
+            font-size: 13px;
+            color: #6B7280;
+            text-align: center;
+            margin-bottom: 16px;
+        `;
+        box.appendChild(desc);
+
+        const btnWrap = document.createElement('div');
+        btnWrap.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
+
+        const makeBtn = (text, sub, bg, color, handler) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = `
+                width: 100%;
+                padding: 12px 10px;
+                background: ${bg};
+                color: ${color};
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                line-height: 1.4;
+            `;
+            btn.innerHTML = `${text}<br><span style="font-size:11px;font-weight:normal;opacity:0.85">${sub}</span>`;
+            btn.onclick = () => {
+                document.body.removeChild(mask);
+                handler();
+            };
+            return btn;
+        };
+
+        // 选项1：只下载新增/未完成的图片
+        btnWrap.appendChild(makeBtn(
+            '只下载新增图片',
+            '跳过已缓存的图片，只下载缺失的部分（推荐，速度快）',
+            '#2563EB', '#fff',
+            () => { downloadAllImages(false); }
+        ));
+
+        // 选项2：清空全部缓存重新下载
+        btnWrap.appendChild(makeBtn(
+            '清空全部并重新下载',
+            '删除本地所有图片缓存，从仓库重新下载最新版本（较慢）',
+            '#fff', '#DC2626',
+            () => {
+                if (confirm('确定要清空全部图片缓存并重新下载吗？\n这将删除本地所有缓存的图片。')) {
+                    downloadAllImages(true);
+                }
+            }
+        ));
+
+        box.appendChild(btnWrap);
+
+        // 取消按钮
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.textContent = '取消';
+        cancel.style.cssText = `
+            width: 100%;
+            margin-top: 12px;
+            padding: 9px;
+            background: #F3F4F6;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        `;
+        cancel.onclick = () => document.body.removeChild(mask);
+        box.appendChild(cancel);
+
+        mask.appendChild(box);
+        mask.onclick = (e) => { if (e.target === mask) document.body.removeChild(mask); };
+        document.body.appendChild(mask);
+    }
+
     // 下载所有图片并缓存（带进度显示）
     // forceRedownload=true 时先清空本地缓存再从仓库重新下载
     async function downloadAllImages(forceRedownload) {
@@ -5554,10 +5677,20 @@
             for (const key in imageCache) {
                 delete imageCache[key];
             }
+            // 先关闭共享连接，否则 deleteDatabase 会被阻塞
+            try {
+                if (sharedDB) { sharedDB.close(); sharedDB = null; }
+                dbOpenPromise = null;
+            } catch(e) {}
             // 清除 IndexedDB
             try {
-                indexedDB.deleteDatabase('ImageCacheDB');
+                await new Promise((resolve) => {
+                    const req = indexedDB.deleteDatabase('ImageCacheDB');
+                    req.onsuccess = req.onerror = req.onblocked = () => resolve();
+                });
             } catch(e) {}
+            // 重新建立连接
+            openImageDB();
             // 清除 localStorage
             try {
                 localStorage.removeItem(STORAGE_KEY);
