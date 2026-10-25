@@ -1954,7 +1954,7 @@
     </div>
 
     <div class="user">
-        <label onclick="clearConfigOnly()" title="点击清空客户名称、备注、服务与发票，保留配件">客户名称</label>
+        <label onclick="clearConfigOnly()" title="点击清除客户名称、发票等，保留配件、备注与默认服务">客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -8490,17 +8490,14 @@
         localStorage.setItem("last",JSON.stringify(o));
     }
 
-    // 点击「客户名称」：清空配置单信息（客户名称、备注、服务勾选、发票类型），保留配件输入栏内容
+    // 点击「客户名称」：清除客户名称、发票类型等配置信息，保留配件内容、备注与默认勾选服务
     function clearConfigOnly(){
         document.getElementById("user").value = "";
-        const r1 = document.getElementById("remark1");
-        const r2 = document.getElementById("remark2");
-        if (r1) r1.value = "";
-        if (r2) r2.value = "";
-        ["svc-videolive","svc-boxing","svc-win10","svc-win11","svc-ubuntu","svc-design","svc-light","svc-burntest"].forEach(id=>{
-            const el = document.getElementById(id);
-            if (el) el.checked = false;
-        });
+        // 备注恢复默认模板文字
+        migrateRemarkDefaults();
+        // 服务项目恢复默认勾选
+        loadServices(["视频验货/直播装机", "包装盒寄出", "WIN10", "烤机测试"]);
+        updateServiceText();
         invoiceType = null;
         const btnPu = document.getElementById('btn-kai-pu');
         const btnZhuan = document.getElementById('btn-kai-zhuan');
