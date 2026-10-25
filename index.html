@@ -9325,25 +9325,9 @@
         }, isMobile ? 400 : 150);
     }
 
-    // 新增：清空客户名称输入框的功能
+    // 清空客户名称输入框的功能（仅清空客户名称，不清空当前配置单）
     function clearUserInput() {
         document.getElementById("user").value = "";
-        // 同时清空相关的配置数据
-        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
-            document.getElementById(k).value = "";
-            document.getElementById(k+"-p").value = "";
-        });
-        calc(); // 重新计算总价
-        saveNow(); // 保存当前状态
-
-        // 清空机箱图片
-        showCaseImage(null);
-
-        // 清空散热器图片
-        showCoolerImage(null);
-
-        // 清空显卡图片
-        showVgaImage(null);
     }
 
     // ========== 手机操作模式 ==========
