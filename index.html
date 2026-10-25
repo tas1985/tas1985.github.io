@@ -5586,8 +5586,18 @@
         let completed = 0;
         let successCount = 0;
         let failCount = 0;
-        const batchSize = 3; // 每批下载3张图片
-        
+        const batchSize = 8; // 每批下载8张图片，提高并发
+
+        // blob 转 base64（比 canvas 重绘快得多）
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
         for (let i = 0; i < allImages.length; i += batchSize) {
             const batch = allImages.slice(i, i + batchSize);
             const promises = batch.map(async (item) => {
@@ -5596,45 +5606,33 @@
                     completed++;
                     updateProgress(completed, allImages.length);
                     successCount++;
-                    console.log('Already cached:', item.key);
                     return;
                 }
-                
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    
-                    img.onload = async function() {
-                        // 转换为 base64 并保存到缓存
-                        const base64 = await imageToBase64(img);
-                        if (base64) {
-                            imageCache[item.key] = { src: base64, loaded: true };
-                            await saveToCache(item.key, base64);
-                        }
-                        completed++;
-                        successCount++;
-                        updateProgress(completed, allImages.length);
-                        console.log('Downloaded and cached:', item.key);
-                        resolve();
-                    };
-                    
-                    img.onerror = function() {
-                        completed++;
-                        failCount++;
-                        updateProgress(completed, allImages.length);
-                        console.warn('Failed to download:', item.key, '-', item.src);
-                        // 记录失败的图片信息到全局数组，方便排查
-                        if (!window.failedImages) window.failedImages = [];
-                        window.failedImages.push({ key: item.key, src: item.src, type: item.type });
-                        resolve();
-                    };
-                    
-                    // 对URL进行编码，处理中文文件名
+
+                try {
+                    // 用 fetch 直接获取 blob，跳过 canvas 重绘，大幅提速
                     const encodedSrc = encodeURI(item.src);
-                    img.src = encodedSrc;
-                });
+                    const resp = await fetch(encodedSrc, { mode: 'cors' });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const blob = await resp.blob();
+                    const base64 = await blobToBase64(blob);
+                    if (base64) {
+                        imageCache[item.key] = { src: base64, loaded: true };
+                        await saveToCache(item.key, base64);
+                    }
+                    completed++;
+                    successCount++;
+                    updateProgress(completed, allImages.length);
+                } catch (e) {
+                    completed++;
+                    failCount++;
+                    updateProgress(completed, allImages.length);
+                    console.warn('Failed to download:', item.key, '-', item.src, e);
+                    if (!window.failedImages) window.failedImages = [];
+                    window.failedImages.push({ key: item.key, src: item.src, type: item.type });
+                }
             });
-            
+
             await Promise.all(promises);
         }
         
