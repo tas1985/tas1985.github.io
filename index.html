@@ -2101,6 +2101,7 @@
                 </div>
                 <button class="btn-reset" onclick="reset()">清空重置</button>
                 <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
+                <button class="btn-download-images" onclick="if(confirm('确定要清空本地缓存并重新从仓库下载所有图片吗？\\n这将删除当前缓存的所有图片，然后从仓库重新下载最新版本。')) downloadAllImages(true)">清空重下</button>
             </div>
             <div class="screenshot-btn-row">
                 <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
@@ -5523,10 +5524,28 @@
     }
 
     // 下载所有图片并缓存（带进度显示）
-    async function downloadAllImages() {
-        // 首先加载已有的缓存（异步）
-        const existingCacheCount = await loadCachedImages();
-        console.log('Existing cache:', existingCacheCount, 'images');
+    // forceRedownload=true 时先清空本地缓存再从仓库重新下载
+    async function downloadAllImages(forceRedownload) {
+        if (forceRedownload) {
+            // 清空内存缓存
+            for (const key in imageCache) {
+                delete imageCache[key];
+            }
+            // 清除 IndexedDB
+            try {
+                indexedDB.deleteDatabase('ImageCacheDB');
+            } catch(e) {}
+            // 清除 localStorage
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch(e) {}
+            showToast('已清空本地缓存，开始重新下载...', 'info', 2000);
+            await new Promise(r => setTimeout(r, 500));
+        } else {
+            // 首先加载已有的缓存（异步）
+            const existingCacheCount = await loadCachedImages();
+            console.log('Existing cache:', existingCacheCount, 'images');
+        }
         
         const allImages = [];
         
@@ -5572,8 +5591,8 @@
         for (let i = 0; i < allImages.length; i += batchSize) {
             const batch = allImages.slice(i, i + batchSize);
             const promises = batch.map(async (item) => {
-                // 检查是否已缓存（使用异步缓存检查函数）
-                if (await hasCachedImageAsync(item.key)) {
+                // 检查是否已缓存（强制重下时跳过缓存检查）
+                if (!forceRedownload && await hasCachedImageAsync(item.key)) {
                     completed++;
                     updateProgress(completed, allImages.length);
                     successCount++;
