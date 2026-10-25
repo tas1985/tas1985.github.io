@@ -1954,7 +1954,7 @@
     </div>
 
     <div class="user">
-        <label onclick="clearConfigOnly()" title="点击清除客户名称、发票等，保留配件、备注与默认服务">客户名称</label>
+        <label onclick="clearConfigOnly()" title="点击清除配置：仅保留其他默认文案、备注与默认服务">客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -8490,9 +8490,20 @@
         localStorage.setItem("last",JSON.stringify(o));
     }
 
-    // 点击「客户名称」：清除客户名称、发票类型等配置信息，保留配件内容、备注与默认勾选服务
+    // 点击「客户名称」：仅保留「其他」默认文案、备注默认模板、服务默认勾选，其余配置全部清除
     function clearConfigOnly(){
         document.getElementById("user").value = "";
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power"].forEach(k=>{
+            document.getElementById(k).value = "";
+            document.getElementById(k+"-p").value = "";
+            document.getElementById(k).classList.remove('selected');
+        });
+        // 「其他」栏保留默认文案，价格 0
+        document.getElementById("other").value = "不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费";
+        document.getElementById("other-p").value = 0;
+        showCaseImage(null);
+        showCoolerImage(null);
+        showVgaImage(null);
         // 备注恢复默认模板文字
         migrateRemarkDefaults();
         // 服务项目恢复默认勾选
