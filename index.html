@@ -131,6 +131,9 @@
             color: #2563EB;
             width: 80px;
             text-align: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .user-input-container {
             position: relative;
@@ -1951,7 +1954,7 @@
     </div>
 
     <div class="user">
-        <label>客户名称</label>
+        <label onclick="reset()" title="点击清空当前配置单">客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -3291,7 +3294,7 @@
             {n:"双敏6500XT 暴雪白色",p:1198},
             {n:"华硕 PRIME RTX5060TI 16G 大师三风扇黑色",p:5899},
             {n:"华硕 RTX5060TI 16G DUAL 雪豹 黑色",p:5899},
-            {n:"微星-RTX5070Ti 16G VENTUS  3X OC",p:12049},
+            {n:"微星-RTX5070Ti 16G VENTUS  3X OC",p:11550},
             {n:"七彩虹RTX5060TiUItra DUO 16GB黑色双风扇",p:5899},
             {n:"七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇",p:3850},
             {n:"映众 RTX5060ti 16G 曜夜 双风扇",p:5899},
@@ -3456,9 +3459,9 @@
             {n:"微星-RTX5080 16G GAMING TRIO OC 黑魔龙",p:16049},
             {n:"微星-RTX5080 16G VENTUS 3X OC 万图师3风扇",p:16049},
             {n:"微星-RTX5080 16G SHADOW 3X OC 幻影师3风扇",p:16049},
-            {n:"微星-RTX5070Ti 16G GAMING TRIO OC WHITE 白魔龙",p:12049},
-            {n:"微星-RTX5070Ti 16G GAMING TRIO OC 黑魔龙",p:12049},
-            {n:"微星-RTX5070Ti 16G VENTUS 3X OC 万图师3风扇",p:12049},
+            {n:"微星-RTX5070Ti 16G GAMING TRIO OC WHITE 白魔龙",p:11550},
+            {n:"微星-RTX5070Ti 16G GAMING TRIO OC 黑魔龙",p:11550},
+            {n:"微星-RTX5070Ti 16G VENTUS 3X OC 万图师3风扇",p:11550},
             {n:"微星-RTX5070 12G GAMING TRIO OC WHITE 白魔龙",p:8450},
             {n:"微星-RTX5070 12G GAMING TRIO OC 黑魔龙",p:8450},
             {n:"微星-RTX5070 12G GAMING DUKE 3X OC PLUS 龙爵",p:8450},
@@ -3541,7 +3544,7 @@
             {n:"七彩虹 RTX5060 8G ULTRA W DUO OC 白色双扇",p:3850},
             {n:"七彩虹 RTX5050 8G 战斧 DUO 双扇",p:2750},
             {n:"七彩虹 RTX5050 8G ULTRA W DUO 白色双扇",p:2799},
-            {n:"七彩虹 RTX3050 8G 战斧DUO 双扇",p:1599},
+            {n:"七彩虹 RTX3050 8G 战斧DUO 双扇",p:1949},
             {n:"Intel UHD 核显",p:0},
             {n:"AMD Vega 核显",p:0},
             {n:"AMD Radeon Graphics",p:0},
