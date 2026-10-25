@@ -5497,7 +5497,7 @@
             text-align: center;
             font-size: 14px;
         `;
-        downloadProgressText.textContent = '0/0 (0%)';
+        downloadProgressText.innerHTML = '已下载: <strong>0</strong> 张 &nbsp;|&nbsp; 未下载: <strong>0</strong> 张 &nbsp;|&nbsp; 总计: 0 张 (0%)';
         container.appendChild(downloadProgressText);
         
         // 创建取消按钮
@@ -5530,8 +5530,9 @@
     function updateProgress(current, total) {
         if (downloadProgressBar && downloadProgressText) {
             const percentage = Math.round((current / total) * 100);
+            const remaining = total - current;
             downloadProgressBar.style.width = percentage + '%';
-            downloadProgressText.textContent = `${current}/${total} (${percentage}%)`;
+            downloadProgressText.innerHTML = `已下载: <strong>${current}</strong> 张 &nbsp;|&nbsp; 未下载: <strong>${remaining}</strong> 张 &nbsp;|&nbsp; 总计: ${total} 张 (${percentage}%)`;
         }
     }
 
