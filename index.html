@@ -4968,12 +4968,19 @@
                     const now = Date.now();
                     const expiredKeys = [];
                     images.forEach((item) => {
-                        if (item && item.base64) {
+                        if (item && (item.base64 || item.blob)) {
                             const cachedTime = item.timestamp || 0;
                             if (now - cachedTime > IMAGE_CACHE_TTL) {
                                 expiredKeys.push(item.key);
                             } else {
-                                imageCache[item.key] = { src: item.base64, loaded: true };
+                                // 兼容旧base64缓存和新blob缓存
+                                let src;
+                                if (item.blob) {
+                                    src = URL.createObjectURL(item.blob);
+                                } else {
+                                    src = item.base64;
+                                }
+                                imageCache[item.key] = { src: src, loaded: true };
                                 loadedCount++;
                             }
                         }
@@ -5076,8 +5083,14 @@
                 const getRequest = store.get(key);
                 
                 getRequest.onsuccess = function() {
-                    if (getRequest.result && getRequest.result.base64) {
-                        imageCache[key] = { src: getRequest.result.base64, loaded: true };
+                    if (getRequest.result && (getRequest.result.base64 || getRequest.result.blob)) {
+                        let src;
+                        if (getRequest.result.blob) {
+                            src = URL.createObjectURL(getRequest.result.blob);
+                        } else {
+                            src = getRequest.result.base64;
+                        }
+                        imageCache[key] = { src: src, loaded: true };
                         db.close();
                         resolve(true);
                     } else {
@@ -5149,7 +5162,7 @@
                 const getRequest = store.get(key);
                 
                 getRequest.onsuccess = function() {
-                    if (getRequest.result && getRequest.result.base64) {
+                    if (getRequest.result && (getRequest.result.base64 || getRequest.result.blob)) {
                         // 检查缓存是否过期
                         const cachedTime = getRequest.result.timestamp || 0;
                         if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
@@ -5163,10 +5176,15 @@
                             resolve(null);
                             return;
                         }
-                        const base64 = getRequest.result.base64;
-                        imageCache[key] = { src: base64, loaded: true };
+                        let src;
+                        if (getRequest.result.blob) {
+                            src = URL.createObjectURL(getRequest.result.blob);
+                        } else {
+                            src = getRequest.result.base64;
+                        }
+                        imageCache[key] = { src: src, loaded: true };
                         db.close();
-                        resolve(base64);
+                        resolve(src);
                     } else {
                         db.close();
                         resolve(getCachedImageSrcFromLocalStorage(key));
@@ -5215,30 +5233,32 @@
         return null;
     }
 
-    // 保存图片到IndexedDB缓存（复用共享连接）
-    async function saveToCache(key, imageData) {
+    // 保存图片到IndexedDB缓存（复用共享连接，直接存Blob不转base64）
+    async function saveToCache(key, imageData, isBlob = false) {
         return new Promise(async (resolve) => {
             const db = sharedDB || await dbOpenPromise;
             if (!db) {
-                saveToCacheLocalStorage(key, imageData);
+                if (!isBlob) saveToCacheLocalStorage(key, imageData);
                 resolve();
                 return;
             }
             try {
                 const transaction = db.transaction(['images'], 'readwrite');
                 const store = transaction.objectStore('images');
-                store.put({
-                    key: key,
-                    base64: imageData,
-                    timestamp: Date.now()
-                });
+                const record = { key: key, timestamp: Date.now() };
+                if (isBlob) {
+                    record.blob = imageData;
+                } else {
+                    record.base64 = imageData;
+                }
+                store.put(record);
                 transaction.oncomplete = () => resolve();
                 transaction.onerror = () => {
-                    saveToCacheLocalStorage(key, imageData);
+                    if (!isBlob) saveToCacheLocalStorage(key, imageData);
                     resolve();
                 };
             } catch (e) {
-                saveToCacheLocalStorage(key, imageData);
+                if (!isBlob) saveToCacheLocalStorage(key, imageData);
                 resolve();
             }
         });
@@ -5590,7 +5610,7 @@
         let failCount = 0;
         const maxConcurrent = 12; // 最大并发数
 
-        // blob 转 base64（比 canvas 重绘快得多）
+        // blob 转 base64（比 canvas 重绘快得多）—— 仅用于 localStorage 降级
         function blobToBase64(blob) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -5614,17 +5634,16 @@
 
         async function downloadOne(item) {
             try {
-                // 用 fetch 直接获取 blob，跳过 canvas 重绘，大幅提速
+                // 用 fetch 直接获取 blob，跳过 canvas 重绘和 base64 编码
                 const encodedSrc = encodeURI(item.src);
                 const resp = await fetchWithTimeout(encodedSrc, { mode: 'cors' });
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const blob = await resp.blob();
-                const base64 = await blobToBase64(blob);
-                if (base64) {
-                    imageCache[item.key] = { src: base64, loaded: true };
-                    // 异步写入缓存，不阻塞下载流程
-                    saveToCache(item.key, base64).catch(() => {});
-                }
+                // 直接用 objectURL 显示，不转 base64（省掉最耗时的编码步骤）
+                const objectURL = URL.createObjectURL(blob);
+                imageCache[item.key] = { src: objectURL, loaded: true };
+                // 异步写入 blob 到 IndexedDB（不转 base64，体积小33%，写入更快）
+                saveToCache(item.key, blob, true).catch(() => {});
                 successCount++;
             } catch (e) {
                 failCount++;
