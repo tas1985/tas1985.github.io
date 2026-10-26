@@ -6976,12 +6976,15 @@
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
-                        // SVG图标：序列化为data URL图片（图标自带灰度色，确保截图兼容）
+                        // SVG图标：补齐宽高后序列化为data URL图片（无固有尺寸会导致html2canvas渲染空白）
                         const svgIcon = span.querySelector('svg');
                         if (svgIcon) {
-                            const svgStr = new XMLSerializer().serializeToString(svgIcon);
+                            const svgClone = svgIcon.cloneNode(true);
+                            svgClone.setAttribute('width', '22');
+                            svgClone.setAttribute('height', '22');
+                            const svgStr = new XMLSerializer().serializeToString(svgClone);
                             const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-                            span.innerHTML = `<img src="${svgUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                            span.innerHTML = `<img src="${svgUrl}" width="22" height="22" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
                         }
                         // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
                         const emoji = span.textContent || span.innerText;
@@ -7575,12 +7578,15 @@
                     // 将图标转换为灰色
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
-                        // SVG图标：序列化为data URL图片（图标自带灰度色，确保截图兼容）
+                        // SVG图标：补齐宽高后序列化为data URL图片（无固有尺寸会导致html2canvas渲染空白）
                         const svgIcon = span.querySelector('svg');
                         if (svgIcon) {
-                            const svgStr = new XMLSerializer().serializeToString(svgIcon);
+                            const svgClone = svgIcon.cloneNode(true);
+                            svgClone.setAttribute('width', '22');
+                            svgClone.setAttribute('height', '22');
+                            const svgStr = new XMLSerializer().serializeToString(svgClone);
                             const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-                            span.innerHTML = `<img src="${svgUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                            span.innerHTML = `<img src="${svgUrl}" width="22" height="22" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
                         }
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
