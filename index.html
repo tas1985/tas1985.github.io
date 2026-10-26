@@ -265,11 +265,17 @@
             justify-content: flex-end;
         }
         .icon-gray {
-            filter: grayscale(100%) brightness(60%) !important;
+            color: #555;
             display: inline-block;
             margin-right: 4px;
             line-height: 28px;
             font-size: 22px;
+            vertical-align: middle;
+        }
+        .icon-gray svg {
+            width: 22px;
+            height: 22px;
+            display: inline-block;
             vertical-align: middle;
         }
         /* 移动端适配 */
@@ -333,7 +339,10 @@
                 font-size: 20px !important;
                 line-height: 28px !important;
                 vertical-align: middle !important;
-                filter: grayscale(100%) brightness(60%) !important;
+            }
+            .item-label .icon-gray svg {
+                width: 20px !important;
+                height: 20px !important;
             }
             .item-price {
                 width: 85px !important;
@@ -1968,7 +1977,7 @@
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
     <div class="item">
-        <div class="item-label"><span class="icon-gray">⚙️</span> CPU</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1.5v3M15 1.5v3M9 19.5v3M15 19.5v3M19.5 9h3M19.5 15h3M1.5 9h3M1.5 15h3"/></svg></span> CPU</div>
         <div class="item-input">
             <input class="combo" id="cpu" onclick="match('cpu')" oninput="match('cpu')" onblur="hideDrop('cpu')">
             <div class="clear-btn" onclick="clearItem('cpu')">×</div>
@@ -1977,7 +1986,7 @@
         <div class="item-price"><input class="price" id="cpu-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">💿</span> 内存</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="9.5" rx="1.5"/><rect x="5.5" y="9" width="3.2" height="4.5" rx="0.4"/><rect x="10.4" y="9" width="3.2" height="4.5" rx="0.4"/><path d="M16.2 9v4.5M18 9v4.5M5.5 16v2.5M9.5 16v2.5M13.5 16v2.5M17.5 16v2.5"/></svg></span> 内存</div>
         <div class="item-input">
             <input class="combo" id="ram" onclick="match('ram')" oninput="match('ram')" onblur="hideDrop('ram')">
             <div class="clear-btn" onclick="clearItem('ram')">×</div>
@@ -1986,7 +1995,7 @@
         <div class="item-price"><input class="price" id="ram-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🔧</span> 主板</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="6" height="6" rx="0.5"/><path d="M15.5 7.5h2.7M15.5 10.2h2.7M6.5 17.5h3.5"/><circle cx="15.8" cy="15.8" r="1.7"/></svg></span> 主板</div>
         <div class="item-input">
             <input class="combo" id="board" onclick="match('board')" oninput="match('board')" onblur="hideDrop('board')">
             <div class="clear-btn" onclick="clearItem('board')">×</div>
@@ -2001,7 +2010,7 @@
         </div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🌀</span> 散热</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5c-1 1.1 1 1.7 0 2.9M12 3.5c-1 1.1 1 1.7 0 2.9M16.5 3.5c-1 1.1 1 1.7 0 2.9"/><rect x="4" y="11" width="16" height="9.5" rx="1.5"/><path d="M8 13v5.5M12 13v5.5M16 13v5.5"/></svg></span> 散热</div>
         <div class="item-input">
             <input class="combo" id="cooler" onclick="match('cooler')" oninput="match('cooler')" onblur="hideDrop('cooler')">
             <div class="clear-btn" onclick="clearItem('cooler')">×</div>
@@ -2010,7 +2019,7 @@
         <div class="item-price"><input class="price" id="cooler-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🎯</span> 显卡</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="10" rx="1.5"/><circle cx="12.5" cy="11" r="3.1"/><circle cx="12.5" cy="11" r="0.8" fill="#555" stroke="none"/><path d="M5.5 16v2.5M9 16v2.5M12.5 16v2.5M16 16v2.5M19.5 16v2.5"/></svg></span> 显卡</div>
         <div class="item-input">
             <input class="combo" id="vga" onclick="match('vga')" oninput="match('vga')" onblur="hideDrop('vga')">
             <div class="clear-btn" onclick="clearItem('vga')">×</div>
@@ -2019,7 +2028,7 @@
         <div class="item-price"><input class="price" id="vga-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">💽</span> 固态</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M7.5 7.5h4.5"/><circle cx="17" cy="7.5" r="0.9" fill="#555" stroke="none"/><rect x="7" y="13" width="10" height="4" rx="1"/></svg></span> 固态</div>
         <div class="item-input">
             <input class="combo" id="ssd" onclick="match('ssd')" oninput="match('ssd')" onblur="hideDrop('ssd')">
             <div class="clear-btn" onclick="clearItem('ssd')">×</div>
@@ -2028,7 +2037,7 @@
         <div class="item-price"><input class="price" id="ssd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🖇️</span> 机械</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><circle cx="11.5" cy="12" r="4.2"/><circle cx="11.5" cy="12" r="0.7" fill="#555" stroke="none"/><path d="M12 11.5l4.6-4.6"/><circle cx="17.4" cy="6.2" r="1.1"/></svg></span> 机械</div>
         <div class="item-input">
             <input class="combo" id="hdd" onclick="match('hdd')" oninput="match('hdd')" onblur="hideDrop('hdd')">
             <div class="clear-btn" onclick="clearItem('hdd')">×</div>
@@ -2037,7 +2046,7 @@
         <div class="item-price"><input class="price" id="hdd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🗄️</span> 机箱</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2"/><circle cx="12" cy="6.3" r="1.2"/><path d="M9.5 15.5h5M9.5 18h5"/></svg></span> 机箱</div>
         <div class="item-input">
             <input class="combo" id="case" onclick="match('case')" oninput="match('case')" onblur="hideDrop('case')">
             <div class="clear-btn" onclick="clearItem('case')">×</div>
@@ -2046,7 +2055,7 @@
         <div class="item-price"><input class="price" id="case-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🌀</span> 风扇</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 12C10.9 9.6 10.9 6.8 12 4.2C13.1 6.8 13.1 9.6 12 12Z" fill="#555" stroke="none"/><path d="M12 12C10.9 9.6 10.9 6.8 12 4.2C13.1 6.8 13.1 9.6 12 12Z" fill="#555" stroke="none" transform="rotate(120 12 12)"/><path d="M12 12C10.9 9.6 10.9 6.8 12 4.2C13.1 6.8 13.1 9.6 12 12Z" fill="#555" stroke="none" transform="rotate(240 12 12)"/><circle cx="12" cy="12" r="1.7"/></svg></span> 风扇</div>
         <div class="item-input">
             <input class="combo" id="fan" onclick="match('fan')" oninput="match('fan')" onblur="hideDrop('fan')">
             <div class="clear-btn" onclick="clearItem('fan')">×</div>
@@ -2056,7 +2065,7 @@
     </div>
     <!-- 电源调整到机箱之后、风扇之后 -->
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🔋</span> 电源</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.6 6.6a7.6 7.6 0 1 0 10.8 0"/></svg></span> 电源</div>
         <div class="item-input">
             <input class="combo" id="power" onclick="match('power')" oninput="match('power')" onblur="hideDrop('power')">
             <div class="clear-btn" onclick="clearItem('power')">×</div>
@@ -2066,7 +2075,7 @@
     </div>
     <!-- 新增其他配件栏目 -->
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🔩</span> 配件</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span> 配件</div>
         <div class="item-input">
             <input class="combo" id="other" value="不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
             <div class="clear-btn" onclick="clearItem('other')">×</div>
@@ -2076,7 +2085,7 @@
     </div>
     <!-- 新增备注栏目 -->
     <div class="item has-service">
-        <div class="item-label"><span class="icon-gray">📝</span> 备注</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span> 备注</div>
         <div class="remark-container">
             <div class="remark-row">
                 <input class="remark-input remark-text" id="remark1" oninput="saveNow()" value="6%润：调货装机走线系统调试打包、店铺运营、三年一对一售后成本">
@@ -6967,6 +6976,13 @@
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
+                        // SVG图标：序列化为data URL图片（图标自带灰度色，确保截图兼容）
+                        const svgIcon = span.querySelector('svg');
+                        if (svgIcon) {
+                            const svgStr = new XMLSerializer().serializeToString(svgIcon);
+                            const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+                            span.innerHTML = `<img src="${svgUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                        }
                         // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
@@ -7559,6 +7575,13 @@
                     // 将图标转换为灰色
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
+                        // SVG图标：序列化为data URL图片（图标自带灰度色，确保截图兼容）
+                        const svgIcon = span.querySelector('svg');
+                        if (svgIcon) {
+                            const svgStr = new XMLSerializer().serializeToString(svgIcon);
+                            const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+                            span.innerHTML = `<img src="${svgUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                        }
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
                             const canvas = clonedDoc.createElement('canvas');
