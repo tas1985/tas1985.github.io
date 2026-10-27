@@ -6970,6 +6970,36 @@
         ov.style.display = 'flex';
     }
 
+    // 轻量提示（1.5 秒后自动淡出，不打断操作）
+    function showShotToast(text) {
+        var t = document.getElementById('shotToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'shotToast';
+            t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:100000;background:rgba(0,0,0,.78);color:#fff;font-size:14px;padding:8px 16px;border-radius:18px;pointer-events:none;transition:opacity .3s;';
+            document.body.appendChild(t);
+        }
+        t.textContent = text;
+        t.style.opacity = '1';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; }, 1500);
+    }
+
+    // 把截图复制到剪贴板（Clipboard API 只接受 PNG，故单独用 canvas 导出 png）
+    function copyShotAsync(canvas) {
+        try {
+            if (!navigator.clipboard || !window.ClipboardItem || !canvas) return;
+            canvas.toBlob(function (blob) {
+                if (!blob) return;
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                    .then(function () { showShotToast('截图已复制到剪贴板'); })
+                    .catch(function (e) { console.warn('复制到剪贴板失败:', e); });
+            }, 'image/png');
+        } catch (e) {
+            console.warn('复制到剪贴板失败:', e);
+        }
+    }
+
     // 保存截图功能
     function saveScreenshot() {
         // 检查html2canvas是否加载成功
@@ -7565,6 +7595,7 @@
                         setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
                     } else {
                         showShotPreview(url);
+                        copyShotAsync(resizedCanvas);
                         setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
                     }
                 }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
@@ -8192,6 +8223,7 @@
                         setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
                     } else {
                         showShotPreview(url);
+                        copyShotAsync(resizedCanvas);
                         setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
                     }
                 }, 'image/jpeg', 0.95);
