@@ -1779,18 +1779,19 @@
             font-size: 14px !important;
         }
         body.mobile-mode .item-price{
-            width: 76px !important;
+            /* 价格栏收窄，把省下的宽度让给左侧配件输入栏 */
+            width: 66px !important;
             flex-shrink: 0;
         }
         body.mobile-mode .item-price::before{
-            font-size: 16px !important;
-            left: 4px !important;
+            font-size: 15px !important;
+            left: 3px !important;
             margin-top: -8px !important;
             line-height: 16px !important;
         }
         body.mobile-mode input.price{
-            font-size: 16px !important;
-            padding: 5px 4px 5px 18px !important;
+            font-size: 15px !important;
+            padding: 5px 3px 5px 16px !important;
             height: 36px !important;
         }
         body.mobile-mode .clear-btn{
