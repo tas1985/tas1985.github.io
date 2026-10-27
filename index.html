@@ -6952,6 +6952,24 @@
         calc();
     }
 
+    // 截图保存后的处理：电脑端自动打开大图预览，移动端静默保存（都不再弹提示框）
+    function showShotPreview(url) {
+        let ov = document.getElementById('shotPreview');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'shotPreview';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:10px;box-sizing:border-box;cursor:zoom-out;';
+            ov.addEventListener('click', function () { ov.style.display = 'none'; });
+            document.body.appendChild(ov);
+        }
+        ov.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.5);';
+        ov.appendChild(img);
+        ov.style.display = 'flex';
+    }
+
     // 保存截图功能
     function saveScreenshot() {
         // 检查html2canvas是否加载成功
@@ -7541,10 +7559,14 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
 
-                    // 显示成功提示
-                    alert(`截图已保存：${fileName}`);
+                    // 电脑端自动打开截图预览，移动端静默保存，不再弹提示框
+                    if (document.body.classList.contains('mobile-mode')) {
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+                    } else {
+                        showShotPreview(url);
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+                    }
                 }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
             }).catch(error => {
                 console.error('保存截图失败:', error);
@@ -8164,9 +8186,14 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
 
-                    alert(`匿名截图已保存：${fileName}`);
+                    // 电脑端自动打开截图预览，移动端静默保存，不再弹提示框
+                    if (document.body.classList.contains('mobile-mode')) {
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+                    } else {
+                        showShotPreview(url);
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+                    }
                 }, 'image/jpeg', 0.95);
             }).catch(error => {
                 console.error('匿名截图失败:', error);
