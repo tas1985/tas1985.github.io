@@ -284,12 +284,17 @@
                 width: 100% !important;
                 min-width: 100% !important;
                 overflow-x: hidden;
+                overflow-x: clip;
+                overflow-y: auto;
                 font-size: 16px;
             }
             body {
                 width: 100% !important;
                 min-width: 100% !important;
                 overflow-x: hidden;
+                overflow-x: clip;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
                 padding: 8px;
                 font-size: 16px;
             }
@@ -298,7 +303,10 @@
                 max-width: 100% !important;
                 min-width: 100% !important;
                 padding: 12px;
-                overflow-x: auto;
+                /* 原来为 overflow-x:auto，安卓 Chrome 会把它当成内嵌横向滚动容器，吞掉手指纵向拖动导致整页滑不动；clip 不创建滚动容器，手势正常传到页面 */
+                overflow-x: hidden;
+                overflow-x: clip;
+                overflow-y: visible;
             }
             .title {
                 font-size: 18px !important;
@@ -1913,6 +1921,9 @@
         body.mobile-mode{
             overscroll-behavior-y: contain !important;
             -webkit-text-size-adjust: 100% !important;
+            /* 明确允许手指纵向滑动整个页面（安卓 Chrome 手势不被内嵌滚动容器截获） */
+            overflow-y: auto !important;
+            touch-action: pan-y;
         }
         /* 适配刘海屏/全面屏安全区域 */
         body.mobile-mode .container{
@@ -9746,6 +9757,8 @@
         const body = document.body;
         body.classList.toggle('mobile-mode');
         const isMobile = body.classList.contains('mobile-mode');
+        // 清除密码弹窗可能遗留的内联 overflow:hidden，否则页面会被锁死无法滑动
+        if (body.style.overflow === 'hidden') { body.style.overflow = ''; }
         const btn = document.getElementById('mobileToggleBtn');
         if (btn) {
             btn.innerHTML = isMobile ? '💻' : '📱';
