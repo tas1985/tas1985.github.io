@@ -2056,6 +2056,46 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲 参考型号，RTX3050价格未更新")
 
+        # 特殊处理：所有RTX5050型号价格统一按"技嘉 RTX5050 WF2 8G 风魔"价格+50更新
+        # 参考型号本身保持源站价格不动
+        rtx5050_ref_price = None
+        for ref_line in lines[start_idx:end_idx]:
+            if "技嘉 RTX5050 WF2 8G 风魔" in ref_line:
+                ref_price_match = re.search(r'p:(\d+)', ref_line)
+                if ref_price_match:
+                    rtx5050_ref_price = int(ref_price_match.group(1))
+                    break
+        if rtx5050_ref_price is not None:
+            rtx5050_count = 0
+            for i in range(start_idx + 1, end_idx):
+                line = lines[i]
+                if '{n:"' not in line or '",p:' not in line:
+                    continue
+                model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if not model_match:
+                    continue
+                model_name = model_match.group(1)
+                old_price = int(model_match.group(2))
+                # 参考型号本身不参与统价，保持源站价格
+                if model_name == "技嘉 RTX5050 WF2 8G 风魔":
+                    continue
+                chip_key = extract_gpu_chip_key(model_name)
+                if not chip_key:
+                    continue
+                chip_model = chip_key.split("|")[0]
+                if chip_model != "RTX5050":
+                    continue
+                new_price = rtx5050_ref_price + 50
+                if old_price != new_price:
+                    lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
+                    rtx5050_count += 1
+                    print(f"  ★ RTX5050 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（技嘉风魔 ￥{rtx5050_ref_price}+50）")
+                else:
+                    print(f"  ≡ RTX5050 价格已正确: {model_name[:40]}... ￥{old_price}")
+            print(f"✅ RTX5050 统一按技嘉风魔价格+50更新 {rtx5050_count} 个型号（参考价￥{rtx5050_ref_price}+50=￥{rtx5050_ref_price + 50}）")
+        else:
+            print("⚠️ 未找到技嘉 RTX5050 WF2 8G 风魔 参考型号，RTX5050价格未更新")
+
         # 撼讯：参考其他品牌同芯片同显存的价格（在其他品牌价格都更新完之后执行）
         hx_updated, hx_kept = update_hanxun_prices(lines, start_idx, end_idx)
         update_count += hx_updated
