@@ -1779,19 +1779,19 @@
             font-size: 14px !important;
         }
         body.mobile-mode .item-price{
-            /* 价格栏收窄，把省下的宽度让给左侧配件输入栏 */
-            width: 66px !important;
+            /* 价格栏收窄到 50px，把省下的宽度让给左侧配件输入栏 */
+            width: 50px !important;
             flex-shrink: 0;
         }
         body.mobile-mode .item-price::before{
-            font-size: 15px !important;
-            left: 3px !important;
-            margin-top: -8px !important;
-            line-height: 16px !important;
+            font-size: 12px !important;
+            left: 2px !important;
+            margin-top: -7px !important;
+            line-height: 14px !important;
         }
         body.mobile-mode input.price{
-            font-size: 15px !important;
-            padding: 5px 3px 5px 16px !important;
+            font-size: 13px !important;
+            padding: 5px 2px 5px 12px !important;
             height: 36px !important;
         }
         body.mobile-mode .clear-btn{
@@ -1820,6 +1820,11 @@
         }
         body.mobile-mode .dropdown-price{
             font-size: 12px !important;
+        }
+        /* 手机模式：下拉列表隔行加浅色底，方便区分每一行 */
+        body.mobile-mode .dropdown > div:nth-of-type(even),
+        body.mobile-mode .user-dropdown > div:nth-of-type(even){
+            background: rgba(0,0,0,0.05) !important;
         }
         /* 手机模式：手指点击配件行后，该行高亮提示"已选择" */
         body.mobile-mode .dropdown div.dropdown-row-selected{
