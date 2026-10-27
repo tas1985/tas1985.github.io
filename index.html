@@ -7000,18 +7000,30 @@
         }
     }
 
-    // 快捷键：连按两下 Ctrl 触发保存截图（防误触，500ms 内有效）
+    // 快捷键：连按两下 Ctrl 保存截图，连按两下 Alt 保存配置（500ms 内有效）
     let lastCtrlTime = 0;
+    let lastAltTime = 0;
     document.addEventListener('keydown', function (e) {
-        if (e.key !== 'Control') return;
         const now = Date.now();
-        if (now - lastCtrlTime < 500) {
-            lastCtrlTime = 0;
-            // 避免焦点在输入框时误触发
-            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-            saveScreenshot();
-        } else {
-            lastCtrlTime = now;
+        // 避免焦点在输入框时误触发
+        const inInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+
+        if (e.key === 'Control') {
+            if (now - lastCtrlTime < 500) {
+                lastCtrlTime = 0;
+                if (!inInput) saveScreenshot();
+            } else {
+                lastCtrlTime = now;
+            }
+        } else if (e.key === 'Alt') {
+            // 阻止 Alt 键激活浏览器菜单栏
+            e.preventDefault();
+            if (now - lastAltTime < 500) {
+                lastAltTime = 0;
+                if (!inInput) save();
+            } else {
+                lastAltTime = now;
+            }
         }
     });
 
