@@ -7600,22 +7600,26 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 固定宽度1520，高度按内容自适应，底部刚好到白色背景（不留多余灰底）
-                const targetW = 1520;
+                // 性能优化：html2canvas scale:2 + 容器760px 输出宽度已约1520px，
+                // 仅当输出宽度与目标差距较大时才做二次缩放，避免大尺寸canvas重复绘制
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
-                const scaleRatio = targetW / srcW;
-                const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
-                const resizedCanvas = document.createElement('canvas');
-                resizedCanvas.width = targetW;
-                resizedCanvas.height = scaledHeight;
-                const rctx = resizedCanvas.getContext('2d');
-                rctx.fillStyle = '#f5f5f7';
-                rctx.fillRect(0, 0, targetW, scaledHeight);
-                rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
+                const targetW = 1520;
+                let outCanvas = canvas;
+                if (Math.abs(srcW - targetW) > 80) {
+                    const scaleRatio = targetW / srcW;
+                    const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
+                    outCanvas = document.createElement('canvas');
+                    outCanvas.width = targetW;
+                    outCanvas.height = scaledHeight;
+                    const rctx = outCanvas.getContext('2d', { willReadFrequently: true });
+                    rctx.fillStyle = '#f5f5f7';
+                    rctx.fillRect(0, 0, targetW, scaledHeight);
+                    rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
+                }
 
                 // 转换为图片并下载
-                resizedCanvas.toBlob(function(blob) {
+                outCanvas.toBlob(function(blob) {
                     // 恢复按钮状态
                     btn.innerText = originalText;
                     btn.disabled = false;
@@ -7634,15 +7638,16 @@
                     a.click();
                     document.body.removeChild(a);
 
-                    // 电脑端自动打开截图预览，移动端静默保存，不再弹提示框
+                    // 电脑端自动打开截图预览并复制；移动端下载后轻提示成功
                     if (document.body.classList.contains('mobile-mode')) {
+                        showShotToast('截图已保存');
                         setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
                     } else {
                         showShotPreview(url);
-                        copyShotAsync(resizedCanvas);
+                        copyShotAsync(outCanvas);
                         setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
                     }
-                }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
+                }, 'image/jpeg', 0.9); // JPEG质量0.9，编码更快、文件更小，肉眼几乎无差别
             }).catch(error => {
                 console.error('保存截图失败:', error);
                 // 恢复所有按钮容器显示及按钮状态
@@ -8231,21 +8236,25 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 固定宽度1520，高度按内容自适应，底部刚好到白色背景（不留多余灰底）
-                const targetW = 1520;
+                // 性能优化：html2canvas scale:2 + 容器760px 输出宽度已约1520px，
+                // 仅当输出宽度与目标差距较大时才做二次缩放，避免大尺寸canvas重复绘制
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
-                const scaleRatio = targetW / srcW;
-                const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
-                const resizedCanvas = document.createElement('canvas');
-                resizedCanvas.width = targetW;
-                resizedCanvas.height = scaledHeight;
-                const rctx = resizedCanvas.getContext('2d');
-                rctx.fillStyle = '#f5f5f7';
-                rctx.fillRect(0, 0, targetW, scaledHeight);
-                rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
+                const targetW = 1520;
+                let outCanvas = canvas;
+                if (Math.abs(srcW - targetW) > 80) {
+                    const scaleRatio = targetW / srcW;
+                    const scaledHeight = Math.max(1, Math.round(srcH * scaleRatio));
+                    outCanvas = document.createElement('canvas');
+                    outCanvas.width = targetW;
+                    outCanvas.height = scaledHeight;
+                    const rctx = outCanvas.getContext('2d', { willReadFrequently: true });
+                    rctx.fillStyle = '#f5f5f7';
+                    rctx.fillRect(0, 0, targetW, scaledHeight);
+                    rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, scaledHeight);
+                }
 
-                resizedCanvas.toBlob(function(blob) {
+                outCanvas.toBlob(function(blob) {
                     btn.innerText = originalText;
                     btn.disabled = false;
 
@@ -8262,15 +8271,16 @@
                     a.click();
                     document.body.removeChild(a);
 
-                    // 电脑端自动打开截图预览，移动端静默保存，不再弹提示框
+                    // 电脑端自动打开截图预览并复制；移动端下载后轻提示成功
                     if (document.body.classList.contains('mobile-mode')) {
+                        showShotToast('截图已保存');
                         setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
                     } else {
                         showShotPreview(url);
-                        copyShotAsync(resizedCanvas);
+                        copyShotAsync(outCanvas);
                         setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
                     }
-                }, 'image/jpeg', 0.95);
+                }, 'image/jpeg', 0.9); // JPEG质量0.9，编码更快、文件更小
             }).catch(error => {
                 console.error('匿名截图失败:', error);
                 try { allBtnContainer.style.display = allBtnContainerDisplay; } catch(e) {}
