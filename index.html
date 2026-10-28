@@ -131,6 +131,9 @@
             color: #2563EB;
             width: 80px;
             text-align: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .user-input-container {
             position: relative;
@@ -262,11 +265,17 @@
             justify-content: flex-end;
         }
         .icon-gray {
-            filter: grayscale(100%) brightness(60%) !important;
+            color: #555;
             display: inline-block;
             margin-right: 4px;
             line-height: 28px;
             font-size: 22px;
+            vertical-align: middle;
+        }
+        .icon-gray svg {
+            width: 22px;
+            height: 22px;
+            display: inline-block;
             vertical-align: middle;
         }
         /* 移动端适配 */
@@ -275,12 +284,17 @@
                 width: 100% !important;
                 min-width: 100% !important;
                 overflow-x: hidden;
+                overflow-x: clip;
+                overflow-y: auto;
                 font-size: 16px;
             }
             body {
                 width: 100% !important;
                 min-width: 100% !important;
                 overflow-x: hidden;
+                overflow-x: clip;
+                /* 必须是 visible：若设为 auto，body 会变成滚动容器，配合手机模式的 overscroll-behavior 会让整页滑不动 */
+                overflow-y: visible;
                 padding: 8px;
                 font-size: 16px;
             }
@@ -289,7 +303,10 @@
                 max-width: 100% !important;
                 min-width: 100% !important;
                 padding: 12px;
-                overflow-x: auto;
+                /* 原来为 overflow-x:auto，安卓 Chrome 会把它当成内嵌横向滚动容器，吞掉手指纵向拖动导致整页滑不动；clip 不创建滚动容器，手势正常传到页面 */
+                overflow-x: hidden;
+                overflow-x: clip;
+                overflow-y: visible;
             }
             .title {
                 font-size: 18px !important;
@@ -330,7 +347,10 @@
                 font-size: 20px !important;
                 line-height: 28px !important;
                 vertical-align: middle !important;
-                filter: grayscale(100%) brightness(60%) !important;
+            }
+            .item-label .icon-gray svg {
+                width: 20px !important;
+                height: 20px !important;
             }
             .item-price {
                 width: 85px !important;
@@ -1759,18 +1779,19 @@
             font-size: 14px !important;
         }
         body.mobile-mode .item-price{
-            width: 76px !important;
+            /* 价格栏收窄到 50px，把省下的宽度让给左侧配件输入栏 */
+            width: 50px !important;
             flex-shrink: 0;
         }
         body.mobile-mode .item-price::before{
-            font-size: 16px !important;
-            left: 4px !important;
-            margin-top: -8px !important;
-            line-height: 16px !important;
+            font-size: 12px !important;
+            left: 2px !important;
+            margin-top: -7px !important;
+            line-height: 14px !important;
         }
         body.mobile-mode input.price{
-            font-size: 16px !important;
-            padding: 5px 4px 5px 18px !important;
+            font-size: 13px !important;
+            padding: 5px 2px 5px 12px !important;
             height: 36px !important;
         }
         body.mobile-mode .clear-btn{
@@ -1799,6 +1820,11 @@
         }
         body.mobile-mode .dropdown-price{
             font-size: 12px !important;
+        }
+        /* 手机模式：下拉列表隔行加浅色底，方便区分每一行 */
+        body.mobile-mode .dropdown > div:nth-of-type(even),
+        body.mobile-mode .user-dropdown > div:nth-of-type(even){
+            background: rgba(0,0,0,0.05) !important;
         }
         /* 手机模式：手指点击配件行后，该行高亮提示"已选择" */
         body.mobile-mode .dropdown div.dropdown-row-selected{
@@ -1899,8 +1925,11 @@
         }
         /* 防止页面整体下拉刷新/滚动穿透，提升滚动顺畅感 */
         body.mobile-mode{
-            overscroll-behavior-y: contain !important;
+            /* 注意：此处原为 overscroll-behavior-y: contain，会把 body 变成滚动容器并阻断滚动链，
+               导致手机模式下整页手指滑不动（body 自身无内容可滚，手势又传不到页面）；改为 auto 恢复正常滚动 */
+            overscroll-behavior-y: auto !important;
             -webkit-text-size-adjust: 100% !important;
+            height: auto !important;
         }
         /* 适配刘海屏/全面屏安全区域 */
         body.mobile-mode .container{
@@ -1951,7 +1980,7 @@
     </div>
 
     <div class="user">
-        <label>客户名称</label>
+        <label onclick="clearConfigOnly()" title="点击清除配置：仅保留其他默认文案、备注与默认服务">客户名称</label>
         <div class="user-input-container">
             <input id="user" placeholder="输入客户/配置名称" onclick="showUserDropdown()" oninput="filterUserDropdown()" onblur="hideUserDropdown()">
             <!-- 新增：客户名称输入框清除按钮 -->
@@ -1965,7 +1994,7 @@
 
     <!-- 调整风扇位置：移到机箱下方、电源上方 -->
     <div class="item">
-        <div class="item-label"><span class="icon-gray">⚙️</span> CPU</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1.5v3M15 1.5v3M9 19.5v3M15 19.5v3M19.5 9h3M19.5 15h3M1.5 9h3M1.5 15h3"/></svg></span> CPU</div>
         <div class="item-input">
             <input class="combo" id="cpu" onclick="match('cpu')" oninput="match('cpu')" onblur="hideDrop('cpu')">
             <div class="clear-btn" onclick="clearItem('cpu')">×</div>
@@ -1974,7 +2003,7 @@
         <div class="item-price"><input class="price" id="cpu-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">💿</span> 内存</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="9.5" rx="1.5"/><rect x="5.5" y="9" width="3.2" height="4.5" rx="0.4"/><rect x="10.4" y="9" width="3.2" height="4.5" rx="0.4"/><path d="M16.2 9v4.5M18 9v4.5M5.5 16v2.5M9.5 16v2.5M13.5 16v2.5M17.5 16v2.5"/></svg></span> 内存</div>
         <div class="item-input">
             <input class="combo" id="ram" onclick="match('ram')" oninput="match('ram')" onblur="hideDrop('ram')">
             <div class="clear-btn" onclick="clearItem('ram')">×</div>
@@ -1983,7 +2012,7 @@
         <div class="item-price"><input class="price" id="ram-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🔧</span> 主板</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="6" height="6" rx="0.5"/><path d="M15.5 7.5h2.7M15.5 10.2h2.7M6.5 17.5h3.5"/><circle cx="15.8" cy="15.8" r="1.7"/></svg></span> 主板</div>
         <div class="item-input">
             <input class="combo" id="board" onclick="match('board')" oninput="match('board')" onblur="hideDrop('board')">
             <div class="clear-btn" onclick="clearItem('board')">×</div>
@@ -1998,7 +2027,7 @@
         </div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🌀</span> 散热</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5c-1 1.1 1 1.7 0 2.9M12 3.5c-1 1.1 1 1.7 0 2.9M16.5 3.5c-1 1.1 1 1.7 0 2.9"/><rect x="4" y="11" width="16" height="9.5" rx="1.5"/><path d="M8 13v5.5M12 13v5.5M16 13v5.5"/></svg></span> 散热</div>
         <div class="item-input">
             <input class="combo" id="cooler" onclick="match('cooler')" oninput="match('cooler')" onblur="hideDrop('cooler')">
             <div class="clear-btn" onclick="clearItem('cooler')">×</div>
@@ -2007,7 +2036,7 @@
         <div class="item-price"><input class="price" id="cooler-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🎯</span> 显卡</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="10" rx="1.5"/><circle cx="12.5" cy="11" r="3.1"/><circle cx="12.5" cy="11" r="0.8" fill="#555" stroke="none"/><path d="M5.5 16v2.5M9 16v2.5M12.5 16v2.5M16 16v2.5M19.5 16v2.5"/></svg></span> 显卡</div>
         <div class="item-input">
             <input class="combo" id="vga" onclick="match('vga')" oninput="match('vga')" onblur="hideDrop('vga')">
             <div class="clear-btn" onclick="clearItem('vga')">×</div>
@@ -2016,7 +2045,7 @@
         <div class="item-price"><input class="price" id="vga-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">💽</span> 固态</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M7.5 7.5h4.5"/><circle cx="17" cy="7.5" r="0.9" fill="#555" stroke="none"/><rect x="7" y="13" width="10" height="4" rx="1"/></svg></span> 固态</div>
         <div class="item-input">
             <input class="combo" id="ssd" onclick="match('ssd')" oninput="match('ssd')" onblur="hideDrop('ssd')">
             <div class="clear-btn" onclick="clearItem('ssd')">×</div>
@@ -2025,7 +2054,7 @@
         <div class="item-price"><input class="price" id="ssd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🖇️</span> 机械</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><circle cx="11.5" cy="12" r="4.2"/><circle cx="11.5" cy="12" r="0.7" fill="#555" stroke="none"/><path d="M12 11.5l4.6-4.6"/><circle cx="17.4" cy="6.2" r="1.1"/></svg></span> 机械</div>
         <div class="item-input">
             <input class="combo" id="hdd" onclick="match('hdd')" oninput="match('hdd')" onblur="hideDrop('hdd')">
             <div class="clear-btn" onclick="clearItem('hdd')">×</div>
@@ -2034,7 +2063,7 @@
         <div class="item-price"><input class="price" id="hdd-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🗄️</span> 机箱</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2"/><circle cx="12" cy="6.3" r="1.2"/><path d="M9.5 15.5h5M9.5 18h5"/></svg></span> 机箱</div>
         <div class="item-input">
             <input class="combo" id="case" onclick="match('case')" oninput="match('case')" onblur="hideDrop('case')">
             <div class="clear-btn" onclick="clearItem('case')">×</div>
@@ -2043,7 +2072,7 @@
         <div class="item-price"><input class="price" id="case-p" oninput="calc()"></div>
     </div>
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🌀</span> 风扇</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 12C10.9 9.6 10.9 6.8 12 4.2C13.1 6.8 13.1 9.6 12 12Z" fill="#555" stroke="none"/><path d="M12 12C10.9 9.6 10.9 6.8 12 4.2C13.1 6.8 13.1 9.6 12 12Z" fill="#555" stroke="none" transform="rotate(120 12 12)"/><path d="M12 12C10.9 9.6 10.9 6.8 12 4.2C13.1 6.8 13.1 9.6 12 12Z" fill="#555" stroke="none" transform="rotate(240 12 12)"/><circle cx="12" cy="12" r="1.7"/></svg></span> 风扇</div>
         <div class="item-input">
             <input class="combo" id="fan" onclick="match('fan')" oninput="match('fan')" onblur="hideDrop('fan')">
             <div class="clear-btn" onclick="clearItem('fan')">×</div>
@@ -2053,7 +2082,7 @@
     </div>
     <!-- 电源调整到机箱之后、风扇之后 -->
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🔋</span> 电源</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.6 6.6a7.6 7.6 0 1 0 10.8 0"/></svg></span> 电源</div>
         <div class="item-input">
             <input class="combo" id="power" onclick="match('power')" oninput="match('power')" onblur="hideDrop('power')">
             <div class="clear-btn" onclick="clearItem('power')">×</div>
@@ -2063,9 +2092,9 @@
     </div>
     <!-- 新增其他配件栏目 -->
     <div class="item">
-        <div class="item-label"><span class="icon-gray">🔩</span> 配件</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span> 配件</div>
         <div class="item-input">
-            <input class="combo" id="other" value="不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费2%" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
+            <input class="combo" id="other" value="不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费" onclick="match('other')" oninput="match('other')" onblur="hideDrop('other')">
             <div class="clear-btn" onclick="clearItem('other')">×</div>
             <div class="dropdown" id="other-drop"></div>
         </div>
@@ -2073,7 +2102,7 @@
     </div>
     <!-- 新增备注栏目 -->
     <div class="item has-service">
-        <div class="item-label"><span class="icon-gray">📝</span> 备注</div>
+        <div class="item-label"><span class="icon-gray"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span> 备注</div>
         <div class="remark-container">
             <div class="remark-row">
                 <input class="remark-input remark-text" id="remark1" oninput="saveNow()" value="6%润：调货装机走线系统调试打包、店铺运营、三年一对一售后成本">
@@ -2100,7 +2129,7 @@
                     <span>元</span>
                 </div>
                 <button class="btn-reset" onclick="reset()">清空重置</button>
-                <button class="btn-download-images" onclick="if(confirm('确定要下载所有图片吗？这将花费一些时间，请耐心等待。')) downloadAllImages()">下载图片缓存</button>
+                <button class="btn-download-images" onclick="openImageDownloadDialog()">图片缓存</button>
             </div>
             <div class="screenshot-btn-row">
                 <button class="btn-screenshot" onclick="saveScreenshot()">保存截图</button>
@@ -2162,6 +2191,7 @@
     <!-- 云同步：同步按钮 + 自动同步状态指示（置于页面最底部，发票行下一行） -->
     <div class="sync-footer-row">
         <button class="btn-sync" id="btnSync" type="button" onclick="SyncModule.open()">同步数据</button>
+        <button class="btn-sync" id="btnPriceEdit" type="button" onclick="showPriceEdit()" style="border-color:#f59e0b !important;color:#d97706 !important;">改价</button>
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
 
@@ -2276,6 +2306,37 @@
             <button onclick="doAdd()">添加型号</button>
         </div>
         <button onclick="closeModal('addModal')">取消</button>
+    </div>
+</div>
+
+<!-- 改价弹窗：修改单个配件价格并直接写回 index.html 文件 -->
+<div class="modal" id="peModal">
+    <div class="modal-box">
+        <h4 style="color: #d97706; margin-bottom: 10px;">修改配件价格（写回文件）</h4>
+        <div class="add-area">
+            <select id="peType" onchange="peRenderModels()"></select>
+            <input type="text" id="peSearch" placeholder="输入关键字搜索型号（如：5060TI / 雪豹），不区分大小写" oninput="peRenderModels()">
+            <select id="peModel"></select>
+            <input type="number" id="peNewPrice" placeholder="输入新价格（数字）" min="0" step="0.01">
+            <div id="peFileStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
+            <div style="border-top:1px dashed #e5e7eb;margin-top:4px;padding-top:8px;">
+                <div id="peGhStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
+                <details>
+                    <summary style="font-size:12px;color:#2563EB;cursor:pointer;margin-bottom:6px;">GitHub 仓库设置（改价写入线上）</summary>
+                    <input type="text" id="peGhRepo" placeholder="仓库（如 tas1985/tas1985.github.io）">
+                    <input type="text" id="peGhBranch" placeholder="分支（默认 main）">
+                    <input type="text" id="peGhPath" placeholder="文件路径（默认 index.html）">
+                    <input type="password" id="peGhToken" placeholder="GitHub Token（需 Contents 读写权限）">
+                    <div style="display:flex;gap:6px;">
+                        <button type="button" onclick="peGhSaveCfg()">保存配置</button>
+                        <button type="button" onclick="peGhClearCfg()">清除</button>
+                    </div>
+                    <p style="font-size:11px;color:#9ca3af;margin:4px 0 0;">Token 仅保存在本机浏览器。生成位置：GitHub → Settings → Developer settings → Personal access tokens，需勾选仓库 Contents 读写权限。</p>
+                </details>
+            </div>
+            <button onclick="applyPriceEdit()" style="border-color:#d97706;color:#d97706;">确认改价并写入文件</button>
+        </div>
+        <button onclick="closeModal('peModal')">取消</button>
     </div>
 </div>
 
@@ -2464,69 +2525,69 @@
     const defaultData = {
         cpu: [
             {n:"E5-2673V3 3.2GHz 12核24线程(拆机散片到手90天质保）",p:98},
-            {n:"AMD R5-5600 盒装（散片容易暴雷黑屏重启）",p:749},
+            {n:"AMD R5-5600 盒装（散片容易暴雷黑屏重启）",p:729},
             {n:"i9-14900KF 盒装 24核32线程",p:3090},
             {n:"i3-12100F 3.3G 四核",p:730},
             {n:"中文原盒 i3-12100F",p:830},
-            {n:"酷睿 U9 285K 盒装 24核心24线程",p:3399},
-            {n:"酷睿 U7 270K PLUS 盒装 24核心24线程",p:1950},
+            {n:"酷睿 U9 285K 盒装 24核心24线程",p:3299},
+            {n:"酷睿 U7 270K PLUS 盒装 24核心24线程",p:1930},
             {n:"酷睿 U7 265KF 盒装 20核心20线程",p:1730},
-            {n:"酷睿 U7 265K 盒装 20核心20线程",p:1750},
-            {n:"酷睿 U5 250K PLUS 盒装 18核心18线程",p:1350},
+            {n:"酷睿 U7 265K 盒装 20核心20线程",p:1700},
+            {n:"酷睿 U5 250K PLUS 盒装 18核心18线程",p:1320},
             {n:"酷睿 U5 245KF 盒装 14核心14线程",p:999},
             {n:"酷睿 U5 230F 盒装 10核心10线程",p:610},
             {n:"酷睿 U5 225F 盒装 10核心10线程",p:740},
             {n:"酷睿 U5 225 盒装 带核显 10核心10线程",p:1060},
             {n:"中文原盒 i7-14790F 20核28线程",p:1960},
-            {n:"中文原盒 i5-14600KF 14核20线程",p:1700},
+            {n:"中文原盒 i5-14600KF 14核20线程",p:1300},
             {n:"中文原盒 i5-14600K 14核20线程",p:1700},
             {n:"中文原盒 i5-14490F",p:850},
             {n:"中文原盒 i5-12600KF",p:899},
             {n:"中文原盒 i5-12490F",p:760},
-            {n:"Ultra 5 245K 盒装 14核心14线程",p:1075},
-            {n:"i7-14700KF 散 20核28线程",p:2130},
+            {n:"Ultra 5 245K 盒装 14核心14线程",p:1050},
+            {n:"i7-14700KF 散 20核28线程",p:2080},
             {n:"中文原盒 i7-14700KF 20核28线程",p:1975},
-            {n:"i7-12700KF 散",p:1350},
+            {n:"i7-12700KF 散",p:1299},
             {n:"中文原盒 i7-12700KF",p:1705},
-            {n:"i5-14600KF 散 14核20线程",p:1320},
+            {n:"i5-14600KF 散 14核20线程",p:1265},
             {n:"i5-14600K 散 14核20线程",p:1750},
-            {n:"i5-14400F 散 10核心16线程",p:855},
+            {n:"i5-14400F 散 10核心16线程",p:815},
             {n:"中文原盒 i5-14400F",p:950},
-            {n:"i5-13600KF 散 14核20线程",p:1350},
+            {n:"i5-13600KF 散 14核20线程",p:1120},
             {n:"i5-13400F 散 10核心16线程",p:820},
             {n:"i5-12600KF 散",p:895},
-            {n:"i5-12400F 散",p:735},
-            {n:"i5-12400 散",p:915},
+            {n:"i5-12400F 散",p:699},
+            {n:"i5-12400 散",p:888},
             {n:"i3-14100F 散",p:655},
             {n:"中文原盒 i3-14100F",p:950},
-            {n:"i3-12100F 散",p:540},
-            {n:"i3-12100 散",p:699},
+            {n:"i3-12100F 散",p:525},
+            {n:"i3-12100 散",p:685},
             {n:"中文原盒 i3-12100",p:960},
-            {n:"AMD R9-9950X 散 16核心32线程",p:2685},
+            {n:"AMD R9-9950X 散 16核心32线程",p:2730},
             {n:"中文原盒 AMD R9 9950X",p:5950},
             {n:"AMD R9 9950X3D 盒装 16核心32线程",p:4320},
-            {n:"AMD R9 9950X3D 散 16核心32线程",p:3899},
+            {n:"AMD R9 9950X3D 散 16核心32线程",p:3910},
             {n:"AMD R7-9700X 盒装",p:1550},
-            {n:"AMD R7-9700X 散",p:1350},
+            {n:"AMD R7-9700X 散",p:1365},
             {n:"AMD R7 9850X 3D 盒装",p:3250},
-            {n:"AMD R7 9850X 3D 散",p:2655},
+            {n:"AMD R7 9850X 3D 散",p:2735},
             {n:"AMD R7 9800X 3D 盒装",p:2850},
-            {n:"AMD R7 9800X 3D 散",p:2399},
+            {n:"AMD R7 9800X 3D 散",p:2430},
             {n:"中文原盒 AMD R7 9800X 3D",p:2850},
-            {n:"AMD R7 7800X 3D 散",p:1650},
-            {n:"AMD R7 5700X 散",p:840},
-            {n:"AMD R5-5600 散",p:635},
+            {n:"AMD R7 7800X 3D 散",p:1699},
+            {n:"AMD R7 5700X 散",p:855},
+            {n:"AMD R5-5600 散",p:650},
             {n:"中文原盒 AMD R5 5600",p:725},
             {n:"AMD R5-5500GT 散",p:870},
             {n:"AMD R5 9600X 盒装",p:1150},
-            {n:"AMD R5 9600X 散",p:1040},
+            {n:"AMD R5 9600X 散",p:1030},
             {n:"AMD R5 7500F 盒装",p:770},
-            {n:"AMD R5 7500F 散",p:680},
+            {n:"AMD R5 7500F 散",p:685},
             {n:"中文原盒 AMD R5 7500F",p:770},
-            {n:"AMD R5 5600X 散",p:660},
+            {n:"AMD R5 5600X 散",p:670},
             {n:"中文原盒 AMD R5 5600X",p:999},
             {n:"AMD R5 5500X3D 盒",p:1130},
-            {n:"AMD R5 5500 散",p:470},
+            {n:"AMD R5 5500 散",p:480},
             {n:"中文原盒 AMD R5 5500",p:535},
             {n:"赛扬 G5905",p:120},
             {n:"奔腾 G6400",p:170},
@@ -2561,7 +2622,7 @@
             {n:"i7-13700K 散 十六核",p:1595},
             {n:"i9-13900KF 散 二十四核",p:2100},
             {n:"i9-13900K 散 二十四核",p:2960},
-            {n:"i5-14400 散 六核",p:975},
+            {n:"i5-14400 散 六核",p:960},
             {n:"中文原盒 i5-14400",p:920},
             {n:"i5-14490F 散 十核",p:920},
             {n:"Ultra 5 250KF PLUS 盒装",p:1400},
@@ -2583,27 +2644,29 @@
             {n:"中文原盒 锐龙 9 9900X",p:3200},
         ],
         ram: [
-            {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:930},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1520},
-            {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲",p:799},
+            {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:799},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1450},
+            {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲",p:750},
             {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲",p:1360},
-            {n:"光威 天策 16G（8*2）3200 白色 ",p:799},
+            {n:"光威 天策 16G（8*2）3200 白色 ",p:750},
             {n:"光威 天策 32G（16*2）3200 白色 ",p:1360},
+            {n:"光威 32GB(16GBx2) 6000 龙武 海力士A-die CL28 星空灯条黑",p:3750},
+            {n:"金百达 星刃黑甲 32G(16GBx2) 6800(海力士A-DIEC32 XMP) ",p:3650},
             {n:"雷克沙DDR5 64G(32X2) 6000灯条",p:5150},
-            {n:"金百达 银爵 16G 8x2 3200 D4 C16",p:799},
+            {n:"金百达 银爵 16G 8x2 3200 D4 C16",p:750},
             {n:"阿斯加特 弗雷 16G 8*2 3200",p:750},
             {n:"金百达 银爵 32G 16x2 3200 D4 C16",p:1360},
-            {n:"阿斯加特 弗雷 32G 16*2 3200",p:1450},
-            {n:"金百达 银爵 32G 16x2 3600 D4 C18",p:1550},
+            {n:"阿斯加特 弗雷 32G 16*2 3200",p:1299},
+            {n:"金百达 银爵 32G 16x2 3600 D4 C18",p:1499},
             {n:"阿斯加特_女武神 32G 3600(16*2)套装灯条",p:1849},
-            {n:"阿斯加特 DDR4 64G（32X2）3200",p:2598},
+            {n:"阿斯加特 DDR4 64G（32X2）3200",p:2998},
             {n:"阿斯加特女武II RGB白 64G(32G*2) 6000D5 海A-C30",p:7400},
             {n:"阿斯加特女武II RGB 96G(48G*2) 6400 D5 海M-C32",p:3400},
             {n:"光威 天策 64G（32*2）3200 白色 ",p:2699},
-            {n:"金百达_银爵 32G 6000(16*2)套装 c30 m-die",p:3400},
+            {n:"金百达_银爵 32G 6000(16*2)套装 c30 m-die",p:1770},
             {n:"金百达_银爵 32G 6000(16*2)套装 c36 ",p:3300},
             {n:"金百达 银爵 16G 6000 D5 C36 长鑫",p:1650},
-            {n:"金百达 银爵 16G 6000 D5 C30",p:1650},
+            {n:"金百达 银爵 16G 6000 D5 C30",p:1770},
             {n:"金百达_星刃 32G 6000 c28 海力士A-die 灯条",p:3800},
             {n:"阿斯加特_女武神II代32G(16*2)套装6000 C28 ADIE 黑/白",p:3999},
             {n:"佰维dw100 48G套 24x2 6000c28 m-die 灯条",p:3500},
@@ -2621,9 +2684,9 @@
             {n:"阿斯加特 海姆达尔 64G 32*2 6000 C30 黑色马甲",p:7400},
             {n:"阿斯加特 海姆达尔 48G 24*2 6000 C28 黑色马甲",p:4199},
             {n:"阿斯加特 海姆达尔 32G 16*2 6800 C32 黑色马甲",p:3400},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6400 C38 黑色马甲 镁光颗粒",p:3000},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 三星颗粒",p:3000},
-            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 长鑫颗粒",p:3400},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6400 C38 黑色马甲 ",p:3000},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C38 黑色马甲 ",p:3000},
+            {n:"阿斯加特 海姆达尔 32G 16*2 6000 C36 黑色马甲 ",p:3400},
             {n:"阿斯加特 海姆达尔 32G 16*2 6000 C28 黑色马甲",p:3800},
             {n:"阿斯加特 女武神II代 48G 24*2 8000 C38 MDIE 极夜黑",p:4500},
             {n:"阿斯加特 女武神II代 48G 24*2 6800 C34 MDIE 黑/白",p:4400},
@@ -2638,12 +2701,12 @@
             {n:"阿斯加特 女武神 32G 16*2 3200 C18 白色灯条",p:1550},
             {n:"阿斯加特 博拉琪 32G 16*2 6800 C32 黑色灯条",p:3400},
             {n:"阿斯加特 博拉琪 32G 16*2 6000 C30 镜面黑色灯条",p:3800},
-            {n:"阿斯加特 TUF联名RGB 32G 16*2 3200 C18 黑色灯条",p:1520},
+            {n:"阿斯加特 TUF联名RGB 32G 16*2 3200 C18 黑色灯条",p:1450},
             {n:"阿斯加特 TUF联名 32G 16*2 6000 海力士AIDE C28 黑橙甲",p:3800},
             {n:"阿斯加特 TUF联名 32G 16*2 6000 C28 黑橙甲",p:3800},
-            {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1650},
-            {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1699},
-            {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:970},
+            {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C18 黑橙甲",p:1600},
+            {n:"阿斯加特 TUF联名 32G 16*2 3600 海力士CJR C16 黑橙甲",p:1650},
+            {n:"阿斯加特 TUF联名 16G 8*2 3600 C18 黑橙甲",p:860},
             {n:"金邦 巨蟹升级版 32G 16*2 6000 D5 C36 黑色马甲",p:3200},
             {n:"金邦 巨蟹RGB 32G 16*2 6400 D5 C32 海力士A 白色灯条",p:3400},
             {n:"芝奇 焰锋戟 32G 16x2 6000 D5 RGB 黑色 C28 (AMD优化条)",p:3800},
@@ -2651,7 +2714,7 @@
             {n:"海盗船 复仇者 32G 6000D5 16Gx2 C36 黑色马甲",p:3000},
             {n:"海盗船 复仇者 32G 3600 16Gx2 黑色马甲",p:1550},
             {n:"海盗船 复仇者 32G 3200 16Gx2 黑色马甲",p:1460},
-            {n:"海盗船 复仇者 16G 6000D5 Z36 黑色马甲",p:1700},
+            {n:"海盗船 复仇者 16G 6000D5 Z36 黑色马甲",p:1750},
             {n:"宏碁掠夺者 炫光星舰 32G 6000D5 16*2 C32 RGB 黑/银",p:3600},
             {n:"宏碁掠夺者 炫光星舰 32G 6000D5 16*2 C30 RGB 银/黑",p:3700},
             {n:"宏碁掠夺者 影锋 16G 6000D5 C26 RGB 银",p:1999},
@@ -2659,7 +2722,7 @@
             {n:"宏碁掠夺者 冰刃 32G 6000D5 16*2 C28 RGB 黑/白",p:3900},
             {n:"宏碁掠夺者 冰刃 24G 6000D5 C28 RGB 黑/白",p:2350},
             {n:"宏碁掠夺者 冰刃 16G 6000D5 C28 RGB 黑/白",p:1950},
-            {n:"宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 凌霜马甲 黑/银",p:8550},
+            {n:"宏碁掠夺者 Pallasll 96G 6400 D5 48x2 C32 凌霜马甲 黑/银",p:8999},
             {n:"宏碁掠夺者 Pallasll 48G 6000 D5 24x2 C28 凌霜马甲 银",p:4700},
             {n:"宏碁掠夺者 Pallasll 24G 6000 D5 C28 凌霜马甲 银",p:2260},
             {n:"宏碁 HT200冰刀 32G 6400D5 16*2 C36 银 马甲",p:3000},
@@ -2695,15 +2758,23 @@
             {n:"阿斯加特 128G(64X2)-D5-6000-Mr-C40 女武神II代",p:9699},
             {n:"阿斯加特 海姆达尔 24G 6000 C36 黑厚甲 三星颗粒",p:2050},
             {n:"金邦 巨蟹升级版 16G 6000 D5 C36 黑色马甲",p:1350},
-            {n:"金百达 银爵 16G 8x2 3600 D4 C18",p:950},
-            {n:"金士顿 野兽 32G 3600 16Gx2 黑色马甲",p:1850},
+            {n:"金百达 银爵 16G 8x2 3600 D4 C18",p:910},
+            {n:"金士顿 野兽 32G 3600 16Gx2 黑色马甲",p:1940},
             {n:"金士顿 野兽 32G 3200 16Gx2 黑色马甲",p:1720},
-            {n:"金士顿 野兽 16G 3200 8Gx2 黑色马甲",p:900},
-            {n:"金士顿 超级野兽 64G 6000 32x2 D5 C30 黑色马甲",p:7500},
-            {n:"金士顿 超级野兽 32G 6000 16x2 D5 C30 黑色马甲",p:3750},
-            {n:"OC LAB 96G(48G×2)套装 DDR5 6000C26/8000C36 Origin Code炫光 RGB灯条 银",p:8600},
-            {n:"OC LAB 48G(24G×2)套装 DDR5 6000C26/8000C36 Origin Code炫光 RGB灯条 银",p:5150},
-            {n:"阿斯加特 弗雷 32G 16*2 3600 黑甲 C18",p:1550},
+            {n:"金士顿 野兽 16G 3200 8Gx2 黑色马甲",p:930},
+            {n:"金士顿 超级野兽 64G 6000 32x2 D5 C30 黑色马甲",p:7800},
+            {n:"金士顿 超级野兽 32G 6000 16x2 D5 C30 黑色马甲",p:3850},
+            {n:"OC LAB 96G(48G×2)套装 DDR5 6000C26/8000C36 Origin Code炫光 RGB灯条 银",p:9999},
+            {n:"OC LAB 48G(24G×2)套装 DDR5 6000C26/8000C36 Origin Code炫光 RGB灯条 银",p:4999},
+            {n:"阿斯加特 弗雷 32G 16*2 3600 黑甲 C18",p:1450},
+            {n:"金邦 巨蟹升级版 32G 6000 D5 16*2 C36 黑色马甲",p:2799},
+            {n:"雷克沙 雷神II 16G 8*2 6000D5 C38 黑色马甲",p:1470},
+            {n:"得力 16G 8*2 3200 D4 普条",p:650},
+            {n:"金士顿 野兽 32G 3600 D4 16Gx2 黑色马甲",p:1940},
+            {n:"金士顿 野兽 32G 3200 D4 16Gx2 黑色马甲",p:1720},
+            {n:"金士顿 野兽 16G 3200 D4 8Gx2 黑色马甲",p:930},
+            {n:"海盗船 复仇者 32G 3600 D4 16Gx2 黑色马甲",p:1550},
+            {n:"海盗船 复仇者 32G 3200 D4 16Gx2 黑色马甲",p:1460},
         ],
         board: [
             {n:"精粤 H610M-PLUS ARGB 纯白主板WIFI蓝牙",p:449},
@@ -2726,47 +2797,47 @@
             {n:"技嘉 Z790M A ELITE AX ICE 白色 冰雕",p:1199},
             {n:"技嘉 Z790 EAGLE AX 猎鹰 WIFI6",p:1290.00},
             {n:"技嘉 Z790 AORUS ELITE WIFI7 小雕X",p:1750.00},
-            {n:"技嘉 X870M A ELITE WIFI7 小雕",p:1450},
-            {n:"技嘉 X870M A ELITE WIFI7 ICE 冰雕",p:1450},
+            {n:"技嘉 X870M A ELITE WIFI7 小雕",p:1399},
+            {n:"技嘉 X870M A ELITE WIFI7 ICE 冰雕",p:1399},
             {n:"技嘉 X870 GAMING X WIFI7 魔鹰 D5",p:1499},
             {n:"技嘉 X870 A ELITE WIFI7 小雕",p:1750},
             {n:"技嘉 X870 A ELITE WIFI7 ICE 冰雕",p:1750},
-            {n:"技嘉 H610M K DDR4",p:375},
-            {n:"技嘉 H610M H DDR4 V3",p:399},
+            {n:"技嘉 H610M K DDR4",p:399},
+            {n:"技嘉 H610M H DDR4 V3",p:425},
             {n:"技嘉 H610M D3H WIFI D4 ARGB",p:530.00},
             {n:"技嘉 B860M-K D5",p:570.00},
             {n:"技嘉 B860M H D5",p:620.00},
-            {n:"技嘉 B860M GAMING 魔鹰 D5 WIFI6",p:850},
-            {n:"技嘉 B860M EAGLE WIFI6 猎鹰 D5",p:790.00},
-            {n:"技嘉 B860M AORUS ELITE ICE 冰雕 D5 WIFI6E",p:1150.00},
+            {n:"技嘉 B860M GAMING 魔鹰 D5 WIFI6",p:899},
+            {n:"技嘉 B860M EAGLE WIFI6 猎鹰 D5",p:799},
+            {n:"技嘉 B860M AORUS ELITE ICE 冰雕 D5 WIFI6E",p:1199},
             {n:"技嘉 B860M AORUS ELITE AX 小雕 D5 WIFI6E",p:1199.00},
             {n:"技嘉 B850M GAMING X 魔鹰X D5 WIFI6",p:999},
-            {n:"技嘉 B850M FORCE 战鹰 D5 WIFI6E",p:889.00},
-            {n:"技嘉 B850M FORCE 战鹰 D5",p:830},
-            {n:"技嘉 B850M EAGLE WIFI6E 猎鹰 D5",p:960},
-            {n:"技嘉 B850M EAGLE WIFI6E ICE 冰猎鹰 D5 纯白色",p:950},
+            {n:"技嘉 B850M FORCE 战鹰 D5 WIFI6E",p:899},
+            {n:"技嘉 B850M FORCE 战鹰 D5",p:850},
+            {n:"技嘉 B850M EAGLE WIFI6E 猎鹰 D5",p:999},
+            {n:"技嘉 B850M EAGLE WIFI6E ICE 冰猎鹰 D5 纯白色",p:999},
             {n:"技嘉 B850M AORUS PRO 电竞雕 D5 WIFI7",p:1350},
             {n:"技嘉 B850M AORUS ELITE WIFI7 ICE-P D5 雕妹纯白",p:1199},
             {n:"技嘉 B850M AORUS ELITE ICE 冰雕 D5 WIFI6",p:1199},
             {n:"技嘉 B850M AORUS ELITE AX 小雕 D5 WIFI6E",p:1199},
             {n:"技嘉 B850 GAMING X 魔鹰X D5 WIFI6 大板",p:1299.00},
-            {n:"技嘉 B850 AORUS ELITE AX 小雕 D5 WIFI7 大板",p:1499.00},
-            {n:"技嘉 B850 AORUS ELITE AX 冰雕 D5 WIFI7 ICE 大板",p:1499.00},
+            {n:"技嘉 B850 AORUS ELITE AX 小雕 D5 WIFI7 大板",p:1599},
+            {n:"技嘉 B850 AORUS ELITE AX 冰雕 D5 WIFI7 ICE 大板",p:1599},
             {n:"技嘉 B760M POWER D4",p:530.00},
-            {n:"技嘉 B760M K D4",p:480},
-            {n:"技嘉 B760M GAMING 魔鹰X D4 GEN5",p:770},
-            {n:"技嘉 B760M GAMING 魔鹰X AX D5 WIFI6",p:870.00},
-            {n:"技嘉 B760M GAMING 魔鹰X AX D4 WIFI6",p:799.00},
-            {n:"技嘉 B760M GAMING WIFI5 D5 PLUS",p:789.00},
-            {n:"技嘉 B760M GAMING AC WIFI5 D4",p:660.00},
-            {n:"技嘉 B760M D2H D4 ARGB",p:555.00},
+            {n:"技嘉 B760M K D4",p:499},
+            {n:"技嘉 B760M GAMING 魔鹰X D4 GEN5",p:799},
+            {n:"技嘉 B760M GAMING 魔鹰X AX D5 WIFI6",p:860},
+            {n:"技嘉 B760M GAMING 魔鹰X AX D4 WIFI6",p:860},
+            {n:"技嘉 B760M GAMING WIFI5 D5 PLUS",p:730},
+            {n:"技嘉 B760M GAMING AC WIFI5 D4",p:670},
+            {n:"技嘉 B760M D2H D4 ARGB",p:570},
             {n:"技嘉 B760M AORUS ELITE 小雕 D5",p:999.00},
-            {n:"技嘉 B760M AORUS ELITE 小雕 D4 GEN5",p:899.00},
+            {n:"技嘉 B760M AORUS ELITE 小雕 D4 GEN5",p:940},
             {n:"技嘉 B760M AORUS ELITE 小雕 AX-P D5 新雕妹 WIFI6 GEN5",p:1070.00},
             {n:"技嘉 B760M AORUS ELITE 小雕 AX D4 银色 WIFI6 GEN5",p:999.00},
             {n:"技嘉 B760 GAMING 魔鹰X D4 GEN5 大板",p:970.00},
-            {n:"技嘉 B650M-K D5 8+1供电",p:699.00},
-            {n:"技嘉 B650M GAMING WIFI5 D5 白魔鹰",p:670},
+            {n:"技嘉 B650M-K D5 8+1供电",p:730},
+            {n:"技嘉 B650M GAMING WIFI5 D5 白魔鹰",p:699},
             {n:"技嘉 B650M D2HP D5",p:599},
             {n:"技嘉 B650M AORUS ELITE AX 小雕 D5 WIFI6",p:970},
             {n:"技嘉 B650M AORUS ELITE AX ICE 冰雕 纯白色 D5 WFII6",p:999.00},
@@ -2775,52 +2846,52 @@
             {n:"技嘉 B550M DS3H ARGB WIFI",p:550.00},
             {n:"技嘉 B550M AORUS ELITE 小雕",p:599.00},
             {n:"技嘉 B550M AORUS ELITE AX 小雕 WIFI",p:699.00},
-            {n:"技嘉 A520M K V2",p:315},
+            {n:"技嘉 A520M K V2",p:330},
             {n:"微星 Z790 GAMING PLUS WIFI D5",p:1250.00},
-            {n:"微星 PRO Z890-S WIFI7 WHITE 纯白色",p:1299.00},
+            {n:"微星 PRO Z890-S WIFI7 WHITE 纯白色",p:1330},
             {n:"微星 PRO Z890-P WIFI7",p:1350.00},
             {n:"微星 PRO Z890 GAMING PLUS WIFI7",p:1580.00},
-            {n:"微星 PRO Z790-P WIFI6E D4",p:1299.00},
+            {n:"微星 PRO Z790-P WIFI6E D4",p:1320},
             {n:"微星 PRO Z790-P D5 II",p:1199.00},
             {n:"微星 PRO Z790-A MAX D5 WIFI",p:1399.00},
             {n:"微星 PRO X870-P WIFI DDR5",p:1299.00},
             {n:"微星 PRO H610M-S WIFI D4 WIFI6",p:440.00},
             {n:"微星 PRO H610M-S D4",p:365},
             {n:"微星 PRO H610M-G D4 ARGB WIFI",p:540.00},
-            {n:"微星 PRO H610M-G D4 ARGB",p:460.00},
-            {n:"微星 PRO H610M-E D4",p:409},
-            {n:"微星 PRO B860M-B WIFI",p:810},
-            {n:"微星 PRO B760M-B D4 2.5G",p:520.00},
-            {n:"微星 PRO B760M-A D4 II WIFI",p:850},
-            {n:"微星 PRO B760M-A D4 II",p:799},
-            {n:"微星 PRO B650M-P D5",p:699.00},
-            {n:"微星 MPG Z890 CARBON WIFI7 暗黑",p:2990},
-            {n:"微星 MPG X870E CABON WIFI 暗黑 D5",p:2780},
+            {n:"微星 PRO H610M-G D4 ARGB",p:520},
+            {n:"微星 PRO H610M-E D4",p:450},
+            {n:"微星 PRO B860M-B WIFI",p:860},
+            {n:"微星 PRO B760M-B D4 2.5G",p:570},
+            {n:"微星 PRO B760M-A D4 II WIFI",p:899},
+            {n:"微星 PRO B760M-A D4 II",p:840},
+            {n:"微星 PRO B650M-P D5",p:750},
+            {n:"微星 MPG Z890 CARBON WIFI7 暗黑",p:3060},
+            {n:"微星 MPG X870E CABON WIFI 暗黑 D5",p:3099},
             {n:"微星 MEG Z890 UNIFY-X WIFI7 暗影 双槽",p:3350.00},
             {n:"微星 MEG Z890 ACE 战神",p:4099},
             {n:"微星 MAG Z890 TOMAHAWK WIFI7 战斧导弹",p:1750},
-            {n:"微星 MAG X870E TOMAHAWK WIFI 战斧导弹 D5",p:2160},
-            {n:"微星 MAG B860M MORTAR 迫击炮 WIFI7",p:1250},
+            {n:"微星 MAG X870E TOMAHAWK WIFI 战斧导弹 D5",p:2250},
+            {n:"微星 MAG B860M MORTAR 迫击炮 WIFI7",p:1320},
             {n:"微星 MAG B850M MORTAR 迫击炮 WIFI",p:1280},
-            {n:"微星 MAG B850 TOMAHAWK WIFI 战斧导弹 D5",p:1650},
+            {n:"微星 MAG B850 TOMAHAWK WIFI 战斧导弹 D5",p:1699},
             {n:"微星 B850M POWER WIFI",p:1599},
             {n:"微星 B850M GAMING PRO WIFI6E D5",p:988},
             {n:"微星 B850 GAMING PLUS WIFI D5 大板",p:1370.00},
-            {n:"微星 B760M MORTAR 迫击炮 WIFI D4",p:1080.00},
+            {n:"微星 B760M MORTAR 迫击炮 WIFI D4",p:1099},
             {n:"微星 B760M MORTAR 迫击炮 D5 WIFI II",p:1010.00},
             {n:"微星 B760M GAMING WIFI D5 PLUS",p:860.00},
-            {n:"微星 B760M GAMING WIFI D4 PLUS",p:850},
+            {n:"微星 B760M GAMING WIFI D4 PLUS",p:915},
             {n:"微星 B760M EDGE TI WIFI 刀锋 DDR5",p:1120.00},
-            {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:625},
+            {n:"微星 B760M BOMBER 爆破弹 D4 WIFI6E",p:705},
             {n:"微星 B760I EDGE TI WIFI 迷你刀锋 DDR5",p:1199.00},
-            {n:"微星 B650M GAMING WIFI D5 双槽",p:780.00},
-            {n:"微星 B650M GAMING PLUS WIFI D5",p:880.00},
-            {n:"微星 B650M BOMBER WIFI6E D5 爆破弹",p:699.00},
-            {n:"微星 A520M-A PRO",p:315},
+            {n:"微星 B650M GAMING WIFI D5 双槽",p:850},
+            {n:"微星 B650M GAMING PLUS WIFI D5",p:965},
+            {n:"微星 B650M BOMBER WIFI6E D5 爆破弹",p:799},
+            {n:"微星 A520M-A PRO",p:330},
             {n:"微星 PRO Z890-P WIFI6E",p:1420},
             {n:"微星 PRO Z890-S WIFI6 W",p:1320},
             {n:"微星 PRO Z890-S WIFI6E",p:1300},
-            {n:"微星 Z890M GAMING WIFI",p:1270},
+            {n:"微星 Z890M GAMING WIFI",p:1350},
             {n:"微星 PRO Z790-GAMING PLUS WIFI",p:1220},
             {n:"微星 PRO Z790-P WIFI",p:1220},
             {n:"微星 PRO Z790-P WIFI DDR4",p:1270},
@@ -2888,7 +2959,7 @@
             {n:"微星 PRO B850M-E EVO",p:699},
             {n:"微星 MAG B650M MORTAR WIFI",p:1120},
             {n:"微星 B650M GAMING WIFI",p:790},
-            {n:"微星 PRO B650M-B",p:580},
+            {n:"微星 PRO B650M-B",p:599},
             {n:"微星 B650M GAMING PRO",p:870},
             {n:"微星 PRO B650M-P WIFI",p:930},
             {n:"微星 PRO B650M-P WIFI6E",p:860},
@@ -2905,57 +2976,85 @@
             {n:"华硕 Z790-AYW WIFI OC 双槽 D5",p:1350.00},
             {n:"华硕 X870 AYW GAMING WIFI W D5 纯白色",p:1299.00},
             {n:"华硕 TX GAMING B860M天选 WIFI6E",p:1199.00},
-            {n:"华硕 TX GAMING B760M WIFI D4 天选 白色",p:1070.00},
+            {n:"华硕 TX GAMING B760M WIFI D4 天选 白色",p:1099},
             {n:"华硕 TX GAMING B650EM WIFI W 天选 白色 D5",p:999.00},
-            {n:"华硕 TUF GMAING Z890-PLUS WIFI7",p:1899.00},
-            {n:"华硕 TUF GAMING Z890-PRO WIFI7 白色",p:1950.00},
+            {n:"华硕 TUF GMAING Z890-PLUS WIFI7",p:1950},
+            {n:"华硕 TUF GAMING Z890-PRO WIFI7 白色",p:1999},
             {n:"华硕 TUF GAMING Z790-PLUS WIFI D5",p:2050.00},
             {n:"华硕 TUF GAMING X870E-PLUS WIFI D5",p:2399.00},
             {n:"华硕 TUF GAMING X870-PLUS WIFI D5",p:2140.00},
-            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1530.00},
-            {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1270.00},
-            {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1220.00},
+            {n:"华硕 TUF GAMING B850-E WIFI D5 大板",p:1499},
+            {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5 WIFI",p:1250},
+            {n:"华硕 TUF B860M GAMING PLUS 重炮手 D5",p:1199},
             {n:"华硕 TUF B850M-E GAMING WIFI",p:1120.00},
             {n:"华硕 TUF B850M GAMING PLUS 重炮手 D5 WIFI7",p:1320},
             {n:"华硕 TUF B850M GAMING PLUS 重炮手 D5",p:1199.00},
-            {n:"华硕 TUF B850M GAMING PLUS W 重炮手白色 D5 WIFI7",p:1320.00},
+            {n:"华硕 TUF B850M GAMING PLUS W 重炮手白色 D5 WIFI7",p:1299},
             {n:"华硕 TUF B850 GAMING PLUS 重炮手 D5 WIFI7 大板",p:1699.00},
             {n:"华硕 TUF B760M GAMING PLUS 重炮手 D5 WIFI 二代",p:1150.00},
-            {n:"华硕 TUF B760M GAMING PLUS 重炮手 D4 WIFI",p:1120.00},
+            {n:"华硕 TUF B760M GAMING PLUS 重炮手 D4 WIFI",p:1180},
             {n:"华硕 TUF B650M GAMING PLUS 重炮手 D5",p:999.00},
             {n:"华硕 TUF B650EM GAMING PLUS WIFI 重炮手 D5",p:1099.00},
             {n:"华硕 TUF A620M GAMING PLUS 重炮手 D5",p:570.00},
             {n:"华硕 TUF A620M GAMING PLUS WIFI6E 重炮手 D5",p:670.00},
             {n:"华硕 ROG STRIX Z890-H GAMING S WIFI7 RO姬",p:2399.00},
             {n:"华硕 ROG STRIX Z890-E GAMING WIFI7",p:3190.00},
-            {n:"华硕 ROG STRIX Z890-A GAMING WIFI7 S 吹雪",p:2550.00},
+            {n:"华硕 ROG STRIX Z890-A GAMING WIFI7 S 吹雪",p:2399},
             {n:"华硕 ROG STRIX Z790-A GAMING WIFI S D5 吹雪S",p:1800.00},
             {n:"华硕 ROG STRIX X870E-E GAMING WIFI7",p:3099.00},
             {n:"华硕 ROG STRIX X870-F GAMING WIFI7",p:3099.00},
-            {n:"华硕 ROG STRIX X870-A GAMING WIFI S D5 吹雪S",p:2499.00},
-            {n:"华硕 ROG STRIX B850-G GAMING WIFI D5 小吹雪S",p:1450.00},
+            {n:"华硕 ROG STRIX X870-A GAMING WIFI S D5 吹雪S",p:2550},
+            {n:"华硕 ROG STRIX B850-G GAMING WIFI D5 小吹雪S",p:1499},
             {n:"华硕 ROG STRIX B850-A GAMING WIFI S D5 吹雪S",p:1899.00},
             {n:"华硕 ROG STRIX B760-G GAMING WIFI D5 小吹雪S",p:1320.00},
             {n:"华硕 ROG CROSSHAIR X870E HERO",p:4250.00},
-            {n:"华硕 PRIME Z890-P DDR5 WIFI",p:1399.00},
+            {n:"华硕 PRIME Z890-P DDR5 WIFI",p:1499},
             {n:"华硕 PRIME Z790-P DDR5",p:1260.00},
             {n:"华硕 PRIME Z790-P DDR4",p:1399.00},
             {n:"华硕 PRIME H610M-K ARGB",p:430.00},
-            {n:"华硕 PRIME B850M-AYW WIFI 哎呦喂 D5",p:920.00},
-            {n:"华硕 PRIME B760M-AYW WIFI D4 哎呦喂",p:799.00},
-            {n:"华硕 PRIME B760M K D4",p:590.00},
-            {n:"华硕 PRIME B660M K",p:515.00},
-            {n:"华硕 PRIME B650M R D5",p:599},
-            {n:"华硕 PRIME B650M K D5",p:699.00},
+            {n:"华硕 PRIME B850M-AYW WIFI 哎呦喂 D5",p:899},
+            {n:"华硕 PRIME B760M-AYW WIFI D4 哎呦喂",p:815},
+            {n:"华硕 PRIME B760M K D4",p:599},
+            {n:"华硕 PRIME B660M K",p:499},
+            {n:"华硕 PRIME B650M R D5",p:660},
+            {n:"华硕 PRIME B650M K D5",p:750},
             {n:"华硕 PRIME B650M AYW WIFI 哎呦喂",p:799.00},
             {n:"华硕 PRIME B550M-K ARGB",p:480.00},
-            {n:"华硕 PRIME A520M K",p:325.00},
+            {n:"华硕 PRIME A520M K",p:330},
             {n:"技嘉 Z790 D DDR4",p:1150},
-            {n:"技嘉 B760M H D4",p:520},
+            {n:"技嘉 B760M H D4",p:530},
             {n:"技嘉 B650M AORUS ELITE 小雕 D5",p:890},
             {n:"华硕 PRIME B760M A WIFI D4",p:930},
-            {n:"技嘉 B550M H ARGB",p:440},
+            {n:"技嘉 B550M H ARGB",p:450},
             {n:"华硕 PRIME A520M R",p:299},
+            {n:"微星 B850M GAMING PLUS WIFI D5 纯白",p:1050},
+            {n:"微星 B850M GAMING PLUS PRO WIFI6E D5 黑",p:999},
+            {n:"技嘉 电竞雕X3D X870E A PRO X3D",p:2899},
+            {n:"技嘉 电竞冰雕X3D X870E A PRO X3D ICE",p:2899},
+            {n:"技嘉 猎鹰X3D X870E EAGLE X3D WIFI7",p:1850},
+            {n:"技嘉 小雕X3D X870E AORUS ELITE X3D",p:2499},
+            {n:"技嘉 冰雕X3D X870E AORUS ELITE X3D ICE",p:2499},
+            {n:"技嘉 Z890 D PLUS DDR5",p:1299},
+            {n:"技嘉 Z890 A ELITE DUO X WIFI7 小雕DUO",p:1899},
+            {n:"技嘉 B860M E GENG5",p:580},
+            {n:"技嘉 B550M DS3H ARGB AC R2 WIFI",p:570},
+            {n:"微星 X870 GAMING PLUS WIFI7 D5",p:1599},
+            {n:"微星 MPG Z890 EDGETI WIFI7 刀锋钛D5 (白色PCB)",p:1999},
+            {n:"微星 MPG X870E EDGETI WIFI7 刀锋钛D5 (白色PCB)",p:2450},
+            {n:"微星 MAG B850M MORTAR 迫击炮 WIFI7",p:1299},
+            {n:"微星 B850M POWER WIFI 双槽",p:1650},
+            {n:"微星 B850 GAMING PLUS MAX WIFI67 D5 白色大板",p:1499},
+            {n:"华硕 TUF B850M GAMING PLUS 重炮手II D5 WIFI7",p:1340},
+            {n:"华硕 TUF B850M GAMING PLUS 重炮手II D5",p:1220},
+            {n:"华硕 ROG STRIX X870E-E GAMING NEO WIFI7",p:3299},
+            {n:"华硕 ROG STRIX B860-G GAMING WIFI D5 小吹雪S",p:1399},
+            {n:"华硕 ROG STRIX B850-A GAMING WIFI S NEO D5 吹雪S",p:2150},
+            {n:"华硕 ROG CROSSHAIR X870E DARK HERO",p:4799},
+            {n:"华硕 PROART X87OE-CREATOR WIFI 创艺国度",p:3599},
+            {n:"华硕 PROART X870E-CREATOR WIFI 创艺国度",p:3599},
+            {n:"微星 B450M-A PRO MAX II 代",p:399},
+            {n:"技嘉 B760M D2HX SI D4",p:530},
+            {n:"技嘉 Z790-D D4",p:1150},
         ],
         cooler: [
             {n:"大镰刀 赤兔马单塔六铜管 解热功耗230W",p:98},
@@ -2967,39 +3066,39 @@
             {n:"乔思伯 TH240 ARGB 千层镜风扇 冷头数显",p:369},
             {n:"钛钽 SJ-A100E 360一体式水冷 白色 六年质保",p:350},
             {n:"钛钽 SJ-A100 360水冷 白色无限镜 六年质保",p:450},
-            {n:"钛钽 SJ-A090 360一体式水冷 黑色 六年质保",p:498},
-            {n:"钛钽 SJ-A090 360一体式水冷 白色 六年质保",p:498},
-            {n:"钛钽 SJ-A080 360一体式水冷 黑色 六年质保",p:358},
-            {n:"钛钽 SJ-A080 360一体式水冷 白色 六年质保",p:358},
-            {n:"钛钽 SJ-A080 240一体式水冷 黑色 六年质保",p:299},
-            {n:"钛钽 SJ-A080 240一体式水冷 白色 六年质保",p:299},
-            {n:"钛钽 LX800PRO 2.8+1.44寸双屏 黑色 六年质保",p:1199},
-            {n:"钛钽 LX800PRO 2.8+1.44寸双屏 白色 六年质保",p:1199},
-            {n:"钛钽 LG700PRO 3.5寸屏幕 黑色 六年质保",p:1099},
-            {n:"钛钽 LG700PRO 3.5寸屏幕 白色 六年质保",p:1099},
-            {n:"钛钽 LG600 360一体式水冷 黑色 六年质保",p:628},
-            {n:"钛钽 LG600 360一体式水冷 白色 六年质保",p:628},
-            {n:"钛钽 LA300 黑色 微观冷头 六年质保",p:499},
-            {n:"钛钽 LA300 白色 微观冷头 六年质保",p:499},
+            {n:"钛钽 SJ-A090 360一体式水冷 黑色 六年质保",p:568},
+            {n:"钛钽 SJ-A090 360一体式水冷 白色 六年质保",p:568},
+            {n:"钛钽 SJ-A080 360一体式水冷 黑色 六年质保",p:398},
+            {n:"钛钽 SJ-A080 360一体式水冷 白色 六年质保",p:398},
+            {n:"钛钽 SJ-A080 240一体式水冷 黑色 六年质保",p:318},
+            {n:"钛钽 SJ-A080 240一体式水冷 白色 六年质保",p:318},
+            {n:"钛钽 LX800PRO 2.8+1.44寸双屏 黑色 六年质保",p:1229},
+            {n:"钛钽 LX800PRO 2.8+1.44寸双屏 白色 六年质保",p:1229},
+            {n:"钛钽 LG700PRO 3.5寸屏幕 黑色 六年质保",p:1129},
+            {n:"钛钽 LG700PRO 3.5寸屏幕 白色 六年质保",p:1129},
+            {n:"钛钽 LG600 360一体式水冷 黑色 六年质保",p:698},
+            {n:"钛钽 LG600 360一体式水冷 白色 六年质保",p:698},
+            {n:"钛钽 LA300 黑色 微观冷头 六年质保",p:518},
+            {n:"钛钽 LA300 白色 微观冷头 六年质保",p:518},
             {n:"瓦尔基里 V360W-RGB VK （白梅林）带屏幕",p:1000},
             {n:"瓦尔基里 V360-RGB VK（黑洛基）带屏幕",p:1000},
-            {n:"瓦尔基里 R125 洛基 单塔双扇7热管 黑色带屏幕",p:399},
-            {n:"瓦尔基里 R125 梅林 单塔双扇7热管 白色带屏幕",p:420},
-            {n:"瓦尔基里 ML125 双塔双扇六热管 黑色 ARGB",p:289},
+            {n:"瓦尔基里 R125 洛基 单塔双扇7热管 黑色带屏幕",p:439},
+            {n:"瓦尔基里 R125 梅林 单塔双扇7热管 白色带屏幕",p:439},
+            {n:"瓦尔基里 ML125 双塔双扇六热管 黑色 ARGB",p:299},
             {n:"瓦尔基里 ML125 双塔双扇六热管 白色 ARGB",p:299},
             {n:"瓦尔基里 GLA360-RGB VK 黑色数显",p:319},
             {n:"瓦尔基里 GLA360-RGB VK 白色数显",p:329},
             {n:"瓦尔基里 GLA240-RGB VK 黑色数显",p:259},
             {n:"瓦尔基里 GLA240-RGB VK 白色数显",p:269},
-            {n:"瓦尔基里 DL125 洛基 双塔双扇六热管 黑色",p:329},
+            {n:"瓦尔基里 DL125 洛基 双塔双扇六热管 黑色",p:330},
             {n:"瓦尔基里 B360GT-ARGB VK（黑色）带屏幕",p:490},
             {n:"瓦尔基里 B360GT-ARGB VK（白色）带屏幕",p:500},
             {n:"瓦尔基里 B240GT水冷 黑色",p:420},
             {n:"瓦尔基里 B240GT水冷 白色",p:430},
-            {n:"瓦尔基里 AQ125 四热管 黑色ARGB",p:75},
-            {n:"瓦尔基里 AQ125 四热管 纯黑无光",p:65},
-            {n:"瓦尔基里 AQ125 四热管 纯白无光",p:69},
-            {n:"瓦尔基里 AQ125 四热管 白色ARGB",p:79},
+            {n:"瓦尔基里 AQ125 四热管 黑色ARGB",p:80},
+            {n:"瓦尔基里 AQ125 四热管 纯黑无光",p:70},
+            {n:"瓦尔基里 AQ125 四热管 纯白无光",p:80},
+            {n:"瓦尔基里 AQ125 四热管 白色ARGB",p:99},
             {n:"瓦尔基里 AL125 WHITE 4热管 带屏显 ARGB 白色",p:149},
             {n:"瓦尔基里 AL125 BLACK 4热管 带屏显 ARGB 黑色",p:139},
             {n:"瓦尔基里 A240W-RGB VK（银白）",p:240},
@@ -3061,8 +3160,8 @@
             {n:"九州风神 AG500 五热管 白色ARGB",p:110},
             {n:"九州风神 AG400 四热管 黑色ARGB",p:70},
             {n:"九州风神 AG400 四热管 白色ARGB",p:75},
-            {n:"乔思伯 TH360 黑色 ARGB 千层镜风扇 冷头数显",p:360},
-            {n:"乔思伯 TH360 白色 ARGB 千层镜风扇 冷头数显",p:370},
+            {n:"乔思伯 TH360 黑色 ARGB 千层镜风扇 冷头数显",p:399},
+            {n:"乔思伯 TH360 白色 ARGB 千层镜风扇 冷头数显",p:399},
             {n:"乔思伯 HP400S 黑色 4热管下压式",p:78},
             {n:"乔思伯 CR3000E 双塔双扇六热管 黑色 ARGB",p:130},
             {n:"乔思伯 CR3000E 双塔双扇六热管 白色 ARGB",p:140},
@@ -3072,23 +3171,23 @@
             {n:"乔思伯 CR1400 EVO 黑色 RGB",p:60},
             {n:"乔思伯 CR1400 EVO 白色 RGB",p:60},
             {n:"乔思伯 CR1400 EVO 白色 ARGB",p:65},
-            {n:"乔思伯 CR1400 EVO 标准版 四热管 黑色无光",p:60},
-            {n:"乔思伯 CR1400 EVO ARGB 四热管 黑色",p:65},
-            {n:"乔思伯 CR1400 DV2 黑色 ARGB 小双塔",p:135},
+            {n:"乔思伯 CR1400 EVO 标准版 四热管 黑色无光",p:62},
+            {n:"乔思伯 CR1400 EVO ARGB 四热管 黑色",p:70},
+            {n:"乔思伯 CR1400 DV2 黑色 ARGB 小双塔",p:140},
             {n:"乔思伯 CR1400 DV2 白色 ARGB 小双塔",p:140},
             {n:"乔思伯 CR1000E RGB 彩色版 黑色",p:60},
-            {n:"乔思伯 CR1000 MAX ARGB 六热管 黑色",p:85},
-            {n:"乔思伯 CR1000 MAX ARGB 六热管 白色",p:90},
+            {n:"乔思伯 CR1000 MAX ARGB 六热管 黑色",p:89},
+            {n:"乔思伯 CR1000 MAX ARGB 六热管 白色",p:99},
             {n:"乔思伯 CR1000 EVO RGB 四热管 黑色",p:70},
             {n:"乔思伯 CR1000 EVO ARGB 白色",p:75},
-            {n:"乔思伯 CR1000 EVO ARGB 四热管 黑色",p:70},
+            {n:"乔思伯 CR1000 EVO ARGB 四热管 黑色",p:79},
             {n:"超频三 青鸟3 风冷 220W",p:15},
             {n:"超频三 红海MINI 风冷 35W",p:35},
             {n:"超频三 RT600S 风冷 6铜管单风扇ARGB",p:105},
             {n:"超频三 RT620P 风冷 6铜管双塔双风扇无光",p:189},
             {n:"超频三 RT620 风冷 6铜管双塔双风扇ARGB",p:199},
             {n:"超频三 RT620 PRO 风冷 6铜管双风扇ARGB",p:209},
-            {n:"超频三 RT720P 风冷 7铜管双塔双风扇",p:200},
+            {n:"超频三 RT720P 风冷 7铜管双塔双风扇",p:256},
             {n:"超频三 RZ620 风冷 6铜管双塔双风扇",p:300},
             {n:"超频三 RZ820黑色 风冷 8铜管双塔双风扇",p:750},
             {n:"超频三 RZ820白色 风冷 8铜管双塔双风扇",p:750},
@@ -3102,6 +3201,28 @@
             {n:"超频三 DX360黑色 水冷 双面4屏 八年质保",p:780},
             {n:"超频三 DX360白色 水冷 3.4寸超清屏 八年质保",p:1050},
             {n:"超频三 DV360黑色 水冷 6.67寸曲面屏 八年质保",p:1250},
+            {n:"钛钽 NEOX 幻世 360一体式水冷 黑色 六年质保",p:1599},
+            {n:"瓦尔基里 N360-ARGB VK（黑色）曲面屏",p:950},
+            {n:"瓦尔基里 N360-ARGB VK（白色）曲面屏",p:950},
+            {n:"瓦尔基里 MC360 黑色 ARGB 3.5寸屏幕",p:489},
+            {n:"瓦尔基里 MC360 白色 ARGB 3.5寸屏幕",p:499},
+            {n:"瓦尔基里 MA360 黑色 ARGB 光棱冷头",p:389},
+            {n:"瓦尔基里 MA360 白色 ARGB 光棱冷头",p:399},
+            {n:"华硕龙王4代 ROG RYUO IV SLC 360 ARGB(颜值版 曲面屏 短管) 黑色",p:2399},
+            {n:"华硕龙王4代 ROG RYUO IV SLC 360 ARGB(颜值版 曲面屏 短管) 白色",p:2499},
+            {n:"华硕 TUF 破冰手 360 ARGB LCD 2.8寸 LCD",p:899},
+            {n:"华硕 ROG 龙神3 360一体式水冷 ARGB EXTRME",p:2499},
+            {n:"九州风神 阿萨辛4 七热管双塔双扇 黑",p:499},
+            {n:"九州风神 玄冰400 G2性能版 四热管 无光",p:75},
+            {n:"九州风神 冰果LE360 ARGB 黑色",p:299},
+            {n:"九州风神 AG620 大霜塔 G2 黑色无光",p:135},
+            {n:"九州风神 AG620 大霜塔 G2 黑色 ARGB",p:145},
+            {n:"乔思伯（JONSBO）TX360水冷 黑色 3.95寸屏幕",p:589},
+            {n:"乔思伯（JONSBO）TX360水冷 白色 3.95寸屏幕",p:589},
+            {n:"乔思伯 CR3000 黑色 双塔七热管 ARGB",p:189},
+            {n:"乔思伯 CR3000 白色 双塔七热管 ARGB",p:199},
+            {n:"乔思伯 CR1400 EVO 白色 四热管 ARGB",p:75},
+            {n:"乔思伯 CR1000 EVO ARGB 四热管 白色",p:89},
         ],
         fan: [
             {n:"棱镜4 7把",p:140},{n:"棱镜4 6把",p:120},
@@ -3113,6 +3234,7 @@
             {n:"乔思伯 ZA360 ARGB",p:169},
             {n:"乔思伯 ZA360 ARGBX2+ZA120",p:419},
             {n:"乔思伯 ZA240 ARGB",p:129},
+            {n:"机械大师 三联360 ARGBX3+双联240",p:489},
             {n:"棱镜8积木白8个+图灵副屏+霓虹线两组",p:1198},
             {n:"联力四代LCDx5+联力四代积木x3+联力霓虹线+图灵副屏+控制器",p:4299}
         ],
@@ -3129,173 +3251,128 @@
             {n:"追风者 BH650W铜牌 蟒纹线 白色",p:298},
             {n:"追风者 AMP GH650 650W 金牌全模组 ATX3.1 蟒纹线 白色",p:480},
             {n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:750},
-            {n:"骨伽 XTC700 700W 白牌",p:205},
-            {n:"骨伽 VTE X2 850W 铜牌直出 ATX3.1",p:370},
-            {n:"骨伽 VTE X2 750W 铜牌直出 ATX3.1",p:300},
-            {n:"骨伽 VTE X2 650W 铜牌直出",p:260},
+            {n:"骨伽 VTE X2 850W 铜牌直出 ATX3.1",p:399},
+            {n:"骨伽 VTE X2 750W 铜牌直出 ATX3.1",p:319},
+            {n:"骨伽 VTE X2 650W 铜牌直出",p:279},
             {n:"骨伽 SXC750 额定750W 白牌 白色 PCIE5.0线",p:275},
             {n:"骨伽 SXC750 额定750W 白牌 PCIE5.0线",p:265},
             {n:"骨伽 SXC650 额定650W 白牌 白色",p:220},
             {n:"骨伽 SXC650 额定650W 白牌",p:210},
             {n:"骨伽 SXC500 额定500W 白色",p:190},
             {n:"骨伽 SXC500 额定500W",p:180},
-            {n:"骨伽 ST300 额定300W",p:100},
             {n:"骨伽 GR1000 1000W 金牌全模组 ATX3.1 黑色 蟒纹线 理线梳",p:650},
-            {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:290},
-            {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:285},
-            {n:"长城 P7 750W 白牌直出 黑色",p:255},
-            {n:"长城 P6 650W 白牌直出 黑色 ATX3.1",p:240},
+            {n:"长城 P8 850W 白牌直出 黑色 ATX3.1",p:319},
+            {n:"长城 P7 750W 白牌直出 黑色 ATX3.1",p:290},
+            {n:"长城 P7 750W 白牌直出 黑色",p:260},
+            {n:"长城 P6 650W 白牌直出 黑色 ATX3.1",p:260},
             {n:"长城 N20 2000W 金牌全模组 黑色 ATX3.1 十年质保 尼龙线",p:1200},
             {n:"长城 N12 1200W 金牌全模组 黑色 ATX3.1 十年质保 尼龙线",p:780},
             {n:"长城 GX 850W 金牌 全模组白色限量版",p:310},
-            {n:"长城 G7 750W 铜牌全模组 白色",p:260},
+            {n:"长城 G7 750W 铜牌全模组 白色",p:299},
             {n:"长城 F8 850W 白金全模组 黑色 ATX3.1",p:459},
             {n:"长城 F8 850W 白金全模组 白色 ATX3.1",p:509},
-            {n:"长城 E8 850W 80PLUS 金牌 全模组 黑色 ATX3.1",p:450},
-            {n:"长城 E8 850W 80PLUS 金牌 全模组 白色 ATX3.1",p:460},
-            {n:"长城 E7 750W 80PLUS 金牌 全模组 黑色 ATX3.1",p:380},
-            {n:"长城 E7 750W 80PLUS 金牌 全模组 白色 ATX3.1",p:380},
-            {n:"长城 E6 650W 80PLUS 金牌 全模组 黑色 ATX3.1",p:350},
-            {n:"长城 E6 650W 80PLUS 金牌 全模组 白色 ATX3.1",p:350},
-            {n:"鑫谷 昆仑SFX 750W 金牌全模组 黑色",p:650},
-            {n:"鑫谷 无界M 冰山版 850W金牌全模组 ATX3.1 白色 压纹线",p:400},
-            {n:"鑫谷 无界M 冰山版 750W金牌全模组 ATX3.1 白色 压纹线",p:360},
-            {n:"鑫谷 无界M 850W金牌全模组 ATX3.1 黑色 压纹线",p:380},
-            {n:"鑫谷 无界M 750W金牌全模组 ATX3.1 黑色 压纹线",p:350},
-            {n:"鑫谷 无界M 650W 金牌全模组 黑色",p:335},
-            {n:"鑫谷 无界M 1250W金牌全模组 ATX3.1 黑色 压纹线",p:540},
-            {n:"鑫谷 数智DM-850G 850W 双金牌全模组数字电源 黑色 ATX3.1 十年质保",p:449},
-            {n:"鑫谷 数智DM-850G 850W 双金牌全模组数字电源 白色 ATX3.1 十年质保",p:459},
-            {n:"鑫谷 GM650 650W 金牌全模组 冰山版白色",p:339},
-            {n:"鑫谷 AN550 550W 白牌直出 黑色",p:180},
-            {n:"鑫谷 AN550 550W 冰山版 白牌直出 白色",p:195},
-            {n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 黑色",p:660},
-            {n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:699},
-            {n:"追风者 AMP GH750 750W 金牌全模组 ATX3.1 蟒纹线 黑色",p:550},
-            {n:"追风者 AMP GH750 750W 金牌全模组 ATX3.1 蟒纹线 白色",p:560},
-            {n:"追风者 AMP GH650 650W 金牌全模组 ATX3.1 蟒纹线 黑色",p:399},
-            {n:"追风者 AMP GH650 650W 金牌全模组 ATX3.1 蟒纹线 白色",p:419},
-            {n:"追风者 AMP GH1000 1000W 白金牌全模组 ATX3.1 蟒纹线 黑色",p:850},
-            {n:"追风者 AMP GH1000 1000W 白金牌全模组 ATX3.1 蟒纹线 白色",p:860},
-            {n:"追风者 AMP BH750 750W 铜牌 ATX3.1 蟒纹线 黑色",p:299},
-            {n:"追风者 AMP BH750 750W 铜牌 ATX3.1 蟒纹线 白色",p:319},
-            {n:"追风者 AMP BH650 650W 铜牌 ATX3.1 蟒纹线 黑色",p:259},
-            {n:"追风者 AMP BH650 650W 铜牌 ATX3.1 蟒纹线 白色",p:279},
-            {n:"艾湃电竞 GTR850M白色 850W金牌全模组 ATX3.0 十年质保",p:520},
-            {n:"艾湃电竞 GTR750M白色 750W金牌全模组 ATX3.0 十年质保",p:499},
-            {n:"艾湃电竞 GTI850黑色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:440},
-            {n:"艾湃电竞 GTI850白色 850W金牌全模组 ATX3.1 十年质保 压纹线",p:460},
-            {n:"艾湃电竞 GTI750白色 750W金牌全模组 ATX3.1 十年质保 压纹线",p:410},
-            {n:"艾湃电竞 GTI650黑色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:350},
-            {n:"艾湃电竞 GTI650白色 650W金牌全模组 ATX3.1 十年质保 压纹线",p:370},
-            {n:"航嘉 MVP P850 850W 白金牌全模组 黑色 ATX3.1",p:620},
-            {n:"航嘉 MVP P850 850W 白金牌全模组 白色 ATX3.1",p:620},
-            {n:"航嘉 MVP P1200 1200W 白金牌全模组 黑色 ATX3.1",p:970},
-            {n:"航嘉 MVP P1200 1200W 白金牌全模组 白色 ATX3.1",p:980},
-            {n:"航嘉 MVP P1000 1000W 白金牌全模组 黑色 ATX3.1",p:840},
-            {n:"航嘉 MVP P1000 1000W 白金牌全模组 白色 ATX3.1",p:860},
-            {n:"航嘉 MVP K850 850W 金牌全模组 黑色 ATX3.1",p:570},
-            {n:"航嘉 MVP K850 850W 金牌全模组 白色 ATX3.1",p:600},
-            {n:"航嘉 GX850M黑色 850W金牌全模组 ATX3.1",p:480},
-            {n:"航嘉 GX850M白色 850W金牌全模组 ATX3.1",p:490},
-            {n:"航嘉 GX750M黑色 750W金牌全模组 ATX3.1",p:390},
-            {n:"航嘉 GX750M白色 750W金牌全模组 ATX3.1",p:399},
-            {n:"航嘉 GX650M黑色 650W金牌全模组",p:340},
-            {n:"航嘉 GX650M白色 650W金牌全模组",p:350},
+            {n:"长城 E8 850W 80PLUS 金牌 全模组 黑色 ATX3.1",p:460},
+            {n:"长城 E8 850W 80PLUS 金牌 全模组 白色 ATX3.1",p:470},
+            {n:"长城 E7 750W 80PLUS 金牌 全模组 黑色 ATX3.1",p:390},
+            {n:"长城 E7 750W 80PLUS 金牌 全模组 白色 ATX3.1",p:399},
+            {n:"长城 E6 650W 80PLUS 金牌 全模组 黑色 ATX3.1",p:360},
+            {n:"长城 E6 650W 80PLUS 金牌 全模组 白色 ATX3.1",p:370},
+            {n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 黑色",p:699},
+            {n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:729},
+            {n:"追风者 AMP GH750 750W 金牌全模组 ATX3.1 蟒纹线 黑色",p:599},
+            {n:"追风者 AMP GH750 750W 金牌全模组 ATX3.1 蟒纹线 白色",p:599},
+            {n:"追风者 AMP GH650 650W 金牌全模组 ATX3.1 蟒纹线 黑色",p:450},
+            {n:"追风者 AMP GH650 650W 金牌全模组 ATX3.1 蟒纹线 白色",p:450},
+            {n:"追风者 AMP GH1000 1000W 白金牌全模组 ATX3.1 蟒纹线 黑色",p:899},
+            {n:"追风者 AMP GH1000 1000W 白金牌全模组 ATX3.1 蟒纹线 白色",p:899},
+            {n:"追风者 AMP BH750 750W 铜牌 ATX3.1 蟒纹线 黑色",p:450},
+            {n:"追风者 AMP BH750 750W 铜牌 ATX3.1 蟒纹线 白色",p:450},
+            {n:"追风者 AMP BH650 650W 铜牌 ATX3.1 蟒纹线 黑色",p:349},
+            {n:"追风者 AMP BH650 650W 铜牌 ATX3.1 蟒纹线 白色",p:349},
             {n:"海韵 Vertex PX-2200W 旗舰白金全模组 黑色",p:3699},
-            {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 黑色",p:1650},
-            {n:"海韵 Vertex GX-1200W 金牌 全模组 ATX3.0 白色",p:1799},
-            {n:"海韵 PRIME TX-1600 钛金全模组 猫头鹰联名 ATX3.0 黑色 十二年质保",p:4799},
-            {n:"海韵 PRIME TX-1300 钛金全模组 ATX3.0 黑色 十二年质保",p:2799},
-            {n:"海韵 FOCUS GX-850W 金牌全模组 ATX3.1 V4 白色",p:999},
-            {n:"海韵 FOCUS GX-850W 金牌 全模组 ATX3.1 V4 黑色",p:950},
-            {n:"海韵 FOCUS GX-1000W 金牌全模组 ATX3.1 V5 白色",p:1199},
-            {n:"海韵 FOCUS GX-1000W 金牌 全模组 ATX3.1 V5 黑色",p:1150},
+            {n:"海韵 Vertex GX-1200W 金牌 全模组V2 白色",p:1899},
+            {n:"海韵 Vertex GX-1200W 金牌 全模组 V2 黑色",p:1699},
+            {n:"海韵 PRIME TX-1600 钛金全模组 猫头鹰联名 ATX3.0 黑色 十二年质保",p:3999},
+            {n:"海韵 PRIME TX-1300 钛金全模组 ATX3.0 黑色 十二年质保",p:2899},
+            {n:"海韵 FOCUS GX-850W 白金架构全模组 ATX3.1 V5 黑色",p:999},
+            {n:"海韵 FOCUS GX-1000W 白金架构全模组 ATX3.1 V5 黑色",p:1199},
+            {n:"海韵 FOCUS GX-1000W 白金架构全模组 ATX3.1 V5 白色",p:1199},
             {n:"海韵 CORE GX-750W 金牌 全模组 ATX3.1 七年质保",p:550},
             {n:"海韵 CORE GX-650W 金牌 全模组 ATX3.1 七年质保",p:499},
             {n:"海盗船电源/RM850x 850w 金牌全模组 ATX3.1 黑(CP-9020270-CN)",p:899},
             {n:"海盗船电源/RM850e 850W 金牌全模组 ATX3.0 黑(CP-9020263-CN)",p:799},
             {n:"海盗船电源/RM750x 750w 金牌全模组 ATX3.1 黑(CP-9020285-CN)",p:799},
             {n:"海盗船电源/RM1000x 金牌全模组 ATX3.1 黑(CP-9020271-CN)",p:1199},
-            {n:"技嘉 魔鹰850W 金牌全模组 黑色",p:630},
-            {n:"技嘉 魔鹰750W 金牌全模组 黑色",p:460},
-            {n:"技嘉 风魔850W 金牌直出 黑色",p:360},
-            {n:"技嘉 风魔750W 金牌直出 黑色",p:315},
-            {n:"技嘉 雪鹰850W 金牌全模组 白色",p:660},
-            {n:"技嘉 斗战650S ICE 650W 银牌直出 白色",p:319},
-            {n:"技嘉 斗战650S 650W 银牌直出 黑色",p:289},
-            {n:"技嘉 斗战550S ICE 550W 银牌直出 白色",p:249},
-            {n:"技嘉 斗战550S 550W 银牌直出 黑色",p:239},
-            {n:"安钛克 TiTAN 850W 金牌全模组 黑色 PCIE5.0",p:499},
-            {n:"安钛克 TiTAN 750W 金牌全模组 黑色 PCIE5.0",p:449},
-            {n:"安钛克 TiTAN 1200W 金牌全模组 黑色 ATX3.1",p:789},
-            {n:"安钛克 NE650 650W 80PLUS 金牌全模组",p:339},
-            {n:"安钛克 BP650 金牌直出(额定650W/直出)",p:299},
-            {n:"华硕 ROG STRIX 雷鹰氮化镓白色 1000P GAMING 1000W 白金全模组 ATX3.0",p:1399},
-            {n:"华硕 ROG STRIX 雷鹰氮化镓 850P GAMING 850W 白金全模组 ATX3.0",p:1100},
+            {n:"华硕 TUF-GAMING-700B-EVO 铜牌全模组",p:450},
+            {n:"华硕 ROG STRIX 雷鹰氮化镓白色 1000P GAMING 1000W 白金全模组 ATX3.0",p:1550},
             {n:"华硕 ROG STRIX 雷鹰氮化镓 1000P GAMING 1000W EQ线 白金全模组 ATX3.0",p:1450},
-            {n:"华硕 PRIME 750B 750W 铜牌直出 黑色",p:399},
-            {n:"华硕 PRIME 750B 750W 铜牌直出 白色",p:399},
+            {n:"华硕 ROG STRIX 雷神3白色氮化镓 1200P GAMING 1200W EQ线 白金全模组",p:3799},
+            {n:"华硕 ROG STRIX 雷神3氮化镓 1200P GAMING 1200W EQ线 白金全模组",p:3699},
             {n:"九州风神 PX1200G 1200W ATX3.0 80PLUS金牌 额定1200W",p:1199},
             {n:"九州风神 PQ850G 850W 金牌全模组 黑色 ATX3.1 10年",p:499},
             {n:"九州风神 PQ750G 750W 金牌全模组 黑色 ATX3.1 10年",p:439},
             {n:"九州风神 PQ650G 黄金统治者 压纹线 650W 金牌全模组 ATX3.1",p:369},
-            {n:"TT 斗龙 850W 金牌直出 ATX3.1",p:319},
+            {n:"TT 斗龙 850W 金牌直出 ATX3.1",p:339},
+            {n:"TT 斗龙 1000W 金牌直出 ATX3.1",p:480},
         ],
         vga: [
-            {n:"微星-RTX5050 VENTUS 2X 8G 万图师",p:2680},
-            {n:"微星-RTX5060 8G VENTUS 2X OC 万图师2风扇",p:3100},
-            {n:"微星 RTX5060 8G VENTUS 2X OC WHITE白色",p:3149},
-            {n:"微星 RTX5060TI VENTUS 2X 8G 万图师 双扇",p:3799},
-            {n:"微星-RTX5060TI 16G VENTUS 2X OC 万图师2风扇",p:5899},
-            {n:"七彩虹 RTX5060TI 16G ULTRA W DUO OC 白色双扇",p:5300},
-            {n:"双敏6500XT 暴雪白色",p:998},
-            {n:"华硕 PRIME RTX5060TI 16G 大师三风扇黑色",p:5300},
-            {n:"华硕 RTX5060TI 16G DUAL 雪豹 黑色",p:5300},
-            {n:"微星-RTX5070Ti 16G VENTUS  3X OC",p:8700},
-            {n:"七彩虹RTX5060TiUItra DUO 16GB黑色双风扇",p:5300},
-            {n:"七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇",p:3550},
-            {n:"映众 RTX5060ti 16G 曜夜 双风扇",p:5300},
-            {n:"双敏-RTX3050暴雪 6G白色",p:1770},
+            {n:"映众 RTX5050 8G 曜夜X2 双风扇",p:2790},
+            {n:"映众 RTX5060 8G 曜夜X2 V2 双风扇",p:4200},
+            {n:"映众 RTX5060 8G 雪域冰龙X3 WHITE 三风扇",p:4200},
+            {n:"微星-RTX5050 VENTUS 2X 8G 万图师",p:2800},
+            {n:"微星-RTX5060 8G VENTUS 2X OC 万图师2风扇",p:4300},
+            {n:"微星 RTX5060 8G VENTUS 2X OC WHITE白色",p:4350},
+            {n:"微星 RTX5060TI VENTUS 2X 8G 万图师 双扇",p:4599},
+            {n:"微星-RTX5060TI 16G VENTUS 2X OC 万图师2风扇",p:6498},
+            {n:"七彩虹 RTX5060TI 16G ULTRA W DUO OC 白色双扇",p:5899},
+            {n:"双敏6500XT 暴雪白色",p:1198},
+            {n:"华硕 PRIME RTX5060TI 16G 大师三风扇黑色",p:5899},
+            {n:"华硕 RTX5060TI 16G DUAL 雪豹 黑色",p:5899},
+            {n:"微星-RTX5070Ti 16G VENTUS  3X OC",p:12049},
+            {n:"七彩虹RTX5060TiUItra DUO 16GB黑色双风扇",p:5899},
+            {n:"七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇",p:4200},
+            {n:"映众 RTX5060ti 16G 曜夜 双风扇",p:5899},
+            {n:"双敏-RTX3050暴雪 6G白色",p:1949},
             {n:"双敏-RTX2060暴雪 6G D6白 帧数超过3050 10%",p:1500},
-            {n:"双敏RTX5050 8G 暴雪白色",p:2599},
-            {n:"双敏RTX5060 8G 暴雪白色",p:2999},
-            {n:"双敏RTX5060ti 8G 暴雪白色",p:3599},
-            {n:"电竞判客 RTX5060 X2W 8G 白色",p:3099},
-            {n:"七彩虹iGame RTX5070Ti Ultra OC SFF 16GB 黑色 三风扇",p:9500},
-            {n:"七彩虹iGame RTX5070Ti Ultra W OC SFF 16GB 白色三风扇",p:9500},
-            {n:"七彩虹iGame RTX5070Ti Ultra Z BLACK OC 16GB黑色三风扇",p:9500},
-            {n:"七彩虹iGame RTX5070Ti Vulcan X OC 16GB 黑火神三风扇",p:9500},
-            {n:"七彩虹iGame RTX5070Ti Vulcan W OC 16GB 白火神",p:9500},
-            {n:"微星魔龙 GeForce RTX 5070Ti 16G GAMING TRIO OC",p:9500},
-            {n:"华硕 TUF RTX5090 32G OC不带D 代购国行拒保",p:31088},
+            {n:"双敏RTX5050 8G 暴雪白色",p:2750},
+            {n:"双敏RTX5060 8G 暴雪白色",p:4200},
+            {n:"双敏RTX5060ti 8G 暴雪白色",p:4399},
+            {n:"电竞判客 RTX5060 X2W 8G 白色",p:4250},
+            {n:"七彩虹iGame RTX5070Ti Ultra OC SFF 16GB 黑色 三风扇",p:11999},
+            {n:"七彩虹iGame RTX5070Ti Ultra W OC SFF 16GB 白色三风扇",p:11999},
+            {n:"七彩虹iGame RTX5070Ti Ultra Z BLACK OC 16GB黑色三风扇",p:11999},
+            {n:"七彩虹iGame RTX5070Ti Vulcan X OC 16GB 黑火神三风扇",p:11999},
+            {n:"七彩虹iGame RTX5070Ti Vulcan W OC 16GB 白火神",p:11999},
+            {n:"微星魔龙 GeForce RTX 5070Ti 16G GAMING TRIO OC",p:11999},
+            {n:"华硕 TUF RTX5090 32G OC不带D 代购国行拒保",p:64949},
+            {n:"华硕 ROG ASTRAL RTX5090 O32G 夜神超频",p:64949},
             {n:"英伟达 RTX4090 24G 涡轮不带D 代购",p:19998},
-            {n:"七彩虹 RTX5090D Advanced银鲨OC 24GB",p:20499},
+            {n:"七彩虹 RTX5090D Advanced银鲨OC 24GB",p:39699},
             {n:"旌宇-GTX1050Ti-4G-Fighting-战虎-双风扇",p:1299},
             {n:"旌宇-GT730 4GD3 大刀",p:240},
-            {n:"磐正 GTX1660S-6GD6 双风扇",p:1050},
-            {n:"旌宇-GTX1660S-6G-战虎",p:1050},
-            {n:"旌宇-RTX3050-6G-Fighting-战虎",p:1770},
-            {n:"撼讯 RX 550-4G 红龙",p:580},
-            {n:"撼讯 RX9070XT 16G 红魔",p:6799},
-            {n:"撼讯 RX9070XT 16G 暗黑犬",p:6449},
-            {n:"撼讯 RX9070XT 16G 游荡者",p:6199},
+            {n:"磐正 GTX1660S-6GD6 双风扇",p:1150},
+            {n:"旌宇-GTX1660S-6G-战虎",p:1150},
+            {n:"旌宇-RTX3050-6G-Fighting-战虎",p:1949},
+            {n:"撼讯 RX 550-4G 红龙",p:530},
+            {n:"撼讯 RX9070XT 16G 红魔",p:7300},
+            {n:"撼讯 RX9070XT 16G 暗黑犬",p:6950},
+            {n:"撼讯 RX9070XT 16G 游荡者",p:6700},
             {n:"撼讯 RX9070GRE 12G 游荡者",p:4499},
             {n:"撼讯 RX9070GRE 12G 暗黑犬",p:4749},
             {n:"撼讯 RX9060XT 16G 暗黑犬白",p:3549},
             {n:"撼讯 RX9060XT 16G 暗黑犬黑",p:3549},
             {n:"撼讯 RX9060XT 16G 暗黑犬 白",p:3549},
             {n:"撼讯 RX9060XT 16G 游荡者 黑",p:3399},
-            {n:"撼讯 RX9060XT 8G 游荡者 黑",p:3199},
-            {n:"撼讯 RX9060XT 8G 游荡者 白",p:3269},
-            {n:"讯景RX7650 GRE 8G 雪狼 白色双风扇",p:2199},
-            {n:"讯景RX7650 GRE 8G 黑狼 双风扇",p:2199},
-            {n:"撼讯 RX 7650GRE-8G 暗黑犬",p:24099},
-            {n:"撼讯 RX 7650GRE-8G 游荡者 白",p:17059},
-            {n:"撼讯 RX 7650GRE-8G 游荡者 黑",p:10899},
+            {n:"撼讯 RX9060XT 8G 游荡者 黑",p:3299},
+            {n:"撼讯 RX9060XT 8G 游荡者 白",p:3369},
+            {n:"讯景RX7650 GRE 8G 雪狼 白色双风扇",p:2299},
+            {n:"讯景RX7650 GRE 8G 黑狼 双风扇",p:2299},
+            {n:"撼讯 RX 7650GRE-8G 暗黑犬",p:2549},
+            {n:"撼讯 RX 7650GRE-8G 游荡者 白",p:2469},
+            {n:"撼讯 RX 7650GRE-8G 游荡者 黑",p:2399},
             {n:"撼讯 RX 6750GRE-10G竞技双风扇 白",p:2100},
             {n:"撼讯 RX 6750GRE-10G竞技双风扇 黑",p:2050},
-            {n:"磐正RX6500XT-4GD6",p:998},
+            {n:"昂达 RX6500XT-4G",p:1198},
             {n:"旌宇 GT610 2GD3 小刀",p:130},
             {n:"旌宇 GT730-2G-4HDMI-青锋 4屏卡 4*HDMI1.4",p:130},
             {n:"旌宇 R7 350 5mDP IPC 5屏卡 5*miniDP1.2",p:870},
@@ -3303,10 +3380,10 @@
             {n:"旌宇 A550 8mDP PRO 8屏卡 8*Mini-DP",p:3400},
             {n:"旌宇 R7 350 8mDP PRO 8屏卡 8*Mini-DP",p:870},
             {n:"旌宇 HD7750 G12VD 12屏卡",p:3800},
-            {n:"旌宇 RTX5060TI-8G 白神 双风扇",p:3599},
-            {n:"旌宇 RTX5060-8G 白神 双风扇",p:3099},
+            {n:"旌宇 RTX5060TI-8G 白神 双风扇",p:4399},
+            {n:"旌宇 RTX5060-8G 白神 双风扇",p:4250},
             {n:"旌宇 RTX4060M-8G 战虎 双风扇",p:2250},
-            {n:"旌宇 RTX3060-12G 战虎/GAMING 双风扇",p:2750},
+            {n:"旌宇 RTX3060-12G 战虎/GAMING 双风扇",p:2999},
             {n:"旌宇-GT1030-2G-D3-战虎",p:460},
             {n:"旌宇-GT730-2GD3-HDA-锋刃",p:250},
             {n:"旌宇-GT730-4GD3-HDA-锋刃",p:280},
@@ -3344,213 +3421,238 @@
             {n:"蓝戟 Arc B580 Index 12G 黑色双扇",p:2150},
             {n:"蓝戟 Arc A750 Index 8G 黑色双扇",p:1299},
             {n:"蓝戟 ARC A380 Photon 6G 黑色双扇 对标1650",p:799},
-            {n:"蓝宝石 RX9070XT 16G 脉动 黑色三扇",p:6199},
-            {n:"蓝宝石 RX9070XT 16G 氮动 银色三扇",p:6599},
-            {n:"蓝宝石 RX9070XT 16G 极地 白色三扇",p:6199},
+            {n:"蓝宝石 RX9070XT 16G 脉动 黑色三扇",p:6700},
+            {n:"蓝宝石 RX9070XT 16G 氮动 银色三扇",p:6700},
+            {n:"蓝宝石 RX9070XT 16G 极地 白色三扇",p:6700},
             {n:"蓝宝石 RX9070GRE 12G 脉动双扇 黑色",p:4499},
-            {n:"蓝宝石 RX9060XT 8G 脉动 黑色双扇",p:3099},
-            {n:"蓝宝石 RX9060XT 8G 极地 白色双扇",p:3150},
+            {n:"蓝宝石 RX9060XT 8G 脉动 黑色双扇",p:3199},
+            {n:"蓝宝石 RX9060XT 8G 极地 白色双扇",p:3199},
             {n:"蓝宝石 RX9060XT 16G 脉动 黑色双扇",p:3299},
             {n:"蓝宝石 RX9060XT 16G 氮动 银色三扇",p:3699},
             {n:"蓝宝石 RX9060XT 16G 极地 白色双扇",p:3350},
-            {n:"蓝宝石 RX7650GRE 8G 黑钻三扇 黑色",p:2199},
-            {n:"蓝宝石 RX7650GRE 8G 白金双扇 黑色",p:2199},
-            {n:"蓝宝石 RX7650GRE 8G 极地双扇 白色",p:2199},
-            {n:"索泰 RTX5060 8G 月影白色 三扇",p:2999},
-            {n:"索泰 RTX5060 8G 星夜 双扇",p:2999},
-            {n:"索泰 RTX 3050 6GB 毁灭者 OC HC 双扇",p:1299},
+            {n:"蓝宝石 RX7650GRE 8G 黑钻三扇 黑色",p:2299},
+            {n:"蓝宝石 RX7650GRE 8G 白金双扇 黑色",p:2299},
+            {n:"蓝宝石 RX7650GRE 8G 极地双扇 白色",p:2299},
+            {n:"索泰 RTX5060 8G 月影白色 三扇",p:4200},
+            {n:"索泰 RTX5060 8G 星夜 双扇",p:4200},
+            {n:"索泰 RTX 3050 6GB 毁灭者 OC HC 双扇",p:1949},
             {n:"磐镭 RX5500 8GD6 双风扇 （1660性能）",p:899},
-            {n:"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲",p:1550},
-            {n:"磐镭 RTX3050 6G 开天黑色 双扇",p:1299},
-            {n:"磐镭 GTX1660S 6G 双扇 （三年质保）",p:1050},
-            {n:"磐镭 GTX1650 4G 黑色 双扇",p:899},
+            {n:"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲",p:1599},
+            {n:"磐镭 RTX3050 6G 开天黑色 双扇",p:1949},
+            {n:"磐镭 GTX1660S 6G 双扇 （三年质保）",p:1150},
+            {n:"磐镭 GTX1650 4G 黑色 双扇",p:950},
             {n:"磐镭 GT730 4G 4K办公电影（VGA+HDMI+DVI)",p:240},
             {n:"磐镭 GT 610 2G",p:130},
-            {n:"盈通 RX7650GRE 8G 游戏高手 白色三扇",p:2199},
+            {n:"盈通 RX7650GRE 8G 游戏高手 白色三扇",p:2299},
             {n:"盈通 RX6500 XT 4G D6 萌宠 白色",p:1150},
-            {n:"技嘉 RX9070XT GAMING OC 16G 魔鹰",p:6700},
-            {n:"技嘉 RX9070XT ELITE 16G 小雕",p:6199},
-            {n:"技嘉 RX9060XT GAMING OC 8G 魔鹰 三扇",p:3099},
-            {n:"技嘉 RX7650GRE GAMING OC 8G 魔鹰 三扇",p:2499},
-            {n:"技嘉 RTX5080 WF3 OC 16G 风魔",p:13500},
-            {n:"技嘉 RTX5080 MASTER ICE 16G 超级冰雕",p:13500},
-            {n:"技嘉 RTX5080 MASTER 16G 超级雕",p:13500},
-            {n:"技嘉 RTX5080 AERO OC 16G 雪鹰 SFF",p:13500},
-            {n:"技嘉 RTX5070TI WF3 16G 风魔 SFF",p:9400},
-            {n:"技嘉 RTX5070TI GAMING OC 16G 魔鹰",p:9500},
-            {n:"技嘉 RTX5070 WF3 OC 12G 风魔 三扇",p:7500},
-            {n:"技嘉 RTX5070 GAMING OC 12G 魔鹰",p:7499},
-            {n:"技嘉 RTX5070 Eagle OC ICE 12G 冰猎鹰 三扇",p:7500},
-            {n:"技嘉 RTX5070 Eagle OC 12G 猎鹰 三扇",p:7500},
-            {n:"技嘉 RTX5070 AORUS MASTER OC 12G 超级雕",p:7500},
-            {n:"技嘉 RTX5070 AERO OC 12G 雪鹰",p:7500},
-            {n:"技嘉 RTX5060TI WF2 OC 16G 风魔MAX 双扇",p:5300},
-            {n:"技嘉 RTX5060TI WF2 MAX OC 8G 风魔MAX",p:3599},
-            {n:"技嘉 RTX5060TI GAMING OC 8G 魔鹰",p:3950},
-            {n:"技嘉 RTX5060TI EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:3800},
-            {n:"技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇",p:5300},
-            {n:"技嘉 RTX5060TI EAGLE MAX OC 8G 猎鹰MAX 黑色三扇",p:3850},
-            {n:"技嘉 RTX5060TI AERO 8G 雪鹰",p:3999},
-            {n:"技嘉 RTX5060 WF2 MAX OC 8G 风魔",p:3099},
-            {n:"技嘉 RTX5060 GAMING OC 8G 魔鹰",p:3399},
-            {n:"技嘉 RTX5060 EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:3199},
-            {n:"技嘉 RTX5060 EAGLE OC 8G 猎鹰 黑色双扇",p:3199},
-            {n:"技嘉 RTX5060 EAGLE MAX OC 8G 猎鹰 黑色三扇",p:3299},
-            {n:"技嘉 RTX5060 AERO 8G 雪鹰",p:3099},
-            {n:"技嘉 RTX5050 WF2 8G 风魔",p:2499},
-            {n:"技嘉 RTX4070 WF3 OC 12G 风魔 三扇",p:3999},
+            {n:"技嘉 RX9070XT GAMING OC 16G 魔鹰",p:6800},
+            {n:"技嘉 RX9070XT ELITE 16G 小雕",p:6700},
+            {n:"技嘉 RX9060XT GAMING OC 8G 魔鹰 三扇",p:3199},
+            {n:"技嘉 RX7650GRE GAMING OC 8G 魔鹰 三扇",p:2299},
+            {n:"技嘉 RTX5080 WF3 OC 16G 风魔",p:15999},
+            {n:"技嘉 RTX5080 MASTER ICE 16G 超级冰雕",p:15999},
+            {n:"技嘉 RTX5080 MASTER 16G 超级雕",p:15999},
+            {n:"技嘉 RTX5080 AERO OC 16G 雪鹰 SFF",p:15999},
+            {n:"技嘉 RTX5070TI WF3 16G 风魔 SFF",p:11500},
+            {n:"技嘉 RTX5070TI GAMING OC 16G 魔鹰",p:11999},
+            {n:"技嘉 RTX5070 WF3 OC 12G 风魔 三扇",p:8500},
+            {n:"技嘉 RTX5070 GAMING OC 12G 魔鹰",p:8400},
+            {n:"技嘉 RTX5070 Eagle OC ICE 12G 冰猎鹰 三扇",p:8500},
+            {n:"技嘉 RTX5070 Eagle OC 12G 猎鹰 三扇",p:8500},
+            {n:"技嘉 RTX5070 AORUS MASTER OC 12G 超级雕",p:8500},
+            {n:"技嘉 RTX5070 AERO OC 12G 雪鹰",p:8500},
+            {n:"技嘉 RTX5060TI WF2 OC 16G 风魔MAX 双扇",p:5899},
+            {n:"技嘉 RTX5060TI WF2 MAX OC 8G 风魔MAX",p:4399},
+            {n:"技嘉 RTX5060TI GAMING OC 8G 魔鹰",p:4399},
+            {n:"技嘉 RTX5060TI EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:4399},
+            {n:"技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇",p:5899},
+            {n:"技嘉 RTX5060TI EAGLE MAX OC 8G 猎鹰MAX 黑色三扇",p:4399},
+            {n:"技嘉 RTX5060TI AERO 8G 雪鹰",p:4399},
+            {n:"技嘉 RTX5060 WF2 MAX OC 8G 风魔",p:4250},
+            {n:"技嘉 RTX5060 GAMING OC 8G 魔鹰",p:4250},
+            {n:"技嘉 RTX5060 EAGLE OC ICE 8G 冰猎鹰 白色双扇",p:4250},
+            {n:"技嘉 RTX5060 EAGLE OC 8G 猎鹰 黑色双扇",p:4250},
+            {n:"技嘉 RTX5060 EAGLE MAX OC 8G 猎鹰 黑色三扇",p:4250},
+            {n:"技嘉 RTX5060 AERO 8G 雪鹰",p:4250},
+            {n:"技嘉 RTX5050 WF2 8G 风魔",p:2750},
+            {n:"技嘉 RTX4070 WF3 OC 12G 风魔 三扇",p:4500},
             {n:"技嘉 RTX3060 WF2 12G 风魔EC 工包",p:1999},
-            {n:"技嘉 RTX3060 EAGLE OC 12G 猎鹰双扇",p:2750},
-            {n:"技嘉 RTX3050 WF2 6G 风魔",p:1799},
-            {n:"微星 RTX5080 16G VENTUS 3X OC 万图师",p:12999},
-            {n:"微星 RTX5070TI INSPIRE 3X 16G OC 硬派师",p:9500},
-            {n:"微星 RTX5070 VENTUS 2X OC 12G 万图师 双扇",p:7500},
-            {n:"微星 RTX5070 12G GAMING TRIO OC 魔龙黑色",p:7399},
-            {n:"微星 RTX5070 12G GAMING TRIO OC WHITE 白魔龙",p:7399},
+            {n:"技嘉 RTX3060 EAGLE OC 12G 猎鹰双扇",p:2999},
+            {n:"技嘉 RTX3050 WF2 6G 风魔",p:1949},
+            {n:"微星 RTX5080 16G VENTUS 3X OC 万图师",p:16999},
+            {n:"微星 RTX5070TI INSPIRE 3X 16G OC 硬派师",p:11999},
+            {n:"微星 RTX5070 VENTUS 2X OC 12G 万图师 双扇",p:8500},
+            {n:"微星 RTX5070 12G GAMING TRIO OC 魔龙黑色",p:8500},
+            {n:"微星 RTX5070 12G GAMING TRIO OC WHITE 白魔龙",p:8500},
             {n:"微星 RTX5060TI GAMING DUKE 3X龙爵",p:2859},
-            {n:"微星 RTX5060 SHADOW 2X 8G 幻影师 双扇",p:3099},
-            {n:"微星 RTX5050 VENTUS 2X 8G 万图师 双扇",p:5050},
-            {n:"微星 RTX3050 6G 万图师 双扇",p:1299},
-            {n:"微星-RTX5090D V2 24G VENTUS 3X OC 万图师3风扇",p:23000},
-            {n:"微星-RTX5080 16G GAMING TRIO OC WHITE 白魔龙",p:12600},
-            {n:"微星-RTX5080 16G GAMING TRIO OC 黑魔龙",p:11000},
-            {n:"微星-RTX5080 16G VENTUS 3X OC 万图师3风扇",p:10000},
-            {n:"微星-RTX5080 16G SHADOW 3X OC 幻影师3风扇",p:11000},
-            {n:"微星-RTX5070Ti 16G GAMING TRIO OC WHITE 白魔龙",p:9400},
-            {n:"微星-RTX5070Ti 16G GAMING TRIO OC 黑魔龙",p:9050},
-            {n:"微星-RTX5070Ti 16G VENTUS 3X OC 万图师3风扇",p:9050},
-            {n:"微星-RTX5070 12G GAMING TRIO OC WHITE 白魔龙",p:6900},
-            {n:"微星-RTX5070 12G GAMING TRIO OC 黑魔龙",p:6900},
-            {n:"微星-RTX5070 12G GAMING DUKE 3X OC PLUS 龙爵",p:6500},
-            {n:"微星-RTX5070 12G VENTUS 3X OC 万图师3风扇",p:6400},
-            {n:"微星-RTX5070 12G VENTUS 2X OC 万图师2风扇",p:6200},
-            {n:"微星-RTX5070 12G SHADOW 3X OC 幻影师3风扇",p:6200},
-            {n:"微星-RTX5070 12G SHADOW 2X OC 幻影师2风扇",p:6000},
-            {n:"微星-RTX5060TI 16G VENTUS 2X OC WHITE 万图师2风扇白",p:5899},
-            {n:"微星-RTX5060TI 16G INSPIRE 2X OC 硬派师2风扇",p:5899},
-            {n:"微星-RTX5060TI 8G GAMING TRIO OC WHITE 白魔龙",p:3799},
-            {n:"微星-RTX5060TI 8G GAMING DUKE 3X OC PLUS 龙爵PLUS",p:3799},
-            {n:"微星-RTX5060TI 8G GAMING TRIO OC 魔龙",p:3799},
-            {n:"微星-RTX5060TI 8G INSPIRE 2X OC 硬派师2风扇",p:3799},
-            {n:"微星-RTX5060TI 8G VENTUS 3X OC 万图师3风扇",p:3799},
-            {n:"微星-RTX5060TI 8G VENTUS 2X OC WHITE 万图师2风扇白",p:3799},
-            {n:"微星-RTX5060TI 8G VENTUS 2X OC PLUS 万图师2风扇",p:3799},
-            {n:"微星-RTX5060TI 8G SHADOW 2X OC 幻影师2风扇",p:3799},
-            {n:"微星-RTX5060 8G GAMING TRIO OC WHITE 白魔龙3风扇",p:3350},
-            {n:"微星-RTX5060 8G GAMING TRIO OC 黑魔龙3风扇",p:3350},
-            {n:"微星-RTX5060 8G GAMING DUKE 3X OC PLUS 龙爵3风扇",p:3250},
-            {n:"微星-RTX5060 8G GAMING OC 万图师2风扇",p:3250},
-            {n:"微星-RTX5060 8G VENTUS 3X OC 万图师3风扇",p:3250},
-            {n:"微星-RTX5060 8G VENTUS 2X OC MAX 万图师2风扇MAX",p:3099},
-            {n:"微星-RTX5060 8G VENTUS 2X OC WHITE 万图师2风扇白",p:3150},
-            {n:"微星-RTX5060 8G SHADOW 2X OC 幻影师2风扇",p:3050},
+            {n:"微星 RTX5060 SHADOW 2X 8G 幻影师 双扇",p:4250},
+            {n:"微星 RTX5050 VENTUS 2X 8G 万图师 双扇",p:2800},
+            {n:"微星 RTX3050 6G 万图师 双扇",p:1949},
+            {n:"微星-RTX5090D V2 24G VENTUS 3X OC 万图师3风扇",p:28949},
+            {n:"微星-RTX5080 16G GAMING TRIO OC WHITE 白魔龙",p:16049},
+            {n:"微星-RTX5080 16G GAMING TRIO OC 黑魔龙",p:16049},
+            {n:"微星-RTX5080 16G VENTUS 3X OC 万图师3风扇",p:16049},
+            {n:"微星-RTX5080 16G SHADOW 3X OC 幻影师3风扇",p:16049},
+            {n:"微星-RTX5070Ti 16G GAMING TRIO OC WHITE 白魔龙",p:12049},
+            {n:"微星-RTX5070Ti 16G GAMING TRIO OC 黑魔龙",p:12049},
+            {n:"微星-RTX5070Ti 16G VENTUS 3X OC 万图师3风扇",p:12049},
+            {n:"微星-RTX5070 12G GAMING TRIO OC WHITE 白魔龙",p:8450},
+            {n:"微星-RTX5070 12G GAMING TRIO OC 黑魔龙",p:8450},
+            {n:"微星-RTX5070 12G GAMING DUKE 3X OC PLUS 龙爵",p:8450},
+            {n:"微星-RTX5070 12G VENTUS 3X OC 万图师3风扇",p:8450},
+            {n:"微星-RTX5070 12G VENTUS 2X OC 万图师2风扇",p:8450},
+            {n:"微星-RTX5070 12G SHADOW 3X OC 幻影师3风扇",p:8450},
+            {n:"微星-RTX5070 12G SHADOW 2X OC 幻影师2风扇",p:8450},
+            {n:"微星-RTX5060TI 16G VENTUS 2X OC WHITE 万图师2风扇白",p:6498},
+            {n:"微星-RTX5060TI 16G INSPIRE 2X OC 硬派师2风扇",p:6498},
+            {n:"微星-RTX5060TI 8G GAMING TRIO OC WHITE 白魔龙",p:4599},
+            {n:"微星-RTX5060TI 8G GAMING DUKE 3X OC PLUS 龙爵PLUS",p:4599},
+            {n:"微星-RTX5060TI 8G GAMING TRIO OC 魔龙",p:4599},
+            {n:"微星-RTX5060TI 8G INSPIRE 2X OC 硬派师2风扇",p:4599},
+            {n:"微星-RTX5060TI 8G VENTUS 3X OC 万图师3风扇",p:4599},
+            {n:"微星-RTX5060TI 8G VENTUS 2X OC WHITE 万图师2风扇白",p:4599},
+            {n:"微星-RTX5060TI 8G VENTUS 2X OC PLUS 万图师2风扇",p:4599},
+            {n:"微星-RTX5060TI 8G SHADOW 2X OC 幻影师2风扇",p:4599},
+            {n:"微星-RTX5060 8G GAMING TRIO OC WHITE 白魔龙3风扇",p:4300},
+            {n:"微星-RTX5060 8G GAMING TRIO OC 黑魔龙3风扇",p:4300},
+            {n:"微星-RTX5060 8G GAMING DUKE 3X OC PLUS 龙爵3风扇",p:4300},
+            {n:"微星-RTX5060 8G GAMING OC 万图师2风扇",p:4300},
+            {n:"微星-RTX5060 8G VENTUS 3X OC 万图师3风扇",p:4300},
+            {n:"微星-RTX5060 8G VENTUS 2X OC MAX 万图师2风扇MAX",p:4300},
+            {n:"微星-RTX5060 8G VENTUS 2X OC WHITE 万图师2风扇白",p:4300},
+            {n:"微星-RTX5060 8G SHADOW 2X OC 幻影师2风扇",p:4300},
             {n:"微星-RTX5050 8G GAMING OC 黑魔龙2风扇",p:2780},
-            {n:"微星-RTX3050 6G VENTUS 2X OC 万图师双扇",p:1630},
+            {n:"微星-RTX5050 8G GAMING TRIO OC",p:3000},
+            {n:"微星-RTX3050 6G VENTUS 2X OC 万图师双扇",p:1949},
             {n:"微星-GT1030-2GD4 ABRO ITX OCV1",p:550},
-            {n:"影驰 RTX5080 16G 金属大师 OC 黑金版 黑色",p:12999},
-            {n:"影驰 RTX5070 星曜LUNA OC 三扇 12G 白色",p:7500},
-            {n:"影驰 RTX5070 12G 魔刃 OC 黑色",p:7550},
-            {n:"影驰 RTX5070 12G 金属大师 白金版 白色",p:7650},
-            {n:"影驰 RTX5070 12G 圣刃 OC 白色",p:7600},
-            {n:"影驰 RTX5060TI 魔刃 OC 8G 黑色 三扇",p:3799},
-            {n:"影驰 RTX5060TI FIRE MAX 16G 双扇黑色",p:5300},
-            {n:"影驰 RTX5060TI 8G 金属大师 OC 白金版 白色",p:3899},
-            {n:"影驰 RTX5060 魔刃V2 OC 8G 黑色 三扇",p:3350},
-            {n:"影驰 RTX5060 金属大师 OC 8G 黑金版 黑色三扇",p:3399},
-            {n:"影驰 RTX5060 金属大师 OC 8G 白金版 白色三扇",p:3399},
-            {n:"影驰 RTX5060 FIRE 8G 三扇 黑色",p:3099},
-            {n:"影驰 RTX3050 虎将 6G",p:1770},
-            {n:"华硕 RX7650GRE O8G GAMING ATS巨齿鲨 三扇",p:2199},
-            {n:"华硕 RTX5080 O16G GAMING TUF 电竞特工",p:15600},
-            {n:"华硕 RTX5080 O16G GAMING ROG ASTRAL 夜神 四风扇",p:18800},
-            {n:"华硕 RTX5070TI O16G PRIME 大师",p:9999},
-            {n:"华硕 RTX5070 O12G PRIME 大师",p:7700},
-            {n:"华硕 RTX5070 O12G GAMING TX 天选白色",p:7700},
-            {n:"华硕 RTX5070 O12G GAMING TUF 电竞特工",p:7700},
-            {n:"华硕 RTX5070 O12G ATS 巨齿鲨 V2 三扇",p:7700},
-            {n:"华硕 RTX5070 12G DUAL 雪豹 黑色 双扇",p:7500},
-            {n:"华硕 RTX5060TI O8G GAMING TX 天选白色",p:3899},
-            {n:"华硕 RTX5060TI O8G ATS 巨齿鲨 三扇",p:3950},
-            {n:"华硕 RTX5060TI 8G DUAL 雪豹 黑色",p:3750},
-            {n:"华硕 RTX5060 O8G GAMING TX 天选白色",p:3350},
-            {n:"华硕 RTX5060 O8G DUAL 雪豹 黑色",p:3199},
-            {n:"华硕 RTX5060 O8G ATS 巨齿鲨 三扇",p:3350},
-            {n:"华硕 RTX4070S 12G DUAL 雪豹 黑色 双扇",p:3999},
-            {n:"华硕 PRIME RX9070XT O16G 大师",p:6350},
-            {n:"七彩虹 RTX5080 16G Vulcan OC 黑火神",p:15500},
-            {n:"七彩虹 RTX5080 16G Vulcan OC W 白火神",p:15999},
-            {n:"七彩虹 RTX5080 16G ULTRA W OC 白色",p:12999},
-            {n:"七彩虹 RTX5080 16G Advanced OC 16G 银鲨",p:12999},
-            {n:"七彩虹 RTX5070TI 16G 战斧豪华版 SFF",p:9500},
-            {n:"七彩虹 RTX5070TI 16G Vulcan OC 黑火神",p:10999},
-            {n:"七彩虹 RTX5070TI 16G ULTRA W OC 白色",p:9500},
-            {n:"七彩虹 RTX5070TI 16G Advanced OC 16G 银鲨",p:10600},
-            {n:"七彩虹 RTX5070 12G 战斧豪华版",p:7399},
-            {n:"七彩虹 RTX5070 12G Vulcan XOC 黑火神",p:7399},
-            {n:"七彩虹 RTX5070 12G Vulcan OC W 白火神",p:7399},
-            {n:"七彩虹 RTX5070 12G ULTRA W OC 白色",p:7399},
-            {n:"七彩虹 RTX5070 12G Advanced OC 银鲨",p:7399},
-            {n:"七彩虹 RTX5060TI 8G 战斧豪华版 三扇",p:3899},
-            {n:"七彩虹 RTX5060TI 8G 战斧 DUO 双扇",p:3750},
-            {n:"七彩虹 RTX5060TI 8G ULTRA W OC 白色三扇",p:3899},
-            {n:"七彩虹 RTX5060TI 8G ULTRA W DUO OC 白色双扇",p:3799},
-            {n:"七彩虹 RTX5060TI 16G 战斧 DUO 双扇",p:5300},
-            {n:"七彩虹 RTX5060 8G 战斧豪华版 三扇",p:3399},
-            {n:"七彩虹 RTX5060 8G 战斧 DUO 双扇",p:3099},
-            {n:"七彩虹 RTX5060 8G ULTRA W OC 白色三扇",p:3550},
-            {n:"七彩虹 RTX5060 8G ULTRA W DUO OC 白色双扇",p:3450},
-            {n:"七彩虹 RTX5050 8G 战斧 DUO 双扇",p:2599},
-            {n:"七彩虹 RTX5050 8G ULTRA W DUO 白色双扇",p:2699},
-            {n:"七彩虹 RTX3050 8G 战斧DUO 双扇",p:2150},
+            {n:"影驰 RTX5080 16G 金属大师 OC 黑金版 黑色",p:16999},
+            {n:"影驰 RTX5070 星曜LUNA OC 三扇 12G 白色",p:8500},
+            {n:"影驰 RTX5070 12G 魔刃 OC 黑色",p:8500},
+            {n:"影驰 RTX5070 12G 金属大师 白金版 白色",p:8500},
+            {n:"影驰 RTX5070 12G 圣刃 OC 白色",p:8500},
+            {n:"影驰 RTX5060TI 魔刃 OC 8G 黑色 三扇",p:4499},
+            {n:"影驰 RTX5060TI FIRE MAX 16G 双扇黑色",p:5899},
+            {n:"影驰 RTX5060TI 8G 金属大师 OC 白金版 白色",p:4599},
+            {n:"影驰 RTX5060 魔刃V2 OC 8G 黑色 三扇",p:4250},
+            {n:"影驰 RTX5060 金属大师 OC 8G 黑金版 黑色三扇",p:4250},
+            {n:"影驰 RTX5060 金属大师 OC 8G 白金版 白色三扇",p:4250},
+            {n:"影驰 RTX5060 FIRE 8G 三扇 黑色",p:4250},
+            {n:"影驰 RTX3050 虎将 6G",p:1949},
+            {n:"华硕 RX7650GRE O8G GAMING ATS巨齿鲨 三扇",p:2299},
+            {n:"华硕 RTX5080 O16G GAMING TUF 电竞特工",p:15999},
+            {n:"华硕 RTX5080 O16G GAMING ROG ASTRAL 夜神 四风扇",p:15999},
+            {n:"华硕 RTX5070TI O16G PRIME 大师",p:11999},
+            {n:"华硕 RTX5070 O12G PRIME 大师",p:8500},
+            {n:"华硕 RTX5070 O12G GAMING TX 天选白色",p:8500},
+            {n:"华硕 RTX5070 O12G GAMING TUF 电竞特工",p:8500},
+            {n:"华硕 RTX5070 O12G ATS 巨齿鲨 V2 三扇",p:8500},
+            {n:"华硕 RTX5070 12G DUAL 雪豹 黑色 双扇",p:8500},
+            {n:"华硕 RTX5060TI O8G GAMING TX 天选白色",p:4399},
+            {n:"华硕 RTX5060TI O8G ATS 巨齿鲨 三扇",p:4399},
+            {n:"华硕 RTX5060TI 8G DUAL 雪豹 黑色",p:4399},
+            {n:"华硕 RTX5060 O8G GAMING TX 天选白色",p:4250},
+            {n:"华硕 RTX5060 O8G DUAL 雪豹 黑色",p:4250},
+            {n:"华硕 RTX5060 O8G ATS 巨齿鲨 三扇",p:4250},
+            {n:"华硕 RTX4070S 12G DUAL 雪豹 黑色 双扇",p:4500},
+            {n:"华硕 PRIME RX9070XT O16G 大师",p:6700},
+            {n:"七彩虹 RTX5080 16G Vulcan OC 黑火神",p:16999},
+            {n:"七彩虹 RTX5080 16G Vulcan OC W 白火神",p:16999},
+            {n:"七彩虹 RTX5080 16G ULTRA W OC 白色",p:16999},
+            {n:"七彩虹 RTX5080 16G Advanced OC 16G 银鲨",p:16999},
+            {n:"七彩虹 RTX5070TI 16G 战斧豪华版 SFF",p:11999},
+            {n:"七彩虹 RTX5070TI 16G Vulcan OC 黑火神",p:11999},
+            {n:"七彩虹 RTX5070TI 16G ULTRA W OC 白色",p:11999},
+            {n:"七彩虹 RTX5070TI 16G Advanced OC 16G 银鲨",p:11999},
+            {n:"七彩虹 RTX5070 12G 战斧豪华版",p:8500},
+            {n:"七彩虹 RTX5070 12G Vulcan XOC 黑火神",p:8500},
+            {n:"七彩虹 RTX5070 12G Vulcan OC W 白火神",p:8500},
+            {n:"七彩虹 RTX5070 12G ULTRA W OC 白色",p:8500},
+            {n:"七彩虹 RTX5070 12G Advanced OC 银鲨",p:8500},
+            {n:"七彩虹 RTX5060TI 8G 战斧豪华版 三扇",p:4550},
+            {n:"七彩虹 RTX5060TI 8G 战斧 DUO 双扇",p:4550},
+            {n:"七彩虹 RTX5060TI 8G ULTRA W OC 白色三扇",p:4399},
+            {n:"七彩虹 RTX5060TI 8G ULTRA W DUO OC 白色双扇",p:4399},
+            {n:"七彩虹 RTX5060TI 16G 战斧 DUO 双扇",p:5899},
+            {n:"七彩虹 RTX5060 8G 战斧豪华版 三扇",p:4200},
+            {n:"七彩虹 RTX5060 8G 战斧 DUO 双扇",p:4200},
+            {n:"七彩虹 RTX5060 战斧DUO 8G V3-T 双风扇",p:4250},
+            {n:"七彩虹 RTX5060 8G ULTRA W OC 白色三扇",p:4200},
+            {n:"七彩虹 RTX5060 8G ULTRA W DUO OC 白色双扇",p:4200},
+            {n:"七彩虹 RTX5050 8G 战斧 DUO 双扇",p:2750},
+            {n:"七彩虹 RTX5050 8G ULTRA W DUO 白色双扇",p:2850},
+            {n:"映众 RTX5060 8G 超级冰龙 三风扇",p:4200},
+            {n:"七彩虹 RTX5050 ULTRA W DUO OC 8G-T 双风扇",p:2800},
+            {n:"七彩虹 RTX5050 ULTRA W 8GB 白色三风扇",p:2800},
+            {n:"七彩虹 RTX5050 ULTRA W OC 8G 三风扇",p:2800},
+            {n:"七彩虹 RTX3050 8G 战斧DUO 双扇",p:1599},
             {n:"Intel UHD 核显",p:0},
             {n:"AMD Vega 核显",p:0},
             {n:"AMD Radeon Graphics",p:0},
-            {n:"影驰 RTX5070TI 16G 金属大师 黑金版 黑色",p:9750},
+            {n:"影驰 RTX5070TI 16G 金属大师 黑金版 黑色",p:11999},
 
-            {n:"影驰 RTX5070TI 16G 金属大师 白金版 白色",p:9800},
+            {n:"影驰 RTX5070TI 16G 金属大师 白金版 白色",p:11999},
 
-            {n:"影驰 RTX5060TI 圣刃 OC 8G 白色 三扇",p:3899},
+            {n:"影驰 RTX5060TI 圣刃 OC 8G 白色 三扇",p:4499},
 
-            {n:"华硕 RTX5090D O32G GAMING ROG ASTRAL 夜神黑色 四风扇",p:5350},
+            {n:"华硕 RTX5090D O32G GAMING ROG ASTRAL 夜神黑色 四风扇",p:36999},
 
-            {n:"华硕 RTX5080 O16G GAMING ROG ASTRAL WHITE 白夜神 四风扇",p:18999},
+            {n:"华硕 RTX5080 O16G GAMING ROG ASTRAL WHITE 白夜神 四风扇",p:15999},
 
-            {n:"华硕 RTX5060TI O8G GAMING TUF 电竞特工",p:3899},
+            {n:"华硕 RTX5060TI O8G GAMING TUF 电竞特工",p:4399},
 
-            {n:"七彩虹 RTX5090D V2 16G Advanced OC 24G 银鲨",p:26999},
+            {n:"七彩虹 RTX5090D V2 16G Advanced OC 24G 银鲨",p:39699},
 
-            {n:"七彩虹 RTX5070TI 16G Vulcan OC W 白火神",p:10999},
+            {n:"七彩虹 RTX5070TI 16G Vulcan OC W 白火神",p:11999},
 
-            {n:"七彩虹 RTX5070TI 16G ULTRA W OC 黑色",p:9500},
+            {n:"七彩虹 RTX5070TI 16G ULTRA W OC 黑色",p:11999},
 
-            {n:"七彩虹 RTX5070 12G ULTRA W OC 黑色",p:7399},
+            {n:"七彩虹 RTX5070 12G ULTRA W OC 黑色",p:8500},
             {n:"铭鑫RTX3060 12G D6 炫彩版 双风扇",p:1980},
-            {n:"七彩虹RTX3060 战斧DUO 12GB V5",p:2750},
+            {n:"七彩虹RTX3060 战斧DUO 12GB V5",p:2999},
             {n:"华硕DUAL RTX3060 O6G 12G",p:2300},
             {n:"技嘉GV-N3060WF2OC-12GD",p:2260},
             {n:"影驰RTX3060 12G Fire Lite",p:2140},
             {n:"影驰RTX-N3060WF2OC-12GD",p:2260},
-            {n:"盈通RTX3060-12GD6-大地之神",p:2750},
-           <!-- 显卡自动更新区域 结束 -->            {n:"华硕RTX5090-32G TUF-OC非D",p:31999},
-            {n:"品牌GTX1060（到手30天质保）",p:499}
+            {n:"盈通RTX3060-12GD6-大地之神",p:2999},
+           <!-- 显卡自动更新区域 结束 -->            {n:"华硕RTX5090-32G TUF-OC非D",p:64949},
+            {n:"品牌GTX1060（到手30天质保）",p:499},
+            {n:"磐镭 RTX 2060S 8G 白色双风扇",p:1499},
+            {n:"技嘉 RTX5080 GAMING OC 16G 魔鹰",p:16999},
+            {n:"技嘉 RTX5060 WF2 MAX OC 8G 风魔MAX",p:4250},
+            {n:"技嘉 RTX4060TI 8G 风魔 工包",p:3199},
+            {n:"影驰 RTX5070TI HOF OC LAB 16G 名人堂黑魂X",p:11999},
+            {n:"影驰 RTX5070TI HOF OC LAB 16G Deluxe-X 名人堂白色",p:11999},
+            {n:"影驰 RTX5070 HOF OC LAB 12G Deluxe-X 名人堂白色",p:8500},
+            {n:"影驰 RTX5060TI FIRE 8G 三扇 黑色",p:4499},
+            {n:"影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色",p:4599},
+            {n:"影驰 RTX5060 圣刃V2 OC 8G 白色 三扇",p:4250},
+            {n:"华硕 RTX5070TI O16G GAMING TUF 电竞特工",p:11999},
+            {n:"华硕 PRIME RX9060XT O8G 大师",p:3199},
+            {n:"华擎 RX7650GRE 8G 挑战者 双扇",p:2299},
+            {n:"铭鑫 RTX20606G D6H+DP+DV炫彩版",p:1299},
+            {n:"翔升 RTX2060 SUPER 战神8G D6(DP*3+HIMI)",p:1499},
+            {n:"技嘉 RTX4060 8G WF2 风魔双扇",p:2999},
+            {n:"艾尔莎 GTX1650幻雷者4G",p:980},
         ],
         ssd: [
-            {n:"宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",p:522},
+            {n:"宏碁 N3500 512G NVME PCIE3.0 读3500 TLC",p:499},
             {n:"金泰克 TP3000 256G PCIE3.0",p:399},
             {n:"雷克沙 雷神THOR 1T PCIE4.0 6500/3000",p:949},
             {n:"雷克沙 雷神THOR 2T PCIE4.0 7000/5000",p:1760},
             {n:"雷克沙 雷神THOR 4T PCIE4.0 7000/6000",p:2899},
-            {n:"西数 黑盘SN7100 1T PCIE 4.0 读7250写6800 TLC颗粒",p:1080},
-            {n:"宏碁 GM7 1T PCIE 4.0 读7200写6300",p:1049},
+            {n:"宏碁 暗影骑士擎N8000 1T PCIe5.0TLC颗粒读11000MB/S",p:1128},
+            {n:"宏碁 暗影骑士擎N8000 2T PCIe5.0TLC颗粒读11000MB/S",p:1950},
+            {n:"西数 黑盘SN7100 1T PCIE 4.0 读7250写6800 TLC颗粒",p:1100},
+            {n:"宏碁 GM7 1T PCIE 4.0 读7200写6300",p:1025},
             {n:"佰维 NV7400 512G TLC颗粒 读速7050MB/s",p:690},
-            {n:"佰维 NV3500 512G TLC颗粒",p:522},
-            {n:"佰维 NV3500 1T TLC颗粒",p:860},
+            {n:"佰维 NV3500 512G TLC颗粒",p:499},
+            {n:"佰维 NV3500 1T TLC颗粒",p:849},
             {n:"佰维 NV7400 1T TLC颗粒 读速7400MB/s",p:969},
             {n:"佰维 NV7400 2T TLC颗粒 读速7400MB/s",p:1699},
-            {n:"梵想S500PRO-1T TLC颗粒",p:1098},
-            {n:"梵想S500PRO-512GB TLC颗粒",p:649},
-            {n:"致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",p:1100},
-            {n:"三星 990 PRO 1T PCIE 4.0 读7450写6900",p:1530},
+            {n:"梵想S500PRO-1T TLC颗粒",p:880},
+            {n:"梵想S500PRO-512GB TLC颗粒",p:530},
+            {n:"致态 TIPlus7100-1TB PCIE 4.0 读7400，写6700",p:1149},
+            {n:"三星 990 PRO 1T PCIE 4.0 读7450写6900",p:1500},
             {n:"品牌SSD 512G（到手30天质保）",p:149},
             {n:"雷克沙 战神ARES PRO 1T 读14000 PCIE 5.0",p:1200},
             {n:"雷克沙 战神ARES 4T 读7400 PCIE 4.0",p:3099},
@@ -3559,42 +3661,42 @@
             {n:"雷克沙 NQ790 1T PCIE4.0 读7000 写6000 QLC",p:950},
             {n:"雷克沙 NM710 1T PCIE4.0 5000/4000",p:949},
             {n:"阿斯加特 AN4+ 1T NVME PCIE4.0 读7450写6500",p:950},
-            {n:"铠侠 VD10 2T PCIE5.0 读10000写8200",p:1850},
-            {n:"铠侠 VD10 1T PCIE5.0 读10000写7900",p:1100},
+            {n:"铠侠 VD10 2T PCIE5.0 读10000写8200",p:1650},
+            {n:"铠侠 VD10 1T PCIE5.0 读10000写7900",p:1149},
             {n:"铠侠 SF10 2T PCIE4.0 7200/6600",p:1650},
-            {n:"铠侠 SF10 1T PCIE4.0 7200/6600",p:939},
-            {n:"铠侠 SD10 2T PCIE4.0 5000/3900",p:1650},
-            {n:"铠侠 RC20 2T PCIE3.0 读2100写1700",p:1850},
-            {n:"西数 黑盘SN7100 2T PCIE 4.0 读7250写6800",p:1850},
-            {n:"西数 黑盘 SN850X 4T PCIE 4.0",p:4699},
-            {n:"西数 黑盘 SN850X 2T PCIE 4.0 读7300写6600",p:2099},
+            {n:"铠侠 SF10 1T PCIE4.0 7200/6600",p:900},
+            {n:"铠侠 SD10 2T PCIE4.0 5000/3900",p:1760},
+            {n:"铠侠 RC20 2T PCIE3.0 读2100写1700",p:1650},
+            {n:"西数 黑盘SN7100 2T PCIE 4.0 读7250写6800",p:1899},
+            {n:"西数 黑盘 SN850X 4T PCIE 4.0",p:4750},
+            {n:"西数 黑盘 SN850X 2T PCIE 4.0 读7300写6600",p:1650},
             {n:"西数 黑盘 SN850X 1T PCIE 4.0 读7300写6600",p:1249},
-            {n:"西数 蓝盘SN5100 2T PCIE 4.0",p:1699},
+            {n:"西数 蓝盘SN5100 2T PCIE 4.0",p:1899},
             {n:"西数 蓝盘SN5100 1T PCIE 4.0",p:990},
             {n:"西数 蓝盘SN3000 1T PCIE 4.0 读5000",p:949},
-            {n:"致态 TI600-2TB PCIE 4.0 读7000，写6000 QLC",p:1750},
-            {n:"致态 TI600-1TB PCIE 4.0 读7000，写6000 QLC",p:900},
+            {n:"致态 TI600-2TB PCIE 4.0 读7000，写6000 QLC",p:1699},
+            {n:"致态 TI600-1TB PCIE 4.0 读7000，写6000 QLC",p:885},
             {n:"梵想 SP510 500G PCIE3.0 3500/3250 TLC",p:555},
             {n:"梵想 SP510 1T PCIE3.0 3500/3250 TLC",p:880},
             {n:"梵想 S790 1T NVME 读7400 写6300 TLC 5年",p:1030},
             {n:"梵想 S500PRO 2T PCIE3.0 3500/3250 TLC",p:1499},
             {n:"宏碁 N5000S 1T PCIE 4.0 读5000写4400",p:949},
-            {n:"宏碁 N3500 1T NVME PCIE3.0 读3500 TLC",p:900},
+            {n:"宏碁 N3500 1T NVME PCIE3.0 读3500 TLC",p:849},
             {n:"宏碁 GM9000 2T PCIE 5.0 读14000 2G缓存",p:2260},
             {n:"宏碁 GM9000 1T PCIE 5.0 读14000 1G缓存",p:1200},
             {n:"宏碁 GM9 2T PCIE 5.0 读14500写10000",p:2030},
             {n:"宏碁 GM9 1T PCIE 5.0 读14500写10000",p:1200},
             {n:"佰维 NV7400 2T NVME 读7450 TLC",p:1999},
-            {n:"佰维 NV7200 1T NVME 读7200 QLC",p:860},
-            {n:"佰维 NV3500 512G NVME",p:522},
-            {n:"佰维 NV3500 1T NVME",p:860},
-            {n:"三星 990EVO PLUS 2T 7250/6300",p:2299},
+            {n:"佰维 NV7200 1T NVME 读7200 QLC",p:849},
+            {n:"佰维 NV3500 512G NVME",p:499},
+            {n:"佰维 NV3500 1T NVME",p:849},
+            {n:"三星 990EVO PLUS 2T 7250/6300",p:1950},
             {n:"三星 990EVO PLUS 1T 7150/6300",p:1449},
             {n:"三星 990 PRO 4T PCIE 4.0 读7450写6900",p:4999},
-            {n:"三星 990 PRO 2T PCIE 4.0 读7450写6900",p:2550},
+            {n:"三星 990 PRO 2T PCIE 4.0 读7450写6900",p:2499},
             {n:"三星 9100 PRO 4T PCIE 5.0 读14700写13400",p:5200},
             {n:"三星 9100 PRO 2T PCIE 5.0 读14700写13400",p:2799},
-            {n:"三星 9100 PRO 1T PCIE 5.0 读14700写13300",p:1600},
+            {n:"三星 9100 PRO 1T PCIE 5.0 读14700写13300",p:1549},
         ],
         hdd: [
             {n:"东芝 2T 机械硬盘",p:899},
@@ -3604,6 +3706,7 @@
             {n:"白色海景房",p:129},
             {n:"黑色海景房",p:129},
             {n:"幻境侧透",p:129},
+            {n:"动力火车 恒享Z3",p:169},
             {n:"航嘉 G63",p:139},
             {n:"锐龙 360M 大海景房",p:169},
             {n:"智界V1",p:139},
@@ -3751,7 +3854,7 @@
             {n:"机械大师 C25 PLUS ITX主板 双扇显卡",p:530},
             {n:"未知玩家 X300 黑色 手提机箱 240 C口",p:230},
             {n:"未知玩家 X300 白色 手提机箱 240 C口",p:240},
-            {n:"未知玩家 X100PRO 白色 手提机箱",p:139},
+            {n:"未知玩家 X100PRO 白色 手提机箱",p:145},
             {n:"未知玩家 X100 黑色 手提机箱",p:109},
             {n:"未知玩家 P60 黑色 手提机箱",p:169},
             {n:"未知玩家 P60 白色 手提机箱",p:179},
@@ -3767,16 +3870,16 @@
             {n:"安钛克 NX420 黑色侧透 带灯条",p:119},
             {n:"华硕 追影 A23 黑色",p:279},
             {n:"华硕 追影 A23 白色",p:279},
-            {n:"华硕 海王星 黑色海景房 无立柱 ATX",p:290},
-            {n:"华硕 海王星 白色海景房 无立柱 ATX",p:310},
+            {n:"华硕 海王星 黑色海景房 无立柱 ATX",p:299},
+            {n:"华硕 海王星 白色海景房 无立柱 ATX",p:330},
             {n:"华硕 彗星海景房机箱 SI-A01 黑色",p:245},
             {n:"华硕 彗星海景房机箱 SI-A01 白色",p:250},
-            {n:"华硕 TUF GT502 弹药库 黑色 无界版",p:899},
-            {n:"华硕 TUF GT502 弹药库 白色 无界版",p:960},
+            {n:"华硕 TUF GT502 弹药库 黑色 无界版",p:850},
+            {n:"华硕 TUF GT502 弹药库 白色 无界版",p:899},
             {n:"华硕 ROG GX601S太阳神 焕新版 黑色",p:1749},
             {n:"华硕 ROG GX601S 太阳神 焕新版 白色",p:1949},
-            {n:"华硕 ROG GR701 创世神 黑色",p:2599},
-            {n:"华硕 ROG GR701 创世神 白色",p:2750},
+            {n:"华硕 ROG GR701 创世神 黑色",p:2650},
+            {n:"华硕 ROG GR701 创世神 白色",p:2799},
             {n:"华硕 ProArt 创意国度 PA602",p:1399},
             {n:"华硕 GT302 装备库 黑色",p:599},
             {n:"华硕 AP201冰立方机箱 钢化玻璃版 黑色",p:265},
@@ -3905,10 +4008,21 @@
             {n:"微星 M100L 黑刀 顶部360全景房",p:290},
             {n:"微星 M100L 黑刀 顶部360全景房",p:310},
             {n:"微星 M100L 白刀 顶部360全景房",p:290},
+            {n:"追风者 x2 像素版 黑色",p:980},
+            {n:"追风者 x2 像素版 白色",p:1050},
+            {n:"追风者 S2视界之窗 黑色",p:410},
+            {n:"玩嘉 天幕黑色 曲面海景房",p:175},
+            {n:"玩嘉 天幕白色 曲面海景房",p:185},
+            {n:"未知玩家 X100PRO 黑色 手提机箱",p:140},
+            {n:"华硕 ROG 幻世神GR801 曲面豪华版 黑色",p:2199},
+            {n:"华硕 ROG 幻世神GR801 曲面豪华版 白色",p:2299},
+            {n:"华硕 ProArt 创意国度 PA602 标准侧透版",p:1450},
+            {n:"乔思伯 X400CG 白色",p:650},
+            {n:"乔思伯 X400CG 灰色",p:630},
         ],
         // 新增其他配件默认数据
         other: [
-            {n:"不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费2%",p:0},
+            {n:"不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费",p:0},
             {n:"AOC 27寸 2K 180HZ",p:879},
             {n:"赠送键鼠",p:0}
         ]
@@ -3945,6 +4059,7 @@
         '幻境侧透': '幻境侧透',
         '乔思伯 D33标准版': '乔思伯 D33标准版',
         '航嘉 G63': 'hangjia_G63',
+        '动力火车 恒享Z3': '动力火车 恒享Z3',
         '锐龙 360M 大海景房': 'wanjia_gyz_360_W',
         '智界V1': 'hangjia_G63_MINI',
         '未知玩家 X100手提机箱': 'wzwj_X100_b',
@@ -4258,7 +4373,18 @@
         '微星 131L 黑龙 顶部360': '微星 131L 黑龙 顶部360',
         '微星 131L 白龙 顶部360': '微星 131L 白龙 顶部360',
         '微星 M100L 黑刀 顶部360全景房': '微星 M100L 黑刀 顶部360全景房',
-        '微星 M100L 白刀 顶部360全景房': '微星 M100L 白刀 顶部360全景房'
+        '微星 M100L 白刀 顶部360全景房': '微星 M100L 白刀 顶部360全景房',
+        '追风者 x2 像素版 黑色': '追风者 x2 像素版 黑色',
+        '追风者 x2 像素版 白色': '追风者 x2 像素版 白色',
+        '追风者 S2视界之窗 黑色': '追风者 S2视界之窗 黑色',
+        '玩嘉 天幕黑色 曲面海景房': '玩嘉 天幕黑色 曲面海景房',
+        '玩嘉 天幕白色 曲面海景房': '玩嘉 天幕白色 曲面海景房',
+        '未知玩家 X100PRO 黑色 手提机箱': '未知玩家 X100PRO 黑色 手提机箱',
+        '华硕 ROG 幻世神GR801 曲面豪华版 黑色': '华硕 ROG 幻世神GR801 曲面豪华版 黑色',
+        '华硕 ROG 幻世神GR801 曲面豪华版 白色': '华硕 ROG 幻世神GR801 曲面豪华版 白色',
+        '华硕 ProArt 创意国度 PA602 标准侧透版': '华硕 ProArt 创意国度 PA602 标准侧透版',
+        '乔思伯 X400CG 白色': '乔思伯 X400CG 白色',
+        '乔思伯 X400CG 灰色': '乔思伯 X400CG 灰色',
     };
 
     // 散热器图片映射表
@@ -4314,7 +4440,7 @@
         '钛钽 SJ-A080 240一体式水冷 白色 六年质保': '钛钽_sj-a080_240一体式水冷_六年质保_w',
         '钛钽 NEOX 幻世 360一体式水冷 黑色 六年质保': '钛钽_neox_幻世_360一体式水冷_六年质保_b',
         '钛钽 NEOX 幻世 360一体式水冷 黑色 六年质保': '钛钽_neox_幻世_360一体式水冷_六年质保_b',
-        '钛钽 LX800PRO 2.8+1.44寸双屏 黑色 六年质保': '钛钽_lx800pro_2.8+1.44寸双屏_六年质保_b',
+        '钛钽 LX800PRO 2.8+1.44寸双屏 黑色 六年质保': '钛钽_lx800pro_2.8+1.44寸双屏_六年质保_b_2',
         '钛钽 LX800PRO 2.8+1.44寸双屏 白色 六年质保': '钛钽_lx800pro_2.8+1.44寸双屏_六年质保_w',
         '钛钽 LG700PRO 3.5寸屏幕 黑色 六年质保': '钛钽_lg700pro_3.5寸屏幕_六年质保_b',
         '钛钽 LG700PRO 3.5寸屏幕 白色 六年质保': '钛钽_lg700pro_3.5寸屏幕_六年质保_w',
@@ -4493,7 +4619,28 @@
         '超频三 GT360白色 水冷 3.5寸液晶屏 八年质保': '超频三 GT360白色 水冷 3.5寸液晶屏 八年质保',
         '超频三 DX360黑色 水冷 双面4屏 八年质保': '超频三 DX360黑色 水冷 双面4屏 八年质保',
         '超频三 DX360白色 水冷 3.4寸超清屏 八年质保': '超频三 DX360白色 水冷 3.4寸超清屏 八年质保',
-        '超频三 DV360黑色 水冷 6.67寸曲面屏 八年质保': '超频三 DV360黑色 水冷 6.67寸曲面屏 八年质保'
+        '超频三 DV360黑色 水冷 6.67寸曲面屏 八年质保': '超频三 DV360黑色 水冷 6.67寸曲面屏 八年质保',
+        '瓦尔基里 N360-ARGB VK（黑色）曲面屏': '瓦尔基里 N360-ARGB VK（黑色）曲面屏',
+        '瓦尔基里 N360-ARGB VK（白色）曲面屏': '瓦尔基里 N360-ARGB VK（白色）曲面屏',
+        '瓦尔基里 MC360 黑色 ARGB 3.5寸屏幕': '瓦尔基里 MC360 黑色 ARGB 3.5寸屏幕',
+        '瓦尔基里 MC360 白色 ARGB 3.5寸屏幕': '瓦尔基里 MC360 白色 ARGB 3.5寸屏幕',
+        '瓦尔基里 MA360 黑色 ARGB 光棱冷头': '瓦尔基里 MA360 黑色 ARGB 光棱冷头',
+        '瓦尔基里 MA360 白色 ARGB 光棱冷头': '瓦尔基里 MA360 白色 ARGB 光棱冷头',
+        '华硕龙王4代 ROG RYUO IV SLC 360 ARGB(颜值版 曲面屏 短管) 黑色': '华硕龙王4代 ROG RYUO IV SLC 360 ARGB(颜值版 曲面屏 短管) 黑色',
+        '华硕龙王4代 ROG RYUO IV SLC 360 ARGB(颜值版 曲面屏 短管) 白色': '华硕龙王4代 ROG RYUO IV SLC 360 ARGB(颜值版 曲面屏 短管) 白色',
+        '华硕 TUF 破冰手 360 ARGB LCD 2.8寸 LCD': '华硕 TUF 破冰手 360 ARGB LCD 2.8寸 LCD',
+        '华硕 ROG 龙神3 360一体式水冷 ARGB EXTRME': '华硕 ROG 龙神3 360一体式水冷 ARGB EXTRME',
+        '九州风神 阿萨辛4 七热管双塔双扇 黑': '九州风神 阿萨辛4 七热管双塔双扇 黑',
+        '九州风神 玄冰400 G2性能版 四热管 无光': '九州风神 玄冰400 G2性能版 四热管 无光',
+        '九州风神 冰果LE360 ARGB 黑色': '九州风神 冰果LE360 ARGB 黑色',
+        '九州风神 AG620 大霜塔 G2 黑色无光': '九州风神 AG620 大霜塔 G2 黑色无光',
+        '九州风神 AG620 大霜塔 G2 黑色 ARGB': '九州风神 AG620 大霜塔 G2 黑色 ARGB',
+        '乔思伯（JONSBO）TX360水冷 黑色 3.95寸屏幕': '乔思伯（JONSBO）TX360水冷 黑色 3.95寸屏幕',
+        '乔思伯（JONSBO）TX360水冷 白色 3.95寸屏幕': '乔思伯（JONSBO）TX360水冷 白色 3.95寸屏幕',
+        '乔思伯 CR3000 黑色 双塔七热管 ARGB': '乔思伯 CR3000 黑色 双塔七热管 ARGB',
+        '乔思伯 CR3000 白色 双塔七热管 ARGB': '乔思伯 CR3000 白色 双塔七热管 ARGB',
+        '乔思伯 CR1400 EVO 白色 四热管 ARGB': '乔思伯 CR1400 EVO 白色 四热管 ARGB',
+        '乔思伯 CR1000 EVO ARGB 四热管 白色': '乔思伯 CR1000 EVO ARGB 四热管 白色',
     };
 
     // 显卡图片映射表
@@ -4565,7 +4712,7 @@
         '旌宇-RX550-4G-GAMING': '旌宇-RX550-4G-GAMING',
         '旌宇 RX550 8G 刀锋': '旌宇 RX550 8G 刀锋',
         '旌宇-RX6500-4GD6-FIGHTING-战虎': '旌宇-RX6500-4GD6-FIGHTING-战虎',
-        '磐正RX6500XT-4GD6': '磐正RX6500XT-4GD6',
+        '昂达 RX6500XT-4G': '昂达 RX6500XT-4G',
         '微星-GT1030-2GD4 AERO ITX OCV1': '微星-GT1030-2GD4 AERO ITX OCV1',
         '七彩虹RTX5060TiUItra DUO 16GB黑色双风扇': '七彩虹RTX5060TiUItra DUO 16GB黑色双风扇',
         '七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇': '七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇',
@@ -4755,25 +4902,35 @@
         '七彩虹 RTX5060 8G ULTRA W DUO OC 白色双扇': 'qicaihong_rtx5060_8g_ultra_w_duo_oc_白色双扇',
         '七彩虹 RTX5050 8G 战斧 DUO 双扇': 'qicaihong_rtx5050_8g_zhanfu_duo_双扇',
         '七彩虹 RTX5050 8G ULTRA W DUO 白色双扇': 'qicaihong_rtx5050_8g_ultra_w_duo_白色双扇',
+        '映众 RTX5050 8G 曜夜X2 双风扇': 'yingzhong_rtx5050_8g_曜夜x2_双风扇',
+        '七彩虹 RTX5060 战斧DUO 8G V3-T 双风扇': 'qicaihong_rtx5060_8g_zhanfu_duo_双扇',
+        '映众 RTX5060 8G 曜夜X2 V2 双风扇': 'yingzhong_rtx5060_8g_曜夜x2_v2_双风扇',
+        '映众 RTX5060 8G 超级冰龙 三风扇': 'yingzhong_rtx5060_8g_超级冰龙_三风扇',
+        '映众 RTX5060 8G 雪域冰龙X3 WHITE 三风扇': 'yingzhong_rtx5060_8g_雪域冰龙x3_white_三风扇',
+        '七彩虹 RTX5050 ULTRA W DUO OC 8G-T 双风扇': 'qicaihong_rtx5050_8g_ultra_w_duo_白色双扇',
+        '七彩虹 RTX5050 ULTRA W 8GB 白色三风扇': 'qicaihong_rtx5050_ultra_w_oc_8g_三风扇',
+        '七彩虹 RTX5050 ULTRA W OC 8G 三风扇': 'qicaihong_rtx5050_ultra_w_oc_8g_三风扇',
+        '微星-RTX5050 8G GAMING TRIO OC': 'weixing_rtx5050_8g_gaming_trio_oc',
         '七彩虹 RTX3050 8G 战斧DUO 双扇': 'qicaihong_rtx3050_8g_战斧duo_双扇',
         'Intel UHD 核显': 'intel_uhd_核显',
         'AMD Vega 核显': 'amd_vega_核显',
         'AMD Radeon Graphics': 'amd_radeon_graphics',
-        '* 技嘉 RTX5070TI Eagle OC 16G 猎鹰 三扇 SFF': '*_jijia_rtx5070ti_eagle_oc_16g_猎鹰_三扇_sff',
-        '* 技嘉 RTX5070TI AERO 16G 雪鹰': '*_jijia_rtx5070ti_aero_16g_雪鹰',
-        '* 影驰 RTX5070TI 16G 金属大师 黑金版 黑色': '*_yingchi_rtx5070ti_16g_金属大师_黑金版_b',
-        '* 影驰 RTX5070TI 16G 金属大师 白金版 白色': '*_yingchi_rtx5070ti_16g_金属大师_白金版_w',
-        '* 影驰 RTX5070 12G 金属大师 黑金版 黑色': '*_yingchi_rtx5070_12g_金属大师_黑金版_b',
-        '* 影驰 RTX5060TI 圣刃 OC 8G 白色 三扇': '*_yingchi_rtx5060ti_圣刃_oc_8g_三扇_w',
-        '* 影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色': '*_yingchi_rtx5060ti_8g_金属大师_oc_黑金版_b',
-        '* 华硕 RTX5070TI O16G WHITE GAMING TUF电竞特工 白色': '*_huashuo_rtx5070ti_o16g_white_gaming_tuf电竞特工_w',
-        '* 华硕 RTX5070TI O16G GAMING TUF 电竞特工': '*_huashuo_rtx5070ti_o16g_gaming_tuf_电竞特工',
-        '* 七彩虹 RTX5070 12G ULTRA OC 黑色': '*_qicaihong_rtx5070_12g_ultra_oc_b',
+        '* 技嘉 RTX5070TI Eagle OC 16G 猎鹰 三扇 SFF': 'jijia_rtx5070ti_eagle_oc_16g_猎鹰_三扇_sff',
+        '* 技嘉 RTX5070TI AERO 16G 雪鹰': 'jijia_rtx5070ti_aero_16g_雪鹰',
+        '* 影驰 RTX5070TI 16G 金属大师 黑金版 黑色': '影驰 RTX5070TI 16G 金属大师 黑金版 黑色',
+        '* 影驰 RTX5070TI 16G 金属大师 白金版 白色': '影驰 RTX5070TI 16G 金属大师 白金版 白色',
+        '* 影驰 RTX5070 12G 金属大师 黑金版 黑色': 'yingchi_rtx5070_12g_金属大师_黑金版_b',
+        '* 影驰 RTX5060TI 圣刃 OC 8G 白色 三扇': '影驰 RTX5060TI 圣刃 OC 8G 白色 三扇',
+        '* 影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色': '影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色',
+        '* 华硕 RTX5070TI O16G WHITE GAMING TUF电竞特工 白色': 'huashuo_rtx5070ti_o16g_white_gaming_tuf电竞特工_w',
+        '* 华硕 RTX5070TI O16G GAMING TUF 电竞特工': '华硕 RTX5070TI O16G GAMING TUF 电竞特工',
+        '* 七彩虹 RTX5070 12G ULTRA OC 黑色': '七彩虹 RTX5070 12G ULTRA W OC 黑色',
         '微星-RTX5070Ti 16G VENTUS  3X OC': '微星-RTX5070Ti 16G VENTUS  3X OC',
         '影驰 RTX5070TI 16G 金属大师 黑金版 黑色': '影驰 RTX5070TI 16G 金属大师 黑金版 黑色',
         '影驰 RTX5070TI 16G 金属大师 白金版 白色': '影驰 RTX5070TI 16G 金属大师 白金版 白色',
         '影驰 RTX5060TI 圣刃 OC 8G 白色 三扇': '影驰 RTX5060TI 圣刃 OC 8G 白色 三扇',
         '华硕 RTX5090D O32G GAMING ROG ASTRAL 夜神黑色 四风扇': '华硕 RTX5090D O32G GAMING ROG ASTRAL 夜神黑色 四风扇',
+        '华硕 ROG ASTRAL RTX5090 O32G 夜神超频': '华硕 ROG ASTRAL RTX5090 O32G 夜神超频',
         '华硕 RTX5080 O16G GAMING ROG ASTRAL WHITE 白夜神 四风扇': '华硕 RTX5080 O16G GAMING ROG ASTRAL WHITE 白夜神 四风扇',
         '华硕 RTX5060TI O8G GAMING TUF 电竞特工': '华硕 RTX5060TI O8G GAMING TUF 电竞特工',
         '七彩虹 RTX5090D V2 16G Advanced OC 24G 银鲨': '七彩虹 RTX5090D V2 16G Advanced OC 24G 银鲨',
@@ -4787,8 +4944,25 @@
         '华硕DUAL RTX3060 O6G 12G': '华硕DUAL RTX3060 O6G 12G',
         '技嘉GV-N3060WF2OC-12GD': '技嘉GV-N3060WF2OC-12GD',
         '影驰RTX3060 12G Fire Lite': '影驰RTX3060 12G Fire Lite',
-        '影驰RTX-N3060WF2OC-12GD': '影驰RTX-N3060WF2OC-12GD',
-        '盈通RTX3060-12GD6-大地之神': '盈通RTX3060-12GD6-大地之神'
+        '影驰RTX-N3060WF2OC-12GD': '技嘉GV-N3060WF2OC-12GD',
+        '盈通RTX3060-12GD6-大地之神': '盈通RTX3060-12GD6-大地之神',
+        '磐镭 RTX 2060S 8G 白色双风扇': '磐镭 RTX 2060S 8G 白色双风扇',
+        '技嘉 RTX5080 GAMING OC 16G 魔鹰': '技嘉 RTX5080 GAMING OC 16G 魔鹰',
+        '技嘉 RTX5060 WF2 MAX OC 8G 风魔MAX': '技嘉 RTX5060 WF2 MAX OC 8G 风魔MAX',
+        '技嘉 RTX4060TI 8G 风魔 工包': '技嘉 RTX4060TI 8G 风魔 工包',
+        '影驰 RTX5070TI HOF OC LAB 16G 名人堂黑魂X': '影驰 RTX5070TI HOF OC LAB 16G 名人堂黑魂X',
+        '影驰 RTX5070TI HOF OC LAB 16G Deluxe-X 名人堂白色': '影驰 RTX5070TI HOF OC LAB 16G Deluxe-X 名人堂白色',
+        '影驰 RTX5070 HOF OC LAB 12G Deluxe-X 名人堂白色': '影驰 RTX5070 HOF OC LAB 12G Deluxe-X 名人堂白色',
+        '影驰 RTX5060TI FIRE 8G 三扇 黑色': '影驰 RTX5060TI FIRE 8G 三扇 黑色',
+        '影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色': '影驰 RTX5060TI 8G 金属大师 OC 黑金版 黑色',
+        '影驰 RTX5060 圣刃V2 OC 8G 白色 三扇': '影驰 RTX5060 圣刃V2 OC 8G 白色 三扇',
+        '华硕 RTX5070TI O16G GAMING TUF 电竞特工': '华硕 RTX5070TI O16G GAMING TUF 电竞特工',
+        '华硕 PRIME RX9060XT O8G 大师': '华硕 PRIME RX9060XT O8G 大师',
+        '华擎 RX7650GRE 8G 挑战者 双扇': '华擎 RX7650GRE 8G 挑战者 双扇',
+        '铭鑫 RTX20606G D6H+DP+DV炫彩版': '铭鑫 RTX20606G D6H+DP+DV炫彩版',
+        '翔升 RTX2060 SUPER 战神8G D6(DP*3+HIMI)': '翔升 RTX2060 SUPER 战神8G D6(DP*3+HIMI)',
+        '技嘉 RTX4060 8G WF2 风魔双扇': '技嘉 RTX4060 8G WF2 风魔双扇',
+        '艾尔莎 GTX1650幻雷者4G': '艾尔莎 GTX1650幻雷者4G',
     };
 
     // 图片缓存对象
@@ -4797,6 +4971,30 @@
     let isLoadingImages = false;
     const STORAGE_KEY = 'tasi_image_cache';
     const CACHE_VERSION = '1.0';
+    const IMAGE_CACHE_TTL = 24 * 60 * 60 * 1000; // 图片缓存有效期24小时，过期后自动从仓库重新下载
+
+    // 共享 IndexedDB 连接（避免每次保存都重新 open）
+    let sharedDB = null;
+    let dbOpenPromise = null;
+    function openImageDB() {
+        dbOpenPromise = new Promise((resolve) => {
+            const request = indexedDB.open('ImageCacheDB', 1);
+            request.onerror = () => resolve(null);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    const store = db.createObjectStore('images', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+            request.onsuccess = (event) => {
+                sharedDB = event.target.result;
+                resolve(sharedDB);
+            };
+        });
+        return dbOpenPromise;
+    }
+    openImageDB();
     
     // 图片服务器基础URL配置
     const IMAGE_BASE_URL = 'https://tas1985.github.io';
@@ -4825,12 +5023,34 @@
                 
                 getAllRequest.onsuccess = function() {
                     const images = getAllRequest.result || [];
+                    const now = Date.now();
+                    const expiredKeys = [];
                     images.forEach((item) => {
-                        if (item && item.base64) {
-                            imageCache[item.key] = { src: item.base64, loaded: true };
-                            loadedCount++;
+                        if (item && (item.base64 || item.blob)) {
+                            const cachedTime = item.timestamp || 0;
+                            if (now - cachedTime > IMAGE_CACHE_TTL) {
+                                expiredKeys.push(item.key);
+                            } else {
+                                // 兼容旧base64缓存和新blob缓存
+                                let src;
+                                if (item.blob) {
+                                    src = URL.createObjectURL(item.blob);
+                                } else {
+                                    src = item.base64;
+                                }
+                                imageCache[item.key] = { src: src, loaded: true };
+                                loadedCount++;
+                            }
                         }
                     });
+                    // 删除过期缓存
+                    if (expiredKeys.length > 0) {
+                        try {
+                            const delTrans = db.transaction(['images'], 'readwrite');
+                            expiredKeys.forEach(k => delTrans.objectStore('images').delete(k));
+                            console.log('Cleared', expiredKeys.length, 'expired IndexedDB cache entries');
+                        } catch(e) {}
+                    }
                     console.log('Loaded', loadedCount, 'images from IndexedDB cache');
                     db.close();
                     resolve(loadedCount);
@@ -4861,11 +5081,23 @@
                 const cache = JSON.parse(cachedData);
                 if (cache.version === CACHE_VERSION && cache.images) {
                     let loadedCount = 0;
+                    let expiredCount = 0;
+                    const now = Date.now();
                     for (const [key, data] of Object.entries(cache.images)) {
                         if (data && data.base64) {
-                            imageCache[key] = { src: data.base64, loaded: true };
-                            loadedCount++;
+                            const cachedTime = data.timestamp || 0;
+                            if (now - cachedTime > IMAGE_CACHE_TTL) {
+                                delete cache.images[key];
+                                expiredCount++;
+                            } else {
+                                imageCache[key] = { src: data.base64, loaded: true };
+                                loadedCount++;
+                            }
                         }
+                    }
+                    if (expiredCount > 0) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+                        console.log('Cleared', expiredCount, 'expired localStorage cache entries');
                     }
                     console.log('Loaded', loadedCount, 'images from localStorage cache');
                     return loadedCount;
@@ -4909,8 +5141,14 @@
                 const getRequest = store.get(key);
                 
                 getRequest.onsuccess = function() {
-                    if (getRequest.result && getRequest.result.base64) {
-                        imageCache[key] = { src: getRequest.result.base64, loaded: true };
+                    if (getRequest.result && (getRequest.result.base64 || getRequest.result.blob)) {
+                        let src;
+                        if (getRequest.result.blob) {
+                            src = URL.createObjectURL(getRequest.result.blob);
+                        } else {
+                            src = getRequest.result.base64;
+                        }
+                        imageCache[key] = { src: src, loaded: true };
                         db.close();
                         resolve(true);
                     } else {
@@ -4982,11 +5220,29 @@
                 const getRequest = store.get(key);
                 
                 getRequest.onsuccess = function() {
-                    if (getRequest.result && getRequest.result.base64) {
-                        const base64 = getRequest.result.base64;
-                        imageCache[key] = { src: base64, loaded: true };
+                    if (getRequest.result && (getRequest.result.base64 || getRequest.result.blob)) {
+                        // 检查缓存是否过期
+                        const cachedTime = getRequest.result.timestamp || 0;
+                        if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
+                            console.log('IndexedDB cache expired, re-downloading:', key);
+                            // 删除过期缓存
+                            try {
+                                const delTrans = db.transaction(['images'], 'readwrite');
+                                delTrans.objectStore('images').delete(key);
+                            } catch(e) {}
+                            db.close();
+                            resolve(null);
+                            return;
+                        }
+                        let src;
+                        if (getRequest.result.blob) {
+                            src = URL.createObjectURL(getRequest.result.blob);
+                        } else {
+                            src = getRequest.result.base64;
+                        }
+                        imageCache[key] = { src: src, loaded: true };
                         db.close();
-                        resolve(base64);
+                        resolve(src);
                     } else {
                         db.close();
                         resolve(getCachedImageSrcFromLocalStorage(key));
@@ -5016,6 +5272,14 @@
             if (cachedData) {
                 const cache = JSON.parse(cachedData);
                 if (cache.images && cache.images[key] && cache.images[key].base64) {
+                    // 检查缓存是否过期
+                    const cachedTime = cache.images[key].timestamp || 0;
+                    if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
+                        console.log('localStorage cache expired, re-downloading:', key);
+                        delete cache.images[key];
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+                        return null;
+                    }
                     const base64 = cache.images[key].base64;
                     imageCache[key] = { src: base64, loaded: true };
                     return base64;
@@ -5027,48 +5291,34 @@
         return null;
     }
 
-    // 保存图片到IndexedDB缓存
-    async function saveToCache(key, imageData) {
-        return new Promise((resolve) => {
-            const request = indexedDB.open('ImageCacheDB', 1);
-            
-            request.onerror = function() {
-                console.warn('IndexedDB not available, falling back to localStorage');
-                saveToCacheLocalStorage(key, imageData);
+    // 保存图片到IndexedDB缓存（复用共享连接，直接存Blob不转base64）
+    async function saveToCache(key, imageData, isBlob = false) {
+        return new Promise(async (resolve) => {
+            const db = sharedDB || await dbOpenPromise;
+            if (!db) {
+                if (!isBlob) saveToCacheLocalStorage(key, imageData);
                 resolve();
-            };
-            
-            request.onsuccess = function(event) {
-                const db = event.target.result;
+                return;
+            }
+            try {
                 const transaction = db.transaction(['images'], 'readwrite');
                 const store = transaction.objectStore('images');
-                const putRequest = store.put({
-                    key: key,
-                    base64: imageData,
-                    timestamp: Date.now()
-                });
-                
-                putRequest.onsuccess = function() {
-                    db.close();
-                    console.log('Saved to IndexedDB:', key);
-                    resolve();
-                };
-                
-                putRequest.onerror = function() {
-                    db.close();
-                    console.warn('Failed to save to IndexedDB, falling back to localStorage');
-                    saveToCacheLocalStorage(key, imageData);
-                    resolve();
-                };
-            };
-            
-            request.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('images')) {
-                    const store = db.createObjectStore('images', { keyPath: 'key' });
-                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                const record = { key: key, timestamp: Date.now() };
+                if (isBlob) {
+                    record.blob = imageData;
+                } else {
+                    record.base64 = imageData;
                 }
-            };
+                store.put(record);
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => {
+                    if (!isBlob) saveToCacheLocalStorage(key, imageData);
+                    resolve();
+                };
+            } catch (e) {
+                if (!isBlob) saveToCacheLocalStorage(key, imageData);
+                resolve();
+            }
         });
     }
     
@@ -5095,10 +5345,21 @@
         }
     }
     
-    // 清理旧缓存（已取消时间限制：缓存永久有效，仅在你手动“清除图片缓存”时才删除）
+    // 清理旧缓存（超过30天的）
     function cleanOldCache(cache) {
-        // 不再按时间删除任何缓存条目；缓存永久保留，直到用户主动清除缓存重新下载
-        return 0;
+        const now = Date.now();
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        let cleanedCount = 0;
+        
+        for (const [key, data] of Object.entries(cache.images)) {
+            if (data.timestamp && (now - data.timestamp) > thirtyDays) {
+                delete cache.images[key];
+                cleanedCount++;
+            }
+        }
+        
+        console.log('Cleaned', cleanedCount, 'old cache entries');
+        return cleanedCount;
     }
 
     // 将图片转换为base64
@@ -5294,7 +5555,7 @@
             text-align: center;
             font-size: 14px;
         `;
-        downloadProgressText.textContent = '0/0 (0%)';
+        downloadProgressText.innerHTML = '已下载: <strong>0</strong> 张 &nbsp;|&nbsp; 未下载: <strong>0</strong> 张 &nbsp;|&nbsp; 总计: 0 张 (0%)';
         container.appendChild(downloadProgressText);
         
         // 创建取消按钮
@@ -5327,8 +5588,9 @@
     function updateProgress(current, total) {
         if (downloadProgressBar && downloadProgressText) {
             const percentage = Math.round((current / total) * 100);
+            const remaining = total - current;
             downloadProgressBar.style.width = percentage + '%';
-            downloadProgressText.textContent = `${current}/${total} (${percentage}%)`;
+            downloadProgressText.innerHTML = `已下载: <strong>${current}</strong> 张 &nbsp;|&nbsp; 未下载: <strong>${remaining}</strong> 张 &nbsp;|&nbsp; 总计: ${total} 张 (${percentage}%)`;
         }
     }
 
@@ -5342,11 +5604,187 @@
         downloadProgressText = null;
     }
 
+    // 统计本地图片缓存情况
+    function getImageCacheStats() {
+        const keys = new Set();
+        for (const [, name] of Object.entries(caseImageMap)) keys.add(name);
+        for (const [, name] of Object.entries(coolerImageMap)) keys.add('cooler_' + name);
+        for (const [, name] of Object.entries(vgaImageMap)) keys.add('vga_' + name);
+        let cached = 0;
+        keys.forEach((k) => {
+            if (imageCache[k] && imageCache[k].src) cached++;
+        });
+        return { cached: cached, total: keys.size };
+    }
+
+    // 打开图片缓存下载选择弹窗
+    function openImageDownloadDialog() {
+        // 避免重复弹窗
+        if (document.getElementById('imageDownloadDialogMask')) return;
+
+        const mask = document.createElement('div');
+        mask.id = 'imageDownloadDialogMask';
+        mask.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        const box = document.createElement('div');
+        box.style.cssText = `
+            background: #fff;
+            border-radius: 12px;
+            padding: 22px 20px;
+            width: 86%;
+            max-width: 380px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        `;
+
+        const title = document.createElement('div');
+        title.textContent = '图片缓存';
+        title.style.cssText = `
+            font-size: 17px;
+            font-weight: bold;
+            color: #111827;
+            text-align: center;
+            margin-bottom: 6px;
+        `;
+        box.appendChild(title);
+
+        const desc = document.createElement('div');
+        desc.textContent = '请选择下载方式：';
+        desc.style.cssText = `
+            font-size: 13px;
+            color: #6B7280;
+            text-align: center;
+            margin-bottom: 10px;
+        `;
+        box.appendChild(desc);
+
+        // 本地缓存状态
+        const stats = getImageCacheStats();
+        const statsEl = document.createElement('div');
+        statsEl.style.cssText = `
+            font-size: 13px;
+            color: ${stats.cached === 0 ? '#DC2626' : '#2563EB'};
+            background: ${stats.cached === 0 ? '#FEF2F2' : '#EFF6FF'};
+            border-radius: 8px;
+            padding: 8px 10px;
+            text-align: center;
+            margin-bottom: 14px;
+        `;
+        statsEl.innerHTML = `本地已缓存：<strong>${stats.cached}</strong> / ${stats.total} 张` +
+            (stats.cached === 0 ? '<br><span style="font-size:11px">未检测到缓存，可能是浏览器禁用了存储或使用了隐私模式</span>' : '');
+        box.appendChild(statsEl);
+
+        const btnWrap = document.createElement('div');
+        btnWrap.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
+
+        const makeBtn = (text, sub, bg, color, handler) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = `
+                width: 100%;
+                padding: 12px 10px;
+                background: ${bg};
+                color: ${color};
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                line-height: 1.4;
+            `;
+            btn.innerHTML = `${text}<br><span style="font-size:11px;font-weight:normal;opacity:0.85">${sub}</span>`;
+            btn.onclick = () => {
+                document.body.removeChild(mask);
+                handler();
+            };
+            return btn;
+        };
+
+        // 选项1：只下载新增/未完成的图片
+        btnWrap.appendChild(makeBtn(
+            '只下载新增图片',
+            '跳过已缓存的图片，只下载缺失的部分（推荐，速度快）',
+            '#2563EB', '#fff',
+            () => { downloadAllImages(false); }
+        ));
+
+        // 选项2：清空全部缓存重新下载
+        btnWrap.appendChild(makeBtn(
+            '清空全部并重新下载',
+            '删除本地所有图片缓存，从仓库重新下载最新版本（较慢）',
+            '#fff', '#DC2626',
+            () => {
+                if (confirm('确定要清空全部图片缓存并重新下载吗？\n这将删除本地所有缓存的图片。')) {
+                    downloadAllImages(true);
+                }
+            }
+        ));
+
+        box.appendChild(btnWrap);
+
+        // 取消按钮
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.textContent = '取消';
+        cancel.style.cssText = `
+            width: 100%;
+            margin-top: 12px;
+            padding: 9px;
+            background: #F3F4F6;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        `;
+        cancel.onclick = () => document.body.removeChild(mask);
+        box.appendChild(cancel);
+
+        mask.appendChild(box);
+        mask.onclick = (e) => { if (e.target === mask) document.body.removeChild(mask); };
+        document.body.appendChild(mask);
+    }
+
     // 下载所有图片并缓存（带进度显示）
-    async function downloadAllImages() {
-        // 首先加载已有的缓存（异步）
-        const existingCacheCount = await loadCachedImages();
-        console.log('Existing cache:', existingCacheCount, 'images');
+    // forceRedownload=true 时先清空本地缓存再从仓库重新下载
+    async function downloadAllImages(forceRedownload) {
+        if (forceRedownload) {
+            // 清空内存缓存
+            for (const key in imageCache) {
+                delete imageCache[key];
+            }
+            // 先关闭共享连接，否则 deleteDatabase 会被阻塞
+            try {
+                if (sharedDB) { sharedDB.close(); sharedDB = null; }
+                dbOpenPromise = null;
+            } catch(e) {}
+            // 清除 IndexedDB
+            try {
+                await new Promise((resolve) => {
+                    const req = indexedDB.deleteDatabase('ImageCacheDB');
+                    req.onsuccess = req.onerror = req.onblocked = () => resolve();
+                });
+            } catch(e) {}
+            // 重新建立连接
+            openImageDB();
+            // 清除 localStorage
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch(e) {}
+            showToast('已清空本地缓存，开始重新下载...', 'info', 2000);
+            await new Promise(r => setTimeout(r, 500));
+        } else {
+            // 首先加载已有的缓存（异步）
+            const existingCacheCount = await loadCachedImages();
+            console.log('Existing cache:', existingCacheCount, 'images');
+        }
         
         const allImages = [];
         
@@ -5387,56 +5825,83 @@
         let completed = 0;
         let successCount = 0;
         let failCount = 0;
-        const batchSize = 3; // 每批下载3张图片
-        
-        for (let i = 0; i < allImages.length; i += batchSize) {
-            const batch = allImages.slice(i, i + batchSize);
-            const promises = batch.map(async (item) => {
-                // 检查是否已缓存（使用异步缓存检查函数）
-                if (await hasCachedImageAsync(item.key)) {
-                    completed++;
-                    updateProgress(completed, allImages.length);
-                    successCount++;
-                    console.log('Already cached:', item.key);
-                    return;
-                }
-                
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    
-                    img.onload = async function() {
-                        // 转换为 base64 并保存到缓存
-                        const base64 = await imageToBase64(img);
-                        if (base64) {
-                            imageCache[item.key] = { src: base64, loaded: true };
-                            await saveToCache(item.key, base64);
-                        }
-                        completed++;
-                        successCount++;
-                        updateProgress(completed, allImages.length);
-                        console.log('Downloaded and cached:', item.key);
-                        resolve();
-                    };
-                    
-                    img.onerror = function() {
-                        completed++;
-                        failCount++;
-                        updateProgress(completed, allImages.length);
-                        console.warn('Failed to download:', item.key, '-', item.src);
-                        // 记录失败的图片信息到全局数组，方便排查
-                        if (!window.failedImages) window.failedImages = [];
-                        window.failedImages.push({ key: item.key, src: item.src, type: item.type });
-                        resolve();
-                    };
-                    
-                    // 对URL进行编码，处理中文文件名
-                    const encodedSrc = encodeURI(item.src);
-                    img.src = encodedSrc;
-                });
+        let skippedCount = 0;
+        const maxConcurrent = 12; // 最大并发数
+
+        // blob 转 base64（比 canvas 重绘快得多）—— 仅用于 localStorage 降级
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
             });
-            
-            await Promise.all(promises);
+        }
+
+        // 带超时的 fetch，避免单张卡死
+        function fetchWithTimeout(url, options, timeout = 15000) {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
+            ]);
+        }
+
+        // 并发池模式：完成一个立即补充一个，不等待整批
+        let index = 0;
+        const activePromises = new Set();
+        const pendingSaves = [];
+
+        async function downloadOne(item) {
+            // 非强制模式：跳过已缓存的图片（loadCachedImages 已加载到内存）
+            if (!forceRedownload && imageCache[item.key] && imageCache[item.key].src) {
+                completed++;
+                successCount++;
+                skippedCount++;
+                updateProgress(completed, allImages.length);
+                return;
+            }
+            try {
+                // 用 fetch 直接获取 blob，跳过 canvas 重绘和 base64 编码
+                const encodedSrc = encodeURI(item.src);
+                const resp = await fetchWithTimeout(encodedSrc, { mode: 'cors' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const blob = await resp.blob();
+                // 直接用 objectURL 显示，不转 base64（省掉最耗时的编码步骤）
+                const objectURL = URL.createObjectURL(blob);
+                imageCache[item.key] = { src: objectURL, loaded: true };
+                // 异步写入 blob 到 IndexedDB（不转 base64，体积小33%，写入更快）
+                pendingSaves.push(saveToCache(item.key, blob, true));
+                successCount++;
+            } catch (e) {
+                failCount++;
+                console.warn('Failed to download:', item.key, '-', item.src, e);
+                if (!window.failedImages) window.failedImages = [];
+                window.failedImages.push({ key: item.key, src: item.src, type: item.type });
+            }
+            completed++;
+            updateProgress(completed, allImages.length);
+        }
+
+        async function pool() {
+            while (index < allImages.length) {
+                // 控制并发数
+                while (activePromises.size >= maxConcurrent) {
+                    await Promise.race(activePromises);
+                }
+                const item = allImages[index++];
+                const p = downloadOne(item).then(() => {
+                    activePromises.delete(p);
+                });
+                activePromises.add(p);
+            }
+            // 等待所有活跃任务完成
+            await Promise.all(activePromises);
+        }
+
+        await pool();
+        // 等待所有缓存写入完成，确保关闭页面前数据已落盘
+        if (pendingSaves.length > 0) {
+            await Promise.allSettled(pendingSaves);
         }
         
         // 关闭进度显示
@@ -5456,9 +5921,18 @@
         
         // 显示结果
         if (failCount === 0) {
-            showToast(`全部下载完成！共 ${successCount} 张图片已缓存`, 'success', 5000);
+            if (!forceRedownload && skippedCount > 0) {
+                showToast(`下载完成！新增 ${successCount - skippedCount} 张，跳过已缓存 ${skippedCount} 张`, 'success', 5000);
+            } else {
+                showToast(`全部下载完成！共 ${successCount} 张图片已缓存`, 'success', 5000);
+            }
         } else {
             showToast(`下载完成！成功 ${successCount} 张，失败 ${failCount} 张`, 'warning', 5000);
+        }
+        // 缓存未成功写入时给出提示
+        const finalStats = getImageCacheStats();
+        if (finalStats.cached < finalStats.total * 0.9) {
+            showToast(`注意：本地仅缓存 ${finalStats.cached}/${finalStats.total} 张，浏览器的存储可能被限制`, 'warning', 6000);
         }
     }
 
@@ -6478,6 +6952,81 @@
         calc();
     }
 
+    // 截图保存后的处理：电脑端自动打开大图预览，移动端静默保存（都不再弹提示框）
+    function showShotPreview(url) {
+        let ov = document.getElementById('shotPreview');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'shotPreview';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:10px;box-sizing:border-box;cursor:zoom-out;';
+            ov.addEventListener('click', function () { ov.style.display = 'none'; });
+            document.body.appendChild(ov);
+        }
+        ov.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.5);';
+        ov.appendChild(img);
+        ov.style.display = 'flex';
+    }
+
+    // 轻量提示（1.5 秒后自动淡出，不打断操作）
+    function showShotToast(text) {
+        var t = document.getElementById('shotToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'shotToast';
+            t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:100000;background:rgba(0,0,0,.78);color:#fff;font-size:14px;padding:8px 16px;border-radius:18px;pointer-events:none;transition:opacity .3s;';
+            document.body.appendChild(t);
+        }
+        t.textContent = text;
+        t.style.opacity = '1';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; }, 1500);
+    }
+
+    // 把截图复制到剪贴板（Clipboard API 只接受 PNG，故单独用 canvas 导出 png）
+    function copyShotAsync(canvas) {
+        try {
+            if (!navigator.clipboard || !window.ClipboardItem || !canvas) return;
+            canvas.toBlob(function (blob) {
+                if (!blob) return;
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                    .then(function () { showShotToast('截图已复制到剪贴板'); })
+                    .catch(function (e) { console.warn('复制到剪贴板失败:', e); });
+            }, 'image/png');
+        } catch (e) {
+            console.warn('复制到剪贴板失败:', e);
+        }
+    }
+
+    // 快捷键：连按两下 Ctrl 保存截图，连按两下 Alt 保存配置（500ms 内有效）
+    let lastCtrlTime = 0;
+    let lastAltTime = 0;
+    document.addEventListener('keydown', function (e) {
+        const now = Date.now();
+        // 避免焦点在输入框时误触发
+        const inInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+
+        if (e.key === 'Control') {
+            if (now - lastCtrlTime < 500) {
+                lastCtrlTime = 0;
+                if (!inInput) saveScreenshot();
+            } else {
+                lastCtrlTime = now;
+            }
+        } else if (e.key === 'Alt') {
+            // 阻止 Alt 键激活浏览器菜单栏
+            e.preventDefault();
+            if (now - lastAltTime < 500) {
+                lastAltTime = 0;
+                if (!inInput) save();
+            } else {
+                lastAltTime = now;
+            }
+        }
+    });
+
     // 保存截图功能
     function saveScreenshot() {
         // 检查html2canvas是否加载成功
@@ -6539,6 +7088,16 @@
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
+                        // SVG图标：补齐宽高后序列化为data URL图片（无固有尺寸会导致html2canvas渲染空白）
+                        const svgIcon = span.querySelector('svg');
+                        if (svgIcon) {
+                            const svgClone = svgIcon.cloneNode(true);
+                            svgClone.setAttribute('width', '22');
+                            svgClone.setAttribute('height', '22');
+                            const svgStr = new XMLSerializer().serializeToString(svgClone);
+                            const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+                            span.innerHTML = `<img src="${svgUrl}" width="22" height="22" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                        }
                         // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
@@ -7057,10 +7616,15 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
 
-                    // 显示成功提示
-                    alert(`截图已保存：${fileName}`);
+                    // 电脑端自动打开截图预览，移动端静默保存，不再弹提示框
+                    if (document.body.classList.contains('mobile-mode')) {
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+                    } else {
+                        showShotPreview(url);
+                        copyShotAsync(resizedCanvas);
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+                    }
                 }, 'image/jpeg', 0.95); // 使用JPEG格式，质量0.95
             }).catch(error => {
                 console.error('保存截图失败:', error);
@@ -7131,6 +7695,16 @@
                     // 将图标转换为灰色
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
+                        // SVG图标：补齐宽高后序列化为data URL图片（无固有尺寸会导致html2canvas渲染空白）
+                        const svgIcon = span.querySelector('svg');
+                        if (svgIcon) {
+                            const svgClone = svgIcon.cloneNode(true);
+                            svgClone.setAttribute('width', '22');
+                            svgClone.setAttribute('height', '22');
+                            const svgStr = new XMLSerializer().serializeToString(svgClone);
+                            const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+                            span.innerHTML = `<img src="${svgUrl}" width="22" height="22" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
+                        }
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
                             const canvas = clonedDoc.createElement('canvas');
@@ -7670,9 +8244,15 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
 
-                    alert(`匿名截图已保存：${fileName}`);
+                    // 电脑端自动打开截图预览，移动端静默保存，不再弹提示框
+                    if (document.body.classList.contains('mobile-mode')) {
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+                    } else {
+                        showShotPreview(url);
+                        copyShotAsync(resizedCanvas);
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+                    }
                 }, 'image/jpeg', 0.95);
             }).catch(error => {
                 console.error('匿名截图失败:', error);
@@ -8067,6 +8647,35 @@
         localStorage.setItem("last",JSON.stringify(o));
     }
 
+    // 点击「客户名称」：仅保留「其他」默认文案、备注默认模板、服务默认勾选，其余配置全部清除
+    function clearConfigOnly(){
+        document.getElementById("user").value = "";
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power"].forEach(k=>{
+            document.getElementById(k).value = "";
+            document.getElementById(k+"-p").value = "";
+            document.getElementById(k).classList.remove('selected');
+        });
+        // 「其他」栏保留默认文案，价格 0
+        document.getElementById("other").value = "不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费";
+        document.getElementById("other-p").value = 0;
+        showCaseImage(null);
+        showCoolerImage(null);
+        showVgaImage(null);
+        // 备注恢复默认模板文字
+        migrateRemarkDefaults();
+        // 服务项目恢复默认勾选
+        loadServices(["视频验货/直播装机", "包装盒寄出", "WIN10", "烤机测试"]);
+        updateServiceText();
+        invoiceType = null;
+        const btnPu = document.getElementById('btn-kai-pu');
+        const btnZhuan = document.getElementById('btn-kai-zhuan');
+        if (btnPu) btnPu.classList.remove('active');
+        if (btnZhuan) btnZhuan.classList.remove('active');
+        hideUserDropdown();
+        saveNow();
+        calc();
+    }
+
     // 备注默认文字迁移：将旧的默认备注文字替换为新版默认文字
     function migrateRemarkDefaults() {
         const newR1 = "6%润：调货装机走线系统调试打包、店铺运营、三年一对一售后成本";
@@ -8139,7 +8748,7 @@
             case: { n: "黑色海景房", p: 129 },
             fan: { n: "棱镜4 7把", p: 140 },
             power: { n: "宏碁 额定550W 80PLUS铜牌全模组 3C", p: 229 },
-            other: { n: "不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费2%", p: 0 }
+            other: { n: "不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费", p: 0 }
         };
         for (let key in defaults) {
             document.getElementById(key).value = defaults[key].n;
@@ -8389,8 +8998,8 @@
         document.getElementById(m).style.display="none";
     }
 
-    function reset(){
-        if(!confirm("确定清空？"))return;
+    function reset(skipConfirm){
+        if(!skipConfirm && !confirm("确定清空？"))return;
         localStorage.removeItem("last");
         invoiceType = null;
         const btnPu = document.getElementById('btn-kai-pu');
@@ -8572,10 +9181,399 @@
         typeInput.value = currentValue; // 恢复输入框原有内容
         
         alert("型号添加成功！");
-        
+
         // 如果是显卡类型，执行排序
         if(type === 'vga') {
             afterDataUpdate();
+        }
+    }
+
+    // ===================== 改价写文件功能 =====================
+    // 直接修改某个配件的价格，并把修改写回 index.html 文件本身（刷新/重开页面后仍然生效）
+    // 电脑版 Chrome/Edge 支持 File System Access API：首次写入时选择一次 index.html，之后记住授权；
+    // 不支持的浏览器（Firefox/手机/微信内置）自动改为「读取原文件→打补丁→下载替换」方式。
+    let peFileHandle = null;
+
+    const PE_CATEGORIES = [["cpu","CPU"],["ram","内存"],["board","主板"],["cooler","散热器"],["fan","风扇"],["power","电源"],["other","其他配件"],["vga","显卡"],["ssd","固态硬盘"],["hdd","机械硬盘"],["case","机箱"]];
+
+    function peOpenDB(){
+        return new Promise((res,rej)=>{
+            const r = indexedDB.open("priceEditDB",1);
+            r.onupgradeneeded = ()=>{ r.result.createObjectStore("h"); };
+            r.onsuccess = ()=>res(r.result);
+            r.onerror = ()=>rej(r.error);
+        });
+    }
+    async function peSaveHandle(h){
+        try{
+            const db = await peOpenDB();
+            await new Promise((res,rej)=>{ const t=db.transaction("h","readwrite"); t.objectStore("h").put(h,"indexHtml"); t.oncomplete=res; t.onerror=()=>rej(t.error); });
+        }catch(e){ /* 记不住句柄不影响本次写入 */ }
+    }
+    async function peLoadHandle(){
+        try{
+            const db = await peOpenDB();
+            return await new Promise((res)=>{ const t=db.transaction("h","readonly"); const q=t.objectStore("h").get("indexHtml"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); });
+        }catch(e){ return null; }
+    }
+
+    function peEsc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+
+    function showPriceEdit(){
+        const typeSel = document.getElementById("peType");
+        if(!typeSel.options.length){
+            PE_CATEGORIES.forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; typeSel.appendChild(o); });
+        }
+        document.getElementById("peSearch").value = "";
+        peRenderModels();
+        peUpdateFileStatus();
+        peGhFillInputs();
+        document.getElementById("peNewPrice").value = "";
+        document.getElementById("peModal").style.display = "flex";
+    }
+
+    function peRenderModels(){
+        const type = document.getElementById("peType").value;
+        // 关键字过滤：忽略空格、不区分大小写（与其他型号匹配规则一致）
+        const kw = (document.getElementById("peSearch").value||"").trim().toUpperCase().replace(/\s+/g,"");
+        const sel = document.getElementById("peModel");
+        sel.innerHTML = "";
+        let count = 0;
+        (data[type]||[]).forEach(it=>{
+            const nn = (it.n||"").toUpperCase().replace(/\s+/g,"");
+            if(kw && !nn.includes(kw)) return;
+            const o = document.createElement("option");
+            o.value = it.n;
+            o.textContent = it.n + "（当前 ¥" + it.p + "）";
+            sel.appendChild(o);
+            count++;
+        });
+        if(kw && !count){
+            const o = document.createElement("option");
+            o.disabled = true;
+            o.textContent = "无匹配型号";
+            sel.appendChild(o);
+        }
+        sel.title = count ? ("共 " + count + " 个匹配型号") : "";
+    }
+
+    async function peUpdateFileStatus(){
+        const el = document.getElementById("peFileStatus");
+        if(!window.showOpenFilePicker){
+            el.textContent = "当前浏览器不支持直接写文件（如微信/手机浏览器），确认后需选择原文件并下载替换。建议用电脑版 Chrome/Edge。";
+            return;
+        }
+        const saved = await peLoadHandle();
+        if(saved){ el.textContent = "已连接文件：" + (saved.name||"index.html") + "（写入时如需重新授权会再询问一次）"; }
+        else{ el.textContent = "首次使用：点「确认改价」后会让你选择本页面对应的 index.html 文件，之后会记住，无需重复选择。"; }
+    }
+
+    // 联动改价规则（与既定约定一致），返回 [{type,name,price,rule}]
+    function peLinkedChanges(type, name, price){
+        const out = [];
+        const eq = (a,b)=>a.trim()===b;
+        const push = (t,n,price2,rule)=>out.push({type:t,name:n,price:price2,rule});
+        if(type==="vga"){
+            if(eq(name,"技嘉 RTX5060TI EAGLE OC 16G 猎鹰 黑色双扇")){
+                push("vga","华硕 RTX5060TI 16G DUAL 雪豹 黑色", price+100, "雪豹=猎鹰+100");
+            }
+            if(eq(name,"技嘉 RTX5070TI GAMING OC 16G 魔鹰")){
+                push("vga","微星-RTX5070Ti 16G VENTUS  3X OC", price, "与魔鹰同价");
+            }
+            if(eq(name,"七彩虹 RTX5060TI 16G 战斧 DUO 双扇")){
+                data.vga.forEach(it=>{
+                    const nn = it.n.replace(/\s+/g,"").toUpperCase();
+                    if(!nn.includes("RTX5060TI") || !nn.includes("16G")) return;
+                    if(/^微星[\s-]?/.test(it.n)) push("vga", it.n, price+599, "微星16G=战斧+599");
+                    else if(eq(it.n,"华硕 RTX5060TI 16G DUAL 雪豹 黑色")) push("vga", it.n, price+100, "雪豹=猎鹰(统价)+100");
+                    else push("vga", it.n, price, "5060TI 16G统价");
+                });
+            }
+            if(eq(name,"七彩虹 RTX5060TI 8G 战斧 DUO 双扇")){
+                data.vga.forEach(it=>{
+                    const nn = it.n.replace(/\s+/g,"").toUpperCase();
+                    if(!nn.includes("RTX5060TI")) return;
+                    if(!/^微星[\s-]?/.test(it.n)) return;
+                    const m = nn.match(/(\d+)G/);
+                    if(m ? m[1]==="8" : true) push("vga", it.n, price+49, "微星8G=战斧+49");
+                });
+            }
+            if(eq(name,"七彩虹 RTX5060 8G 战斧 DUO 双扇")){
+                data.vga.forEach(it=>{
+                    const nn = it.n.replace(/\s+/g,"").toUpperCase();
+                    if(!nn.includes("RTX5060") || nn.includes("RTX5060TI")) return;
+                    if(!/^微星-/.test(it.n)) return;
+                    push("vga", it.n, price+100, "微星5060 8G=战斧+100");
+                });
+            }
+            if(eq(name,"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲")){
+                data.vga.forEach(it=>{
+                    if(eq(it.n,"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲")) return;
+                    const nn = it.n.replace(/\s+/g,"").toUpperCase();
+                    if(!nn.includes("RTX3050")) return;
+                    push("vga", it.n, price+350, "3050统价=磐镭黑鳞甲+350");
+                });
+            }
+        }
+        if(type==="ram"){
+            if(eq(name,"金百达 银爵 16G 8x2 3200 D4 C16")){
+                push("ram","光威 天策 16G（8*2）3200 白色 ", price, "与银爵16G同价");
+                push("ram","阿斯加特 弗雷 16G 8*2 3200 黑甲", price, "与银爵16G同价");
+            }
+            if(eq(name,"金百达 银爵 32G 16x2 3200 D4 C16")){
+                push("ram","光威 天策 32G（16*2）3200 白色 ", price, "与银爵32G同价");
+                push("ram","阿斯加特 弗雷 32G 16*2 3200 黑甲", price, "与银爵32G同价");
+            }
+            if(eq(name,"金百达 银爵 32G 16x2 3600 D4 C18")){
+                push("ram","光威 天策 64G（32*2）3200 白色 ", price*2, "天策64G=银爵3600×2");
+            }
+        }
+        return out;
+    }
+
+    async function applyPriceEdit(){
+        const type = document.getElementById("peType").value;
+        const name = document.getElementById("peModel").value;
+        const newPrice = parseFloat(document.getElementById("peNewPrice").value);
+        if(!name){ alert("请选择型号！"); return; }
+        if(isNaN(newPrice) || newPrice < 0){ alert("请输入有效的价格（非负数）！"); return; }
+        const item = data[type].find(i=>i.n===name);
+        if(!item){ alert("型号未找到！"); return; }
+
+        // 汇总所有改动（主改动 + 联动），同名只保留第一条
+        const changes = [{type: type, name: name, newP: newPrice}];
+        peLinkedChanges(type, name, newPrice).forEach(l=>{
+            if(l.type===type && l.name===name) return;
+            const it = data[l.type].find(i=>i.n.trim()===l.name.trim());
+            if(!it) return; // 联动型号不存在则跳过
+            if(changes.some(c=>c.type===l.type && c.name===it.n)) return;
+            changes.push({type: l.type, name: it.n, newP: l.price});
+        });
+
+        // 应用到内存数据并生成报告
+        const reportLines = [];
+        changes.forEach(c=>{
+            const it = data[c.type].find(i=>i.n===c.name);
+            c.oldP = it.p;
+            it.p = c.newP;
+            reportLines.push(c.name + "：" + c.oldP + " → " + c.newP);
+        });
+
+        // 更新界面：已选中配件的价格框同步刷新 + 重新计算 + 修复排序
+        saveData();
+        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
+            const v = document.getElementById(k).value;
+            if(v){
+                const it = data[k].find(i=>i.n===v);
+                if(it) document.getElementById(k+"-p").value = it.p;
+            }
+        });
+        calc();
+        afterDataUpdate();
+        closeModal('peModal');
+
+        // 写入：GitHub 仓库（如已配置）+ 本地 index.html 文件
+        const ghCfg = peGhGetCfg();
+        let ghMsg = null, ghOk = false;
+        if(ghCfg){
+            const gh = await peWriteToGithub(changes, ghCfg);
+            ghOk = gh.ok; ghMsg = gh.msg;
+        }
+        const localResult = await peWriteToFile(changes, !ghOk);
+        alert("改价完成！\n\n" + reportLines.join("\n") + "\n\n" + (ghMsg ? ghMsg + "\n\n" : "") + localResult + "\n\n提醒：下次运行爬虫 update_prices.py 会覆盖手动改价。");
+    }
+
+    // 用「型号名→p值」的正则给文件文本打补丁，只改匹配行的价格
+    function pePatchText(text, changes){
+        const misses = [];
+        changes.forEach(c=>{
+            const re = new RegExp('(\\{\\s*n:\\s*"' + peEsc(c.name) + '"\\s*,\\s*p:\\s*)(\\d+(?:\\.\\d+)?)');
+            if(re.test(text)){
+                text = text.replace(re, (m, pre)=> pre + c.newP);
+            }else{
+                misses.push(c.name);
+            }
+        });
+        return {text: text, misses: misses};
+    }
+
+    async function peWriteToFile(changes, allowPrompt){
+        if(allowPrompt === undefined) allowPrompt = true;
+        let handle = peFileHandle;
+        let how = "已连接文件";
+        if(!handle && window.showOpenFilePicker){
+            const saved = await peLoadHandle();
+            if(saved){
+                try{
+                    const opt = {mode:"readwrite"};
+                    let perm = await saved.queryPermission(opt);
+                    if(perm !== "granted" && allowPrompt) perm = await saved.requestPermission(opt);
+                    if(perm === "granted"){ handle = saved; how = "上次连接的文件"; }
+                }catch(e){ /* 授权失败则走重新选择 */ }
+            }
+        }
+        if(!handle && allowPrompt && window.showOpenFilePicker){
+            try{
+                const picks = await window.showOpenFilePicker({
+                    multiple: false,
+                    types: [{description: "HTML 文件", accept: {"text/html": [".html",".htm"]}}]
+                });
+                handle = picks[0];
+                const txt = await (await handle.getFile()).text();
+                if(!txt.includes("defaultData")){
+                    alert("所选文件里没有找到报价数据（defaultData），请重新选择本页面所在的 index.html！");
+                    return "未写入文件。注意：内存中的价格已更新，但刷新后会丢失！";
+                }
+                peFileHandle = handle;
+                peSaveHandle(handle);
+                how = "新选择的文件";
+            }catch(e){
+                if(e && e.name === "AbortError") return "已取消文件选择，未写入文件。注意：内存中的价格已更新，但刷新后会丢失！";
+                handle = null;
+            }
+        }
+        if(handle){
+            try{
+                const text = await (await handle.getFile()).text();
+                const r = pePatchText(text, changes);
+                const w = await handle.createWritable();
+                await w.write(r.text);
+                await w.close();
+                return "已写入文件：" + (handle.name||"index.html") + "（" + how + "），刷新页面后依然生效。"
+                    + (r.misses.length ? "\n\n⚠ 以下型号在文件中未找到，未写入：\n" + r.misses.join("\n") : "");
+            }catch(e){
+                return "写入文件失败：" + (e && e.message ? e.message : e) + "。注意：内存中的价格已更新，但刷新后会丢失！";
+            }
+        }
+        if(!allowPrompt) return "本地文件未写入（未连接本地文件）。";
+        // 浏览器不支持直接写文件：读原文件→打补丁→下载替换
+        if(!confirm("当前浏览器无法直接写文件。将让你选择原 index.html 文件，然后下载打好补丁的新文件，请用其替换原文件（同目录、同名）。是否继续？")){
+            return "已取消。注意：内存中的价格已更新，但刷新后会丢失！";
+        }
+        return await pePickAndDownload(changes);
+    }
+
+    function pePickAndDownload(changes){
+        return new Promise(resolve=>{
+            const inp = document.createElement("input");
+            inp.type = "file";
+            inp.accept = ".html,.htm";
+            inp.onchange = ()=>{
+                const f = inp.files[0];
+                if(!f){ resolve("已取消。注意：内存中的价格已更新，但刷新后会丢失！"); return; }
+                const r = new FileReader();
+                r.onload = ()=>{
+                    try{
+                        const res = pePatchText(String(r.result), changes);
+                        const blob = new Blob([res.text], {type:"text/html"});
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = "index.html";
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+                        resolve("已下载打好补丁的 index.html，请手动将其移动到原位置替换旧文件。"
+                            + (res.misses.length ? "\n\n⚠ 以下型号未找到，未写入：\n" + res.misses.join("\n") : ""));
+                    }catch(e){
+                        resolve("处理失败：" + (e && e.message ? e.message : e) + "。注意：内存中的价格已更新，但刷新后会丢失！");
+                    }
+                };
+                r.onerror = ()=>resolve("读取文件失败。注意：内存中的价格已更新，但刷新后会丢失！");
+                r.readAsText(f);
+            };
+            inp.click();
+        });
+    }
+
+    // ===================== 改价写入 GitHub 仓库 =====================
+    // 通过 GitHub Contents API 直接更新仓库里的 index.html（Pages 约 1 分钟后自动发布）
+    function peGhGetCfg(){
+        try{ return JSON.parse(localStorage.getItem("peGithubCfg")) || null; }catch(e){ return null; }
+    }
+    function peGhFillInputs(){
+        const cfg = peGhGetCfg() || {};
+        document.getElementById("peGhRepo").value = cfg.repo || "tas1985/tas1985.github.io";
+        document.getElementById("peGhBranch").value = cfg.branch || "main";
+        document.getElementById("peGhPath").value = cfg.path || "index.html";
+        document.getElementById("peGhToken").value = cfg.token || "";
+        peGhStatusRefresh();
+    }
+    function peGhSaveCfg(){
+        const cfg = {
+            repo: document.getElementById("peGhRepo").value.trim(),
+            branch: document.getElementById("peGhBranch").value.trim() || "main",
+            path: document.getElementById("peGhPath").value.trim() || "index.html",
+            token: document.getElementById("peGhToken").value.trim()
+        };
+        if(!cfg.repo || !cfg.token){ alert("请填写仓库名和 Token！"); return; }
+        localStorage.setItem("peGithubCfg", JSON.stringify(cfg));
+        peGhStatusRefresh();
+        alert("GitHub 配置已保存（仅保存在本机浏览器中）");
+    }
+    function peGhClearCfg(){
+        localStorage.removeItem("peGithubCfg");
+        peGhFillInputs();
+    }
+    function peGhStatusRefresh(){
+        const el = document.getElementById("peGhStatus");
+        if(!el) return;
+        const cfg = peGhGetCfg();
+        if(cfg && cfg.token){
+            el.textContent = "GitHub 已配置：" + cfg.repo + "（分支 " + cfg.branch + "）→ 改价将同时提交到线上仓库";
+            el.style.color = "#16a34a";
+        }else{
+            el.textContent = "GitHub 未配置：改价只写入本地文件。展开下方设置填写 Token 后可同时写入线上仓库。";
+            el.style.color = "#6b7280";
+        }
+    }
+    function peUtf8ToB64(str){
+        const bytes = new TextEncoder().encode(str);
+        let bin = "";
+        for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+    }
+    function peB64ToUtf8(b64){
+        const bin = atob(b64.replace(/\s/g,""));
+        const bytes = new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+    }
+    async function peWriteToGithub(changes, cfg){
+        try{
+            const api = "https://api.github.com/repos/" + cfg.repo + "/contents/" + cfg.path.replace(/^\/+/,"");
+            const headers = {
+                "Authorization": "Bearer " + cfg.token,
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28"
+            };
+            // 1. 读取远端文件（拿 sha + 最新内容）
+            const getRes = await fetch(api + "?ref=" + encodeURIComponent(cfg.branch), { headers: headers });
+            if(!getRes.ok){
+                const why = getRes.status===401 ? "Token 无效或过期" : getRes.status===404 ? "仓库/分支/文件路径不对" : getRes.status===403 ? "Token 无 Contents 写权限或触发速率限制" : "HTTP " + getRes.status;
+                return { ok:false, msg:"GitHub 读取失败（" + why + "）" };
+            }
+            const meta = await getRes.json();
+            const remoteText = peB64ToUtf8(meta.content || "");
+            // 2. 对远端最新内容打补丁
+            const r = pePatchText(remoteText, changes);
+            // 3. 提交
+            const putRes = await fetch(api, {
+                method: "PUT",
+                headers: headers,
+                body: JSON.stringify({
+                    message: "改价: " + changes.map(c => c.name + " " + c.oldP + "->" + c.newP).join("; "),
+                    content: peUtf8ToB64(r.text),
+                    sha: meta.sha,
+                    branch: cfg.branch
+                })
+            });
+            if(!putRes.ok){
+                return { ok:false, msg:"GitHub 写入失败（HTTP " + putRes.status + "，请检查 Token 权限或稍后重试）" };
+            }
+            return { ok:true, msg:"已提交到 GitHub 仓库 " + cfg.repo + "（分支 " + cfg.branch + "），GitHub Pages 约 1 分钟后自动更新线上页面。"
+                + (r.misses.length ? "\n⚠ 远端文件中未找到以下型号，未写入：\n" + r.misses.join("\n") : "") };
+        }catch(e){
+            return { ok:false, msg:"GitHub 写入异常：" + (e && e.message ? e.message : e) };
         }
     }
 
@@ -8613,10 +9611,21 @@
     let userDropdownEventsBound = false;
 
     // 刷新客户名称缓存（不再一次性构建全部 DOM）
+    // 按每个客户名称的最新更新时间(_ut)倒序排列，最近更新的排在最前面
     function initUserDropdown() {
         const list = JSON.parse(localStorage.getItem("list")) || [];
-        // 提取唯一的客户名称并去重
-        userNamesCache = Array.from(new Set(list.map(item => item.name).filter(name => name.trim())));
+        // 为每个客户名称记录最新的更新时间 _ut
+        const nameLatestTime = {};
+        list.forEach(item => {
+            const name = item.name;
+            if (!name || !name.trim()) return;
+            const t = item._ut || 0;
+            if (!nameLatestTime[name] || t > nameLatestTime[name]) {
+                nameLatestTime[name] = t;
+            }
+        });
+        // 按最新更新时间倒序排列
+        userNamesCache = Object.keys(nameLatestTime).sort((a, b) => nameLatestTime[b] - nameLatestTime[a]);
         const dropdown = document.getElementById("userDropdown");
         if (dropdown) {
             dropdown.innerHTML = "";
@@ -8751,6 +9760,11 @@
                 showCoolerImage(config.cooler);
             }
 
+            // 如果加载了显卡，显示对应的图片
+            if(config.vga) {
+                showVgaImage(config.vga);
+            }
+
             alert(`成功加载【${name}】的配置单`);
         } else {
             alert(`未找到【${name}】的配置单`);
@@ -8805,25 +9819,9 @@
         }, isMobile ? 400 : 150);
     }
 
-    // 新增：清空客户名称输入框的功能
+    // 清空客户名称输入框的功能（仅清空客户名称，不清空当前配置单）
     function clearUserInput() {
         document.getElementById("user").value = "";
-        // 同时清空相关的配置数据
-        ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
-            document.getElementById(k).value = "";
-            document.getElementById(k+"-p").value = "";
-        });
-        calc(); // 重新计算总价
-        saveNow(); // 保存当前状态
-
-        // 清空机箱图片
-        showCaseImage(null);
-
-        // 清空散热器图片
-        showCoolerImage(null);
-
-        // 清空显卡图片
-        showVgaImage(null);
     }
 
     // ========== 手机操作模式 ==========
@@ -8851,6 +9849,8 @@
         const body = document.body;
         body.classList.toggle('mobile-mode');
         const isMobile = body.classList.contains('mobile-mode');
+        // 清除密码弹窗可能遗留的内联 overflow:hidden，否则页面会被锁死无法滑动
+        if (body.style.overflow === 'hidden') { body.style.overflow = ''; }
         const btn = document.getElementById('mobileToggleBtn');
         if (btn) {
             btn.innerHTML = isMobile ? '💻' : '📱';
