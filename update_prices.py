@@ -1355,17 +1355,35 @@ def update_ssd_prices():
 
         # 计算特定硬盘价格
         nv7400_2t_price = 0
+        thor_1t_price = 0
+        thor_2t_price = 0
         for ssd in ssd_list:
-            if "佰维" in ssd["name"] and "NV7400" in ssd["name"] and ("2T" in ssd["name"] or "2TB" in ssd["name"]):
+            name = ssd["name"]
+            # 佰维 NV7400 2T 作为 1T 反推基准
+            if "佰维" in name and "NV7400" in name and ("2T" in name or "2TB" in name):
                 nv7400_2t_price = ssd["price"]
-                break
+            # 雷克沙 雷神 THOR 作为 NQ790 / NM710 的基准（爬取源没有 NQ790 / NM710，但有 THOR）
+            if ("雷神THOR" in name or ("THOR" in name and "雷克沙" in name)) and ("1T" in name or "1TB" in name):
+                thor_1t_price = ssd["price"]
+            if ("雷神THOR" in name or ("THOR" in name and "雷克沙" in name)) and ("2T" in name or "2TB" in name):
+                thor_2t_price = ssd["price"]
 
         nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
 
         # 特殊处理的型号（需要价格调整）
+        # 公式：线上价 = base_price + adjust + get_ssd_capacity_bonus(容量)
+        # base_price 取自爬取源中该型号"同族"的参考价，这样源价波动时这些型号会跟着动
         special_models = {
-            "佰维 NV7400 1T TLC颗粒 读速7400MB/s": {"adjust": -90, "base_price": nv7400_1t_price},
+            # ---- 佰维 ----
+            "佰维 NV7400 1T TLC颗粒 读速7400MB/s": {"adjust": -90,  "base_price": nv7400_1t_price},
             "佰维 NV7400 2T TLC颗粒 读速7400MB/s": {"adjust": -300, "base_price": nv7400_2t_price},
+            # ---- 雷克沙 NQ790 / NM710：爬取源没有这两个型号，用雷神 THOR 作基准 ----
+            # NM710 1T = THOR 1T（同代 PCIe4.0，性能接近，用同一爬取价）
+            "雷克沙 NM710 1T PCIE4.0 5000/4000":   {"adjust": 0,    "base_price": thor_1t_price},
+            # NQ790 1T 比 THOR 1T 略贵（QLC 高寿命），HTML 现价 950 = 899 + 1 + 50
+            "雷克沙 NQ790 1T PCIE4.0 读7000 写6000 QLC": {"adjust": 1, "base_price": thor_1t_price},
+            # NQ790 2T 比 THOR 2T 略便宜（QLC vs TLC），HTML 现价 1699 = 1660 - 61 + 100
+            "雷克沙 NQ790 2T PCIE4.0 读7000 写6000 QLC": {"adjust": -61, "base_price": thor_2t_price},
         }
 
         # 更新SSD价格 - 遍历HTML文件中的每个SSD行
