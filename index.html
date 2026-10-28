@@ -5870,12 +5870,17 @@
             });
         }
 
-        // 带超时的 fetch，避免单张卡死
-        function fetchWithTimeout(url, options, timeout = 15000) {
-            return Promise.race([
-                fetch(url, options),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
-            ]);
+        // 带超时的 fetch，使用 AbortController 确保超时后连接被释放
+        function fetchWithTimeout(url, options, timeout = 10000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeout);
+            return fetch(url, { ...options, signal: controller.signal })
+                .then(resp => { clearTimeout(timer); return resp; })
+                .catch(err => {
+                    clearTimeout(timer);
+                    if (err.name === 'AbortError') throw new Error('timeout');
+                    throw err;
+                });
         }
 
         // 并发池模式：完成一个立即补充一个，不等待整批
@@ -5892,21 +5897,31 @@
                 scheduleProgressUpdate();
                 return;
             }
-            try {
-                // 用 fetch 直接获取 blob，跳过 canvas 重绘和 base64 编码
-                const encodedSrc = encodeURI(item.src);
-                const resp = await fetchWithTimeout(encodedSrc, { mode: 'cors' });
-                if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                const blob = await resp.blob();
-                // 直接用 objectURL 显示，不转 base64（省掉最耗时的编码步骤）
-                const objectURL = URL.createObjectURL(blob);
-                imageCache[item.key] = { src: objectURL, loaded: true };
-                // 异步写入 blob 到 IndexedDB（不转 base64，体积小33%，写入更快）
-                pendingSaves.push(saveToCache(item.key, blob, true));
-                successCount++;
-            } catch (e) {
+            const maxRetries = 1; // 失败重试1次，应对网络抖动
+            let lastErr = null;
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const encodedSrc = encodeURI(item.src);
+                    const resp = await fetchWithTimeout(encodedSrc, { mode: 'cors' });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const blob = await resp.blob();
+                    const objectURL = URL.createObjectURL(blob);
+                    imageCache[item.key] = { src: objectURL, loaded: true };
+                    pendingSaves.push(saveToCache(item.key, blob, true));
+                    successCount++;
+                    lastErr = null;
+                    break;
+                } catch (e) {
+                    lastErr = e;
+                    if (attempt < maxRetries) {
+                        // 短暂退避后重试
+                        await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+                    }
+                }
+            }
+            if (lastErr) {
                 failCount++;
-                console.warn('Failed to download:', item.key, '-', item.src, e);
+                console.warn('Failed to download:', item.key, '-', item.src, lastErr);
                 if (!window.failedImages) window.failedImages = [];
                 window.failedImages.push({ key: item.key, src: item.src, type: item.type });
             }
