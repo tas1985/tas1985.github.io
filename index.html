@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <!-- 预加载关键资源 -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" as="script" href="html2canvas.min.js">
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
     <!-- html2canvas库用于截图功能 - 异步加载 -->
     <script>
@@ -46,6 +47,12 @@
         }
     </script>
     <style>
+        /* ===== 首屏加载骨架（性能优化：减少白屏感知） ===== */
+        #pageLoader{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f5f5f7;transition:opacity .3s ease;}
+        #pageLoader .pl-spinner{width:42px;height:42px;border:4px solid rgba(37,99,235,.2);border-top-color:#2563EB;border-radius:50%;animation:pl-spin .8s linear infinite;}
+        #pageLoader .pl-text{margin-top:16px;font-size:14px;color:#2563EB;font-weight:bold;}
+        @keyframes pl-spin{to{transform:rotate(360deg);}}
+        #pageLoader.pl-hidden{opacity:0;pointer-events:none;}
         *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei", "微软雅黑", "Microsoft JhengHei", "PingFang SC", sans-serif !important;}
         html, body, div, span, applet, object, iframe,
         h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -184,6 +191,7 @@
             border: 2px solid rgba(37,99,235,0.4);
             box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(37,99,235,0.06);
             transition: all 0.3s ease;
+            contain: layout style;
         }
         .datetime-display:hover{
             box-shadow: 0 3px 10px rgba(37,99,235,0.12), 0 1px 3px rgba(0,0,0,0.06);
@@ -1008,6 +1016,7 @@
             min-height: 0;
             box-shadow: 0 4px 12px rgba(37,99,235,0.15), 0 2px 6px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
             transition: all 0.3s ease;
+            contain: layout style;
         }
         .total:hover{
             box-shadow: 0 6px 20px rgba(37,99,235,0.2), 0 3px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
@@ -1022,6 +1031,7 @@
             padding:0;
             border:none;
             display:block !important;
+            contain: layout style;
         }
         /* 第一行：主机总价原价（缩小） */
         .kan-row-original{
@@ -1954,6 +1964,8 @@
     </style>
 </head>
 <body>
+<!-- 首屏加载骨架（性能优化：JS执行完成前显示，减少白屏感知） -->
+<div id="pageLoader"><div class="pl-spinner"></div><div class="pl-text">加载中…</div></div>
 <!-- 手机操作模式切换按钮 -->
 <button id="mobileToggleBtn" class="mobile-toggle-btn" onclick="toggleMobileMode()" title="切换到手机模式">📱</button>
 <!-- 手机模式幽灵点击屏蔽层（下拉选项触摸后临时激活，避免合成点击穿透到下方按钮） -->
@@ -2144,7 +2156,7 @@
         <div class="product-images-container">
             <!-- 机箱图片容器 -->
             <div class="case-image-container" id="caseImageContainer">
-                <img src="" alt="机箱图片" class="case-image" id="caseImage">
+                <img src="" alt="机箱图片" class="case-image" id="caseImage" loading="lazy" decoding="async">
                 <div id="caseImagePlaceholder" style="color: #333; text-align: center;">请选择机箱<br>查看图片</div>
             </div>
 
@@ -2153,7 +2165,7 @@
 
             <!-- 散热器图片容器 -->
             <div class="cooler-image-container" id="coolerImageContainer">
-                <img src="" alt="散热器图片" class="cooler-image" id="coolerImage">
+                <img src="" alt="散热器图片" class="cooler-image" id="coolerImage" loading="lazy" decoding="async">
                 <div id="coolerImagePlaceholder" style="color: #333; text-align: center;">请选择散热器<br>查看图片</div>
             </div>
 
@@ -2162,7 +2174,7 @@
 
             <!-- 显卡图片容器 -->
             <div class="vga-image-container" id="vgaImageContainer">
-                <img src="" alt="显卡图片" class="vga-image" id="vgaImage">
+                <img src="" alt="显卡图片" class="vga-image" id="vgaImage" loading="lazy" decoding="async">
                 <div id="vgaImagePlaceholder" style="color: #333; text-align: center;">请选择显卡<br>查看图片</div>
             </div>
         </div>
@@ -2346,6 +2358,22 @@
     </div>
 
 <script>
+    // ===== 隐藏首屏加载骨架（性能优化） =====
+    (function hideLoader() {
+        function doHide() {
+            var loader = document.getElementById('pageLoader');
+            if (loader) {
+                loader.classList.add('pl-hidden');
+                setTimeout(function () { if (loader.parentNode) loader.remove(); }, 350);
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', doHide);
+        } else {
+            doHide();
+        }
+    })();
+
     // 发票类型全局变量：null-无发票, 'pu'-普票, 'zhuan'-专票
     let invoiceType = null;
 
@@ -8802,15 +8830,27 @@
         // 初始化客户名称下拉列表
         initUserDropdown();
         
-        // 初始化并启动实时日期时间更新
+        // 初始化并启动实时日期时间更新（页面隐藏时自动暂停，节省资源）
         updateDateTime();
-        setInterval(updateDateTime, 1000); // 每秒更新一次
+        var dtTimer = setInterval(updateDateTime, 1000);
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                clearInterval(dtTimer);
+                dtTimer = null;
+            } else if (!dtTimer) {
+                updateDateTime();
+                dtTimer = setInterval(updateDateTime, 1000);
+            }
+        });
         
-        // 预加载所有机箱图片到缓存
-        preloadImages();
-
-        // 启动全自动云同步：自动拉取云端配置并开启每分钟轮询（未配置仓库时静默跳过）
-        try { if(window.SyncModule && SyncModule.start) SyncModule.start(); } catch(e){}
+        // 非关键任务延迟到浏览器空闲时执行（性能优化：不阻塞首屏交互）
+        var runWhenIdle = window.requestIdleCallback || function(cb){ setTimeout(cb, 300); };
+        runWhenIdle(function () {
+            // 预加载所有机箱图片到缓存
+            try { preloadImages(); } catch(e){}
+            // 启动全自动云同步：自动拉取云端配置并开启每分钟轮询（未配置仓库时静默跳过）
+            try { if(window.SyncModule && SyncModule.start) SyncModule.start(); } catch(e){}
+        });
     }
 
     function save(){
