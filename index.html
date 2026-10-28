@@ -12,6 +12,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <!-- 预加载关键资源 -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://tas1985.github.io" crossorigin>
+    <link rel="dns-prefetch" href="https://tas1985.github.io">
     <link rel="preload" as="script" href="html2canvas.min.js">
     <title>重庆塔斯电脑DIY配置报价单58508218</title>
     <!-- html2canvas库用于截图功能 - 异步加载 -->
@@ -5843,7 +5845,20 @@
         let successCount = 0;
         let failCount = 0;
         let skippedCount = 0;
-        const maxConcurrent = 12; // 最大并发数
+        const maxConcurrent = 24; // 提高并发数（GitHub Pages 支持 HTTP/2，可承载更高并发）
+        let progressDirty = false;
+        let progressRafId = null;
+        // 节流进度更新：避免每张都触发 DOM 重排
+        function scheduleProgressUpdate() {
+            if (progressDirty) return;
+            progressDirty = true;
+            const update = () => {
+                progressDirty = false;
+                updateProgress(completed, allImages.length);
+            };
+            if (progressRafId) cancelAnimationFrame(progressRafId);
+            progressRafId = requestAnimationFrame(update);
+        }
 
         // blob 转 base64（比 canvas 重绘快得多）—— 仅用于 localStorage 降级
         function blobToBase64(blob) {
@@ -5874,7 +5889,7 @@
                 completed++;
                 successCount++;
                 skippedCount++;
-                updateProgress(completed, allImages.length);
+                scheduleProgressUpdate();
                 return;
             }
             try {
@@ -5896,7 +5911,7 @@
                 window.failedImages.push({ key: item.key, src: item.src, type: item.type });
             }
             completed++;
-            updateProgress(completed, allImages.length);
+            scheduleProgressUpdate();
         }
 
         async function pool() {
@@ -5916,9 +5931,12 @@
         }
 
         await pool();
-        // 等待所有缓存写入完成，确保关闭页面前数据已落盘
+        // 不阻塞等待 IndexedDB 写入完成，让写入在后台继续，下载完立即显示结果
+        // （写入是异步的，不影响用户感知的下载速度）
         if (pendingSaves.length > 0) {
-            await Promise.allSettled(pendingSaves);
+            Promise.allSettled(pendingSaves).then(() => {
+                console.log('All image cache writes completed');
+            });
         }
         
         // 关闭进度显示
