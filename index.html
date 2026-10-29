@@ -9010,7 +9010,11 @@
         calc();
         saveNow();
     }
+    let fanQtyBound = false;
     function bindFanQty(){
+        // 防止重复绑定导致点一次数量变化2次
+        if(fanQtyBound) return;
+        fanQtyBound = true;
         document.getElementById('fan-qty-minus').addEventListener('click', function(){ setFanQty(fanQty - 1); });
         document.getElementById('fan-qty-plus').addEventListener('click', function(){ setFanQty(fanQty + 1); });
         // 手动修改风扇总价时反推单价，保持 数量×单价 一致
