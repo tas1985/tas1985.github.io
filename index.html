@@ -5001,7 +5001,7 @@
     let isLoadingImages = false;
     const STORAGE_KEY = 'tasi_image_cache';
     const CACHE_VERSION = '1.0';
-    const IMAGE_CACHE_TTL = 24 * 60 * 60 * 1000; // 图片缓存有效期24小时，过期后自动从仓库重新下载
+    const IMAGE_CACHE_TTL = Infinity; // 图片缓存永久有效，不按时间过期；仅在用户手动“清除图片缓存”时删除
 
     // 共享 IndexedDB 连接（避免每次保存都重新 open）
     let sharedDB = null;
