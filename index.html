@@ -5322,7 +5322,8 @@
     }
 
     // 保存图片到IndexedDB缓存（复用共享连接，直接存Blob不转base64）
-    async function saveToCache(key, imageData, isBlob = false) {
+    // meta 可选：{ etag, url }，用于之后与仓库对比检测图片是否被替换
+    async function saveToCache(key, imageData, isBlob = false, meta = null) {
         return new Promise(async (resolve) => {
             const db = sharedDB || await dbOpenPromise;
             if (!db) {
@@ -5334,6 +5335,8 @@
                 const transaction = db.transaction(['images'], 'readwrite');
                 const store = transaction.objectStore('images');
                 const record = { key: key, timestamp: Date.now() };
+                if (meta && meta.etag) record.etag = meta.etag;
+                if (meta && meta.url) record.url = meta.url;
                 if (isBlob) {
                     record.blob = imageData;
                 } else {
@@ -5381,6 +5384,89 @@
         return 0;
     }
 
+    // ===== 缓存与仓库图片同步 =====
+    // 原理：GitHub Pages 同源返回 ETag（图片内容一变 ETag 就变）。
+    // 打开页面后后台用 HEAD 请求对比每张已缓存图片的 ETag，
+    // 不一致（或无 ETag 的旧缓存）就重新下载并替换缓存；页面正在显示的图片即时换图。
+    async function refreshChangedImages() {
+        try {
+            const db = sharedDB || await dbOpenPromise;
+            if (!db) return; // 无 IndexedDB（localStorage 降级模式）时跳过批量同步
+
+            const allImages = [];
+            for (const [, imageName] of Object.entries(caseImageMap)) {
+                allImages.push({ key: imageName, src: `${IMAGE_PATHS.case}/${imageName}.png` });
+            }
+            for (const [, imageName] of Object.entries(coolerImageMap)) {
+                allImages.push({ key: 'cooler_' + imageName, src: `${IMAGE_PATHS.cooler}/${imageName}.png` });
+            }
+            for (const [, imageName] of Object.entries(vgaImageMap)) {
+                allImages.push({ key: 'vga_' + imageName, src: `${IMAGE_PATHS.vga}/${imageName}.png` });
+            }
+
+            // 读取 IndexedDB 中已缓存的记录（含 etag）
+            const records = await new Promise((resolve) => {
+                const tx = db.transaction(['images'], 'readonly');
+                const req = tx.objectStore('images').getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+            const recordMap = {};
+            records.forEach(r => { if (r && r.key && (r.blob || r.base64)) recordMap[r.key] = r; });
+
+            // 只检查已缓存的图片
+            const cachedItems = allImages.filter(it => recordMap[it.key]);
+            if (cachedItems.length === 0) return;
+
+            const fetchTO = (url, options, timeout) => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeout);
+                return fetch(url, { ...options, signal: controller.signal })
+                    .then(resp => { clearTimeout(timer); return resp; })
+                    .catch(err => { clearTimeout(timer); throw err; });
+            };
+
+            let updatedCount = 0;
+            let idx = 0;
+            const concurrency = 4;
+
+            async function worker() {
+                while (idx < cachedItems.length) {
+                    const item = cachedItems[idx++];
+                    const rec = recordMap[item.key];
+                    try {
+                        const headResp = await fetchTO(encodeURI(item.src), { method: 'HEAD' }, 10000);
+                        if (!headResp || !headResp.ok) continue;
+                        const remoteEtag = headResp.headers.get('ETag') || '';
+                        // ETag 一致 → 仓库图片未变，跳过
+                        if (rec.etag && remoteEtag && rec.etag === remoteEtag) continue;
+                        // ETag 变了（或旧缓存没有 ETag）→ 重新下载替换缓存
+                        const getResp = await fetchTO(encodeURI(item.src), {}, 20000);
+                        if (!getResp || !getResp.ok) continue;
+                        const blob = await getResp.blob();
+                        const etag = getResp.headers.get('ETag') || remoteEtag || '';
+                        await saveToCache(item.key, blob, true, { etag: etag, url: item.src });
+                        const objectURL = URL.createObjectURL(blob);
+                        imageCache[item.key] = { src: objectURL, loaded: true };
+                        // 若该图片正显示在页面上，立即替换
+                        const shown = document.querySelector('img[data-cache-key="' + item.key.replace(/"/g, '\\"') + '"]');
+                        if (shown) shown.src = objectURL;
+                        updatedCount++;
+                    } catch (e) {
+                        console.warn('刷新缓存失败:', item.key, e);
+                    }
+                }
+            }
+            await Promise.all(Array.from({ length: Math.min(concurrency, cachedItems.length) }, () => worker()));
+            if (updatedCount > 0) {
+                console.log('缓存同步完成：更新', updatedCount, '张图片');
+                showToast(`检测到仓库图片更新，已替换 ${updatedCount} 张缓存`, 'success', 3000);
+            }
+        } catch (e) {
+            console.warn('refreshChangedImages error:', e);
+        }
+    }
+
     // 将图片转换为base64
     function imageToBase64(img) {
         return new Promise((resolve) => {
@@ -5421,6 +5507,9 @@
     async function preloadImages() {
         // 首先加载localStorage中的缓存 - 等待缓存加载完成
         await loadCachedImages();
+
+        // 后台同步仓库中已被替换的图片（不阻塞预加载）
+        setTimeout(() => { refreshChangedImages(); }, 3000);
         
         const allImages = [];
         
@@ -5907,7 +5996,7 @@
                     const blob = await resp.blob();
                     const objectURL = URL.createObjectURL(blob);
                     imageCache[item.key] = { src: objectURL, loaded: true };
-                    pendingSaves.push(saveToCache(item.key, blob, true));
+                    pendingSaves.push(saveToCache(item.key, blob, true, { etag: resp.headers.get('ETag') || '', url: item.src }));
                     successCount++;
                     lastErr = null;
                     break;
@@ -6134,6 +6223,7 @@
         
         if (caseName && caseImageMap[caseName]) {
             const imageName = caseImageMap[caseName];
+            imageElement.dataset.cacheKey = imageName;
             
             // 先检查内存缓存
             let cachedSrc = getCachedImageSrc(imageName);
@@ -6187,6 +6277,7 @@
             img.src = `${IMAGE_PATHS.case}/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
+            delete imageElement.dataset.cacheKey;
             placeholder.style.display = 'block';
             placeholder.innerHTML = '请选择机箱<br>查看图片';
         }
@@ -6200,6 +6291,7 @@
         if (coolerName && coolerImageMap[coolerName]) {
             const imageName = coolerImageMap[coolerName];
             const cacheKey = 'cooler_' + imageName;
+            imageElement.dataset.cacheKey = cacheKey;
 
             // 先检查内存缓存
             let cachedSrc = getCachedImageSrc(cacheKey);
@@ -6252,6 +6344,7 @@
             img.src = `${IMAGE_PATHS.cooler}/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
+            delete imageElement.dataset.cacheKey;
             placeholder.style.display = 'block';
             placeholder.innerHTML = '请选择散热器<br>查看图片';
         }
@@ -6265,6 +6358,7 @@
         if (vgaName && vgaImageMap[vgaName]) {
             const imageName = vgaImageMap[vgaName];
             const cacheKey = 'vga_' + imageName;
+            imageElement.dataset.cacheKey = cacheKey;
 
             // 先检查内存缓存
             let cachedSrc = getCachedImageSrc(cacheKey);
@@ -6317,6 +6411,7 @@
             img.src = `${IMAGE_PATHS.vga}/${imageName}.png`;
         } else {
             imageElement.style.display = 'none';
+            delete imageElement.dataset.cacheKey;
             placeholder.style.display = 'block';
             placeholder.innerHTML = '请选择显卡<br>查看图片';
         }
