@@ -533,7 +533,8 @@
         /* 风扇数量调节器：位于风扇输入栏与价格栏之间 */
         .fan-qty{
             display:flex;
-            align-items:center;
+            align-items:stretch;
+            align-self:stretch;
             flex-shrink:0;
             border:1px solid rgba(37,99,235,0.4);
             border-radius:4px;
@@ -545,7 +546,6 @@
         }
         .fan-qty-btn{
             width:32px;
-            height:33px;
             display:flex;
             align-items:center;
             justify-content:center;
@@ -563,11 +563,13 @@
         .fan-qty-num{
             min-width:48px;
             width:48px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
             text-align:center;
             font-size:14px;
             font-weight:bold;
             color:#333;
-            line-height:33px;
         }
         /* 新增：价格框¥符号样式 */
         .item-price::before {
@@ -1847,12 +1849,10 @@
         }
         body.mobile-mode .fan-qty-btn{
             width:32px !important;
-            height:36px !important;
         }
         body.mobile-mode .fan-qty-num{
             min-width:48px !important;
             width:48px !important;
-            line-height:36px !important;
             font-size:13px !important;
         }
         body.mobile-mode .clear-btn{
