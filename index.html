@@ -5388,7 +5388,8 @@
     // 原理：GitHub Pages 同源返回 ETag（图片内容一变 ETag 就变）。
     // 打开页面后后台用 HEAD 请求对比每张已缓存图片的 ETag，
     // 不一致（或无 ETag 的旧缓存）就重新下载并替换缓存；页面正在显示的图片即时换图。
-    async function refreshChangedImages() {
+    // withProgress=true 时显示进度条（用户从“图片缓存”弹窗手动触发）
+    async function refreshChangedImages(withProgress = false) {
         try {
             const db = sharedDB || await dbOpenPromise;
             if (!db) return; // 无 IndexedDB（localStorage 降级模式）时跳过批量同步
@@ -5416,7 +5417,15 @@
 
             // 只检查已缓存的图片
             const cachedItems = allImages.filter(it => recordMap[it.key]);
-            if (cachedItems.length === 0) return;
+            if (cachedItems.length === 0) {
+                if (withProgress) showToast('本地暂无缓存图片', 'info', 2000);
+                return;
+            }
+            let progressDone = 0;
+            if (withProgress) {
+                createProgressDisplay();
+                updateProgress(0, cachedItems.length);
+            }
 
             const fetchTO = (url, options, timeout) => {
                 const controller = new AbortController();
@@ -5434,6 +5443,8 @@
                 while (idx < cachedItems.length) {
                     const item = cachedItems[idx++];
                     const rec = recordMap[item.key];
+                    progressDone++;
+                    if (withProgress) updateProgress(progressDone, cachedItems.length);
                     try {
                         const headResp = await fetchTO(encodeURI(item.src), { method: 'HEAD' }, 10000);
                         if (!headResp || !headResp.ok) continue;
@@ -5458,9 +5469,12 @@
                 }
             }
             await Promise.all(Array.from({ length: Math.min(concurrency, cachedItems.length) }, () => worker()));
+            if (withProgress) closeProgressDisplay();
             if (updatedCount > 0) {
                 console.log('缓存同步完成：更新', updatedCount, '张图片');
                 showToast(`检测到仓库图片更新，已替换 ${updatedCount} 张缓存`, 'success', 3000);
+            } else if (withProgress) {
+                showToast('所有缓存图片均已是最新，无需更新', 'success', 2500);
             }
         } catch (e) {
             console.warn('refreshChangedImages error:', e);
@@ -5823,16 +5837,12 @@
             () => { downloadAllImages(false); }
         ));
 
-        // 选项2：清空全部缓存重新下载
+        // 选项2：只更新仓库中已被替换的图片（对比ETag，不删除其他缓存）
         btnWrap.appendChild(makeBtn(
-            '清空全部并重新下载',
-            '删除本地所有图片缓存，从仓库重新下载最新版本（较慢）',
+            '只更新被替换的图片',
+            '对比仓库版本，只重新下载有变动的图片，不删除其他缓存',
             '#fff', '#DC2626',
-            () => {
-                if (confirm('确定要清空全部图片缓存并重新下载吗？\n这将删除本地所有缓存的图片。')) {
-                    downloadAllImages(true);
-                }
-            }
+            () => { refreshChangedImages(true); }
         ));
 
         box.appendChild(btnWrap);
