@@ -530,6 +530,43 @@
             width:100px;
             position: relative; /* 新增：用于¥符号定位 */
         }
+        /* 风扇数量调节器：位于风扇输入栏与价格栏之间 */
+        .fan-qty{
+            display:flex;
+            align-items:center;
+            flex-shrink:0;
+            border:1px solid rgba(37,99,235,0.4);
+            border-radius:4px;
+            overflow:hidden;
+            background:#fff;
+            user-select:none;
+            -webkit-user-select:none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .fan-qty-btn{
+            width:26px;
+            height:33px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#EFF4FF;
+            color:#2563EB;
+            font-size:16px;
+            font-weight:bold;
+            cursor:pointer;
+            padding:0;
+            touch-action:manipulation;
+        }
+        .fan-qty-btn:hover{ background:#DBE7FF; }
+        .fan-qty-btn:active{ background:#C7DBFF; }
+        .fan-qty-num{
+            min-width:26px;
+            text-align:center;
+            font-size:14px;
+            font-weight:bold;
+            color:#333;
+            line-height:33px;
+        }
         /* 新增：价格框¥符号样式 */
         .item-price::before {
             content: '¥';
@@ -1806,6 +1843,15 @@
             padding: 5px 2px 5px 12px !important;
             height: 36px !important;
         }
+        body.mobile-mode .fan-qty-btn{
+            width:24px !important;
+            height:36px !important;
+        }
+        body.mobile-mode .fan-qty-num{
+            min-width:20px !important;
+            line-height:36px !important;
+            font-size:13px !important;
+        }
         body.mobile-mode .clear-btn{
             width: 30px !important;
             height: 30px !important;
@@ -2091,6 +2137,11 @@
             <input class="combo" id="fan" onclick="match('fan')" oninput="match('fan')" onblur="hideDrop('fan')">
             <div class="clear-btn" onclick="clearItem('fan')">×</div>
             <div class="dropdown" id="fan-drop"></div>
+        </div>
+        <div class="fan-qty" id="fan-qty">
+            <div class="fan-qty-btn" id="fan-qty-minus">-</div>
+            <div class="fan-qty-num" id="fan-qty-num">7</div>
+            <div class="fan-qty-btn" id="fan-qty-plus">+</div>
         </div>
         <div class="item-price"><input class="price" id="fan-p" oninput="calc()"></div>
     </div>
@@ -3260,7 +3311,7 @@
             {n:"棱镜8",p:28},
             {n:"乔思伯 ZA360 ARGBX2+ZA120",p:419},
             {n:"星链V360三联X3+星链V120",p:396},
-            {n:"棱镜8积木白8个+图灵副屏+霓虹线两组",p:1198},
+            {n:"棱镜8积木8个+图灵副屏+霓虹线两组",p:998},
             {n:"联力四代LCDx5+联力四代积木x3+联力霓虹线+图灵副屏+控制器",p:4299}
         ],
         power: [
@@ -6945,7 +6996,17 @@
                 if (done) return;
                 done = true;
                 document.getElementById(key).value = i.n;
-                document.getElementById(key+"-p").value = i.p;
+                if(key === 'fan'){
+                    // 风扇按 数量×单价 计价；套装类（含 + / N个 / 副屏 / 霓虹线）数量自动重置为1
+                    fanUnitPrice = i.p;
+                    if(/\+|\d+个|副屏|霓虹线/.test(i.n)){
+                        fanQty = 1;
+                        document.getElementById('fan-qty-num').textContent = fanQty;
+                    }
+                    document.getElementById(key+"-p").value = fanUnitPrice * fanQty;
+                } else {
+                    document.getElementById(key+"-p").value = i.p;
+                }
                 document.getElementById(key).classList.add('selected');
                 // 手机模式：高亮所选行并稍延后关闭下拉，给出"已选择该配件"的反馈
                 if (document.body.classList.contains('mobile-mode')) {
@@ -7471,6 +7532,18 @@
                         .invoice-btn-row,
                         .sync-footer-row {
                             display: none !important;
+                        }
+                        .fan-qty {
+                            border: none !important;
+                            background: transparent !important;
+                            box-shadow: none !important;
+                            overflow: visible !important;
+                        }
+                        .fan-qty-btn {
+                            display: none !important;
+                        }
+                        .fan-qty-num::before {
+                            content: '×';
                         }
                         .title {
                             box-shadow: 0 2px 8px rgba(37,99,235,0.15), 0 1px 3px rgba(0,0,0,0.05) !important;
@@ -8117,6 +8190,18 @@
                         }
                         .screenshot-btn-container {
                             display: none !important;
+                        }
+                        .fan-qty {
+                            border: none !important;
+                            background: transparent !important;
+                            box-shadow: none !important;
+                            overflow: visible !important;
+                        }
+                        .fan-qty-btn {
+                            display: none !important;
+                        }
+                        .fan-qty-num::before {
+                            content: '×';
                         }
                         .title {
                             box-shadow: 0 2px 8px rgba(37,99,235,0.15), 0 1px 3px rgba(0,0,0,0.05) !important;
@@ -8767,6 +8852,9 @@
             if (fanMatch) {
                 const fanCount = parseInt(fanMatch[1] || fanMatch[2]);
                 totalPower += fanCount * powerConsumption.fan["每把"];
+            } else {
+                // 型号名称无数量标识时，按数量调节器的风扇数量计算功耗
+                totalPower += fanQty * powerConsumption.fan["每把"];
             }
         }
         
@@ -8800,6 +8888,9 @@
             o[k]=document.getElementById(k).value;
             o[k+"p"]=document.getElementById(k+"-p").value;
         });
+        // 保存风扇数量与单价
+        o.fanQty = fanQty;
+        o.fanUnitPrice = fanUnitPrice;
         o.remark1 = document.getElementById("remark1").value;
         o.remark2 = document.getElementById("remark2").value;
         // 保存服务项目勾选状态
@@ -8902,11 +8993,44 @@
         document.getElementById("datetimeDisplay").textContent = formattedTime;
     }
 
+    // 风扇数量调节：风扇价格 = 数量 × 单价
+    let fanQty = 7;
+    let fanUnitPrice = 20;
+    function updateFanTotal(){
+        // 仅在选择/输入了风扇型号时按 数量×单价 刷新总价
+        if(document.getElementById('fan').value){
+            document.getElementById('fan-p').value = fanUnitPrice * fanQty;
+        }
+    }
+    function setFanQty(q){
+        fanQty = Math.max(0, Math.min(99, q));
+        document.getElementById('fan-qty-num').textContent = fanQty;
+        updateFanTotal();
+        calc();
+        saveNow();
+    }
+    function bindFanQty(){
+        document.getElementById('fan-qty-minus').addEventListener('click', function(){ setFanQty(fanQty - 1); });
+        document.getElementById('fan-qty-plus').addEventListener('click', function(){ setFanQty(fanQty + 1); });
+        // 手动修改风扇总价时反推单价，保持 数量×单价 一致
+        document.getElementById('fan-p').addEventListener('input', function(){
+            if(fanQty > 0){
+                const v = parseFloat(this.value);
+                if(!isNaN(v)) fanUnitPrice = v / fanQty;
+            }
+        });
+    }
+
     function setDefaultItems(){
+        // 默认风扇：棱镜4 共7把，单把20元，合计140元
+        fanQty = 7;
+        fanUnitPrice = 20;
+        document.getElementById('fan-qty-num').textContent = fanQty;
+        bindFanQty();
         const defaults = {
             cooler: { n: "大镰刀 赤兔马单塔六铜管 解热功耗230W", p: 98 },
             case: { n: "黑色海景房", p: 129 },
-            fan: { n: "棱镜4 7把", p: 140 },
+            fan: { n: "棱镜4", p: 140 },
             power: { n: "宏碁 额定550W 80PLUS铜牌全模组 3C", p: 229 },
             other: { n: "不含显示器键盘鼠标耳机，赠品：鼠标垫 不含平台手续费", p: 0 }
         };
@@ -8928,10 +9052,17 @@
         if(d){
             d=JSON.parse(d);
             document.getElementById("user").value=d.user||"";
+            bindFanQty();
             ["cpu","ram","board","cooler","vga","ssd","hdd","case","fan","power","other"].forEach(k=>{
                 document.getElementById(k).value=d[k]||"";
                 document.getElementById(k+"-p").value=d[k+"p"]||"";
             });
+            // 恢复风扇数量与单价（旧存档没有该字段时保持默认 7把×20元）
+            if(d.fanQty!==undefined && d.fanQty!==null){
+                fanQty=d.fanQty;
+                document.getElementById('fan-qty-num').textContent=fanQty;
+            }
+            if(d.fanUnitPrice){ fanUnitPrice=d.fanUnitPrice; }
             // 加载备注（兼容旧格式和新格式）
             if (d.remark1) {
                 document.getElementById("remark1").value = d.remark1;
@@ -9029,6 +9160,9 @@
             o.remark1 = document.getElementById("remark1").value;
             o.remark2 = document.getElementById("remark2").value;
             o.services = getSelectedServices();
+            // 保存风扇数量与单价
+            o.fanQty = fanQty;
+            o.fanUnitPrice = fanUnitPrice;
             // 自动同步用：唯一ID + 毫秒时间戳（不影响任何现有功能）
             o._ut = Date.now();
             o._id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
@@ -9903,6 +10037,12 @@
                 document.getElementById(k).value = config[k] || "";
                 document.getElementById(k+"-p").value = config[k+"p"] || "";
             });
+            // 恢复风扇数量与单价（旧配置单没有该字段时保持当前值）
+            if(config.fanQty!==undefined && config.fanQty!==null){
+                fanQty=config.fanQty;
+                document.getElementById('fan-qty-num').textContent=fanQty;
+            }
+            if(config.fanUnitPrice){ fanUnitPrice=config.fanUnitPrice; }
             // 加载备注（兼容旧格式和新格式）
             if (config.remark1) {
                 document.getElementById("remark1").value = config.remark1;
