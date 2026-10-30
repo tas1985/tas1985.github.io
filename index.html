@@ -2523,10 +2523,53 @@
         return isValidPrefix && isValidDate;
     }
 
-    // 验证密码是否有效（3个月有效期）
+    // 密码授权存储 - 多级回退（localStorage → sessionStorage → cookie）
+    const PW_KEY = 'passwordAuth';
+    function pwStorageAvailable() {
+        try { localStorage.setItem('__test__', '1'); localStorage.removeItem('__test__'); return 'local'; } catch(e) {}
+        try { sessionStorage.setItem('__test__', '1'); sessionStorage.removeItem('__test__'); return 'session'; } catch(e) {}
+        return 'cookie';
+    }
+    function pwSave(record) {
+        const json = JSON.stringify(record);
+        const target = pwStorageAvailable();
+        if (target === 'local') {
+            try { localStorage.setItem(PW_KEY, json); } catch(e) { /* 忽略 */ }
+        } else if (target === 'session') {
+            try { sessionStorage.setItem(PW_KEY, json); } catch(e) { /* 忽略 */ }
+        }
+        // 总是尝试写入 cookie，作为最终兜底
+        try {
+            const expires = new Date(record.expireTime).toUTCString();
+            document.cookie = `${PW_KEY}=${encodeURIComponent(json)}; expires=${expires}; path=/; SameSite=Lax`;
+        } catch(e) { /* 忽略 */ }
+    }
+    function pwLoad() {
+        // 按优先级依次尝试：localStorage → sessionStorage → cookie
+        const sources = [];
+        try { const v = localStorage.getItem(PW_KEY); if (v) sources.push(v); } catch(e) {}
+        try { const v = sessionStorage.getItem(PW_KEY); if (v) sources.push(v); } catch(e) {}
+        try {
+            const cookies = document.cookie.split(';');
+            for (const c of cookies) {
+                const trimmed = c.trim();
+                if (trimmed.startsWith(PW_KEY + '=')) {
+                    sources.push(decodeURIComponent(trimmed.substring(PW_KEY.length + 1)));
+                    break;
+                }
+            }
+        } catch(e) {}
+        for (const json of sources) {
+            try { return JSON.parse(json); } catch(e) { /* 尝试下一个 */ }
+        }
+        return null;
+    }
+
+    // 验证密码是否有效（3个月有效期，支持 localStorage/sessionStorage/cookie 多级回退）
     function checkPasswordValidity() {
         try {
-            const passwordRecord = JSON.parse(localStorage.getItem('passwordAuth')) || {};
+            const passwordRecord = pwLoad();
+            if (!passwordRecord) return false;
             const { expireTime, isValid, machineCode } = passwordRecord;
             
             // 严格验证：确保所有字段都存在且有效
@@ -2540,13 +2583,13 @@
                 return storedMachinePrefix === currentMachinePrefix;
             }
         } catch (error) {
-            // 如果localStorage操作失败，返回false
-            console.error('localStorage error:', error);
+            // 存储操作失败，返回false
+            console.error('密码验证失败:', error);
         }
         return false;
     }
 
-    // 检查是否在微信浏览器中
+    // 检查是否在微信浏览器中（仅用于提示，不再强制弹窗）
     function isWeChatBrowser() {
         const ua = navigator.userAgent.toLowerCase();
         return ua.includes('micromessenger');
@@ -2580,17 +2623,13 @@
             const now = new Date().getTime();
             const threeMonthsLater = now + 3 * 30 * 24 * 60 * 60 * 1000;
             
-            // 保存授权信息到本地存储
-            try {
-                localStorage.setItem('passwordAuth', JSON.stringify({
-                    isValid: true,
-                    expireTime: threeMonthsLater,
-                    authTime: now,
-                    machineCode: machineCode
-                }));
-            } catch (error) {
-                console.error('localStorage error:', error);
-            }
+            // 保存授权信息到多级存储（localStorage + sessionStorage + cookie）
+            pwSave({
+                isValid: true,
+                expireTime: threeMonthsLater,
+                authTime: now,
+                machineCode: machineCode
+            });
             
             hidePasswordModal();
             alert('解锁成功！当前设备3个月内无需重复验证');
@@ -2603,8 +2642,9 @@
 
     // 页面加载时验证密码状态
     window.addEventListener('DOMContentLoaded', function() {
-        // 在微信浏览器中强制验证（因为微信浏览器的localStorage可能不可靠）
-        if (isWeChatBrowser() || !checkPasswordValidity()) {
+        // 统一验证存储中的授权记录（localStorage/sessionStorage/cookie 多级回退）
+        // 不再对微信浏览器做特殊强制，pwLoad() 已包含 cookie 兜底
+        if (!checkPasswordValidity()) {
             showPasswordModal();
         }
     });
@@ -3503,7 +3543,7 @@
             {n:"Quadro RTX A2000-12G 工包",p:3900},
             {n:"Quadro RTX A4000 16G 工包",p:8500},
             {n:"微星-GT1030-2GD4 AERO ITX OCV1",p:798},
-           <!-- 显卡自动更新区域 开始 -->
+           // 显卡自动更新区域 开始
             {n:"蓝戟 Arc B580 Photon 12G OC 黑色三扇",p:2250},
             {n:"蓝戟 Arc B580 Photon 12G OC 白色三扇",p:2250},
             {n:"蓝戟 Arc B580 Index 12G 黑色双扇",p:2150},
@@ -3707,7 +3747,8 @@
             {n:"影驰RTX3060 12G Fire Lite",p:2140},
             {n:"影驰RTX-N3060WF2OC-12GD",p:2260},
             {n:"盈通RTX3060-12GD6-大地之神",p:2999},
-           <!-- 显卡自动更新区域 结束 -->            {n:"华硕RTX5090-32G TUF-OC非D",p:64949},
+           // 显卡自动更新区域 结束
+            {n:"华硕RTX5090-32G TUF-OC非D",p:64949},
             {n:"品牌GTX1060（到手30天质保）",p:499},
             {n:"磐镭 RTX 2060S 8G 白色双风扇",p:1499},
             {n:"技嘉 RTX5080 GAMING OC 16G 魔鹰",p:18599},
@@ -4135,7 +4176,6 @@
             const asgardRam = defaultData.ram.find(item => item.n === "阿斯加特 DDR4 64G（32X2）3200");
             if (asgardRam) {
                 asgardRam.p = targetPrice;
-                console.log(`✓ 自动计算价格: 阿斯加特 DDR4 64G（32X2）3200 = 金百达_银爵 32G 3600海力士c18 × 2 = ${jbdPrice} × 2 = ${targetPrice}`);
             }
         }
     }
@@ -5104,6 +5144,10 @@
         cooler: `${IMAGE_BASE_URL}/PNG_SR`,
         vga: `${IMAGE_BASE_URL}/PNG_VGA`
     };
+    // 安全拼接图片URL：对文件名中的中文/特殊字符做 encodeURIComponent
+    function buildImgUrl(base, imageName) {
+        return `${base}/${encodeURIComponent(imageName)}.png`;
+    }
 
     // 从IndexedDB读取缓存的图片
     async function loadCachedImages() {
@@ -5112,7 +5156,6 @@
             let loadedCount = 0;
             
             request.onerror = function() {
-                console.warn('IndexedDB not available, falling back to localStorage');
                 resolve(loadCachedImagesFromLocalStorage());
             };
             
@@ -5149,16 +5192,13 @@
                         try {
                             const delTrans = db.transaction(['images'], 'readwrite');
                             expiredKeys.forEach(k => delTrans.objectStore('images').delete(k));
-                            console.log('Cleared', expiredKeys.length, 'expired IndexedDB cache entries');
                         } catch(e) {}
                     }
-                    console.log('Loaded', loadedCount, 'images from IndexedDB cache');
                     db.close();
                     resolve(loadedCount);
                 };
                 
                 getAllRequest.onerror = function() {
-                    console.warn('Failed to get images from IndexedDB');
                     db.close();
                     resolve(loadCachedImagesFromLocalStorage());
                 };
@@ -5198,15 +5238,12 @@
                     }
                     if (expiredCount > 0) {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-                        console.log('Cleared', expiredCount, 'expired localStorage cache entries');
                     }
-                    console.log('Loaded', loadedCount, 'images from localStorage cache');
                     return loadedCount;
                 }
             }
             return 0;
         } catch (e) {
-            console.warn('Failed to load cached images:', e);
             return 0;
         }
     }
@@ -5286,7 +5323,6 @@
                 }
             }
         } catch (e) {
-            console.warn('Failed to check cache for:', key, e);
         }
         return false;
     }
@@ -5325,7 +5361,6 @@
                         // 检查缓存是否过期
                         const cachedTime = getRequest.result.timestamp || 0;
                         if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
-                            console.log('IndexedDB cache expired, re-downloading:', key);
                             // 删除过期缓存
                             try {
                                 const delTrans = db.transaction(['images'], 'readwrite');
@@ -5376,7 +5411,6 @@
                     // 检查缓存是否过期
                     const cachedTime = cache.images[key].timestamp || 0;
                     if (Date.now() - cachedTime > IMAGE_CACHE_TTL) {
-                        console.log('localStorage cache expired, re-downloading:', key);
                         delete cache.images[key];
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
                         return null;
@@ -5387,7 +5421,6 @@
                 }
             }
         } catch (e) {
-            console.warn('Failed to get cached image:', key, e);
         }
         return null;
     }
@@ -5440,12 +5473,9 @@
             
             if (sizeInBytes < maxSize) {
                 localStorage.setItem(STORAGE_KEY, jsonStr);
-                console.log('Saved to localStorage:', key);
             } else {
-                console.warn('localStorage size limit exceeded');
             }
         } catch (e) {
-            console.warn('Failed to save to localStorage:', e);
         }
     }
     
@@ -5467,13 +5497,13 @@
 
             const allImages = [];
             for (const [, imageName] of Object.entries(caseImageMap)) {
-                allImages.push({ key: imageName, src: `${IMAGE_PATHS.case}/${imageName}.png` });
+                allImages.push({ key: imageName, src: buildImgUrl(IMAGE_PATHS.case, imageName) });
             }
             for (const [, imageName] of Object.entries(coolerImageMap)) {
-                allImages.push({ key: 'cooler_' + imageName, src: `${IMAGE_PATHS.cooler}/${imageName}.png` });
+                allImages.push({ key: 'cooler_' + imageName, src: buildImgUrl(IMAGE_PATHS.cooler, imageName) });
             }
             for (const [, imageName] of Object.entries(vgaImageMap)) {
-                allImages.push({ key: 'vga_' + imageName, src: `${IMAGE_PATHS.vga}/${imageName}.png` });
+                allImages.push({ key: 'vga_' + imageName, src: buildImgUrl(IMAGE_PATHS.vga, imageName) });
             }
 
             // 读取 IndexedDB 中已缓存的记录（含 etag）
@@ -5535,20 +5565,17 @@
                         if (shown) shown.src = objectURL;
                         updatedCount++;
                     } catch (e) {
-                        console.warn('刷新缓存失败:', item.key, e);
                     }
                 }
             }
             await Promise.all(Array.from({ length: Math.min(concurrency, cachedItems.length) }, () => worker()));
             if (withProgress) closeProgressDisplay();
             if (updatedCount > 0) {
-                console.log('缓存同步完成：更新', updatedCount, '张图片');
                 showToast(`检测到仓库图片更新，已替换 ${updatedCount} 张缓存`, 'success', 3000);
             } else if (withProgress) {
                 showToast('所有缓存图片均已是最新，无需更新', 'success', 2500);
             }
         } catch (e) {
-            console.warn('refreshChangedImages error:', e);
         }
     }
 
@@ -5582,7 +5609,6 @@
                 const base64 = canvas.toDataURL('image/webp', 0.8);
                 resolve(base64);
             } catch (e) {
-                console.warn('Failed to convert image:', e);
                 resolve(null);
             }
         });
@@ -5601,21 +5627,21 @@
         for (const [, imageName] of Object.entries(caseImageMap)) {
             allImages.push({ 
                 key: imageName, 
-                src: `${IMAGE_PATHS.case}/${imageName}.png`,
+                src: buildImgUrl(IMAGE_PATHS.case, imageName),
                 type: 'case' 
             });
         }
         for (const [, imageName] of Object.entries(coolerImageMap)) {
             allImages.push({ 
                 key: 'cooler_' + imageName, 
-                src: `${IMAGE_PATHS.cooler}/${imageName}.png`,
+                src: buildImgUrl(IMAGE_PATHS.cooler, imageName),
                 type: 'cooler' 
             });
         }
         for (const [, imageName] of Object.entries(vgaImageMap)) {
             allImages.push({ 
                 key: 'vga_' + imageName, 
-                src: `${IMAGE_PATHS.vga}/${imageName}.png`,
+                src: buildImgUrl(IMAGE_PATHS.vga, imageName),
                 type: 'vga' 
             });
         }
@@ -5650,7 +5676,6 @@
                         resolve();
                     };
                     img.onerror = function() {
-                        console.warn('Failed to preload:', item.src);
                         resolve();
                     };
                     // 对URL进行编码，处理中文文件名
@@ -5972,7 +5997,6 @@
         } else {
             // 首先加载已有的缓存（异步）
             const existingCacheCount = await loadCachedImages();
-            console.log('Existing cache:', existingCacheCount, 'images');
         }
         
         const allImages = [];
@@ -5981,7 +6005,7 @@
         for (const [, imageName] of Object.entries(caseImageMap)) {
             allImages.push({ 
                 key: imageName, 
-                src: `${IMAGE_PATHS.case}/${imageName}.png`,
+                src: buildImgUrl(IMAGE_PATHS.case, imageName),
                 type: 'case' 
             });
         }
@@ -5989,7 +6013,7 @@
         for (const [, imageName] of Object.entries(coolerImageMap)) {
             allImages.push({ 
                 key: 'cooler_' + imageName, 
-                src: `${IMAGE_PATHS.cooler}/${imageName}.png`,
+                src: buildImgUrl(IMAGE_PATHS.cooler, imageName),
                 type: 'cooler' 
             });
         }
@@ -5997,7 +6021,7 @@
         for (const [, imageName] of Object.entries(vgaImageMap)) {
             allImages.push({ 
                 key: 'vga_' + imageName, 
-                src: `${IMAGE_PATHS.vga}/${imageName}.png`,
+                src: buildImgUrl(IMAGE_PATHS.vga, imageName),
                 type: 'vga' 
             });
         }
@@ -6091,7 +6115,6 @@
             }
             if (lastErr) {
                 failCount++;
-                console.warn('Failed to download:', item.key, '-', item.src, lastErr);
                 if (!window.failedImages) window.failedImages = [];
                 window.failedImages.push({ key: item.key, src: item.src, type: item.type });
             }
@@ -6120,7 +6143,6 @@
         // （写入是异步的，不影响用户感知的下载速度）
         if (pendingSaves.length > 0) {
             Promise.allSettled(pendingSaves).then(() => {
-                console.log('All image cache writes completed');
             });
         }
         
@@ -6133,10 +6155,8 @@
             if (cachedData) {
                 const sizeInBytes = new Blob([cachedData]).size;
                 const sizeInMB = (sizeInBytes / 1024 / 1024).toFixed(2);
-                console.log('Total cache size:', sizeInMB, 'MB');
             }
         } catch (e) {
-            console.warn('Failed to calculate cache size:', e);
         }
         
         // 显示结果
@@ -6167,17 +6187,14 @@
             // 清除 IndexedDB
             const request = indexedDB.deleteDatabase('ImageCacheDB');
             request.onsuccess = function() {
-                console.log('IndexedDB deleted');
             };
             request.onerror = function() {
-                console.warn('Failed to delete IndexedDB');
             };
             
             // 清除 localStorage
             try {
                 localStorage.removeItem(STORAGE_KEY);
             } catch (e) {
-                console.warn('Failed to clear localStorage:', e);
             }
             
             showToast('缓存已清除', 'success');
@@ -6229,7 +6246,6 @@
                     const message = `缓存状态:\n机箱图片: ${caseCount} 张\n散热器图片: ${coolerCount} 张\n显卡图片: ${vgaCount} 张\n总计: ${count} 张\n缓存大小: ${sizeInMB} MB`;
                     
                     showToast(message, 'info', 8000);
-                    console.log('Cache status:', { count, sizeInMB, caseCount, coolerCount, vgaCount });
                     
                     db.close();
                     resolve({ count, size: parseFloat(sizeInMB), caseCount, coolerCount, vgaCount });
@@ -6282,13 +6298,11 @@
             const message = `缓存状态:\n机箱图片: ${caseCount} 张\n散热器图片: ${coolerCount} 张\n显卡图片: ${vgaCount} 张\n总计: ${count} 张\n缓存大小: ${sizeInMB} MB`;
             
             showToast(message, 'info', 8000);
-            console.log('Cache status:', { count, sizeInMB, caseCount, coolerCount, vgaCount });
             
             const result = { count, size: parseFloat(sizeInMB), caseCount, coolerCount, vgaCount };
             if (resolve) resolve(result);
             return result;
         } catch (e) {
-            console.warn('Failed to check cache status:', e);
             showToast('检查缓存状态失败', 'error');
             const result = { count: 0, size: 0 };
             if (resolve) resolve(result);
@@ -6309,7 +6323,6 @@
             // 先检查内存缓存
             let cachedSrc = getCachedImageSrc(imageName);
             if (cachedSrc) {
-                console.log('Using memory cached image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -6324,7 +6337,6 @@
             // 异步检查IndexedDB缓存
             cachedSrc = await getCachedImageSrcAsync(imageName);
             if (cachedSrc) {
-                console.log('Using IndexedDB cached image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -6345,7 +6357,6 @@
                 if (base64) {
                     imageCache[imageName] = { src: base64, loaded: true };
                     await saveToCache(imageName, base64);
-                    console.log('Saved image to cache:', imageName);
                 }
             };
             
@@ -6355,7 +6366,7 @@
                 placeholder.innerHTML = '图片<br>未找到';
             };
             
-            img.src = `${IMAGE_PATHS.case}/${imageName}.png`;
+            img.src = buildImgUrl(IMAGE_PATHS.case, imageName);
         } else {
             imageElement.style.display = 'none';
             delete imageElement.dataset.cacheKey;
@@ -6377,7 +6388,6 @@
             // 先检查内存缓存
             let cachedSrc = getCachedImageSrc(cacheKey);
             if (cachedSrc) {
-                console.log('Using memory cached cooler image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -6392,7 +6402,6 @@
             // 异步检查IndexedDB缓存
             cachedSrc = await getCachedImageSrcAsync(cacheKey);
             if (cachedSrc) {
-                console.log('Using IndexedDB cached cooler image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -6412,7 +6421,6 @@
                 if (base64) {
                     imageCache[cacheKey] = { src: base64, loaded: true };
                     await saveToCache(cacheKey, base64);
-                    console.log('Saved cooler image to cache:', cacheKey);
                 }
             };
             
@@ -6422,7 +6430,7 @@
                 placeholder.innerHTML = '图片<br>未找到';
             };
             
-            img.src = `${IMAGE_PATHS.cooler}/${imageName}.png`;
+            img.src = buildImgUrl(IMAGE_PATHS.cooler, imageName);
         } else {
             imageElement.style.display = 'none';
             delete imageElement.dataset.cacheKey;
@@ -6444,7 +6452,6 @@
             // 先检查内存缓存
             let cachedSrc = getCachedImageSrc(cacheKey);
             if (cachedSrc) {
-                console.log('Using memory cached VGA image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -6459,7 +6466,6 @@
             // 异步检查IndexedDB缓存
             cachedSrc = await getCachedImageSrcAsync(cacheKey);
             if (cachedSrc) {
-                console.log('Using IndexedDB cached VGA image for:', imageName);
                 imageElement.src = cachedSrc;
                 imageElement.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -6479,7 +6485,6 @@
                 if (base64) {
                     imageCache[cacheKey] = { src: base64, loaded: true };
                     await saveToCache(cacheKey, base64);
-                    console.log('Saved VGA image to cache:', cacheKey);
                 }
             };
             
@@ -6489,7 +6494,7 @@
                 placeholder.innerHTML = '图片<br>未找到';
             };
             
-            img.src = `${IMAGE_PATHS.vga}/${imageName}.png`;
+            img.src = buildImgUrl(IMAGE_PATHS.vga, imageName);
         } else {
             imageElement.style.display = 'none';
             delete imageElement.dataset.cacheKey;
@@ -7229,10 +7234,9 @@
                 if (!blob) return;
                 navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
                     .then(function () { showShotToast('截图已复制到剪贴板'); })
-                    .catch(function (e) { console.warn('复制到剪贴板失败:', e); });
+                    .catch(function () { showToast('复制到剪贴板失败，请手动保存图片', 'error'); });
             }, 'image/png');
         } catch (e) {
-            console.warn('复制到剪贴板失败:', e);
         }
     }
 
@@ -8687,7 +8691,9 @@
         } else {
             kanDiscount = 399;
         }
-        let kanPrice = finalPrice - kanDiscount;
+        // 安全保护：砍一刀不得超过 finalPrice 的 50%，最低砍一刀金额不得低于 0（即 finalPrice 太小时不砍）
+        kanDiscount = Math.min(kanDiscount, Math.floor(finalPrice / 2));
+        let kanPrice = Math.max(0, finalPrice - kanDiscount);
         document.getElementById("finalDiscount").innerText=`${kanPrice} 元`;
         
         // 计算鲁大师跑分
@@ -9075,7 +9081,6 @@
     function updateServiceText() {
         const services = getSelectedServices();
         // 如果有选中的服务，可以在控制台查看
-        console.log('已选服务:', services.join('、'));
     }
 
     // 加载配置时恢复服务项目勾选状态
@@ -9170,7 +9175,6 @@
     window.onload=async ()=>{
         // 首先加载localStorage中的图片缓存（关键修复）- 等待缓存加载完成
         const cachedCount = await loadCachedImages();
-        console.log('Loaded', cachedCount, 'images from cache on startup');
         
         let d=localStorage.getItem("last");
         if(d){
@@ -9266,11 +9270,9 @@
                     list = JSON.parse(storedList);
                     // 验证 list 是否为数组
                     if (!Array.isArray(list)) {
-                        console.warn("存储的 list 不是数组，重置为空数组");
                         list = [];
                     }
                 }
-                console.log("当前配置列表长度:", list.length);
             } catch(e) {
                 console.error("读取 localStorage 失败:",e);
                 list = [];
@@ -9292,11 +9294,9 @@
             o._id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
             list.push(o);
             
-            console.log("即将保存的配置数量:", list.length);
             
             try {
                 localStorage.setItem("list",JSON.stringify(list));
-                console.log("保存成功");
             } catch(e) {
                 console.error("保存到 localStorage 失败:",e);
                 if(e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
@@ -9359,7 +9359,6 @@
             for (const key in imageCache) {
                 delete imageCache[key];
             }
-            console.log('Image cache cleared');
             return true;
         } catch(e) {
             console.error('Failed to clear image cache:', e);
@@ -10879,7 +10878,6 @@
                 return { pulled: pulled, pushed: pushed, total: merged.length };
             } catch(e){
                 setAutoStatus('error', '同步失败：' + e.message + '（将在下次保存或 1 分钟后自动重试）');
-                console.warn('[autoSync]', e);
                 return { pulled: 0, pushed: 0, error: e.message };
             } finally {
                 autoBusy = false;
@@ -10973,6 +10971,7 @@
 </script>
 </body>
 </html>
+
 
 
 
