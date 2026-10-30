@@ -7263,6 +7263,84 @@
         }
     });
 
+    // 手势功能（手机模式）：画一个勾（✓），自动执行 保存配置 + 保存截图（自动下载）
+    // 说明：网页无法区分手指与指关节，任何单指触控笔画出"先下后上的勾形"均会触发
+    (function(){
+        let gPts = [];
+        let gTracking = false;
+        let gLastFire = 0;
+
+        function resetGesture(){ gPts = []; gTracking = false; }
+
+        // 识别成功后吞掉随后产生的 click，避免笔画落点误触按钮
+        function swallowNextClick(){
+            const h = function(ev){ ev.stopPropagation(); ev.preventDefault(); };
+            document.addEventListener('click', h, true);
+            setTimeout(function(){ document.removeEventListener('click', h, true); }, 500);
+        }
+
+        document.addEventListener('touchstart', function(e){
+            if (!document.body.classList.contains('mobile-mode')) return;
+            if (e.touches.length !== 1) { resetGesture(); return; }
+            const t = e.touches[0];
+            gTracking = true;
+            gPts = [{ x: t.clientX, y: t.clientY, t: Date.now() }];
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function(e){
+            if (!gTracking || e.touches.length !== 1) return;
+            const t = e.touches[0];
+            const last = gPts[gPts.length - 1];
+            if (!last || Math.hypot(t.clientX - last.x, t.clientY - last.y) >= 4) {
+                gPts.push({ x: t.clientX, y: t.clientY, t: Date.now() });
+                if (gPts.length > 300) gPts.shift();
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(){
+            if (!gTracking) return;
+            const pts = gPts;
+            resetGesture();
+            if (!document.body.classList.contains('mobile-mode')) return;
+            if (pts.length < 8) return;
+
+            const now = Date.now();
+            if (now - gLastFire < 3000) return; // 3秒冷却，防重复触发
+            const dur = pts[pts.length-1].t - pts[0].t;
+            if (dur < 100 || dur > 1500) return;
+
+            // 路径总长需足够，排除普通滑动/点击
+            let pathLen = 0;
+            for (let i=1;i<pts.length;i++) pathLen += Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+            if (pathLen < 200) return;
+
+            const start = pts[0], end = pts[pts.length-1];
+
+            // 找最低点作为勾的拐角，且拐角须位于笔画中段
+            let vi = 0;
+            for (let i=1;i<pts.length;i++) if (pts[i].y > pts[vi].y) vi = i;
+            const vx = pts[vi];
+            if (vi < pts.length*0.15 || vi > pts.length*0.85) return;
+
+            const drop = vx.y - start.y;   // 第一段下行深度
+            const rise = vx.y - end.y;     // 第二段上行高度
+            if (drop < 60 || rise < 60) return;
+
+            if (end.x - start.x < 80) return; // 整体向右
+            const dx1 = vx.x - start.x, dx2 = end.x - vx.x;
+            if (dx1 < -40) return;  // 允许略向左下起笔
+            if (dx2 < 40) return;   // 第二段须明显向右上方伸出
+
+            gLastFire = now;
+            swallowNextClick();
+            showToast('识别到勾选手势：保存配置并截图下载', 'success', 2500);
+            try { save(); } catch(err) { console.error('手势保存配置失败:', err); }
+            setTimeout(function(){ try { saveScreenshot(); } catch(err) { console.error('手势截图失败:', err); } }, 150);
+        }, { passive: true });
+
+        document.addEventListener('touchcancel', resetGesture, { passive: true });
+    })();
+
     // 保存截图功能
     function saveScreenshot() {
         // 检查html2canvas是否加载成功
