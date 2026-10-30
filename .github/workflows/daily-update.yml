@@ -12,18 +12,13 @@ on:
     - cron: "1 10 * * *"  # 北京时间 18:01
     - cron: "1 12 * * *"  # 北京时间 20:01
     - cron: "1 14 * * *"  # 北京时间 22:01
-    - cron: "20 15 * * *"  # 临时验证：北京时间 23:20
+    - cron: "38 15 * * *"  # 临时验证：北京时间 23:38
   # 支持手动触发测试
   workflow_dispatch:
 
 # 赋予仓库写入权限（必须）
 permissions:
   contents: write
-
-# 避免多个触发重叠时互相覆盖提交
-concurrency:
-  group: price-update
-  cancel-in-progress: false
 
 jobs:
   update-price:
