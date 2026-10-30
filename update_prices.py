@@ -82,8 +82,8 @@ def is_garbled(text):
     return False
 
 # 配置
-GPU_START_MARK = "<!-- 显卡自动更新区域 开始 -->"
-GPU_END_MARK = "<!-- 显卡自动更新区域 结束 -->"
+GPU_START_MARK = "// 显卡自动更新区域 开始"
+GPU_END_MARK = "// 显卡自动更新区域 结束"
 MB_TARGET_LINE = '{n:"华硕 ROG STRIX B760-G GAMING WIFI D4 小吹雪",p:1289},'
 MB_EXCLUDE = "铭瑄"
 RAM_EXIST_START = '{n:"金百达 银爵 16G 8x2 3200'
