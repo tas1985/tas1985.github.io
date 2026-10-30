@@ -7263,8 +7263,8 @@
         }
     });
 
-    // 手势功能（手机模式）：画一个勾（✓），自动执行 保存配置 + 保存截图（自动下载）
-    // 说明：网页无法区分手指与指关节，任何单指触控笔画出"先下后上的勾形"均会触发
+    // 手势功能（手机模式）：画勾（✓）或画圈（○），自动执行 保存配置 + 保存截图（自动下载）
+    // 说明：网页无法区分手指与指关节，任何单指触控笔画出勾形或闭合圆圈均会触发
     (function(){
         let gPts = [];
         let gTracking = false;
@@ -7307,7 +7307,7 @@
             const now = Date.now();
             if (now - gLastFire < 3000) return; // 3秒冷却，防重复触发
             const dur = pts[pts.length-1].t - pts[0].t;
-            if (dur < 100 || dur > 1500) return;
+            if (dur < 100 || dur > 2500) return;
 
             // 路径总长需足够，排除普通滑动/点击
             let pathLen = 0;
@@ -7316,24 +7316,50 @@
 
             const start = pts[0], end = pts[pts.length-1];
 
-            // 找最低点作为勾的拐角，且拐角须位于笔画中段
+            // —— 勾形（✓）判定：找最低点作为拐角，拐角须位于笔画中段 ——
             let vi = 0;
             for (let i=1;i<pts.length;i++) if (pts[i].y > pts[vi].y) vi = i;
             const vx = pts[vi];
-            if (vi < pts.length*0.15 || vi > pts.length*0.85) return;
-
             const drop = vx.y - start.y;   // 第一段下行深度
             const rise = vx.y - end.y;     // 第二段上行高度
-            if (drop < 35 || rise < 35) return;
-
-            if (end.x - start.x < 50) return; // 整体向右
             const dx1 = vx.x - start.x, dx2 = end.x - vx.x;
-            if (dx1 < -40) return;  // 允许略向左下起笔
-            if (dx2 < 25) return;   // 第二段须明显向右上方伸出
+            const isCheck = vi >= pts.length*0.15 && vi <= pts.length*0.85
+                && drop >= 35 && rise >= 35          // 下压、上挑都要够深
+                && (end.x - start.x) >= 50           // 整体向右
+                && dx1 >= -40 && dx2 >= 25;          // 允许略向左下起笔，第二段须明显向右上伸出
+
+            // —— 圆圈（○）判定：起终点接近闭合、路径足够绕、四象限都经过 ——
+            let isCircle = false;
+            if (!isCheck) {
+                let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+                for (let i=0;i<pts.length;i++){
+                    const p=pts[i];
+                    if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x;
+                    if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y;
+                }
+                const w=maxX-minX, h=maxY-minY, dMax=Math.max(w,h);
+                const closeDist=Math.hypot(end.x-start.x, end.y-start.y);
+                if (dMax>=80 && w>=60 && h>=60            // 圈不能太小，排除小抖动
+                    && closeDist<=dMax*0.5                // 起终点靠近，基本闭合
+                    && pathLen>=dMax*2.5) {               // 路径长度足以绕一圈，排除U形/折线
+                    const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+                    let q1=false,q2=false,q3=false,q4=false;
+                    for (let i=0;i<pts.length;i++){
+                        const p=pts[i];
+                        if(p.x>=cx&&p.y<cy)q1=true;
+                        else if(p.x>=cx)q4=true;
+                        else if(p.y>=cy)q3=true;
+                        else q2=true;
+                    }
+                    isCircle = q1&&q2&&q3&&q4; // 四个象限都有笔画经过才算绕圈
+                }
+            }
+
+            if (!isCheck && !isCircle) return;
 
             gLastFire = now;
             swallowNextClick();
-            showToast('识别到勾选手势：保存配置并截图下载', 'success', 2500);
+            showToast('识别到' + (isCheck ? '勾选' : '画圈') + '手势：保存配置并截图下载', 'success', 2500);
             try { save(); } catch(err) { console.error('手势保存配置失败:', err); }
             setTimeout(function(){ try { saveScreenshot(); } catch(err) { console.error('手势截图失败:', err); } }, 150);
         }, { passive: true });
