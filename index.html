@@ -1692,6 +1692,9 @@
             background: #ff9900;
             top: 8px;
             left: 8px;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
         }
         body.mobile-mode .container{
             max-width: 100% !important;
@@ -1779,13 +1782,15 @@
         /* 客户名称输入栏加大 */
         body.mobile-mode .user{
             padding: 6px !important;
-            padding-left: 88px !important; /* 给左上角固定切换按钮让位，内容右移与之并排 */
+            padding-left: 0 !important; /* 取消给左上角按钮预留的 88px，标题与输入栏整体左移 */
+            margin-top: 40px !important; /* 让出缩小后的切换按钮高度，避免遮挡客户名称 */
             margin-bottom: 14px !important; /* 增大与首行配件间距，避免被切换按钮底边遮挡 */
             gap: 6px !important;
         }
         body.mobile-mode .user label{
             font-size: 20px !important;
             width: 95px !important;
+            margin-left: -12px !important; /* 再左移 12px，合计左移 100px */
         }
         body.mobile-mode .user input{
             font-size: 18px !important;
