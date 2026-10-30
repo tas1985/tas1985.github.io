@@ -12,12 +12,9 @@ on:
     - cron: "1 10 * * *"  # 北京时间 18:01
     - cron: "1 12 * * *"  # 北京时间 20:01
     - cron: "1 14 * * *"  # 北京时间 22:01
-    - cron: "40 14 * * *"  # 临时验证：北京时间 22:40
+    - cron: "58 14 * * *"  # 临时验证：北京时间 22:58
   # 支持手动触发测试
   workflow_dispatch:
-  # 供本机定时器通过 API 触发
-  repository_dispatch:
-    types: [update-prices]
 
 # 赋予仓库写入权限（必须）
 permissions:
