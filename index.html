@@ -2388,7 +2388,7 @@
         <h4 style="color: #d97706; margin-bottom: 10px;">修改配件价格（写回文件）</h4>
         <div class="add-area">
             <select id="peType" onchange="peRenderModels()"></select>
-            <input type="text" id="peSearch" placeholder="输入关键字搜索型号（如：5060TI / 雪豹），不区分大小写" oninput="peRenderModels()">
+            <input type="text" id="peSearch" placeholder="输入关键字搜索型号（如：5060TI / 雪豹），不区分大小写" oninput="peRenderModelsDebounced()">
             <select id="peModel"></select>
             <input type="number" id="peNewPrice" placeholder="输入新价格（数字）" min="0" step="0.01">
             <div id="peFileStatus" style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;"></div>
@@ -5257,61 +5257,7 @@
         }
         return false;
     }
-    
-    // 异步检查缓存中是否有指定图片（检查IndexedDB）
-    async function hasCachedImageAsync(key) {
-        // 首先检查内存缓存
-        if (imageCache[key] && imageCache[key].src) {
-            return true;
-        }
-        // 然后检查 IndexedDB
-        return new Promise((resolve) => {
-            const request = indexedDB.open('ImageCacheDB', 1);
-            
-            request.onerror = function() {
-                // IndexedDB不可用，检查localStorage
-                resolve(hasCachedImageFromLocalStorage(key));
-            };
-            
-            request.onsuccess = function(event) {
-                const db = event.target.result;
-                const transaction = db.transaction(['images'], 'readonly');
-                const store = transaction.objectStore('images');
-                const getRequest = store.get(key);
-                
-                getRequest.onsuccess = function() {
-                    if (getRequest.result && (getRequest.result.base64 || getRequest.result.blob)) {
-                        let src;
-                        if (getRequest.result.blob) {
-                            src = URL.createObjectURL(getRequest.result.blob);
-                        } else {
-                            src = getRequest.result.base64;
-                        }
-                        imageCache[key] = { src: src, loaded: true };
-                        db.close();
-                        resolve(true);
-                    } else {
-                        db.close();
-                        resolve(false);
-                    }
-                };
-                
-                getRequest.onerror = function() {
-                    db.close();
-                    resolve(hasCachedImageFromLocalStorage(key));
-                };
-            };
-            
-            request.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('images')) {
-                    const store = db.createObjectStore('images', { keyPath: 'key' });
-                    store.createIndex('timestamp', 'timestamp', { unique: false });
-                }
-            };
-        });
-    }
-    
+
     // 从localStorage检查缓存
     function hasCachedImageFromLocalStorage(key) {
         try {
@@ -5337,26 +5283,26 @@
         return null;
     }
     
-    // 异步获取缓存的图片数据（检查IndexedDB）
+    // 异步获取缓存的图片数据（检查IndexedDB，复用共享连接避免每次调用都新建连接）
     async function getCachedImageSrcAsync(key) {
         // 首先检查内存缓存
         if (imageCache[key] && imageCache[key].src) {
             return imageCache[key].src;
         }
         // 然后检查 IndexedDB
+        let db = sharedDB;
+        if (!db) {
+            try { db = await dbOpenPromise; } catch (e) { db = null; }
+        }
+        if (!db) {
+            return getCachedImageSrcFromLocalStorage(key);
+        }
         return new Promise((resolve) => {
-            const request = indexedDB.open('ImageCacheDB', 1);
-            
-            request.onerror = function() {
-                resolve(getCachedImageSrcFromLocalStorage(key));
-            };
-            
-            request.onsuccess = function(event) {
-                const db = event.target.result;
+            try {
                 const transaction = db.transaction(['images'], 'readonly');
                 const store = transaction.objectStore('images');
                 const getRequest = store.get(key);
-                
+
                 getRequest.onsuccess = function() {
                     if (getRequest.result && (getRequest.result.base64 || getRequest.result.blob)) {
                         // 检查缓存是否过期
@@ -5367,7 +5313,6 @@
                                 const delTrans = db.transaction(['images'], 'readwrite');
                                 delTrans.objectStore('images').delete(key);
                             } catch(e) {}
-                            db.close();
                             resolve(null);
                             return;
                         }
@@ -5378,27 +5323,18 @@
                             src = getRequest.result.base64;
                         }
                         imageCache[key] = { src: src, loaded: true };
-                        db.close();
                         resolve(src);
                     } else {
-                        db.close();
                         resolve(getCachedImageSrcFromLocalStorage(key));
                     }
                 };
-                
+
                 getRequest.onerror = function() {
-                    db.close();
                     resolve(getCachedImageSrcFromLocalStorage(key));
                 };
-            };
-            
-            request.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('images')) {
-                    const store = db.createObjectStore('images', { keyPath: 'key' });
-                    store.createIndex('timestamp', 'timestamp', { unique: false });
-                }
-            };
+            } catch (e) {
+                resolve(getCachedImageSrcFromLocalStorage(key));
+            }
         });
     }
     
@@ -5617,8 +5553,8 @@
 
     // 智能预加载图片 - 使用requestIdleCallback延迟加载
     async function preloadImages() {
-        // 首先加载localStorage中的缓存 - 等待缓存加载完成
-        await loadCachedImages();
+        // 启动时已加载过缓存则跳过，避免重复读取一遍 IndexedDB
+        if (Object.keys(imageCache).length === 0) await loadCachedImages();
 
         // 后台同步仓库中已被替换的图片（不阻塞预加载）
         setTimeout(() => { refreshChangedImages(); }, 3000);
@@ -6177,33 +6113,8 @@
         }
     }
 
-    // 清除图片缓存（同时清除IndexedDB和localStorage）
-    function clearImageCache() {
-        if (confirm('确定要清除所有图片缓存吗？下次打开页面需要重新下载。')) {
-            // 清空内存缓存
-            for (const key in imageCache) {
-                delete imageCache[key];
-            }
-            
-            // 清除 IndexedDB
-            const request = indexedDB.deleteDatabase('ImageCacheDB');
-            request.onsuccess = function() {
-            };
-            request.onerror = function() {
-            };
-            
-            // 清除 localStorage
-            try {
-                localStorage.removeItem(STORAGE_KEY);
-            } catch (e) {
-            }
-            
-            showToast('缓存已清除', 'success');
-            return true;
-        }
-        return false;
-    }
-    
+    // 注意：clearImageCache 的唯一定义在文件后部（自动清理版），此处不再重复声明
+
     // 查看缓存状态（检查IndexedDB）
     async function checkCacheStatus() {
         return new Promise((resolve) => {
@@ -6548,10 +6459,8 @@
         localStorage.setItem("productData", JSON.stringify(data));
     }
 
-    // 初始化数据 - 使用最新的HTML数据覆盖本地存储
+    // 初始化数据 - 直接使用当前HTML中定义的defaultData
     const data = loadData();
-    // 强制更新本地存储的数据
-    localStorage.setItem("productData", JSON.stringify(data));
 
     // 鲁大师跑分字典
     const ludashiScores = {
@@ -6915,6 +6824,12 @@
         }
     };
 
+    // 跑分/功耗匹配用的键数组：预先排序一次，避免每次 calc 都重复排序
+    const LUDASHI_VGA_KEYS = Object.keys(ludashiScores.vga).sort((a, b) => b.length - a.length);
+    const LUDASHI_SSD_KEYS = Object.keys(ludashiScores.ssd).sort((a, b) => b.length - a.length);
+    const POWER_VGA_KEYS = Object.keys(powerConsumption.vga).sort((a, b) => b.length - a.length);
+    const POWER_SSD_KEYS = Object.keys(powerConsumption.ssd).sort((a, b) => b.length - a.length);
+
     // 显卡常用型号排序功能 - 在数据初始化后立即执行
     function sortPopularVgaModels() {
         const vgaList = data.vga;
@@ -6955,8 +6870,7 @@
             });
         }
         
-        // 保存更新后的数据
-        saveData();
+        // 排序结果已在内存数据中，productData 无读取方，无需再次写入 localStorage
     }
 
     // 在页面加载时执行显卡型号排序
@@ -8744,6 +8658,9 @@
                     totalScore += Math.floor(ludashiScores.cpu["R5-5500X3D"] * 1.2);
                 }
             } else {
+                // 两种归一化写法只依赖 cpuValue，提到循环外避免逐条重复计算
+                const cpuValueWithDash = cpuValue.replace(/\s+/g, '-');
+                const cpuValueX3D = cpuValue.replace(/X\s+3D/g, 'X3D').replace(/\s+/g, '-');
                 for (let cpuModel in ludashiScores.cpu) {
                     // 原始匹配
                     if (cpuValue.includes(cpuModel)) {
@@ -8751,7 +8668,6 @@
                         break;
                     }
                     // 尝试将cpuValue中的空格替换为-进行匹配
-                    const cpuValueWithDash = cpuValue.replace(/\s+/g, '-');
                     if (cpuValueWithDash.includes(cpuModel)) {
                         totalScore += ludashiScores.cpu[cpuModel];
                         break;
@@ -8763,7 +8679,6 @@
                         break;
                     }
                     // 尝试将cpuValue中的"X 3D"替换为"X3D"进行匹配（如 R7 9850X 3D -> R7-9850X3D）
-                    const cpuValueX3D = cpuValue.replace(/X\s+3D/g, 'X3D').replace(/\s+/g, '-');
                     if (cpuValueX3D.includes(cpuModel)) {
                         totalScore += ludashiScores.cpu[cpuModel];
                         break;
@@ -8775,7 +8690,7 @@
         // 显卡跑分 - 匹配英文数字型号（按型号长度排序，优先匹配更长的型号，支持空格差异）
         const vgaValue = document.getElementById("vga").value;
         if (vgaValue) {
-            const vgaModels = Object.keys(ludashiScores.vga).sort((a, b) => b.length - a.length);
+            const vgaModels = LUDASHI_VGA_KEYS;
             for (let vgaModel of vgaModels) {
                 // 原始匹配
                 if (vgaValue.includes(vgaModel)) {
@@ -8806,7 +8721,7 @@
         // 固态硬盘跑分 - 匹配容量和速度（按型号长度排序，优先匹配更精确的型号）
         const ssdValue = document.getElementById("ssd").value;
         if (ssdValue) {
-            const ssdModels = Object.keys(ludashiScores.ssd).sort((a, b) => b.length - a.length);
+            const ssdModels = LUDASHI_SSD_KEYS;
             for (let ssdModel of ssdModels) {
                 // 原始匹配
                 if (ssdValue.includes(ssdModel)) {
@@ -8840,6 +8755,9 @@
         // CPU功耗（支持空格和破折号互换，支持X 3D转X3D）
         const cpuValue = document.getElementById("cpu").value;
         if (cpuValue) {
+            // 两种归一化写法只依赖 cpuValue，提到循环外避免逐条重复计算
+            const cpuValueWithDash = cpuValue.replace(/\s+/g, '-');
+            const cpuValueX3D = cpuValue.replace(/X\s+3D/g, 'X3D').replace(/\s+/g, '-');
             for (let cpuModel in powerConsumption.cpu) {
                 // 原始匹配
                 if (cpuValue.includes(cpuModel)) {
@@ -8847,7 +8765,6 @@
                     break;
                 }
                 // 尝试将cpuValue中的空格替换为-进行匹配
-                const cpuValueWithDash = cpuValue.replace(/\s+/g, '-');
                 if (cpuValueWithDash.includes(cpuModel)) {
                     totalPower += powerConsumption.cpu[cpuModel];
                     break;
@@ -8859,7 +8776,6 @@
                     break;
                 }
                 // 尝试将cpuValue中的"X 3D"替换为"X3D"进行匹配（如 R7 9850X 3D -> R7-9850X3D）
-                const cpuValueX3D = cpuValue.replace(/X\s+3D/g, 'X3D').replace(/\s+/g, '-');
                 if (cpuValueX3D.includes(cpuModel)) {
                     totalPower += powerConsumption.cpu[cpuModel];
                     break;
@@ -8870,7 +8786,7 @@
         // 显卡功耗（按型号长度排序，优先匹配更长的型号，支持空格差异）
         const vgaValue = document.getElementById("vga").value;
         if (vgaValue) {
-            const vgaModels = Object.keys(powerConsumption.vga).sort((a, b) => b.length - a.length);
+            const vgaModels = POWER_VGA_KEYS;
             for (let vgaModel of vgaModels) {
                 // 原始匹配
                 if (vgaValue.includes(vgaModel)) {
@@ -8944,7 +8860,7 @@
         const ssdValue = document.getElementById("ssd").value;
         if (ssdValue) {
             let found = false;
-            const ssdModels = Object.keys(powerConsumption.ssd).sort((a, b) => b.length - a.length);
+            const ssdModels = POWER_SSD_KEYS;
             for (let ssdModel of ssdModels) {
                 // 原始匹配
                 if (ssdValue.includes(ssdModel)) {
@@ -9174,8 +9090,8 @@
     }
 
     window.onload=async ()=>{
-        // 首先加载localStorage中的图片缓存（关键修复）- 等待缓存加载完成
-        const cachedCount = await loadCachedImages();
+        // 图片缓存改为后台加载，不再阻塞首屏表单恢复与算价（图片展示有异步 IndexedDB 兜底）
+        loadCachedImages();
         
         let d=localStorage.getItem("last");
         if(d){
@@ -9677,6 +9593,13 @@
             sel.appendChild(o);
         }
         sel.title = count ? ("共 " + count + " 个匹配型号") : "";
+    }
+
+    // 搜索输入防抖：避免每敲一个字符就重建整份型号下拉
+    let peRenderTimer = null;
+    function peRenderModelsDebounced(){
+        clearTimeout(peRenderTimer);
+        peRenderTimer = setTimeout(peRenderModels, 150);
     }
 
     async function peUpdateFileStatus(){
