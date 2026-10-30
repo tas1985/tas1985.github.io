@@ -7328,16 +7328,18 @@
                 && (end.x - start.x) >= 50           // 整体向右
                 && dx1 >= -40 && dx2 >= 25;          // 允许略向左下起笔，第二段须明显向右上伸出
 
+            // —— 公共：笔画包围盒 ——
+            let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+            for (let i=0;i<pts.length;i++){
+                const p=pts[i];
+                if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x;
+                if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y;
+            }
+            const w=maxX-minX, h=maxY-minY, dMax=Math.max(w,h);
+
             // —— 圆圈（○）判定：起终点接近闭合、路径足够绕、四象限都经过 ——
             let isCircle = false;
             if (!isCheck) {
-                let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
-                for (let i=0;i<pts.length;i++){
-                    const p=pts[i];
-                    if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x;
-                    if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y;
-                }
-                const w=maxX-minX, h=maxY-minY, dMax=Math.max(w,h);
                 const closeDist=Math.hypot(end.x-start.x, end.y-start.y);
                 if (dMax>=80 && w>=60 && h>=60            // 圈不能太小，排除小抖动
                     && closeDist<=dMax*0.5                // 起终点靠近，基本闭合
@@ -7355,11 +7357,24 @@
                 }
             }
 
-            if (!isCheck && !isCircle) return;
+            // —— 横线（← 再 →）判定：先向左画一段，再折返向右滑 ——
+            let isLine = false;
+            if (!isCheck && !isCircle) {
+                let li = 0; // 最左点即折返点
+                for (let i=1;i<pts.length;i++) if (pts[i].x < pts[li].x) li = i;
+                const leftSeg = start.x - pts[li].x;  // 第一段向左距离
+                const rightSeg = end.x - pts[li].x;   // 折返后向右距离
+                isLine = w >= 120 && h <= w*0.5       // 整体要够长且基本水平
+                    && li >= pts.length*0.15 && li <= pts.length*0.85 // 折返点在中段
+                    && leftSeg >= 60 && rightSeg >= 60               // 左右两段都要够长
+                    && end.x >= start.x - 10;                        // 终点至少滑回起点附近
+            }
+
+            if (!isCheck && !isCircle && !isLine) return;
 
             gLastFire = now;
             swallowNextClick();
-            showToast('识别到' + (isCheck ? '勾选' : '画圈') + '手势：保存配置并截图下载', 'success', 2500);
+            showToast('识别到' + (isCheck ? '勾选' : (isCircle ? '画圈' : '横线')) + '手势：保存配置并截图下载', 'success', 2500);
             try { save(); } catch(err) { console.error('手势保存配置失败:', err); }
             setTimeout(function(){ try { saveScreenshot(); } catch(err) { console.error('手势截图失败:', err); } }, 150);
         }, { passive: true });
