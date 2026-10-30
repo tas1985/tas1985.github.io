@@ -1893,6 +1893,25 @@ def update_gpu_prices():
                             print(f"  ★ RTX5060TI 16G 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5060TI_16G_FIXED_PRICE}")
         print(f"✅ RTX5060TI 16G 统一固定价 ￥{RTX5060TI_16G_FIXED_PRICE} 更新 {special_count} 个型号")
 
+        # 特殊处理：RTX5070（非Ti）所有型号统一固定为 8799
+        # 2026-10-30 指定统一价；如需恢复按源站价格跟随，删除本段即可
+        RTX5070_FIXED_PRICE = 8799
+        rtx5070_count = 0
+        for i in range(start_idx + 1, end_idx):
+            line = lines[i]
+            if '{n:"' in line and '",p:' in line:
+                model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if model_match:
+                    model_name = model_match.group(1)
+                    old_price = int(model_match.group(2))
+                    model_compact = re.sub(r'\s+', '', model_name).lower()
+                    if "rtx5070" in model_compact and "rtx5070ti" not in model_compact:
+                        if old_price != RTX5070_FIXED_PRICE:
+                            lines[i] = re.sub(r'p:\d+', f'p:{RTX5070_FIXED_PRICE}', line)
+                            rtx5070_count += 1
+                            print(f"  ★ RTX5070 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5070_FIXED_PRICE}")
+        print(f"✅ RTX5070 统一固定价 ￥{RTX5070_FIXED_PRICE} 更新 {rtx5070_count} 个型号")
+
         # 特殊处理：微星 RTX5060TI 8G 价格按"七彩虹 RTX5060TI 8G 战斧 DUO 双扇"价格+49更新
         # 16G 已在上方统一固定价处理，此处跳过
         # 大小写不同（RTX5060TI/Ti/ti、8G/8g、16G/16g）与品牌前缀（"微星 "/"微星-"）均需匹配
@@ -1989,8 +2008,9 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，微星 RTX5060 价格未更新")
 
-        # 特殊处理：微星-RTX5070/RTX5070TI/RTX5080 价格按源网站同芯片其他型号价格+50更新
+        # 特殊处理：微星-RTX5070TI/RTX5080 价格按源网站同芯片其他型号价格+50更新
         # 仅处理"微星-"前缀型号：这些型号不参与跨品牌匹配，源站无同型号时会一直停留在旧价
+        # RTX5070（非Ti）已统一固定价，此处不再处理
         msi_high_count = 0
         for i in range(start_idx + 1, end_idx):
             line = lines[i]
@@ -2007,7 +2027,7 @@ def update_gpu_prices():
             if not chip_key:
                 continue
             chip_model = chip_key.split("|")[0]
-            if chip_model not in ("RTX5070", "RTX5070TI", "RTX5080"):
+            if chip_model not in ("RTX5070TI", "RTX5080"):
                 continue
             # 从源网站数据中查找同芯片同显存的其他型号（取最低价作为参考）
             ref_name, ref_price = find_chip_reference_price(gpu_dict, model_name)
@@ -2022,7 +2042,7 @@ def update_gpu_prices():
             else:
                 print(f"  ≡ 微星{chip_model} 价格已正确: {model_name[:40]}... ￥{old_price}")
         if msi_high_count:
-            print(f"✅ 微星 RTX5070/5070TI/5080 价格更新完成 {msi_high_count} 个（源站同芯片参考价+50）")
+            print(f"✅ 微星 RTX5070TI/RTX5080 价格更新完成 {msi_high_count} 个（源站同芯片参考价+50）")
 
         # 特殊处理：所有RTX3050型号价格统一按"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲"价格+350更新
         # 6G/8G、各品牌均统一；参考型号本身保持源站价格不动
