@@ -7312,7 +7312,7 @@
             // 路径总长需足够，排除普通滑动/点击
             let pathLen = 0;
             for (let i=1;i<pts.length;i++) pathLen += Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
-            if (pathLen < 200) return;
+            if (pathLen < 120) return;
 
             const start = pts[0], end = pts[pts.length-1];
 
@@ -7324,12 +7324,12 @@
 
             const drop = vx.y - start.y;   // 第一段下行深度
             const rise = vx.y - end.y;     // 第二段上行高度
-            if (drop < 60 || rise < 60) return;
+            if (drop < 35 || rise < 35) return;
 
-            if (end.x - start.x < 80) return; // 整体向右
+            if (end.x - start.x < 50) return; // 整体向右
             const dx1 = vx.x - start.x, dx2 = end.x - vx.x;
             if (dx1 < -40) return;  // 允许略向左下起笔
-            if (dx2 < 40) return;   // 第二段须明显向右上方伸出
+            if (dx2 < 25) return;   // 第二段须明显向右上方伸出
 
             gLastFire = now;
             swallowNextClick();
