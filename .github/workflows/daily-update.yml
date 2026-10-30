@@ -22,13 +22,15 @@ permissions:
 
 jobs:
   update-price:
-    runs-on: ubuntu-latest
+    # 固定 Ubuntu 24.04：ubuntu-latest 将迁移到 Ubuntu 26，固定版本避免环境突变
+    runs-on: ubuntu-24.04
     steps:
+      # checkout/setup-python 均用基于 Node 24 的新版，消除 Node 20 弃用警告
       - name: 检出仓库代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 设置Python环境
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.10"
 
@@ -39,14 +41,20 @@ jobs:
 
       - name: 运行价格更新脚本
         run: python update_prices.py
-        env: 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
-          JD_APP_KEY: ${{ secrets.JD_APP_KEY }} 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JD_APP_KEY: ${{ secrets.JD_APP_KEY }}
           JD_APP_SECRET: ${{ secrets.JD_APP_SECRET }}
 
       - name: 提交并推送修改
-        uses: EndBug/add-and-commit@v9
-        with:
-          message: "自动更新配件实时价格"
-          committer_name: GitHub Actions
-          committer_email: actions@github.com
+        # 用原生 git 代替第三方 action，少一个 Node 20 依赖
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "无价格变化，跳过提交"
+          else
+            git commit -m "自动更新配件实时价格"
+            git push
+          fi
