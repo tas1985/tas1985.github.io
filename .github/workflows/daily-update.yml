@@ -3,6 +3,7 @@ on:
   # 兜底定时：GitHub 定时队列常延迟数十分钟到数小时，准点由本机计划任务
   # 调用 repository_dispatch 触发（github-trigger-update.ps1，北京时间 06:17~22:17 每 2 小时）
   schedule:
+    - cron: "1 23 * * *"   # 北京时间 07:01 兜底
     - cron: "1 1 * * *"    # 北京时间 09:01 兜底
     - cron: "31 3 * * *"   # 北京时间 11:31 兜底
     - cron: "1 6 * * *"    # 北京时间 14:01 兜底
