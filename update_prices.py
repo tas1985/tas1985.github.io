@@ -1386,8 +1386,20 @@ def update_ssd_prices():
             "雷克沙 NQ790 2T PCIE4.0 读7000 写6000 QLC": {"adjust": -61, "base_price": thor_2t_price},
         }
 
-        # 更新SSD价格 - 遍历HTML文件中的每个SSD行
-        for i in range(len(lines)):
+        # 更新SSD价格 - 只在 SSD 数组范围内遍历，避免误扫其它配件（会产生上千条“未匹配”且可能误改别的分类价格）
+        ssd_start_idx = -1
+        for _i, _l in enumerate(lines):
+            if re.search(r'\bssd\s*:\s*\[', _l):
+                ssd_start_idx = _i
+                break
+        ssd_end_idx = len(lines)
+        if ssd_start_idx != -1:
+            for _i in range(ssd_start_idx + 1, len(lines)):
+                if lines[_i].strip() == '],':
+                    ssd_end_idx = _i
+                    break
+
+        for i in range(ssd_start_idx + 1, ssd_end_idx):
             line = lines[i]
             match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
             if not match:
