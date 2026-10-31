@@ -10662,6 +10662,29 @@
         function sigOf(list){
             return list.map(i => i._id + ':' + i._ut).sort().join(';');
         }
+        // 取配置单的保存时间（毫秒）。优先用 _ut；旧数据 _ut 为 0 时兜底解析 time，
+        // 兼容 "2024/5/1 下午2:30:00"、"2024年5月1日" 等本地化格式；识别不了返回 0
+        function itemTimeMs(it){
+            if(it && typeof it._ut === 'number' && it._ut > 0) return it._ut;
+            const s = it && it.time;
+            if(!s) return 0;
+            const t = Date.parse(s);
+            if(!isNaN(t)) return t;
+            const m = String(s).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})\D*(?:(上午|下午)?\s*(\d{1,2})[:：](\d{1,2})(?:[:：](\d{1,2}))?)?/);
+            if(!m) return 0;
+            let hh = m[5] ? +m[5] : 0;
+            if(m[4] === '下午' && hh < 12) hh += 12;
+            if(m[4] === '上午' && hh === 12) hh = 0;
+            return new Date(+m[1], +m[2] - 1, +m[3], hh, m[6] ? +m[6] : 0, m[7] ? +m[7] : 0).getTime();
+        }
+        // 丢弃保存时间超过 24 个月的配置单（时间无法识别的条目保留，避免误删）
+        function dropExpired(list){
+            const d = new Date();
+            d.setMonth(d.getMonth() - 24);
+            const cutoff = d.getTime();
+            const kept = list.filter(it => { const t = itemTimeMs(it); return !t || t >= cutoff; });
+            return { kept: kept, removed: list.length - kept.length };
+        }
         // 双向合并：按 _id 去重，同 id 取 _ut 较新者；结果按时间升序（保持 append 历史顺序）
         function mergeLists(local, cloud){
             const map = new Map();
@@ -10753,7 +10776,11 @@
                 const cloudItems = remote ? normList(remote.obj.items) : [];
                 const cloudSig = sigOf(cloudItems);
 
-                const merged = mergeLists(local, cloudItems);
+                const mergedAll = mergeLists(local, cloudItems);
+                // 自动清理 24 个月之前的配置单（合并结果同时写回本地与云端，云端随之清理）
+                const cleaned = dropExpired(mergedAll);
+                const merged = cleaned.kept;
+                const expiredCount = cleaned.removed;
                 const mergedSig = sigOf(merged);
 
                 // 统计云端/本地各自带来的条数
@@ -10780,7 +10807,10 @@
 
                 autoLastOkAt = Date.now();
                 setAutoStatus('ok');
-                return { pulled: pulled, pushed: pushed, total: merged.length };
+                if(expiredCount > 0 && document.visibilityState !== 'hidden'){
+                    try { showToast('已自动清理 ' + expiredCount + ' 条 24 个月前的配置单', 'success'); } catch(e){}
+                }
+                return { pulled: pulled, pushed: pushed, total: merged.length, expired: expiredCount };
             } catch(e){
                 setAutoStatus('error', '同步失败：' + e.message + '（将在下次保存或 1 分钟后自动重试）');
                 return { pulled: 0, pushed: 0, error: e.message };
