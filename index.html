@@ -7318,29 +7318,16 @@
         try {
             // 获取要截图的容器
             const container = document.querySelector('.container');
-            
-            // 临时隐藏所有按钮容器
-            const allBtnContainer = document.querySelector('.all-btn-container');
-            const allBtnContainerDisplay = allBtnContainer.style.display;
-            allBtnContainer.style.display = 'none';
 
-            // 使用html2canvas生成截图
-            // 获取完整的文档高度（修复手机端截不全的问题）
-            const fullHeight = Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight,
-                container.scrollHeight,
-                container.offsetHeight
-            );
-            
-            // 临时设置容器为block布局，确保能获取完整高度
-            container.style.display = 'block';
-            container.style.position = 'static';
-            container.style.overflow = 'visible';
-            container.style.height = 'auto';
-            
-            // 等待一小段时间确保页面完全渲染
-            setTimeout(function() {
+            // 按钮容器隐藏与容器布局调整全部在 onclone 的克隆文档中完成，
+            // 不再改动线上 DOM，避免触发整页强制重排导致手机端点击后先卡一下
+
+            // 渲染入口：双rAF确保"正在生成..."按钮状态先绘制一帧，再开始阻塞式渲染；
+            // setTimeout兜底后台标签页rAF停摆的场景（两者只执行一次）
+            let renderStarted = false;
+            const startRender = function() {
+                if (renderStarted) return;
+                renderStarted = true;
                 html2canvas(container, {
                 backgroundColor: '#f5f5f7',
                 scale: 2, // 提高清晰度
@@ -7817,6 +7804,10 @@
                             box-shadow: none !important;
                             outline: none !important;
                         }
+                        /* 按钮栏整体隐藏（原来靠改动线上DOM实现，现移至克隆文档，避免整页重排） */
+                        .all-btn-container {
+                            display: none !important;
+                        }
                         /* 移除移动端特有的样式，确保截图在手机端正确显示 */
                         @media screen and (max-width: 480px) {
                             html, body, .container {
@@ -7844,9 +7835,6 @@
                     clonedDoc.head.appendChild(style);
                 }
             }).then(canvas => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-
                 // 生成文件名（使用当前日期时间）
                 const now = new Date();
                 const year = now.getFullYear();
@@ -7907,13 +7895,13 @@
                 }, 'image/jpeg', 0.9); // JPEG质量0.9，编码更快、文件更小，肉眼几乎无差别
             }).catch(error => {
                 console.error('保存截图失败:', error);
-                // 恢复所有按钮容器显示及按钮状态
-                try { allBtnContainer.style.display = allBtnContainerDisplay; } catch(e) {}
                 btn.innerText = originalText;
                 btn.disabled = false;
                 alert('截图失败：' + (error && error.message ? error.message : String(error)) + '\n请刷新页面重试');
             });
-            }, 100); // 100ms延迟确保页面渲染
+            };
+            requestAnimationFrame(function() { requestAnimationFrame(startRender); });
+            setTimeout(startRender, 300);
         } catch (error) {
             console.error('截图失败:', error);
             btn.innerText = originalText;
@@ -7936,25 +7924,16 @@
 
         try {
             const container = document.querySelector('.container');
-            
-            // 临时隐藏所有按钮容器
-            const allBtnContainer = document.querySelector('.all-btn-container');
-            const allBtnContainerDisplay = allBtnContainer.style.display;
-            allBtnContainer.style.display = 'none';
 
-            const fullHeight = Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight,
-                container.scrollHeight,
-                container.offsetHeight
-            );
-            
-            container.style.display = 'block';
-            container.style.position = 'static';
-            container.style.overflow = 'visible';
-            container.style.height = 'auto';
-            
-            setTimeout(function() {
+            // 按钮容器隐藏与容器布局调整全部在 onclone 的克隆文档中完成，
+            // 不再改动线上 DOM，避免触发整页强制重排导致手机端点击后先卡一下
+
+            // 渲染入口：双rAF确保"正在生成..."按钮状态先绘制一帧，再开始阻塞式渲染；
+            // setTimeout兜底后台标签页rAF停摆的场景（两者只执行一次）
+            let renderStarted = false;
+            const startRender = function() {
+                if (renderStarted) return;
+                renderStarted = true;
                 html2canvas(container, {
                 backgroundColor: '#f5f5f7',
                 scale: 2,
@@ -8455,6 +8434,10 @@
                             box-shadow: none !important;
                             outline: none !important;
                         }
+                        /* 按钮栏整体隐藏（原来靠改动线上DOM实现，现移至克隆文档，避免整页重排） */
+                        .all-btn-container {
+                            display: none !important;
+                        }
                         @media screen and (max-width: 480px) {
                             html, body, .container {
                                 width: 480px !important;
@@ -8481,9 +8464,6 @@
                     clonedDoc.head.appendChild(style);
                 }
             }).then(canvas => {
-                // 恢复所有按钮容器显示
-                allBtnContainer.style.display = allBtnContainerDisplay;
-
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -8540,12 +8520,13 @@
                 }, 'image/jpeg', 0.9); // JPEG质量0.9，编码更快、文件更小
             }).catch(error => {
                 console.error('匿名截图失败:', error);
-                try { allBtnContainer.style.display = allBtnContainerDisplay; } catch(e) {}
                 btn.innerText = originalText;
                 btn.disabled = false;
                 alert('匿名截图失败：' + (error && error.message ? error.message : String(error)) + '\n请刷新页面重试');
             });
-            }, 100);
+            };
+            requestAnimationFrame(function() { requestAnimationFrame(startRender); });
+            setTimeout(startRender, 300);
         } catch (error) {
             console.error('匿名截图失败:', error);
             btn.innerText = originalText;
