@@ -1357,6 +1357,7 @@ def update_ssd_prices():
         nv7400_2t_price = 0
         thor_1t_price = 0
         thor_2t_price = 0
+        sn850x_4t_price = 0
         for ssd in ssd_list:
             name = ssd["name"]
             # 佰维 NV7400 2T 作为 1T 反推基准
@@ -1367,8 +1368,12 @@ def update_ssd_prices():
                 thor_1t_price = ssd["price"]
             if ("雷神THOR" in name or ("THOR" in name and "雷克沙" in name)) and ("2T" in name or "2TB" in name):
                 thor_2t_price = ssd["price"]
+            # 西数 SN850X 4T 作为 2T 的基准（2T 价格 = 4T / 2）
+            if "西数" in name and "SN850X" in name and ("4T" in name or "4TB" in name):
+                sn850x_4t_price = ssd["price"]
 
         nv7400_1t_price = int(nv7400_2t_price * 0.53) if nv7400_2t_price > 0 else 0
+        sn850x_2t_price = int(sn850x_4t_price / 2) if sn850x_4t_price > 0 else 0
 
         # 特殊处理的型号（需要价格调整）
         # 公式：线上价 = base_price + adjust + get_ssd_capacity_bonus(容量)
@@ -1384,6 +1389,8 @@ def update_ssd_prices():
             "雷克沙 NQ790 1T PCIE4.0 读7000 写6000 QLC": {"adjust": 1, "base_price": thor_1t_price},
             # NQ790 2T 比 THOR 2T 略便宜（QLC vs TLC），HTML 现价 1699 = 1660 - 61 + 100
             "雷克沙 NQ790 2T PCIE4.0 读7000 写6000 QLC": {"adjust": -61, "base_price": thor_2t_price},
+            # ---- 西数 SN850X 2T = 4T 价格 / 2，adjust -100 用于抵消 2T 容量加成 ----
+            "西数 黑盘 SN850X 2T PCIE 4.0 读7300写6600": {"adjust": -100, "base_price": sn850x_2t_price},
         }
 
         # 更新SSD价格 - 只在 SSD 数组范围内遍历，避免误扫其它配件（会产生上千条“未匹配”且可能误改别的分类价格）
