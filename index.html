@@ -9299,28 +9299,37 @@
         const resIdx = FPS_RES_INDEX[fpsResolution] || 0;
         const hasGpu = gpuIndex !== null;
 
-        FPS_GAMES.forEach(function(g) {
+        // 先算出各游戏帧数，再统一按当前配置的最高帧数作为进度条基准，
+        // 保证同样的帧数在各游戏间进度条长度一致
+        const vals = FPS_GAMES.map(function(g) {
+            if (!hasGpu) return null;
+            let fps;
+            if (g.cpuW !== undefined) {
+                // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
+                // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
+                const gpuPerf = (g.brandRules && isAmdGpu(vgaValue) ? gpuIndex * 0.85 : gpuIndex) / 100;
+                const cpuPerf = g.brandRules ? cpuFactor * cpuBrandAdjust(normalizeFpsModel(cpuValue)) : cpuFactor;
+                fps = g.base * ((1 - g.cpuW) * gpuPerf + g.cpuW * cpuPerf) * g.res[resIdx];
+            } else {
+                // 显卡端帧数：分辨率只影响显卡部分，CPU 越好也会小幅带动显卡端帧数
+                const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx] * (0.8 + 0.2 * cpuFactor);
+                // CPU 端帧数上限：CPU 越好上限成倍提高，竞技类游戏通常由这一项决定
+                const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
+                fps = Math.min(gpuFps, cpuFps);
+            }
+            fps = Math.round(fps);
+            if (g.cap) fps = Math.min(fps, g.cap);
+            return fps;
+        });
+        // 统一比例基准：当前配置下的最高帧数（至少 1，避免除零）
+        const barMax = Math.max(1, Math.max.apply(null, vals.filter(function(v) { return v !== null; }).concat(0)));
+
+        FPS_GAMES.forEach(function(g, idx) {
             const valEl = document.querySelector('.fps-val[data-fps="' + g.n + '"]');
             if (!valEl) return;
             const fill = valEl.closest(".fps-row").querySelector(".fps-fill");
-            if (hasGpu) {
-                let fps;
-                if (g.cpuW !== undefined) {
-                    // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
-                    // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
-                    const gpuPerf = (g.brandRules && isAmdGpu(vgaValue) ? gpuIndex * 0.85 : gpuIndex) / 100;
-                    const cpuPerf = g.brandRules ? cpuFactor * cpuBrandAdjust(normalizeFpsModel(cpuValue)) : cpuFactor;
-                    fps = g.base * ((1 - g.cpuW) * gpuPerf + g.cpuW * cpuPerf) * g.res[resIdx];
-                } else {
-                    // 显卡端帧数：分辨率只影响显卡部分，CPU 越好也会小幅带动显卡端帧数
-                    const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx] * (0.8 + 0.2 * cpuFactor);
-                    // CPU 端帧数上限：CPU 越好上限成倍提高，竞技类游戏通常由这一项决定
-                    const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
-                    fps = Math.min(gpuFps, cpuFps);
-                }
-                fps = Math.round(fps);
-                if (g.cap) fps = Math.min(fps, g.cap);
-                const barMax = g.cap || 1;
+            const fps = vals[idx];
+            if (fps !== null) {
                 valEl.className = "fps-val";
                 valEl.innerHTML = "<b>" + fps + "</b><i>FPS</i>";
                 fill.style.width = Math.min(100, Math.max(0, fps / barMax * 100)).toFixed(1) + "%";
