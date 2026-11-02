@@ -9440,7 +9440,7 @@
 
     // ===================== 使用需求推荐度（按当前配置打星） =====================
     const RECO_ITEMS = [
-        { n: "网游", tip: "看 CPU，AMD 同档高一星" },
+        { n: "网游", tip: "看 CPU；AMD 同档高一星，有独立显卡加一星" },
         { n: "3A游戏", tip: "看显卡，N 卡同档高一星" },
         { n: "直播", tip: "看 CPU，Intel 同档高一星" },
         { n: "剪辑", tip: "同直播，N 卡 5050 以上加一星" },
@@ -9550,6 +9550,12 @@
         const nv5050 = isN && gpuIndex !== null && gpuIndex >= FPS_GPU_INDEX.RTX5050;
 
         const gpuStars = gpuIndex !== null ? recoGpuStars(gpuIndex, isN) : 1;
+        // 是否独立显卡（排除核显）
+        const gpuKey = matchGpuKey(normalizeFpsModel(vgaValue), FPS_GPU_KEYS);
+        const hasDiscreteGpu = gpuIndex !== null && ["INTELUHD", "AMDVEGA", "AMDRADEON"].indexOf(gpuKey || "") < 0
+            && !/核显/.test(normalizeFpsModel(vgaValue));
+        // 网游：CPU 分档 + 有独立显卡加一星
+        const onlineStars = Math.min(5, (cpuFactor !== null ? recoOnlineStars(cpuFactor, isAmd) : 1) + (hasDiscreteGpu ? 1 : 0));
         // AI：同 3A，16G 显存及以上再加两星
         const aiStars = gpuIndex !== null
             ? Math.min(5, gpuStars + (recoGpuVram(vgaValue) >= 16 ? 2 : 0)) : 1;
@@ -9560,8 +9566,8 @@
         else if (ssdTB !== null && ssdTB < 1) officeStars = Math.max(1, officeStars - 1);
 
         const stars = [
-            // 网游：看 CPU，AMD 同档高一星
-            cpuFactor !== null ? recoOnlineStars(cpuFactor, isAmd) : 1,
+            // 网游：看 CPU，AMD 同档高一星，有独立显卡再加一星
+            onlineStars,
             // 3A 游戏：看显卡，N 卡同档高一星
             gpuStars,
             // 直播：看 CPU，Intel 同档高一星
