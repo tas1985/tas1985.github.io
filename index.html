@@ -9466,8 +9466,9 @@
             if (!hasGpu) return null;
             let fps;
             if (g.ladder) {
-                // CPU 主导型（如无畏契约）：只按 CPU 档位逐级 +40 帧，显卡不参与
-                fps = valCpuFps(cpuFactor) * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
+                // CPU 主导型（如无畏契约）：以 CPU 档位为主，显卡越强也小幅提升（以 RX6500XT=45 为基准，最高约 +15%）
+                const gpuBoost = Math.max(1, 1 + (gpuIndex - 45) / 100 * 0.10);
+                fps = valCpuFps(cpuFactor) * gpuBoost * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
             } else if (g.cpuW !== undefined) {
                 // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
                 // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
