@@ -565,6 +565,28 @@
                 padding: 6px 0;
             }
         }
+        /* 截图专用：强制桌面左右排布，避免窄窗口或媒体查询把帧数栏堆到下方 */
+        body.shot-desktop .page-layout{
+            max-width: 1120px;
+            flex-direction: row;
+            align-items: flex-start;
+        }
+        body.shot-desktop .container{
+            display: flex;
+            flex-direction: row;
+            max-width: 966px;
+        }
+        body.shot-desktop .container-main{
+            flex: 1 1 760px;
+            min-width: 0;
+        }
+        body.shot-desktop .fps-panel{
+            flex: 0 0 190px;
+            width: 190px;
+            position: static;
+            margin-top: 0;
+            align-self: flex-start;
+        }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
@@ -7658,6 +7680,8 @@
                     // 在克隆的文档中调整样式
                     // 移除手机模式，确保截图按电脑模式效果生成
                     clonedDoc.body.classList.remove('mobile-mode');
+                    // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
+                    clonedDoc.body.classList.add('shot-desktop');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -8262,6 +8286,8 @@
                 onclone: function(clonedDoc) {
                     // 移除手机模式，确保截图按电脑模式效果生成
                     clonedDoc.body.classList.remove('mobile-mode');
+                    // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
+                    clonedDoc.body.classList.add('shot-desktop');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
