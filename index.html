@@ -373,10 +373,12 @@
             border-top:1px dashed #f0f0f5;
         }
         .fps-ico{
+            position:relative;
             width:26px;
             height:26px;
-            border-radius:50%;
+            border-radius:6px;
             flex:0 0 26px;
+            overflow:hidden;
             display:flex;
             align-items:center;
             justify-content:center;
@@ -384,7 +386,23 @@
             font-size:9px;
             font-weight:800;
             letter-spacing:0.2px;
+            border:1px solid rgba(0,0,0,0.08);
             box-shadow:0 2px 6px rgba(0,0,0,0.15);
+        }
+        .fps-ico span{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .fps-ico img{
+            position:relative;
+            z-index:1;
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
         }
         .fps-main{
             flex:1;
@@ -9208,16 +9226,16 @@
     // 每个游戏：base 为 RTX 4060 在 1080p 的显卡参考帧数，cpu 为参考处理器的帧数上限
     // （竞技类游戏以 CPU 上限为主），res 为 1K/2K/4K 的显卡负载系数，cap 为引擎/平台帧数上限
     const FPS_GAMES = [
-        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
-        { n: "影之刃零", ico: "影", style: "background:linear-gradient(135deg,#0f172a,#b91c1c)", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
-        { n: "生化危机9", ico: "RE9", style: "background:linear-gradient(135deg,#14532d,#65a30d);font-size:9px", base: 64.3, res: [1, 0.66, 0.36], cpu: 260, cap: 90, amdPenalty: 0.77 },
-        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
-        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
-        { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
-        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", ladder: true, cap: 480 },
-        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
-        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
-        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 }
+        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", img: "PNG_GAMES/wukong.jpg", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
+        { n: "影之刃零", ico: "影", style: "background:linear-gradient(135deg,#0f172a,#b91c1c)", img: "PNG_GAMES/yingzhiling.jpg", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
+        { n: "生化危机9", ico: "RE9", style: "background:linear-gradient(135deg,#14532d,#65a30d);font-size:9px", img: "PNG_GAMES/re9.jpg", base: 64.3, res: [1, 0.66, 0.36], cpu: 260, cap: 90, amdPenalty: 0.77 },
+        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", img: "PNG_GAMES/cp2077.jpg", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
+        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", img: "PNG_GAMES/pubg.jpg", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
+        { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", img: "PNG_GAMES/delta.jpg", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
+        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", img: "PNG_GAMES/valorant.jpg", ladder: true, cap: 480 },
+        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", img: "PNG_GAMES/cs2.jpg", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
+        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", img: "PNG_GAMES/lol.jpg", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
+        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", img: "PNG_GAMES/apex.jpg", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 }
     ];
     // 常见处理器的游戏性能系数（以 R5-5600 / i5-12400F = 1.0 为基准），
     // 弥补跑分无法体现 X3D 大缓存等游戏优势的问题
@@ -9321,7 +9339,10 @@
         if (!list || list.dataset.ready === "1") return;
         list.innerHTML = FPS_GAMES.map(function(g) {
             return '<div class="fps-row">' +
-                '<div class="fps-ico" style="' + g.style + '">' + g.ico + '</div>' +
+                '<div class="fps-ico" style="' + g.style + '">' +
+                    '<span>' + g.ico + '</span>' +
+                    '<img src="' + g.img + '" alt="' + g.n + ' 封面" loading="lazy" onerror="this.remove()">' +
+                '</div>' +
                 '<div class="fps-main">' +
                     '<div class="fps-line">' +
                         '<span class="fps-game">' + g.n + '</span>' +
