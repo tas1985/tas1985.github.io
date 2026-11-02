@@ -9170,7 +9170,7 @@
         { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
         { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
-        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 460, res: [1, 0.94, 0.88], cpu: 211, cap: 480 },
+        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", ladder: true, cap: 480 },
         { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
         { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
         { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 }
@@ -9242,6 +9242,16 @@
         return 1;
     }
 
+    // 无畏契约专用：按 CPU 档位逐级 +40 帧（R5-5500 为最低档 200 帧）
+    function valCpuFps(cpuFactor) {
+        if (cpuFactor <= 0.95) return 200;
+        if (cpuFactor <= 1.02) return 240;
+        if (cpuFactor <= 1.18) return 280;
+        if (cpuFactor <= 1.36) return 320;
+        if (cpuFactor <= 1.60) return 360;
+        return 400;
+    }
+
     // CPU 游戏性能系数：优先查游戏性能表，未收录型号按鲁大师 CPU 分换算
     function getCpuFpsFactor(cpuValue) {
         if (!cpuValue || !cpuValue.trim()) return 1;
@@ -9304,7 +9314,10 @@
         const vals = FPS_GAMES.map(function(g) {
             if (!hasGpu) return null;
             let fps;
-            if (g.cpuW !== undefined) {
+            if (g.ladder) {
+                // CPU 主导型（如无畏契约）：只按 CPU 档位逐级 +40 帧，显卡不参与
+                fps = valCpuFps(cpuFactor) * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
+            } else if (g.cpuW !== undefined) {
                 // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
                 // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
                 const gpuPerf = (g.brandRules && isAmdGpu(vgaValue) ? gpuIndex * 0.85 : gpuIndex) / 100;
