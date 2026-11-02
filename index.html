@@ -9440,29 +9440,25 @@
 
     // ===================== 使用需求推荐度（按当前配置打星） =====================
     const RECO_ITEMS = [
-        { n: "网游", tip: "吃 CPU 单核与缓存" },
-        { n: "3A游戏", tip: "吃显卡性能" },
-        { n: "直播", tip: "CPU 为主，显卡次要" },
-        { n: "剪辑", tip: "CPU + 显卡" },
-        { n: "办公", tip: "吃 CPU，要求较低" },
-        { n: "建模", tip: "CPU + 内存容量" },
-        { n: "渲染", tip: "吃显卡性能" },
-        { n: "AI本地部署", tip: "N 卡 + 大显存" },
-        { n: "颜值", tip: "机箱 + 散热外观件" }
+        { n: "网游", tip: "看 CPU，AMD 同档高一星" },
+        { n: "3A游戏", tip: "看显卡，N 卡同档高一星" },
+        { n: "直播", tip: "看 CPU，Intel 同档高一星" },
+        { n: "剪辑", tip: "同直播，N 卡 5050 以上加一星" },
+        { n: "办公", tip: "同直播" },
+        { n: "建模", tip: "同剪辑" },
+        { n: "渲染", tip: "同 3A" },
+        { n: "AI本地部署", tip: "同 3A，16G 显存以上加两星" },
+        { n: "颜值", tip: "散热 + 机箱 + 风扇" }
     ];
 
-    // 根据数值与 2/3/4/5 星门槛计算星级，低于最低门槛即 1 星
-    function recoLevel(v, th) {
-        let s = 1;
-        for (let i = 0; i < th.length; i++) {
-            if (v >= th[i]) s = i + 2;
-        }
-        return Math.max(1, Math.min(5, s));
-    }
-
-    // 是否 Intel 平台（Intel 在直播、剪辑、办公、建模、渲染上更有优势）
+    // 是否 Intel 平台（Intel 在直播、剪辑、办公、建模上同档高一星）
     function recoIsIntel(n) {
         return /I3|I5|I7|I9|ULTRA|INTEL|酷睿/.test(n);
+    }
+
+    // 是否 AMD 处理器（网游中 AMD 同档比 Intel 高一星）
+    function recoIsAmdCpu(n) {
+        return /锐龙|RYZEN|R5|R7|R9/.test(n) && !recoIsIntel(n);
     }
 
     // 是否 N 卡（AI 本地部署依赖 CUDA）
@@ -9487,10 +9483,35 @@
         return 8;
     }
 
-    // 内存总容量：型号里第一个「16G / 32G」即为总容量（如「32G 16*2」）
-    function recoRamGB(ramValue) {
-        const m = (ramValue || "").toUpperCase().replace(/\s/g, "").match(/(\d{1,3})G/);
-        return m ? parseInt(m[1], 10) : 0;
+    // 网游：5500=2、5600=3、9800X3D 及以上=5；AMD 同档比 Intel 高一星
+    function recoOnlineStars(cpuFactor, isAmd) {
+        const base = cpuFactor >= 1.95 ? 4 : cpuFactor >= 1.45 ? 3 : cpuFactor >= 0.97 ? 2 : 1;
+        return isAmd ? Math.min(5, base + 1) : base;
+    }
+
+    // 直播 / 办公：Intel 14400F=3、14600KF=4、再往上=5、往下=2；AMD 同档降一星
+    function recoCpuWorkStars(cpuFactor, isAmd, nvBonus) {
+        let s = cpuFactor >= 1.38 ? 5 : cpuFactor >= 1.36 ? 4 : cpuFactor >= 1.15 ? 3 : 2;
+        if (isAmd) s -= 1;
+        if (nvBonus) s += 1;
+        return Math.max(1, Math.min(5, s));
+    }
+
+    // 3A / 渲染：N 卡 5050=3、5060=4、5060 以上=5；AMD 同档降一星
+    function recoGpuStars(gpuIndex, isN) {
+        if (gpuIndex < 64) return 1;
+        const base = gpuIndex >= 116 ? 4 : gpuIndex >= 93 ? 3 : 2;
+        return Math.min(5, base + (isN ? 1 : 0));
+    }
+
+    // 颜值：默认 1 星，水冷 +2，机箱 + 风扇 >300 加 1 星、>500 加 2 星
+    function recoLookStars(coolerValue, caseP, fanP) {
+        let s = 1;
+        if (/水冷/.test(normalizeFpsModel(coolerValue))) s += 2;
+        const sum = caseP + fanP;
+        if (sum > 500) s += 2;
+        else if (sum > 300) s += 1;
+        return Math.min(5, s);
     }
 
     function updateRecoPanel() {
@@ -9498,46 +9519,42 @@
         if (!grid) return;
         const cpuValue = (document.getElementById("cpu") || {}).value || "";
         const vgaValue = (document.getElementById("vga") || {}).value || "";
-        const ramValue = (document.getElementById("ram") || {}).value || "";
+        const coolerValue = (document.getElementById("cooler") || {}).value || "";
         const caseP = Number((document.getElementById("case-p") || {}).value) || 0;
-        const coolerP = Number((document.getElementById("cooler-p") || {}).value) || 0;
+        const fanP = Number((document.getElementById("fan-p") || {}).value) || 0;
 
         const cpuFactor = cpuValue.trim() ? getCpuFpsFactor(cpuValue) : null;
         const gpuIndex = getGpuFpsIndex(vgaValue);
-        const ramGB = recoRamGB(ramValue);
-        // 归一化到 0~1（CPU 以 9950X3D、显卡以 5090 为满分）
-        const cpuNorm = cpuFactor ? Math.min(1, cpuFactor / 2.08) : 0;
-        const gpuNorm = gpuIndex ? Math.min(1, gpuIndex / 290) : 0;
-        const intel = recoIsIntel(normalizeFpsModel(cpuValue));
+        const cpuName = normalizeFpsModel(cpuValue);
+        const isAmd = recoIsAmdCpu(cpuName);
+        const isN = recoIsNvidia(vgaValue);
+        // N 卡且达到 RTX5050 及以上，剪辑/建模各加一星
+        const nv5050 = isN && gpuIndex !== null && gpuIndex >= FPS_GPU_INDEX.RTX5050;
+
+        const gpuStars = gpuIndex !== null ? recoGpuStars(gpuIndex, isN) : 1;
+        // AI：同 3A，16G 显存及以上再加两星
+        const aiStars = gpuIndex !== null
+            ? Math.min(5, gpuStars + (recoGpuVram(vgaValue) >= 16 ? 2 : 0)) : 1;
 
         const stars = [
-            // 网游：吃 CPU
-            cpuFactor !== null ? recoLevel(cpuFactor, [0.9, 1.0, 1.35, 1.8]) : 1,
-            // 3A 游戏：吃显卡
-            gpuIndex !== null ? recoLevel(gpuIndex, [68, 98, 140, 185]) : 1,
-            // 直播：CPU 为主、显卡次要，Intel 加分
-            (cpuFactor !== null || gpuIndex !== null)
-                ? recoLevel((0.75 * cpuNorm + 0.25 * gpuNorm) * (intel ? 1.08 : 1), [0.28, 0.44, 0.62, 0.85]) : 1,
-            // 剪辑：CPU + 显卡，Intel 加分
-            (cpuFactor !== null || gpuIndex !== null)
-                ? recoLevel((0.5 * cpuNorm + 0.5 * gpuNorm) * (intel ? 1.05 : 1), [0.22, 0.34, 0.5, 0.7]) : 1,
-            // 办公：吃 CPU，门槛更低，Intel 加分
-            cpuFactor !== null ? recoLevel(cpuFactor * (intel ? 1.08 : 1), [0.9, 1.1, 1.35, 1.75]) : 1,
-            // 建模：CPU + 内存，Intel 加分
-            cpuFactor !== null
-                ? recoLevel((0.6 * cpuNorm + 0.4 * Math.min(1, ramGB / 64)) * (intel ? 1.05 : 1), [0.26, 0.4, 0.56, 0.75]) : 1,
-            // 渲染：显卡为主，CPU 小幅带动，Intel 加分
-            gpuIndex !== null
-                ? recoLevel(gpuIndex * (0.9 + 0.1 * cpuNorm) * (intel ? 1.05 : 1), [75, 105, 150, 200]) : 1,
-            // AI 本地部署：N 卡 + 显存（非 N 卡降两档）
-            (function () {
-                if (gpuIndex === null) return 1;
-                const vram = recoGpuVram(vgaValue);
-                const lv = vram >= 16 ? 5 : vram >= 12 ? 4 : vram >= 8 ? 3 : vram >= 6 ? 2 : 1;
-                return recoIsNvidia(vgaValue) ? lv : Math.max(1, lv - 2);
-            })(),
-            // 颜值：按机箱 + 散热件价位评估
-            recoLevel(caseP + coolerP, [80, 150, 300, 500])
+            // 网游：看 CPU，AMD 同档高一星
+            cpuFactor !== null ? recoOnlineStars(cpuFactor, isAmd) : 1,
+            // 3A 游戏：看显卡，N 卡同档高一星
+            gpuStars,
+            // 直播：看 CPU，Intel 同档高一星
+            cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
+            // 剪辑：同直播，N 卡 5050 以上加一星
+            cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
+            // 办公：同直播
+            cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
+            // 建模：同剪辑
+            cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
+            // 渲染：同 3A
+            gpuStars,
+            // AI 本地部署：同 3A + 大显存加成
+            aiStars,
+            // 颜值：散热 + 机箱 + 风扇
+            recoLookStars(coolerValue, caseP, fanP)
         ];
 
         grid.innerHTML = RECO_ITEMS.map(function (it, i) {
