@@ -301,16 +301,17 @@
             margin: 0;
             flex: 0 1 760px;
         }
+        /* ========== 游戏帧数区块（已合并进配置单卡片，随截图一并输出） ========== */
         .fps-panel{
-            flex: 0 0 176px;
-            width: 176px;
-            position: sticky;
-            top: 15px;
-            background: #fff;
-            border: 2px solid rgba(37,99,235,0.4);
-            border-radius: 10px;
-            padding: 8px;
-            box-shadow: 0 4px 6px rgba(37,99,235,0.08), 0 8px 25px rgba(37,99,235,0.15), 0 1px 3px rgba(0,0,0,0.05);
+            position: static;
+            width: auto;
+            flex: none;
+            margin-top: 12px;
+            padding: 10px;
+            background: #fbfcff;
+            border: 1px solid #e6e9f5;
+            border-radius: 9px;
+            box-shadow: none;
         }
         .fps-head{
             display:flex;
@@ -342,6 +343,7 @@
             background:#eef2ff;
             border-radius:9px;
             margin-bottom:10px;
+            max-width:320px;
         }
         .fps-tab{
             flex:1;
@@ -371,6 +373,14 @@
         }
         .fps-row + .fps-row{
             border-top:1px dashed #f0f0f5;
+        }
+        .fps-list{
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0,1fr));
+            column-gap:16px;
+        }
+        .fps-row:nth-child(2){
+            border-top:none;
         }
         .fps-ico{
             position:relative;
@@ -494,9 +504,9 @@
             white-space:nowrap;
         }
         .reco-grid{
-            display:flex;
-            flex-direction:column;
-            gap:2px;
+            display:grid;
+            grid-template-columns:repeat(3, minmax(0,1fr));
+            column-gap:16px;
         }
         .reco-item{
             display:flex;
@@ -537,6 +547,17 @@
                 margin-top: 14px;
             }
         }
+        @media (max-width: 700px) {
+            .fps-list{
+                grid-template-columns: 1fr;
+            }
+            .fps-row:nth-child(2){
+                border-top: 1px dashed #f0f0f5;
+            }
+            .reco-grid{
+                grid-template-columns: repeat(2, minmax(0,1fr));
+            }
+        }
         @media (max-width: 500px) {
             .page-layout{
                 width: 100%;
@@ -549,6 +570,9 @@
             }
             .fps-row{
                 padding: 6px 0;
+            }
+            .reco-grid{
+                grid-template-columns: 1fr;
             }
         }
         /* 移动端适配 */
@@ -2289,7 +2313,7 @@
             width: auto;
             flex: none;
             position: static;
-            margin: 8px;
+            margin: 10px 0 0;
             padding: 12px;
             border-radius: 8px;
         }
@@ -2545,10 +2569,8 @@
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
 
-</div>
-
-<!-- 右侧竖列：游戏帧数测算（根据当前配置实时估算） -->
-<div class="fps-panel" id="fpsPanel">
+    <!-- 游戏帧数测算（根据当前配置实时估算，已合并进配置单卡片） -->
+    <div class="fps-panel" id="fpsPanel">
     <div class="fps-head">
         <div class="fps-title">游戏帧数 <em>预估</em></div>
     </div>
@@ -2565,6 +2587,7 @@
         </div>
         <div class="reco-grid" id="recoGrid"></div>
     </div>
+</div>
 </div>
 </div>
 
