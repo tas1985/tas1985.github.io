@@ -9151,7 +9151,7 @@
         "GTX1650": 48, "GTX1080TI": 92, "GTX1080": 72, "GTX1070TI": 62, "GTX1070": 58, "GTX1060": 45,
         "RX9070XT": 175, "RX9070GRE": 135, "RX9070": 160, "RX9060XT": 112, "RX9060": 100,
         "RX7900XTX": 215, "RX7900XT": 190, "RX7900GRE": 165, "RX7800XT": 150,
-        "RX7700XT": 135, "RX7650GRE": 82, "RX7600XT": 98, "RX7600": 95,
+        "RX7700XT": 135, "RX7650GRE": 70, "RX7600XT": 98, "RX7600": 95,
         "RX6950XT": 165, "RX6900XT": 158, "RX6800XT": 152, "RX6800": 138,
         "RX6750XT": 120, "RX6750GRE": 115, "RX6700XT": 112, "RX6650XT": 98,
         "RX6600XT": 95, "RX6600": 85, "RX6500XT": 45,
@@ -9169,7 +9169,7 @@
         { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 200 },
         { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 220 },
         { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
-        { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 110, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 320 },
+        { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 110, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 320, brandRules: true },
         { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 900, res: [1, 0.94, 0.88], cpu: 400, cap: 850 },
         { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
         { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
@@ -9200,27 +9200,23 @@
     }
 
     // 显卡性能指数：优先查本地游戏性能表，未收录时回退到鲁大师显卡分换算
-    // AMD（RX / Radeon）统一再乘 0.85，确保同级别帧数低于 N 卡
     function getGpuFpsIndex(vgaValue) {
         const n = normalizeFpsModel(vgaValue);
         if (!n) return null;
-        const amdAdj = function(idx) {
-            return /RX\d|RADEON/.test(n) ? idx * 0.85 : idx;
-        };
         for (let i = 0; i < FPS_GPU_KEYS.length; i++) {
-            if (n.includes(FPS_GPU_KEYS[i])) return amdAdj(FPS_GPU_INDEX[FPS_GPU_KEYS[i]]);
+            if (n.includes(FPS_GPU_KEYS[i])) return FPS_GPU_INDEX[FPS_GPU_KEYS[i]];
         }
         const refScore = ludashiScores.vga["RTX4060"] || 359793;
         for (let i = 0; i < LUDASHI_VGA_KEYS.length; i++) {
             const key = LUDASHI_VGA_KEYS[i];
             if (n.includes(normalizeFpsModel(key))) {
-                return amdAdj(Math.max(5, Math.round(ludashiScores.vga[key] / refScore * 100)));
+                return Math.max(5, Math.round(ludashiScores.vga[key] / refScore * 100));
             }
         }
         return null;
     }
 
-    // 同级别下 Intel 游戏帧数高于 AMD：Intel 上浮 8%，AMD 下浮 5%
+    // 三角洲行动专用：同级别下 Intel 游戏帧数高于 AMD（Intel 上浮 8%，AMD 下浮 5%）
     function cpuBrandAdjust(n) {
         if (/I3|I5|I7|I9|ULTRA|酷睿|INTEL/.test(n)) return 1.08;
         if (/R3|R5|R7|R9|RYZEN|锐龙|AMD/.test(n)) return 0.95;
@@ -9231,18 +9227,17 @@
     function getCpuFpsFactor(cpuValue) {
         if (!cpuValue || !cpuValue.trim()) return 1;
         const n = normalizeFpsModel(cpuValue);
-        const brand = cpuBrandAdjust(n);
         // 优先使用游戏性能系数表
         for (let i = 0; i < FPS_CPU_GAMING_KEYS.length; i++) {
             const key = FPS_CPU_GAMING_KEYS[i];
-            if (n.includes(normalizeFpsModel(key))) return FPS_CPU_GAMING[key] * brand;
+            if (n.includes(normalizeFpsModel(key))) return FPS_CPU_GAMING[key];
         }
         // 未收录型号按鲁大师 CPU 分换算（放大差距）
         for (let i = 0; i < FPS_CPU_KEYS.length; i++) {
             const key = FPS_CPU_KEYS[i];
             if (n.includes(normalizeFpsModel(key))) {
                 const factor = Math.pow(ludashiScores.cpu[key] / 600000, 1.4);
-                return Math.min(2.2, Math.max(0.3, factor * brand));
+                return Math.min(2.2, Math.max(0.3, factor));
             }
         }
         return 0.75;
@@ -9293,7 +9288,11 @@
                 let fps;
                 if (g.cpuW !== undefined) {
                     // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
-                    fps = g.base * ((1 - g.cpuW) * (gpuIndex / 100) + g.cpuW * cpuFactor) * g.res[resIdx];
+                    // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
+                    const gpuNorm = normalizeFpsModel(vgaValue);
+                    const gpuPerf = (g.brandRules && /RX\d|RADEON/.test(gpuNorm) ? gpuIndex * 0.85 : gpuIndex) / 100;
+                    const cpuPerf = g.brandRules ? cpuFactor * cpuBrandAdjust(normalizeFpsModel(cpuValue)) : cpuFactor;
+                    fps = g.base * ((1 - g.cpuW) * gpuPerf + g.cpuW * cpuPerf) * g.res[resIdx];
                 } else {
                     // 显卡端帧数：分辨率只影响显卡部分，CPU 越好也会小幅带动显卡端帧数
                     const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx] * (0.8 + 0.2 * cpuFactor);
