@@ -79,7 +79,7 @@
             color: #333; /* 基础文字黑色 */
         }
         .container{
-            max-width: 760px;
+            max-width: 966px;
             margin: 0 auto;
             background: #fff; /* 容器白色背景 */
             border-radius: 10px;
@@ -88,6 +88,13 @@
             border: 2px solid rgba(37,99,235,0.4); /* 外层浅紫色边框 */
             transition: box-shadow 0.3s ease;
             overflow: visible;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .container-main{
+            flex: 1 1 760px;
+            min-width: 0;
         }
         .title{
             text-align:center;
@@ -299,14 +306,16 @@
         }
         .page-layout > .container{
             margin: 0;
-            flex: 0 1 760px;
+            flex: 0 1 966px;
         }
-        /* ========== 游戏帧数区块（已合并进配置单卡片，随截图一并输出） ========== */
+        /* ========== 游戏帧数区块（位于配置单卡片右侧，随截图一并输出） ========== */
         .fps-panel{
-            position: static;
-            width: auto;
-            flex: none;
-            margin-top: 12px;
+            flex: 0 0 190px;
+            width: 190px;
+            position: sticky;
+            top: 15px;
+            align-self: flex-start;
+            margin-top: 0;
             padding: 10px;
             background: #fbfcff;
             border: 1px solid #e6e9f5;
@@ -343,7 +352,6 @@
             background:#eef2ff;
             border-radius:9px;
             margin-bottom:10px;
-            max-width:320px;
         }
         .fps-tab{
             flex:1;
@@ -373,14 +381,6 @@
         }
         .fps-row + .fps-row{
             border-top:1px dashed #f0f0f5;
-        }
-        .fps-list{
-            display:grid;
-            grid-template-columns:repeat(2, minmax(0,1fr));
-            column-gap:16px;
-        }
-        .fps-row:nth-child(2){
-            border-top:none;
         }
         .fps-ico{
             position:relative;
@@ -504,9 +504,9 @@
             white-space:nowrap;
         }
         .reco-grid{
-            display:grid;
-            grid-template-columns:repeat(3, minmax(0,1fr));
-            column-gap:16px;
+            display:flex;
+            flex-direction:column;
+            gap:2px;
         }
         .reco-item{
             display:flex;
@@ -540,22 +540,15 @@
                 align-items: center;
                 max-width: 760px;
             }
+            .container{
+                flex-direction: column;
+                max-width: 760px;
+            }
             .fps-panel{
                 width: 100%;
                 flex: none;
                 position: static;
                 margin-top: 14px;
-            }
-        }
-        @media (max-width: 700px) {
-            .fps-list{
-                grid-template-columns: 1fr;
-            }
-            .fps-row:nth-child(2){
-                border-top: 1px dashed #f0f0f5;
-            }
-            .reco-grid{
-                grid-template-columns: repeat(2, minmax(0,1fr));
             }
         }
         @media (max-width: 500px) {
@@ -570,9 +563,6 @@
             }
             .fps-row{
                 padding: 6px 0;
-            }
-            .reco-grid{
-                grid-template-columns: 1fr;
             }
         }
         /* 移动端适配 */
@@ -2343,6 +2333,7 @@
 
 <div class="page-layout">
 <div class="container">
+<div class="container-main">
     <div class="title">
         重庆塔司电脑工作室·DIY组装配置报价单58508218
         <div class="subtitle">真诚装机不踩坑-不做新旧搭配-诚心下单可小刀</div>
@@ -2569,7 +2560,8 @@
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
 
-    <!-- 游戏帧数测算（根据当前配置实时估算，已合并进配置单卡片） -->
+    </div>
+    <!-- 游戏帧数测算（根据当前配置实时估算，位于配置单卡片右侧） -->
     <div class="fps-panel" id="fpsPanel">
     <div class="fps-head">
         <div class="fps-title">游戏帧数 <em>预估</em></div>
@@ -7660,7 +7652,7 @@
                 foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
-                windowWidth: 800, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局
+                windowWidth: 1200, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局（宽屏才显示右侧帧数栏）
                 // 移除手动设置的宽高和坐标，让html2canvas自动计算
                 onclone: function(clonedDoc) {
                     // 在克隆的文档中调整样式
@@ -8266,7 +8258,7 @@
                 foreignObjectRendering: false,
                 removeContainer: true,
                 imageTimeout: 15000,
-                windowWidth: 800, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局
+                windowWidth: 1200, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局（宽屏才显示右侧帧数栏）
                 onclone: function(clonedDoc) {
                     // 移除手机模式，确保截图按电脑模式效果生成
                     clonedDoc.body.classList.remove('mobile-mode');
