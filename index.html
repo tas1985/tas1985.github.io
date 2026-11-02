@@ -7694,6 +7694,14 @@
                     clonedDoc.body.classList.add('shot-desktop');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
+                    // 渐变文字（帧数数字、标题“预估”）在 html2canvas 中会渲染成实心色块，截图时改为纯色文字
+                    clonedDoc.querySelectorAll('.fps-val b, .fps-title em').forEach(function(el) {
+                        el.style.background = 'none';
+                        el.style.webkitBackgroundClip = 'border-box';
+                        el.style.backgroundClip = 'border-box';
+                        el.style.webkitTextFillColor = '#7C3AED';
+                        el.style.color = '#7C3AED';
+                    });
                     
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
@@ -8300,6 +8308,14 @@
                     clonedDoc.body.classList.add('shot-desktop');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
+                    // 渐变文字（帧数数字、标题“预估”）在 html2canvas 中会渲染成实心色块，截图时改为纯色文字
+                    clonedDoc.querySelectorAll('.fps-val b, .fps-title em').forEach(function(el) {
+                        el.style.background = 'none';
+                        el.style.webkitBackgroundClip = 'border-box';
+                        el.style.backgroundClip = 'border-box';
+                        el.style.webkitTextFillColor = '#7C3AED';
+                        el.style.color = '#7C3AED';
+                    });
                     
                     // 将图标转换为灰色
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
