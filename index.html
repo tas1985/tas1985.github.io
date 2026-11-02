@@ -2483,7 +2483,7 @@
 <div class="fps-panel" id="fpsPanel">
     <div class="fps-head">
         <div class="fps-title">游戏实测 <em>FPS</em></div>
-        <div class="fps-sub">按当前配置估算</div>
+        <div class="fps-sub">CPU + 显卡综合估算</div>
     </div>
     <div class="fps-tabs">
         <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
@@ -2492,7 +2492,7 @@
     </div>
     <div class="fps-list" id="fpsList"></div>
     <div class="fps-basis" id="fpsBasis">未选择显卡，选择后自动测算</div>
-    <div class="fps-note">参考同平台实测帧数，实际表现受画质设置、驱动版本与场景影响。</div>
+    <div class="fps-note">按高画质（含 DLSS/FSR 质量档）参考同平台实测，实际表现受画质、驱动与场景影响。</div>
 </div>
 </div>
 
@@ -9151,7 +9151,7 @@
         "GTX1650": 48, "GTX1080TI": 92, "GTX1080": 72, "GTX1070TI": 62, "GTX1070": 58, "GTX1060": 45,
         "RX9070XT": 175, "RX9070GRE": 135, "RX9070": 160, "RX9060XT": 112, "RX9060": 100,
         "RX7900XTX": 215, "RX7900XT": 190, "RX7900GRE": 165, "RX7800XT": 150,
-        "RX7700XT": 135, "RX7650GRE": 95, "RX7600XT": 98, "RX7600": 95,
+        "RX7700XT": 135, "RX7650GRE": 103, "RX7600XT": 98, "RX7600": 95,
         "RX6950XT": 165, "RX6900XT": 158, "RX6800XT": 152, "RX6800": 138,
         "RX6750XT": 120, "RX6750GRE": 115, "RX6700XT": 112, "RX6650XT": 98,
         "RX6600XT": 95, "RX6600": 85, "RX6500XT": 45,
@@ -9163,16 +9163,17 @@
     const FPS_GPU_KEYS = Object.keys(FPS_GPU_INDEX).sort((a, b) => b.length - a.length);
     const FPS_CPU_KEYS = Object.keys(ludashiScores.cpu).sort((a, b) => b.length - a.length);
 
-    // 每个游戏：base 为 RTX 4060 在 1080p 的参考帧数，cpu 为参考处理器的帧数上限，
-    // res 为 1K/2K/4K 的显卡负载系数，bar 为进度条满格对应的帧数
+    // 每个游戏：base 为「RTX 4060 + 参考处理器」在 1080p 的参考帧数；
+    // gpuW 为显卡权重（其余为 CPU 权重），竞技类游戏 CPU 权重更高；
+    // res 为 1K/2K/4K 的显卡负载系数；cap 为引擎/平台帧数上限
     const FPS_GAMES = [
-        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 52, res: [1, 0.66, 0.36], cpu: 180, bar: [110, 72, 40] },
-        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 62, res: [1, 0.70, 0.40], cpu: 200, bar: [150, 105, 60] },
-        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 120, res: [1, 0.72, 0.42], cpu: 250, bar: [280, 205, 125] },
-        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 620, res: [1, 0.94, 0.88], cpu: 400, bar: [620, 580, 550] },
-        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 500, res: [1, 0.94, 0.88], cpu: 330, bar: [500, 470, 440] },
-        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 700, res: [1, 0.97, 0.94], cpu: 460, bar: [700, 680, 650] },
-        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 160, res: [1, 0.80, 0.50], cpu: 210, bar: [240, 190, 120] }
+        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 84, res: [1, 0.66, 0.36], gpuW: 0.82, cap: 200 },
+        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 84, res: [1, 0.68, 0.38], gpuW: 0.80, cap: 220 },
+        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 130, res: [1, 0.72, 0.42], gpuW: 0.60, cap: 310 },
+        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 380, res: [1, 0.94, 0.88], gpuW: 0.20, cap: 680 },
+        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 320, res: [1, 0.94, 0.88], gpuW: 0.50, cap: 480 },
+        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 450, res: [1, 0.97, 0.94], gpuW: 0.25, cap: 600 },
+        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 150, res: [1, 0.80, 0.50], gpuW: 0.70, cap: 290 }
     ];
     const FPS_RES_INDEX = { "1k": 0, "2k": 1, "4k": 2 };
     let fpsResolution = "1k";
@@ -9254,14 +9255,19 @@
             const valEl = document.querySelector('.fps-val[data-fps="' + g.n + '"]');
             if (!valEl) return;
             const fill = valEl.closest(".fps-row").querySelector(".fps-fill");
-            let fps = 0;
             if (hasGpu) {
-                const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx];
-                const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.96 : 0.92);
-                fps = Math.min(gpuFps, cpuFps);
+                // CPU 与显卡加权综合：CPU 越好综合性能越高，竞技类游戏 CPU 权重更高
+                const cpuW = 1 - g.gpuW;
+                const perf = g.gpuW * (gpuIndex / 100) + cpuW * cpuFactor;
+                // 分辨率只压低显卡部分，CPU 权重越高的游戏受分辨率影响越小
+                const resEff = 1 - (1 - g.res[resIdx]) * g.gpuW;
+                let fps = Math.round(g.base * perf * resEff);
+                if (g.cap) fps = Math.min(fps, g.cap);
+                // 进度条满格按当前分辨率的顶配参考值计算
+                const barMax = g.base * (g.gpuW * 2.6 + cpuW * 1.5) * resEff;
                 valEl.className = "fps-val";
-                valEl.innerHTML = "<b>" + Math.round(fps) + "</b><i>FPS</i>";
-                fill.style.width = Math.min(100, Math.max(0, fps / g.bar[resIdx] * 100)).toFixed(1) + "%";
+                valEl.innerHTML = "<b>" + fps + "</b><i>FPS</i>";
+                fill.style.width = Math.min(100, Math.max(0, fps / barMax * 100)).toFixed(1) + "%";
             } else {
                 valEl.className = "fps-val empty";
                 valEl.innerHTML = "<b>—</b><i>FPS</i>";
@@ -9274,7 +9280,7 @@
             if (!hasGpu) {
                 basisEl.innerText = vgaValue ? "该显卡暂未收录，暂时无法估算" : "未选择显卡，选择后自动测算";
             } else {
-                basisEl.innerText = "基准：" + vgaValue + (cpuValue ? " ｜ " + cpuValue : "");
+                basisEl.innerText = "综合基准：" + vgaValue + (cpuValue ? " ｜ " + cpuValue : "");
             }
             basisEl.title = basisEl.innerText;
         }
