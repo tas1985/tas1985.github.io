@@ -9448,7 +9448,7 @@
         { n: "建模", tip: "同剪辑" },
         { n: "渲染", tip: "同 3A" },
         { n: "AI本地部署", tip: "同 3A，16G 显存以上加两星" },
-        { n: "颜值", tip: "散热 + 机箱 + 风扇" }
+        { n: "颜值", tip: "风扇>3个=3星，散热>200、机箱>300 各加一星" }
     ];
 
     // 是否 Intel 平台（Intel 在直播、剪辑、办公、建模上同档高一星）
@@ -9522,13 +9522,11 @@
         return Math.min(5, base + (isN ? 1 : 0));
     }
 
-    // 颜值：默认 1 星，水冷 +2，机箱 + 风扇 >300 加 1 星、>500 加 2 星
-    function recoLookStars(coolerValue, caseP, fanP) {
-        let s = 1;
-        if (/水冷/.test(normalizeFpsModel(coolerValue))) s += 2;
-        const sum = caseP + fanP;
-        if (sum > 500) s += 2;
-        else if (sum > 300) s += 1;
+    // 颜值：风扇数量 >3 个给 3 星，散热器 >200 加 1 星，机箱 >300 加 1 星
+    function recoLookStars(coolerP, caseP, fanQty) {
+        let s = fanQty > 3 ? 3 : 1;
+        if (coolerP > 200) s += 1;
+        if (caseP > 300) s += 1;
         return Math.min(5, s);
     }
 
@@ -9537,10 +9535,11 @@
         if (!grid) return;
         const cpuValue = (document.getElementById("cpu") || {}).value || "";
         const vgaValue = (document.getElementById("vga") || {}).value || "";
-        const coolerValue = (document.getElementById("cooler") || {}).value || "";
         const ssdValue = (document.getElementById("ssd") || {}).value || "";
+        const coolerP = Number((document.getElementById("cooler-p") || {}).value) || 0;
         const caseP = Number((document.getElementById("case-p") || {}).value) || 0;
-        const fanP = Number((document.getElementById("fan-p") || {}).value) || 0;
+        const fanQtyEl = document.getElementById("fan-qty-num");
+        const fanQty = fanQtyEl ? parseInt(fanQtyEl.textContent, 10) || 0 : 0;
 
         const cpuFactor = cpuValue.trim() ? getCpuFpsFactor(cpuValue) : null;
         const gpuIndex = getGpuFpsIndex(vgaValue);
@@ -9576,8 +9575,8 @@
             gpuStars,
             // AI 本地部署：同 3A + 大显存加成
             aiStars,
-            // 颜值：散热 + 机箱 + 风扇
-            recoLookStars(coolerValue, caseP, fanP)
+            // 颜值：风扇数量 + 散热器价格 + 机箱价格
+            recoLookStars(coolerP, caseP, fanQty)
         ];
 
         grid.innerHTML = RECO_ITEMS.map(function (it, i) {
