@@ -335,11 +335,6 @@
             background-clip:text;
             color:transparent;
         }
-        .fps-sub{
-            font-size:11px;
-            color:#9aa0aa;
-            white-space:nowrap;
-        }
         .fps-tabs{
             display:flex;
             gap:4px;
@@ -441,13 +436,6 @@
             border-radius:999px;
             background:linear-gradient(90deg,#2563EB,#7C3AED 65%,#EC4899);
             transition:width 0.45s cubic-bezier(.22,.61,.36,1);
-        }
-        .fps-basis{
-            margin-top:10px;
-            font-size:11px;
-            color:#8b94a3;
-            line-height:1.5;
-            overflow-wrap:anywhere;
         }
         /* ========== 使用需求推荐度（五颗星） ========== */
         .reco-sec{
@@ -2539,7 +2527,6 @@
 <div class="fps-panel" id="fpsPanel">
     <div class="fps-head">
         <div class="fps-title">游戏帧数 <em>预估</em></div>
-        <div class="fps-sub">CPU + 显卡综合估算</div>
     </div>
     <div class="fps-tabs">
         <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
@@ -2547,7 +2534,6 @@
         <button class="fps-tab" type="button" data-res="4k" onclick="setFpsRes('4k')">4K</button>
     </div>
     <div class="fps-list" id="fpsList"></div>
-    <div class="fps-basis" id="fpsBasis">未选择显卡，选择后自动测算</div>
     <div class="reco-sec">
         <div class="reco-head">
             <div class="reco-title">使用需求推荐度</div>
@@ -9420,15 +9406,6 @@
             }
         });
 
-        const basisEl = document.getElementById("fpsBasis");
-        if (basisEl) {
-            if (!hasGpu) {
-                basisEl.innerText = vgaValue ? "该显卡暂未收录，暂时无法估算" : "未选择显卡，选择后自动测算";
-            } else {
-                basisEl.innerText = "综合基准：" + vgaValue + (cpuValue ? " ｜ " + cpuValue : "");
-            }
-            basisEl.title = basisEl.innerText;
-        }
         // 同步刷新「使用需求推荐度」
         updateRecoPanel();
     }
