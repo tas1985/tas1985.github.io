@@ -288,6 +288,201 @@
             display: inline-block;
             vertical-align: middle;
         }
+        /* ========== 页面双列布局：配置单 + 右侧游戏帧数列 ========== */
+        .page-layout{
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 18px;
+        }
+        .page-layout > .container{
+            margin: 0;
+            flex: 0 1 760px;
+        }
+        .fps-panel{
+            flex: 0 0 326px;
+            width: 326px;
+            position: sticky;
+            top: 15px;
+            background: #fff;
+            border: 2px solid rgba(37,99,235,0.4);
+            border-radius: 10px;
+            padding: 14px 14px 12px;
+            box-shadow: 0 4px 6px rgba(37,99,235,0.08), 0 8px 25px rgba(37,99,235,0.15), 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .fps-head{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            margin-bottom:12px;
+        }
+        .fps-title{
+            font-size:19px;
+            font-weight:800;
+            color:#2563EB;
+            letter-spacing:0.5px;
+            white-space:nowrap;
+        }
+        .fps-title em{
+            font-style:normal;
+            margin-left:4px;
+            background:linear-gradient(90deg,#7C3AED,#EC4899);
+            -webkit-background-clip:text;
+            background-clip:text;
+            color:transparent;
+        }
+        .fps-sub{
+            font-size:11px;
+            color:#9aa0aa;
+            white-space:nowrap;
+        }
+        .fps-tabs{
+            display:flex;
+            gap:4px;
+            padding:4px;
+            background:#eef2ff;
+            border-radius:9px;
+            margin-bottom:10px;
+        }
+        .fps-tab{
+            flex:1;
+            height:32px;
+            border:none;
+            border-radius:7px;
+            background:transparent;
+            color:#5b6472;
+            font-size:14px;
+            font-weight:700;
+            cursor:pointer;
+            transition:all 0.25s ease;
+        }
+        .fps-tab:hover{
+            color:#2563EB;
+        }
+        .fps-tab.active{
+            background:linear-gradient(135deg,#2563EB,#7C3AED);
+            color:#fff;
+            box-shadow:0 4px 10px rgba(37,99,235,0.28);
+        }
+        .fps-row{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:7px 0;
+        }
+        .fps-row + .fps-row{
+            border-top:1px dashed #f0f0f5;
+        }
+        .fps-ico{
+            width:34px;
+            height:34px;
+            border-radius:50%;
+            flex:0 0 34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#fff;
+            font-size:11px;
+            font-weight:800;
+            letter-spacing:0.3px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.15);
+        }
+        .fps-main{
+            flex:1;
+            min-width:0;
+        }
+        .fps-line{
+            display:flex;
+            align-items:baseline;
+            justify-content:space-between;
+            gap:8px;
+            margin-bottom:5px;
+        }
+        .fps-game{
+            font-size:14px;
+            font-weight:700;
+            color:#1f2937;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .fps-val{
+            white-space:nowrap;
+            font-weight:800;
+            color:#111827;
+            font-size:18px;
+            line-height:1;
+        }
+        .fps-val i{
+            font-style:normal;
+            font-size:10px;
+            font-weight:600;
+            color:#9aa0aa;
+            margin-left:3px;
+        }
+        .fps-val.empty{
+            color:#c0c4cc;
+            font-size:15px;
+        }
+        .fps-track{
+            height:6px;
+            background:#ececf3;
+            border-radius:999px;
+            overflow:hidden;
+        }
+        .fps-fill{
+            height:100%;
+            width:0;
+            border-radius:999px;
+            background:linear-gradient(90deg,#2563EB,#7C3AED 65%,#EC4899);
+            transition:width 0.45s cubic-bezier(.22,.61,.36,1);
+        }
+        .fps-basis{
+            margin-top:10px;
+            font-size:11px;
+            color:#8b94a3;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .fps-note{
+            margin-top:6px;
+            padding-top:8px;
+            border-top:1px dashed #ececf2;
+            font-size:10.5px;
+            color:#b0b6c0;
+            line-height:1.5;
+        }
+        @media (max-width: 1150px) {
+            .page-layout{
+                flex-direction: column;
+                align-items: center;
+                max-width: 760px;
+            }
+            .fps-panel{
+                width: 100%;
+                flex: none;
+                position: static;
+                margin-top: 14px;
+            }
+        }
+        @media (max-width: 500px) {
+            .page-layout{
+                width: 100%;
+                max-width: 100%;
+            }
+            .fps-panel{
+                padding: 12px;
+                border-radius: 8px;
+                margin-top: 10px;
+            }
+            .fps-row{
+                padding: 6px 0;
+            }
+        }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
@@ -2017,6 +2212,19 @@
         body.mobile-mode .mobile-click-shield.active{
             display: block;
         }
+        /* 手机模式：帧数面板纵向排列在配置单下方，保持卡片样式 */
+        body.mobile-mode .page-layout{
+            display: block;
+            max-width: 100%;
+        }
+        body.mobile-mode .fps-panel{
+            width: auto;
+            flex: none;
+            position: static;
+            margin: 8px;
+            padding: 12px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -2041,6 +2249,7 @@
     </div>
 </div>
 
+<div class="page-layout">
 <div class="container">
     <div class="title">
         重庆塔司电脑工作室·DIY组装配置报价单58508218
@@ -2268,6 +2477,23 @@
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
 
+</div>
+
+<!-- 右侧竖列：游戏帧数测算（根据当前配置实时估算） -->
+<div class="fps-panel" id="fpsPanel">
+    <div class="fps-head">
+        <div class="fps-title">游戏实测 <em>FPS</em></div>
+        <div class="fps-sub">按当前配置估算</div>
+    </div>
+    <div class="fps-tabs">
+        <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
+        <button class="fps-tab" type="button" data-res="2k" onclick="setFpsRes('2k')">2K</button>
+        <button class="fps-tab" type="button" data-res="4k" onclick="setFpsRes('4k')">4K</button>
+    </div>
+    <div class="fps-list" id="fpsList"></div>
+    <div class="fps-basis" id="fpsBasis">未选择显卡，选择后自动测算</div>
+    <div class="fps-note">参考同平台实测帧数，实际表现受画质设置、驱动版本与场景影响。</div>
+</div>
 </div>
 
 <!-- 加载配置弹窗 -->
@@ -8598,6 +8824,8 @@
         calculateLudashiScore();
         // 计算功耗
         calculatePowerConsumption();
+        // 计算游戏帧数
+        updateGameFps();
         // 检测主板WIFI
         checkBoardWifi();
     }
@@ -8907,6 +9135,151 @@
         document.getElementById("totalPower").innerText = `${totalPower} W`;
     }
 
+    // ===================== 游戏帧数测算（按当前配置估算） =====================
+    // 显卡游戏性能指数：以 RTX 4060 = 100 为基准的 1080p 原生光栅近似性能
+    const FPS_GPU_INDEX = {
+        "RTX5090": 290, "RTX5090D": 284, "RTX5080": 205,
+        "RTX5070TI": 170, "RTX5070": 140, "RTX5060TI": 116, "RTX5060": 93, "RTX5050": 72,
+        "RTX4090": 240, "RTX4090D": 228, "RTX4080SUPER": 196, "RTX4080": 190,
+        "RTX4070TISUPER": 172, "RTX4070TI": 158, "RTX4070SUPER": 148, "RTX4070": 132,
+        "RTX4060TI": 115, "RTX4060": 100, "RTX4050": 82,
+        "RTX3090TI": 172, "RTX3090": 160, "RTX3080TI": 158, "RTX3080": 148,
+        "RTX3070TI": 128, "RTX3070": 120, "RTX3060TI": 108, "RTX3060": 88, "RTX3050": 58,
+        "RTX2080TI": 132, "RTX2080SUPER": 120, "RTX2080": 112, "RTX2070SUPER": 104,
+        "RTX2070": 98, "RTX2060SUPER": 88, "RTX2060": 78,
+        "GTX1660SUPER": 70, "GTX1660TI": 70, "GTX1660": 62, "GTX1650SUPER": 55,
+        "GTX1650": 48, "GTX1080TI": 92, "GTX1080": 72, "GTX1070TI": 62, "GTX1070": 58, "GTX1060": 45,
+        "RX9070XT": 175, "RX9070GRE": 135, "RX9070": 160, "RX9060XT": 112, "RX9060": 100,
+        "RX7900XTX": 215, "RX7900XT": 190, "RX7900GRE": 165, "RX7800XT": 150,
+        "RX7700XT": 135, "RX7650GRE": 95, "RX7600XT": 98, "RX7600": 95,
+        "RX6950XT": 165, "RX6900XT": 158, "RX6800XT": 152, "RX6800": 138,
+        "RX6750XT": 120, "RX6750GRE": 115, "RX6700XT": 112, "RX6650XT": 98,
+        "RX6600XT": 95, "RX6600": 85, "RX6500XT": 45,
+        "B580": 105, "B750": 95, "A770": 88, "A750": 80, "A580": 65, "A380": 45,
+        "TITANRTX": 120, "TITANV": 115, "TITANXP": 105,
+        "GT1030": 20, "GT730": 12, "GT610": 8,
+        "INTELUHD": 12, "AMDVEGA": 25, "AMDRADEON": 22
+    };
+    const FPS_GPU_KEYS = Object.keys(FPS_GPU_INDEX).sort((a, b) => b.length - a.length);
+    const FPS_CPU_KEYS = Object.keys(ludashiScores.cpu).sort((a, b) => b.length - a.length);
+
+    // 每个游戏：base 为 RTX 4060 在 1080p 的参考帧数，cpu 为参考处理器的帧数上限，
+    // res 为 1K/2K/4K 的显卡负载系数，bar 为进度条满格对应的帧数
+    const FPS_GAMES = [
+        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 52, res: [1, 0.66, 0.36], cpu: 180, bar: [110, 72, 40] },
+        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 62, res: [1, 0.70, 0.40], cpu: 200, bar: [150, 105, 60] },
+        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 120, res: [1, 0.72, 0.42], cpu: 250, bar: [280, 205, 125] },
+        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 620, res: [1, 0.94, 0.88], cpu: 400, bar: [620, 580, 550] },
+        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 500, res: [1, 0.94, 0.88], cpu: 330, bar: [500, 470, 440] },
+        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 700, res: [1, 0.97, 0.94], cpu: 460, bar: [700, 680, 650] },
+        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 160, res: [1, 0.80, 0.50], cpu: 210, bar: [240, 190, 120] }
+    ];
+    const FPS_RES_INDEX = { "1k": 0, "2k": 1, "4k": 2 };
+    let fpsResolution = "1k";
+
+    // 型号归一化：忽略空格、横线、下划线及大小写差异
+    function normalizeFpsModel(s) {
+        return (s || "").toUpperCase().replace(/[\s\-_.]/g, "");
+    }
+
+    // 显卡性能指数：优先查本地游戏性能表，未收录时回退到鲁大师显卡分换算
+    function getGpuFpsIndex(vgaValue) {
+        const n = normalizeFpsModel(vgaValue);
+        if (!n) return null;
+        for (let i = 0; i < FPS_GPU_KEYS.length; i++) {
+            if (n.includes(FPS_GPU_KEYS[i])) return FPS_GPU_INDEX[FPS_GPU_KEYS[i]];
+        }
+        const refScore = ludashiScores.vga["RTX4060"] || 359793;
+        for (let i = 0; i < LUDASHI_VGA_KEYS.length; i++) {
+            const key = LUDASHI_VGA_KEYS[i];
+            if (n.includes(normalizeFpsModel(key))) {
+                return Math.max(5, Math.round(ludashiScores.vga[key] / refScore * 100));
+            }
+        }
+        return null;
+    }
+
+    // CPU 游戏性能系数：按鲁大师 CPU 分换算，未收录型号按中低端处理
+    function getCpuFpsFactor(cpuValue) {
+        if (!cpuValue || !cpuValue.trim()) return 1;
+        const n = normalizeFpsModel(cpuValue);
+        for (let i = 0; i < FPS_CPU_KEYS.length; i++) {
+            const key = FPS_CPU_KEYS[i];
+            if (n.includes(normalizeFpsModel(key))) {
+                const factor = Math.pow(ludashiScores.cpu[key] / 600000, 0.75);
+                return Math.min(1.6, Math.max(0.45, factor));
+            }
+        }
+        return 0.8;
+    }
+
+    function renderFpsRows() {
+        const list = document.getElementById("fpsList");
+        if (!list || list.dataset.ready === "1") return;
+        list.innerHTML = FPS_GAMES.map(function(g) {
+            return '<div class="fps-row">' +
+                '<div class="fps-ico" style="' + g.style + '">' + g.ico + '</div>' +
+                '<div class="fps-main">' +
+                    '<div class="fps-line">' +
+                        '<span class="fps-game">' + g.n + '</span>' +
+                        '<span class="fps-val empty" data-fps="' + g.n + '"><b>—</b><i>FPS</i></span>' +
+                    '</div>' +
+                    '<div class="fps-track"><div class="fps-fill"></div></div>' +
+                '</div>' +
+            '</div>';
+        }).join("");
+        list.dataset.ready = "1";
+    }
+
+    function setFpsRes(res) {
+        fpsResolution = res in FPS_RES_INDEX ? res : "1k";
+        document.querySelectorAll(".fps-tab").forEach(function(btn) {
+            btn.classList.toggle("active", btn.dataset.res === fpsResolution);
+        });
+        updateGameFps();
+    }
+
+    function updateGameFps() {
+        renderFpsRows();
+        const vgaEl = document.getElementById("vga");
+        const cpuEl = document.getElementById("cpu");
+        const vgaValue = vgaEl ? vgaEl.value : "";
+        const cpuValue = cpuEl ? cpuEl.value : "";
+        const gpuIndex = getGpuFpsIndex(vgaValue);
+        const cpuFactor = getCpuFpsFactor(cpuValue);
+        const resIdx = FPS_RES_INDEX[fpsResolution] || 0;
+        const hasGpu = gpuIndex !== null;
+
+        FPS_GAMES.forEach(function(g) {
+            const valEl = document.querySelector('.fps-val[data-fps="' + g.n + '"]');
+            if (!valEl) return;
+            const fill = valEl.closest(".fps-row").querySelector(".fps-fill");
+            let fps = 0;
+            if (hasGpu) {
+                const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx];
+                const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.96 : 0.92);
+                fps = Math.min(gpuFps, cpuFps);
+                valEl.className = "fps-val";
+                valEl.innerHTML = "<b>" + Math.round(fps) + "</b><i>FPS</i>";
+                fill.style.width = Math.min(100, Math.max(0, fps / g.bar[resIdx] * 100)).toFixed(1) + "%";
+            } else {
+                valEl.className = "fps-val empty";
+                valEl.innerHTML = "<b>—</b><i>FPS</i>";
+                fill.style.width = "0%";
+            }
+        });
+
+        const basisEl = document.getElementById("fpsBasis");
+        if (basisEl) {
+            if (!hasGpu) {
+                basisEl.innerText = vgaValue ? "该显卡暂未收录，暂时无法估算" : "未选择显卡，选择后自动测算";
+            } else {
+                basisEl.innerText = "基准：" + vgaValue + (cpuValue ? " ｜ " + cpuValue : "");
+            }
+            basisEl.title = basisEl.innerText;
+        }
+    }
+
     function saveNow(){
         let o={user:document.getElementById("user").value};
         // 新增other字段到保存数据
@@ -9129,6 +9502,12 @@
         } else {
             setDefaultItems();
         }
+        // 显卡/CPU 型号输入时实时刷新游戏帧数面板
+        ["cpu", "vga"].forEach(function(k){
+            const el = document.getElementById(k);
+            if (el) el.addEventListener("input", updateGameFps);
+        });
+        updateGameFps();
         // 初始化客户名称下拉列表
         initUserDropdown();
         
