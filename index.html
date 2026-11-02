@@ -302,8 +302,8 @@
             flex: 0 1 760px;
         }
         .fps-panel{
-            flex: 0 0 150px;
-            width: 150px;
+            flex: 0 0 176px;
+            width: 176px;
             position: sticky;
             top: 15px;
             background: #fff;
@@ -430,6 +430,18 @@
             color:#111827;
             font-size:18px;
             line-height:1;
+        }
+        .fps-val b{
+            background:linear-gradient(90deg,#2563EB,#7C3AED 65%,#EC4899);
+            -webkit-background-clip:text;
+            background-clip:text;
+            -webkit-text-fill-color:transparent;
+            color:transparent;
+        }
+        .fps-val.empty b{
+            background:none;
+            -webkit-text-fill-color:#c0c4cc;
+            color:#c0c4cc;
         }
         .fps-val i{
             font-style:normal;
