@@ -9163,19 +9163,34 @@
     const FPS_GPU_KEYS = Object.keys(FPS_GPU_INDEX).sort((a, b) => b.length - a.length);
     const FPS_CPU_KEYS = Object.keys(ludashiScores.cpu).sort((a, b) => b.length - a.length);
 
-    // 每个游戏：base 为「RTX 4060 + 参考处理器」在 1080p 的参考帧数；
-    // gpuW 为显卡权重（其余为 CPU 权重），竞技类游戏 CPU 权重更高；
-    // res 为 1K/2K/4K 的显卡负载系数；cap 为引擎/平台帧数上限
+    // 每个游戏：base 为 RTX 4060 在 1080p 的显卡参考帧数，cpu 为参考处理器的帧数上限
+    // （竞技类游戏以 CPU 上限为主），res 为 1K/2K/4K 的显卡负载系数，cap 为引擎/平台帧数上限
     const FPS_GAMES = [
-        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 84, res: [1, 0.66, 0.36], gpuW: 0.82, cap: 200 },
-        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 84, res: [1, 0.68, 0.38], gpuW: 0.80, cap: 220 },
-        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 130, res: [1, 0.72, 0.42], gpuW: 0.60, cap: 310 },
-        { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 115, res: [1, 0.74, 0.46], gpuW: 0.65, cap: 280 },
-        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 380, res: [1, 0.94, 0.88], gpuW: 0.20, cap: 680 },
-        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 320, res: [1, 0.94, 0.88], gpuW: 0.50, cap: 480 },
-        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 450, res: [1, 0.97, 0.94], gpuW: 0.25, cap: 600 },
-        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 150, res: [1, 0.80, 0.50], gpuW: 0.70, cap: 290 }
+        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 200 },
+        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 220 },
+        { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
+        { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 300, res: [1, 0.74, 0.46], cpu: 130, cap: 320 },
+        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", base: 900, res: [1, 0.94, 0.88], cpu: 400, cap: 850 },
+        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
+        { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
+        { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 }
     ];
+    // 常见处理器的游戏性能系数（以 R5-5600 / i5-12400F = 1.0 为基准），
+    // 弥补跑分无法体现 X3D 大缓存等游戏优势的问题
+    const FPS_CPU_GAMING = {
+        "R9-9950X3D": 2.08, "R7-9800X3D": 2.05, "R7-7800X3D": 1.86, "R7-5800X3D": 1.55,
+        "R7-5700X3D": 1.48, "R5-7500F": 1.15, "R5-7600": 1.18, "R5-9600X": 1.33,
+        "R7-9700X": 1.45, "R7-7700": 1.3, "R7-5700X": 1.0, "R7-5800X": 1.05,
+        "R9-5900X": 1.1, "R9-5950X": 1.15,
+        "R5-5600X": 1.02, "R5-5600G": 0.9, "R5-5600": 1.0,
+        "i5-12490F": 1.03, "i5-12400F": 1.0, "i5-13400F": 1.12, "i5-14400F": 1.15,
+        "i5-12600KF": 1.16, "i5-13600KF": 1.3, "i5-14600KF": 1.36,
+        "i7-12700KF": 1.27, "i7-13700KF": 1.4, "i7-14700KF": 1.47,
+        "i9-14900KF": 1.55, "i9-14900K": 1.55,
+        "i5-10400F": 0.82, "i5-11400F": 0.9, "i7-10700F": 0.9,
+        "i3-12100F": 0.8, "i3-13100F": 0.84
+    };
+    const FPS_CPU_GAMING_KEYS = Object.keys(FPS_CPU_GAMING).sort((a, b) => b.length - a.length);
     const FPS_RES_INDEX = { "1k": 0, "2k": 1, "4k": 2 };
     let fpsResolution = "1k";
 
@@ -9201,18 +9216,24 @@
         return null;
     }
 
-    // CPU 游戏性能系数：按鲁大师 CPU 分换算，未收录型号按中低端处理
+    // CPU 游戏性能系数：优先查游戏性能表，未收录型号按鲁大师 CPU 分换算
     function getCpuFpsFactor(cpuValue) {
         if (!cpuValue || !cpuValue.trim()) return 1;
         const n = normalizeFpsModel(cpuValue);
+        // 优先使用游戏性能系数表
+        for (let i = 0; i < FPS_CPU_GAMING_KEYS.length; i++) {
+            const key = FPS_CPU_GAMING_KEYS[i];
+            if (n.includes(normalizeFpsModel(key))) return FPS_CPU_GAMING[key];
+        }
+        // 未收录型号按鲁大师 CPU 分换算（放大差距）
         for (let i = 0; i < FPS_CPU_KEYS.length; i++) {
             const key = FPS_CPU_KEYS[i];
             if (n.includes(normalizeFpsModel(key))) {
-                const factor = Math.pow(ludashiScores.cpu[key] / 600000, 0.75);
-                return Math.min(1.6, Math.max(0.45, factor));
+                const factor = Math.pow(ludashiScores.cpu[key] / 600000, 1.4);
+                return Math.min(2.1, Math.max(0.3, factor));
             }
         }
-        return 0.8;
+        return 0.75;
     }
 
     function renderFpsRows() {
@@ -9257,15 +9278,13 @@
             if (!valEl) return;
             const fill = valEl.closest(".fps-row").querySelector(".fps-fill");
             if (hasGpu) {
-                // CPU 与显卡加权综合：CPU 越好综合性能越高，竞技类游戏 CPU 权重更高
-                const cpuW = 1 - g.gpuW;
-                const perf = g.gpuW * (gpuIndex / 100) + cpuW * cpuFactor;
-                // 分辨率只压低显卡部分，CPU 权重越高的游戏受分辨率影响越小
-                const resEff = 1 - (1 - g.res[resIdx]) * g.gpuW;
-                let fps = Math.round(g.base * perf * resEff);
+                // 显卡端帧数：分辨率只影响显卡部分，CPU 越好也会小幅带动显卡端帧数
+                const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx] * (0.8 + 0.2 * cpuFactor);
+                // CPU 端帧数上限：CPU 越好上限成倍提高，竞技类游戏通常由这一项决定
+                const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
+                let fps = Math.round(Math.min(gpuFps, cpuFps));
                 if (g.cap) fps = Math.min(fps, g.cap);
-                // 进度条满格按当前分辨率的顶配参考值计算
-                const barMax = g.base * (g.gpuW * 2.6 + cpuW * 1.5) * resEff;
+                const barMax = g.cap || 1;
                 valEl.className = "fps-val";
                 valEl.innerHTML = "<b>" + fps + "</b><i>FPS</i>";
                 fill.style.width = Math.min(100, Math.max(0, fps / barMax * 100)).toFixed(1) + "%";
