@@ -9285,7 +9285,7 @@
         { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", img: "PNG_GAMES/cp2077.jpg", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
         { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", img: "PNG_GAMES/pubg.jpg", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", img: "PNG_GAMES/delta.jpg", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
-        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", img: "PNG_GAMES/valorant.jpg", ladder: true, cap: 480 },
+        { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", img: "PNG_GAMES/valorant.jpg", ladder: true, cap: 660 },
         { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", img: "PNG_GAMES/cs2.jpg", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
         { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", img: "PNG_GAMES/lol.jpg", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
         { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", img: "PNG_GAMES/apex.jpg", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 }
@@ -9376,14 +9376,18 @@
         return 1;
     }
 
-    // 无畏契约专用：按 CPU 档位逐级 +40 帧（R5-5500 为最低档 200 帧）
+    // 无畏契约专用：按 CPU 档位逐级提升帧数（R5-5500 为 200 帧，5600 为 240 帧，高配继续上探）
     function valCpuFps(cpuFactor) {
         if (cpuFactor <= 0.95) return 200;
         if (cpuFactor <= 1.02) return 240;
-        if (cpuFactor <= 1.18) return 280;
-        if (cpuFactor <= 1.36) return 320;
-        if (cpuFactor <= 1.60) return 360;
-        return 400;
+        if (cpuFactor <= 1.10) return 280;
+        if (cpuFactor <= 1.18) return 310;
+        if (cpuFactor <= 1.30) return 350;
+        if (cpuFactor <= 1.45) return 390;
+        if (cpuFactor <= 1.60) return 440;
+        if (cpuFactor <= 1.86) return 500;
+        if (cpuFactor <= 2.05) return 560;
+        return 620;
     }
 
     // CPU 游戏性能系数：优先查游戏性能表，未收录型号按鲁大师 CPU 分换算
