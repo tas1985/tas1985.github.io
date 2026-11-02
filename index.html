@@ -9444,14 +9444,14 @@
         { n: "3A游戏", tip: "看显卡，N 卡同档高一星" },
         { n: "直播", tip: "看 CPU，Intel 同档高一星" },
         { n: "剪辑", tip: "同直播，N 卡 5050 以上加一星" },
-        { n: "办公", tip: "固态≥1T=4星，低于1T扣一星" },
+        { n: "科研", tip: "固态≥1T=4星，低于1T扣一星" },
         { n: "建模", tip: "同剪辑" },
         { n: "渲染", tip: "同 3A" },
         { n: "AI本地部署", tip: "同 3A，16G 显存以上加两星" },
         { n: "颜值", tip: "风扇>3个=3星，散热>200、机箱>300 各加一星" }
     ];
 
-    // 是否 Intel 平台（Intel 在直播、剪辑、办公、建模上同档高一星）
+    // 是否 Intel 平台（Intel 在直播、剪辑、科研、建模上同档高一星）
     function recoIsIntel(n) {
         return /I3|I5|I7|I9|ULTRA|INTEL|酷睿/.test(n);
     }
@@ -9507,7 +9507,7 @@
         return isAmd ? Math.min(5, base + 1) : base;
     }
 
-    // 直播 / 办公：Intel 14400F=3、14600KF=4、再往上=5、往下=2；AMD 同档降一星
+    // 直播 / 科研：Intel 14400F=3、14600KF=4、再往上=5、往下=2；AMD 同档降一星
     function recoCpuWorkStars(cpuFactor, isAmd, nvBonus) {
         let s = cpuFactor >= 1.38 ? 5 : cpuFactor >= 1.36 ? 4 : cpuFactor >= 1.15 ? 3 : 2;
         if (isAmd) s -= 1;
@@ -9559,7 +9559,7 @@
         // AI：同 3A，16G 显存及以上再加两星
         const aiStars = gpuIndex !== null
             ? Math.min(5, gpuStars + (recoGpuVram(vgaValue) >= 16 ? 2 : 0)) : 1;
-        // 办公：固态 ≥1T 直接给 4 星；低于 1T 在直播基础上扣一星
+        // 科研：固态 ≥1T 直接给 4 星；低于 1T 在直播基础上扣一星
         let officeStars = cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1;
         const ssdTB = recoSsdTB(ssdValue);
         if (ssdTB !== null && ssdTB >= 1) officeStars = 4;
@@ -9574,7 +9574,7 @@
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
             // 剪辑：同直播，N 卡 5050 以上加一星
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
-            // 办公：固态 ≥1T 给 4 星，低于 1T 扣一星
+            // 科研：固态 ≥1T 给 4 星，低于 1T 扣一星
             officeStars,
             // 建模：同剪辑
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
