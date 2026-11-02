@@ -9444,7 +9444,7 @@
         { n: "3A游戏", tip: "看显卡，N 卡同档高一星" },
         { n: "直播", tip: "看 CPU，Intel 同档高一星" },
         { n: "剪辑", tip: "同直播，N 卡 5050 以上加一星" },
-        { n: "科研", tip: "固态≥1T=4星，低于1T扣一星" },
+        { n: "科研", tip: "固态≥1T=4星，内存≥64G=5星" },
         { n: "建模", tip: "同剪辑" },
         { n: "渲染", tip: "同 3A" },
         { n: "AI本地部署", tip: "同 3A，16G 显存以上加两星" },
@@ -9501,6 +9501,23 @@
         return null;
     }
 
+    // 内存容量（GB）：支持 32G、16G*2、32G(16*2) 等写法
+    function recoRamGB(ramValue) {
+        const n = normalizeFpsModel(ramValue);
+        if (!n) return null;
+        const cands = [];
+        let m;
+        const re1 = /(\d+)G[*×X](\d+)/g;
+        while ((m = re1.exec(n)) !== null) cands.push(parseInt(m[1], 10) * parseInt(m[2], 10));
+        const re2 = /(\d+)[*×X](\d+)G/g;
+        while ((m = re2.exec(n)) !== null) cands.push(parseInt(m[1], 10) * parseInt(m[2], 10));
+        const re3 = /\(\s*(\d+)[*×X](\d+)\s*\)/g;
+        while ((m = re3.exec(n)) !== null) cands.push(parseInt(m[1], 10) * parseInt(m[2], 10));
+        const re4 = /(\d+)G/g;
+        while ((m = re4.exec(n)) !== null) cands.push(parseInt(m[1], 10));
+        return cands.length ? Math.max.apply(null, cands) : null;
+    }
+
     // 网游：5500=2、5600=3、9800X3D 及以上=5；AMD 同档比 Intel 高一星
     function recoOnlineStars(cpuFactor, isAmd) {
         const base = cpuFactor >= 1.95 ? 4 : cpuFactor >= 1.45 ? 3 : cpuFactor >= 0.97 ? 2 : 1;
@@ -9536,6 +9553,7 @@
         const cpuValue = (document.getElementById("cpu") || {}).value || "";
         const vgaValue = (document.getElementById("vga") || {}).value || "";
         const ssdValue = (document.getElementById("ssd") || {}).value || "";
+        const ramValue = (document.getElementById("ram") || {}).value || "";
         const coolerP = Number((document.getElementById("cooler-p") || {}).value) || 0;
         const caseP = Number((document.getElementById("case-p") || {}).value) || 0;
         const fanQtyEl = document.getElementById("fan-qty-num");
@@ -9559,11 +9577,13 @@
         // AI：同 3A，16G 显存及以上再加两星
         const aiStars = gpuIndex !== null
             ? Math.min(5, gpuStars + (recoGpuVram(vgaValue) >= 16 ? 2 : 0)) : 1;
-        // 科研：固态 ≥1T 直接给 4 星；低于 1T 在直播基础上扣一星
+        // 科研：固态 ≥1T 直接给 4 星；低于 1T 在直播基础上扣一星；内存 ≥64G 才能五星
         let officeStars = cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1;
         const ssdTB = recoSsdTB(ssdValue);
         if (ssdTB !== null && ssdTB >= 1) officeStars = 4;
         else if (ssdTB !== null && ssdTB < 1) officeStars = Math.max(1, officeStars - 1);
+        const ramGB = recoRamGB(ramValue);
+        officeStars = ramGB !== null && ramGB >= 64 ? 5 : Math.min(4, officeStars);
 
         const stars = [
             // 网游：看 CPU，AMD 同档高一星，有独立显卡再加一星
@@ -9574,7 +9594,7 @@
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
             // 剪辑：同直播，N 卡 5050 以上加一星
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
-            // 科研：固态 ≥1T 给 4 星，低于 1T 扣一星
+            // 科研：固态 ≥1T 给 4 星，内存 ≥64G 才给 5 星
             officeStars,
             // 建模：同剪辑
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
