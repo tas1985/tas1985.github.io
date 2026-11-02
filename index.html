@@ -9444,7 +9444,7 @@
         { n: "3A游戏", tip: "看显卡，N 卡同档高一星" },
         { n: "直播", tip: "看 CPU，Intel 同档高一星" },
         { n: "剪辑", tip: "同直播，N 卡 5050 以上加一星" },
-        { n: "办公", tip: "同直播" },
+        { n: "办公", tip: "同直播，固态低于 1T 扣一星" },
         { n: "建模", tip: "同剪辑" },
         { n: "渲染", tip: "同 3A" },
         { n: "AI本地部署", tip: "同 3A，16G 显存以上加两星" },
@@ -9481,6 +9481,24 @@
             if ([4, 6, 8, 10, 11, 12, 16, 20, 24, 32].indexOf(v) >= 0) return v;
         }
         return 8;
+    }
+
+    // 固态容量（T）：识别「512G / 1T / 1TB / 2T」等写法，未标注返回 null
+    function recoSsdTB(ssdValue) {
+        const n = normalizeFpsModel(ssdValue);
+        if (!n) return null;
+        const tRe = /(\d{1,2})T/g;
+        let m;
+        while ((m = tRe.exec(n)) !== null) {
+            const v = parseInt(m[1], 10);
+            if ([1, 2, 4, 8].indexOf(v) >= 0) return v;
+        }
+        const gRe = /(\d{3,4})G/g;
+        while ((m = gRe.exec(n)) !== null) {
+            const v = parseInt(m[1], 10);
+            if ([128, 256, 500, 512, 1024, 2048].indexOf(v) >= 0) return v / 1024;
+        }
+        return null;
     }
 
     // 网游：5500=2、5600=3、9800X3D 及以上=5；AMD 同档比 Intel 高一星
@@ -9520,6 +9538,7 @@
         const cpuValue = (document.getElementById("cpu") || {}).value || "";
         const vgaValue = (document.getElementById("vga") || {}).value || "";
         const coolerValue = (document.getElementById("cooler") || {}).value || "";
+        const ssdValue = (document.getElementById("ssd") || {}).value || "";
         const caseP = Number((document.getElementById("case-p") || {}).value) || 0;
         const fanP = Number((document.getElementById("fan-p") || {}).value) || 0;
 
@@ -9535,6 +9554,10 @@
         // AI：同 3A，16G 显存及以上再加两星
         const aiStars = gpuIndex !== null
             ? Math.min(5, gpuStars + (recoGpuVram(vgaValue) >= 16 ? 2 : 0)) : 1;
+        // 办公：同直播，固态低于 1T 扣一星
+        let officeStars = cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1;
+        const ssdTB = recoSsdTB(ssdValue);
+        if (ssdTB !== null && ssdTB < 1) officeStars = Math.max(1, officeStars - 1);
 
         const stars = [
             // 网游：看 CPU，AMD 同档高一星
@@ -9545,8 +9568,8 @@
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
             // 剪辑：同直播，N 卡 5050 以上加一星
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
-            // 办公：同直播
-            cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
+            // 办公：同直播，固态低于 1T 扣一星
+            officeStars,
             // 建模：同剪辑
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
             // 渲染：同 3A
