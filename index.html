@@ -9199,18 +9199,36 @@
         return (s || "").toUpperCase().replace(/[\s\-_.]/g, "");
     }
 
+    // 匹配显卡性能表键名：先按原键名包含匹配，再兼容省略「RX」前缀的写法（如「双敏6500XT 暴雪白色」）
+    function matchGpuKey(n, keys) {
+        for (let i = 0; i < keys.length; i++) {
+            if (n.includes(keys[i])) return keys[i];
+        }
+        for (let i = 0; i < keys.length; i++) {
+            if (/^RX/.test(keys[i]) && n.includes(keys[i].slice(2))) return keys[i];
+        }
+        return null;
+    }
+
+    // 判断是否 AMD 显卡（含省略 RX 前缀的型号），供三角洲的 AMD 显卡系数使用
+    function isAmdGpu(vgaValue) {
+        const n = normalizeFpsModel(vgaValue);
+        if (/RADEON/.test(n)) return true;
+        const key = matchGpuKey(n, FPS_GPU_KEYS);
+        return !!key && /^RX/.test(key);
+    }
+
     // 显卡性能指数：优先查本地游戏性能表，未收录时回退到鲁大师显卡分换算
     function getGpuFpsIndex(vgaValue) {
         const n = normalizeFpsModel(vgaValue);
         if (!n) return null;
-        for (let i = 0; i < FPS_GPU_KEYS.length; i++) {
-            if (n.includes(FPS_GPU_KEYS[i])) return FPS_GPU_INDEX[FPS_GPU_KEYS[i]];
-        }
+        const key = matchGpuKey(n, FPS_GPU_KEYS);
+        if (key) return FPS_GPU_INDEX[key];
         const refScore = ludashiScores.vga["RTX4060"] || 359793;
         for (let i = 0; i < LUDASHI_VGA_KEYS.length; i++) {
-            const key = LUDASHI_VGA_KEYS[i];
-            if (n.includes(normalizeFpsModel(key))) {
-                return Math.max(5, Math.round(ludashiScores.vga[key] / refScore * 100));
+            const k = normalizeFpsModel(LUDASHI_VGA_KEYS[i]);
+            if (n.includes(k) || (/^RX/.test(k) && n.includes(k.slice(2)))) {
+                return Math.max(5, Math.round(ludashiScores.vga[LUDASHI_VGA_KEYS[i]] / refScore * 100));
             }
         }
         return null;
@@ -9289,8 +9307,7 @@
                 if (g.cpuW !== undefined) {
                     // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
                     // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
-                    const gpuNorm = normalizeFpsModel(vgaValue);
-                    const gpuPerf = (g.brandRules && /RX\d|RADEON/.test(gpuNorm) ? gpuIndex * 0.85 : gpuIndex) / 100;
+                    const gpuPerf = (g.brandRules && isAmdGpu(vgaValue) ? gpuIndex * 0.85 : gpuIndex) / 100;
                     const cpuPerf = g.brandRules ? cpuFactor * cpuBrandAdjust(normalizeFpsModel(cpuValue)) : cpuFactor;
                     fps = g.base * ((1 - g.cpuW) * gpuPerf + g.cpuW * cpuPerf) * g.res[resIdx];
                 } else {
