@@ -302,22 +302,23 @@
             flex: 0 1 760px;
         }
         .fps-panel{
-            flex: 0 0 326px;
-            width: 326px;
+            flex: 0 0 163px;
+            width: 163px;
             position: sticky;
             top: 15px;
             background: #fff;
             border: 2px solid rgba(37,99,235,0.4);
             border-radius: 10px;
-            padding: 14px 14px 12px;
+            padding: 10px 10px 9px;
             box-shadow: 0 4px 6px rgba(37,99,235,0.08), 0 8px 25px rgba(37,99,235,0.15), 0 1px 3px rgba(0,0,0,0.05);
         }
         .fps-head{
             display:flex;
             align-items:center;
             justify-content:space-between;
-            gap:8px;
-            margin-bottom:12px;
+            flex-wrap:wrap;
+            gap:2px 8px;
+            margin-bottom:10px;
         }
         .fps-title{
             font-size:19px;
@@ -370,22 +371,22 @@
         .fps-row{
             display:flex;
             align-items:center;
-            gap:10px;
+            gap:7px;
             padding:7px 0;
         }
         .fps-row + .fps-row{
             border-top:1px dashed #f0f0f5;
         }
         .fps-ico{
-            width:34px;
-            height:34px;
+            width:28px;
+            height:28px;
             border-radius:50%;
-            flex:0 0 34px;
+            flex:0 0 28px;
             display:flex;
             align-items:center;
             justify-content:center;
             color:#fff;
-            font-size:11px;
+            font-size:9px;
             font-weight:800;
             letter-spacing:0.3px;
             box-shadow:0 2px 6px rgba(0,0,0,0.15);
@@ -466,7 +467,8 @@
             display:flex;
             align-items:baseline;
             justify-content:space-between;
-            gap:8px;
+            flex-wrap:wrap;
+            gap:2px 8px;
             margin-bottom:8px;
         }
         .reco-title{
@@ -490,7 +492,8 @@
             display:flex;
             align-items:center;
             justify-content:space-between;
-            gap:8px;
+            flex-wrap:wrap;
+            gap:0 8px;
             padding:3px 0;
             min-width:0;
         }
@@ -503,9 +506,10 @@
         .reco-stars{
             font-size:18px;
             line-height:1;
-            letter-spacing:1px;
+            letter-spacing:0;
             color:#f59e0b;
             white-space:nowrap;
+            margin-left:auto;
         }
         .reco-stars .off{
             color:#e2e5ec;
