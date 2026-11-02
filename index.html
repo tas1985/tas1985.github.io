@@ -9269,6 +9269,25 @@
     const FPS_RES_INDEX = { "1k": 0, "2k": 1, "4k": 2 };
     let fpsResolution = "1k";
 
+    // 实测帧数修正表：特定 CPU + 显卡组合下的实测值（以 1080p 为准），
+    // 其他分辨率按该游戏的显卡负载系数等比换算
+    const FPS_MEASURED = [
+        { cpu: /5500/, gpu: /6500XT/, games: { "英雄联盟": 150, "反恐精英 2": 160, "Apex 英雄": 95 } }
+    ];
+
+    function getMeasuredFps(g, cpuValue, vgaValue, resIdx) {
+        const cpuN = normalizeFpsModel(cpuValue);
+        const gpuN = normalizeFpsModel(vgaValue);
+        if (!cpuN || !gpuN) return null;
+        for (let i = 0; i < FPS_MEASURED.length; i++) {
+            const rule = FPS_MEASURED[i];
+            if (rule.cpu.test(cpuN) && rule.gpu.test(gpuN) && rule.games[g.n] !== undefined) {
+                return Math.round(rule.games[g.n] * (g.res[resIdx] / g.res[0]));
+            }
+        }
+        return null;
+    }
+
     // 型号归一化：忽略空格、横线、下划线及大小写差异
     function normalizeFpsModel(s) {
         return (s || "").toUpperCase().replace(/[\s\-_.]/g, "");
@@ -9409,7 +9428,8 @@
                 const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
                 fps = Math.min(gpuFps, cpuFps);
             }
-            fps = Math.round(fps);
+            const measured = getMeasuredFps(g, cpuValue, vgaValue, resIdx);
+            fps = measured !== null ? measured : Math.round(fps);
             if (g.cap) fps = Math.min(fps, g.cap);
             return fps;
         });
