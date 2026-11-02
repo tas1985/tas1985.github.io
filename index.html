@@ -9167,6 +9167,8 @@
     // （竞技类游戏以 CPU 上限为主），res 为 1K/2K/4K 的显卡负载系数，cap 为引擎/平台帧数上限
     const FPS_GAMES = [
         { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
+        { n: "影之刃零", ico: "影", style: "background:linear-gradient(135deg,#0f172a,#b91c1c)", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
+        { n: "生化危机9", ico: "RE9", style: "background:linear-gradient(135deg,#14532d,#65a30d);font-size:9px", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320, amdPenalty: 0.77 },
         { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
         { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
@@ -9325,7 +9327,9 @@
                 fps = g.base * ((1 - g.cpuW) * gpuPerf + g.cpuW * cpuPerf) * g.res[resIdx];
             } else {
                 // 显卡端帧数：分辨率只影响显卡部分，CPU 越好也会小幅带动显卡端帧数
-                const gpuFps = g.base * (gpuIndex / 100) * g.res[resIdx] * (0.8 + 0.2 * cpuFactor);
+                // amdPenalty：仅该游戏对 AMD 显卡打折（如生化危机9，N 卡帧数约比 A 卡高 30%）
+                const gIdx = g.amdPenalty && isAmdGpu(vgaValue) ? gpuIndex * g.amdPenalty : gpuIndex;
+                const gpuFps = g.base * (gIdx / 100) * g.res[resIdx] * (0.8 + 0.2 * cpuFactor);
                 // CPU 端帧数上限：CPU 越好上限成倍提高，竞技类游戏通常由这一项决定
                 const cpuFps = g.cpu * cpuFactor * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
                 fps = Math.min(gpuFps, cpuFps);
