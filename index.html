@@ -565,27 +565,37 @@
                 padding: 6px 0;
             }
         }
-        /* 截图专用：强制桌面左右排布，避免窄窗口或媒体查询把帧数栏堆到下方 */
+        /* 截图专用：强制桌面左右排布（固定像素宽，不受窗口宽度和媒体查询影响） */
+        body.shot-desktop{
+            overflow-x: hidden !important;
+        }
         body.shot-desktop .page-layout{
-            max-width: 1120px;
-            flex-direction: row;
-            align-items: flex-start;
+            width: 1120px !important;
+            max-width: none !important;
+            flex-direction: row !important;
+            align-items: flex-start !important;
         }
         body.shot-desktop .container{
-            display: flex;
-            flex-direction: row;
-            max-width: 966px;
+            display: flex !important;
+            flex: 0 0 966px !important;
+            width: 966px !important;
+            min-width: 966px !important;
+            max-width: 966px !important;
+            flex-direction: row !important;
         }
         body.shot-desktop .container-main{
-            flex: 1 1 760px;
-            min-width: 0;
+            flex: 0 0 726px !important;
+            width: 726px !important;
+            min-width: 0 !important;
+            max-width: none !important;
         }
         body.shot-desktop .fps-panel{
-            flex: 0 0 190px;
-            width: 190px;
-            position: static;
-            margin-top: 0;
-            align-self: flex-start;
+            flex: 0 0 190px !important;
+            width: 190px !important;
+            min-width: 190px !important;
+            position: static !important;
+            margin-top: 0 !important;
+            align-self: flex-start !important;
         }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
