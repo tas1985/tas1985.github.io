@@ -594,6 +594,13 @@
             margin-top: 0 !important;
             align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
         }
+        /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
+        body.shot-desktop .item-price::before{
+            left: 14px !important;
+            font-size: 22px !important;
+            line-height: 22px !important;
+            margin-top: -11px !important;
+        }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
