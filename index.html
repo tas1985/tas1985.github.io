@@ -577,10 +577,10 @@
             overflow-x: hidden !important;
         }
         body.shot-desktop .page-layout{
-            width: 1200px !important;
+            width: 1120px !important;
             max-width: none !important;
             flex-direction: row !important;
-            align-items: stretch !important;
+            align-items: stretch !important; /* 让右栏撑满高度 */
         }
         body.shot-desktop .container{
             display: flex !important;
@@ -603,11 +603,8 @@
             min-width: 200px !important;
             position: static !important;
             margin-top: 0 !important;
-            align-self: stretch !important;
-            display: flex !important;
-            flex-direction: column !important;
+            align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
         }
-        body.shot-desktop .fps-panel .reco-sec{ margin-top: auto !important; }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
             left: 18px !important;
@@ -7721,10 +7718,11 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
-                    // 强制 fps-panel 高度 = container 全高(含总价栏)，右侧栏底边对齐左侧总价栏底边
-                    const clonedContainer = clonedDoc.querySelector('.container');
+                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
+                    const cm = clonedDoc.querySelector('.container-main');
                     const fp = clonedDoc.querySelector('.fps-panel');
-                    if (clonedContainer && fp) fp.style.height = clonedContainer.scrollHeight + 'px';
+                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
+                    const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
@@ -8330,10 +8328,11 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
-                    // 强制 fps-panel 高度 = container 全高(含总价栏)，右侧栏底边对齐左侧总价栏底边
-                    const clonedContainer = clonedDoc.querySelector('.container');
+                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
+                    const cm = clonedDoc.querySelector('.container-main');
                     const fp = clonedDoc.querySelector('.fps-panel');
-                    if (clonedContainer && fp) fp.style.height = clonedContainer.scrollHeight + 'px';
+                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
+                    const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
                     // 将图标转换为灰色
