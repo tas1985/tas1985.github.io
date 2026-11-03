@@ -2557,7 +2557,28 @@
         </div>
     </div>
 
-    <!-- 最终报价区域移到按钮栏上方 -->
+    <!-- 游戏帧数测算（根据当前配置实时估算，位于配置单卡片右侧） -->
+    <div class="fps-panel" id="fpsPanel">
+    <div class="fps-head">
+        <div class="fps-title">游戏帧数 <em>预估</em></div>
+    </div>
+    <div class="fps-tabs">
+        <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
+        <button class="fps-tab" type="button" data-res="2k" onclick="setFpsRes('2k')">2K</button>
+        <button class="fps-tab" type="button" data-res="4k" onclick="setFpsRes('4k')">4K</button>
+    </div>
+    <div class="fps-list" id="fpsList"></div>
+    <div class="reco-sec">
+        <div class="reco-head">
+            <div class="reco-title">使用需求推荐度</div>
+            <div class="reco-sub">按当前配置评估</div>
+        </div>
+        <div class="reco-grid" id="recoGrid"></div>
+    </div>
+</div>
+</div>
+
+    <!-- 最终报价区域移到 page-layout 外面，不受 flex stretch 影响 -->
     <div class="total">
         <!-- 新增：产品和散热器图片容器 -->
         <div class="product-images-container">
@@ -2613,29 +2634,6 @@
         <button class="btn-sync" id="btnPriceEdit" type="button" onclick="showPriceEdit()" style="border-color:#f59e0b !important;color:#d97706 !important;">改价</button>
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
-
-    </div>
-    <!-- 游戏帧数测算（根据当前配置实时估算，位于配置单卡片右侧） -->
-    <div class="fps-panel" id="fpsPanel">
-    <div class="fps-head">
-        <div class="fps-title">游戏帧数 <em>预估</em></div>
-    </div>
-    <div class="fps-tabs">
-        <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
-        <button class="fps-tab" type="button" data-res="2k" onclick="setFpsRes('2k')">2K</button>
-        <button class="fps-tab" type="button" data-res="4k" onclick="setFpsRes('4k')">4K</button>
-    </div>
-    <div class="fps-list" id="fpsList"></div>
-    <div class="reco-sec">
-        <div class="reco-head">
-            <div class="reco-title">使用需求推荐度</div>
-            <div class="reco-sub">按当前配置评估</div>
-        </div>
-        <div class="reco-grid" id="recoGrid"></div>
-    </div>
-</div>
-</div>
-</div>
 
 <!-- 加载配置弹窗 -->
 <div class="modal" id="loadModal">
