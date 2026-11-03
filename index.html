@@ -605,6 +605,12 @@
             margin-top: 0 !important;
             align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
         }
+        /* 截图专用：配件输入栏文字放大1.5倍（配件、备注栏除外） */
+        body.shot-desktop input.combo:not(#other){
+            font-size:21px !important;
+            height:46px !important;
+            padding:9px 30px 9px 10px !important;
+        }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
             left: 18px !important;
@@ -621,7 +627,7 @@
         body.shot-desktop .reco-head{ margin-bottom:6px !important; }
         body.shot-desktop .reco-grid{ gap:3px !important; }
         body.shot-desktop .reco-item{ padding:3px 0 !important; }
-        body.shot-desktop .reco-name{ font-size:15px !important; }
+        body.shot-desktop .reco-name{ font-size:22.5px !important; }
         body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
