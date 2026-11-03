@@ -580,7 +580,7 @@
             width: 1120px !important;
             max-width: none !important;
             flex-direction: row !important;
-            align-items: stretch !important; /* 让右栏撑满高度 */
+            align-items: flex-start !important; /* fps-panel不自动拉伸，避免超过左侧配置单底边 */
         }
         body.shot-desktop .container{
             display: flex !important;
@@ -603,7 +603,7 @@
             min-width: 200px !important;
             position: static !important;
             margin-top: 0 !important;
-            align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
+            align-self: flex-start !important; /* 右栏保持自身内容高度，不被total区域拉高超过配置单底边 */
         }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
@@ -2557,28 +2557,7 @@
         </div>
     </div>
 
-    <!-- 游戏帧数测算（根据当前配置实时估算，位于配置单卡片右侧） -->
-    <div class="fps-panel" id="fpsPanel">
-    <div class="fps-head">
-        <div class="fps-title">游戏帧数 <em>预估</em></div>
-    </div>
-    <div class="fps-tabs">
-        <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
-        <button class="fps-tab" type="button" data-res="2k" onclick="setFpsRes('2k')">2K</button>
-        <button class="fps-tab" type="button" data-res="4k" onclick="setFpsRes('4k')">4K</button>
-    </div>
-    <div class="fps-list" id="fpsList"></div>
-    <div class="reco-sec">
-        <div class="reco-head">
-            <div class="reco-title">使用需求推荐度</div>
-            <div class="reco-sub">按当前配置评估</div>
-        </div>
-        <div class="reco-grid" id="recoGrid"></div>
-    </div>
-</div>
-</div>
-
-    <!-- 最终报价区域移到 page-layout 外面，不受 flex stretch 影响 -->
+    <!-- 最终报价区域移到按钮栏上方 -->
     <div class="total">
         <!-- 新增：产品和散热器图片容器 -->
         <div class="product-images-container">
@@ -2634,6 +2613,29 @@
         <button class="btn-sync" id="btnPriceEdit" type="button" onclick="showPriceEdit()" style="border-color:#f59e0b !important;color:#d97706 !important;">改价</button>
         <span id="autoSyncState" class="auto-sync-state off" onclick="SyncModule.open()" title="点击查看云同步设置"><span class="dot"></span><span class="txt">云同步未配置</span></span>
     </div>
+
+    </div>
+    <!-- 游戏帧数测算（根据当前配置实时估算，位于配置单卡片右侧） -->
+    <div class="fps-panel" id="fpsPanel">
+    <div class="fps-head">
+        <div class="fps-title">游戏帧数 <em>预估</em></div>
+    </div>
+    <div class="fps-tabs">
+        <button class="fps-tab active" type="button" data-res="1k" onclick="setFpsRes('1k')">1K</button>
+        <button class="fps-tab" type="button" data-res="2k" onclick="setFpsRes('2k')">2K</button>
+        <button class="fps-tab" type="button" data-res="4k" onclick="setFpsRes('4k')">4K</button>
+    </div>
+    <div class="fps-list" id="fpsList"></div>
+    <div class="reco-sec">
+        <div class="reco-head">
+            <div class="reco-title">使用需求推荐度</div>
+            <div class="reco-sub">按当前配置评估</div>
+        </div>
+        <div class="reco-grid" id="recoGrid"></div>
+    </div>
+</div>
+</div>
+</div>
 
 <!-- 加载配置弹窗 -->
 <div class="modal" id="loadModal">
