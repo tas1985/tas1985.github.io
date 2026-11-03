@@ -619,10 +619,6 @@
         body.shot-desktop .reco-item{ padding:5px 0 !important; }
         body.shot-desktop .reco-name{ font-size:15px !important; }
         body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
-        /* 截图时隐藏砍一刀/发票/同步区域，让container高度=配置单卡片高度，fps-panel底边精确对齐 */
-        body.shot-desktop .total,
-        body.shot-desktop .invoice-btn-row,
-        body.shot-desktop .sync-footer-row{ display:none !important; }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
@@ -7722,6 +7718,10 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
+                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
+                    const cm = clonedDoc.querySelector('.container-main');
+                    const fp = clonedDoc.querySelector('.fps-panel');
+                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -8328,6 +8328,10 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
+                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
+                    const cm = clonedDoc.querySelector('.container-main');
+                    const fp = clonedDoc.querySelector('.fps-panel');
+                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
