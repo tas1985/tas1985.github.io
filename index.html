@@ -94,7 +94,7 @@
             gap: 16px;
         }
         .container-main{
-            flex: 1 1 724px; /* 基准 724 + 间距 16 + 右栏 230 = 970，不超过容器内容宽 972，避免右栏被换行 */
+            flex: 1 1 700px; /* border-box 下容器内容宽 968，基准 700 + 间距 16 + 右栏 230 = 946 < 968，避免右栏换行；实际宽度由 flex-grow 拉满 */
             min-width: 0;
         }
         .title{
@@ -530,7 +530,7 @@
         .reco-stars .off{
             color:#e2e5ec;
         }
-        @media (max-width: 1200px) {
+        @media (max-width: 1032px) {
             .page-layout{
                 flex-direction: column;
                 align-items: center;
