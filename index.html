@@ -612,13 +612,14 @@
             line-height: 26px !important;
             margin-top: -13px !important;
         }
-        /* 截图专用：推荐度区域文字和星星放大，行间距拉开撑满空白 */
-        body.shot-desktop .reco-title{ font-size:16px !important; }
-        body.shot-desktop .reco-sub{ font-size:12px !important; }
-        body.shot-desktop .reco-grid{ gap:6px !important; }
-        body.shot-desktop .reco-item{ padding:5px 0 !important; }
-        body.shot-desktop .reco-name{ font-size:15px !important; }
-        body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
+        /* 截图专用：推荐度区域保持紧凑，保证右栏底部对齐配置单底边 */
+        body.shot-desktop .reco-title{ font-size:15px !important; }
+        body.shot-desktop .reco-sub{ font-size:11px !important; }
+        body.shot-desktop .reco-sec{ margin-top:8px !important; padding-top:8px !important; }
+        body.shot-desktop .reco-grid{ gap:1px !important; }
+        body.shot-desktop .reco-item{ padding:2px 0 !important; }
+        body.shot-desktop .reco-name{ font-size:14px !important; }
+        body.shot-desktop .reco-stars{ font-size:15px !important; letter-spacing:2px !important; }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
