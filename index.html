@@ -577,15 +577,25 @@
             overflow-x: hidden !important;
         }
         body.shot-desktop .page-layout{
-            width: 1200px !important;  /* 976 + gap 18 + 200 + 余量，确保fps-panel不挤到下面 */
+            width: 1120px !important;
             max-width: none !important;
             flex-direction: row !important;
-            align-items: stretch !important;
+            align-items: stretch !important; /* 让右栏撑满高度 */
         }
         body.shot-desktop .container{
+            display: flex !important;
+            flex: 0 0 976px !important;
             width: 976px !important;
             min-width: 976px !important;
             max-width: 976px !important;
+            flex-direction: row !important;
+            align-items: stretch !important; /* 截图时左右两列等高 */
+        }
+        body.shot-desktop .container-main{
+            flex: 0 0 726px !important;
+            width: 726px !important;
+            min-width: 0 !important;
+            max-width: none !important;
         }
         body.shot-desktop .fps-panel{
             flex: 0 0 200px !important;
@@ -593,6 +603,7 @@
             min-width: 200px !important;
             position: static !important;
             margin-top: 0 !important;
+            align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
         }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
@@ -602,12 +613,12 @@
             margin-top: -13px !important;
         }
         /* 截图专用：推荐度区域文字和星星放大，行间距拉开撑满空白 */
-        body.shot-desktop .reco-title{ font-size:15px !important; }
-        body.shot-desktop .reco-sub{ font-size:11px !important; }
-        body.shot-desktop .reco-grid{ gap:2px !important; }
-        body.shot-desktop .reco-item{ padding:2px 0 !important; }
-        body.shot-desktop .reco-name{ font-size:14px !important; }
-        body.shot-desktop .reco-stars{ font-size:16px !important; letter-spacing:2px !important; }
+        body.shot-desktop .reco-title{ font-size:16px !important; }
+        body.shot-desktop .reco-sub{ font-size:12px !important; }
+        body.shot-desktop .reco-grid{ gap:6px !important; }
+        body.shot-desktop .reco-item{ padding:5px 0 !important; }
+        body.shot-desktop .reco-name{ font-size:15px !important; }
+        body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
@@ -7707,12 +7718,12 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
+                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
+                    const cm = clonedDoc.querySelector('.container-main');
+                    const fp = clonedDoc.querySelector('.fps-panel');
+                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
-
-                    // fps-panel 高度硬设为 container 全高，确保右侧栏底边精确对齐左侧总价栏底边
-                    const fp = clonedDoc.querySelector('.fps-panel');
-                    if (clonedContainer && fp) fp.style.height = clonedContainer.offsetHeight + 'px';
                     
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
@@ -8317,6 +8328,10 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
+                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
+                    const cm = clonedDoc.querySelector('.container-main');
+                    const fp = clonedDoc.querySelector('.fps-panel');
+                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -9315,6 +9330,7 @@
         { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", img: "PNG_GAMES/pubg.jpg", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "燕云十六声", ico: "燕云", style: "background:linear-gradient(135deg,#44403c,#b45309);font-size:9px", img: "PNG_GAMES/yysls.jpg", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", img: "PNG_GAMES/delta.jpg", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
+        { n: "战地风云", ico: "BF", style: "background:linear-gradient(135deg,#78350f,#b45309);color:#fef3c7;font-size:9px", img: "PNG_GAMES/bf.jpg", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
         { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", img: "PNG_GAMES/valorant.jpg", ladder: true, cap: 660 },
         { n: "魔兽世界", ico: "WoW", style: "background:linear-gradient(135deg,#1e3a8a,#f59e0b);color:#fff;font-size:8px", img: "PNG_GAMES/wow.jpg", wowLadder: true, cap: 140 },
         { n: "CS2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", img: "PNG_GAMES/cs2.jpg", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
