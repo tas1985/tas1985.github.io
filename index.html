@@ -9314,7 +9314,8 @@
         "i7-12700KF": 1.27, "i7-13700KF": 1.4, "i7-14700KF": 1.47,
         "i9-14900KF": 1.55, "i9-14900K": 1.55,
         "i5-10400F": 0.82, "i5-11400F": 0.9, "i7-10700F": 0.9,
-        "i3-12100F": 0.8, "i3-13100F": 0.84
+        "i3-12100F": 0.8, "i3-13100F": 0.84,
+        "E5-2673V3": 0.5
     };
     const FPS_CPU_GAMING_KEYS = Object.keys(FPS_CPU_GAMING).sort((a, b) => b.length - a.length);
     const FPS_RES_INDEX = { "1k": 0, "2k": 1, "4k": 2 };
@@ -9386,8 +9387,11 @@
         return 1;
     }
 
-    // 无畏契约专用：按 CPU 档位逐级提升帧数（R5-5500 为 200 帧，5600 为 240 帧，高配继续上探）
+    // 无畏契约专用：按 CPU 档位逐级提升帧数（R5-5500 为 200 帧，5600 为 240 帧，高配继续上探，
+    // 低于 5500 的档位逐级下探，E5 等老旧平台约 100 帧）
     function valCpuFps(cpuFactor) {
+        if (cpuFactor <= 0.55) return 100;
+        if (cpuFactor <= 0.75) return 160;
         if (cpuFactor <= 0.95) return 200;
         if (cpuFactor <= 1.02) return 240;
         if (cpuFactor <= 1.10) return 280;
