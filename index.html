@@ -79,7 +79,7 @@
             color: #333; /* 基础文字黑色 */
         }
         .container{
-            max-width: 1002px;
+            max-width: 976px;
             margin: 0 auto;
             background: #fff; /* 容器白色背景 */
             border-radius: 10px;
@@ -308,17 +308,17 @@
         }
         .page-layout > .container{
             margin: 0;
-            flex: 0 1 1002px;
+            flex: 0 1 976px;
         }
         /* ========== 游戏帧数区块（位于配置单卡片右侧，随截图一并输出） ========== */
         .fps-panel{
-            flex: 0 0 230px;
-            width: 230px;
+            flex: 0 0 200px;
+            width: 200px;
             position: sticky;
             top: 15px;
             align-self: stretch; /* 与左列同高，底部对齐 */
             margin-top: 0;
-            padding: 10px;
+            padding: 8px;
             background: #fbfcff;
             border: 1px solid rgba(37,99,235,0.5); /* 与左侧条目框线一致 */
             border-radius: 9px;
@@ -333,7 +333,7 @@
             margin-bottom:10px;
         }
         .fps-title{
-            font-size:17px;
+            font-size:15px;
             font-weight:800;
             color:#2563EB;
             letter-spacing:0.5px;
@@ -354,12 +354,12 @@
         }
         .fps-tab{
             flex:1;
-            height:30px;
+            height:26px;
             border:none;
             border-radius:7px;
             background:transparent;
             color:#5b6472;
-            font-size:13px;
+            font-size:12px;
             font-weight:700;
             cursor:pointer;
             transition:all 0.25s ease;
@@ -383,16 +383,16 @@
         }
         .fps-ico{
             position:relative;
-            width:32px;
-            height:32px;
-            border-radius:7px;
-            flex:0 0 32px;
+            width:28px;
+            height:28px;
+            border-radius:6px;
+            flex:0 0 28px;
             overflow:hidden;
             display:flex;
             align-items:center;
             justify-content:center;
             color:#fff;
-            font-size:10px;
+            font-size:9px;
             font-weight:800;
             letter-spacing:0.2px;
             border:1px solid rgba(0,0,0,0.16);
@@ -426,7 +426,7 @@
             margin-bottom:5px;
         }
         .fps-game{
-            font-size:14px;
+            font-size:13px;
             font-weight:700;
             color:#1f2937;
             white-space:nowrap;
@@ -437,7 +437,7 @@
             white-space:nowrap;
             font-weight:800;
             color:#111827;
-            font-size:18px;
+            font-size:15px;
             line-height:1;
         }
         .fps-val b{
@@ -451,14 +451,14 @@
         }
         .fps-val i{
             font-style:normal;
-            font-size:10px;
+            font-size:9px;
             font-weight:600;
             color:#9aa0aa;
-            margin-left:3px;
+            margin-left:2px;
         }
         .fps-val.empty{
             color:#c0c4cc;
-            font-size:15px;
+            font-size:13px;
         }
         .fps-track{
             height:6px;
@@ -488,7 +488,7 @@
             margin-bottom:8px;
         }
         .reco-title{
-            font-size:15px;
+            font-size:14px;
             font-weight:800;
             color:#2563EB;
             letter-spacing:0.3px;
@@ -514,13 +514,13 @@
             min-width:0;
         }
         .reco-name{
-            font-size:14px;
+            font-size:13px;
             font-weight:700;
             color:#1f2937;
             white-space:nowrap;
         }
         .reco-stars{
-            font-size:18px;
+            font-size:15px;
             line-height:1;
             letter-spacing:0;
             color:#f59e0b;
@@ -530,7 +530,7 @@
         .reco-stars .off{
             color:#e2e5ec;
         }
-        @media (max-width: 1032px) {
+        @media (max-width: 980px) {
             .page-layout{
                 flex-direction: column;
                 align-items: center;
@@ -580,10 +580,10 @@
         }
         body.shot-desktop .container{
             display: flex !important;
-            flex: 0 0 1002px !important;
-            width: 1002px !important;
-            min-width: 1002px !important;
-            max-width: 1002px !important;
+            flex: 0 0 976px !important;
+            width: 976px !important;
+            min-width: 976px !important;
+            max-width: 976px !important;
             flex-direction: row !important;
             align-items: stretch !important; /* 截图时左右两列等高 */
         }
@@ -594,9 +594,9 @@
             max-width: none !important;
         }
         body.shot-desktop .fps-panel{
-            flex: 0 0 230px !important;
-            width: 230px !important;
-            min-width: 230px !important;
+            flex: 0 0 200px !important;
+            width: 200px !important;
+            min-width: 200px !important;
             position: static !important;
             margin-top: 0 !important;
             align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
