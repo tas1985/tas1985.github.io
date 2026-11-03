@@ -56,5 +56,14 @@ jobs:
             echo "无价格变化，跳过提交"
           else
             git commit -m "自动更新配件实时价格"
-            git push
+            # 先变基到远端最新提交再推送，避免脚本运行期间远端新提交（如手动改价）导致 push 被拒；
+            # 失败后重试 3 次，仍失败则步骤报错可见
+            for attempt in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                break
+              fi
+              echo "第 $attempt 次推送失败，5 秒后重试"
+              git rebase --abort 2>/dev/null || true
+              sleep 5
+            done
           fi
