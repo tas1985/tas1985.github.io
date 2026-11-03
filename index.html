@@ -576,6 +576,7 @@
             min-width: 966px !important;
             max-width: 966px !important;
             flex-direction: row !important;
+            align-items: stretch !important; /* 截图时左右两列等高 */
         }
         body.shot-desktop .container-main{
             flex: 0 0 726px !important;
@@ -589,7 +590,7 @@
             min-width: 190px !important;
             position: static !important;
             margin-top: 0 !important;
-            align-self: flex-start !important;
+            align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
         }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
