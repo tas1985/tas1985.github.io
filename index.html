@@ -421,12 +421,12 @@
             display:flex;
             align-items:baseline;
             justify-content:space-between;
-            flex-wrap:wrap;
-            gap:2px 8px;
+            flex-wrap:nowrap;
+            gap:2px 6px;
             margin-bottom:5px;
         }
         .fps-game{
-            font-size:13px;
+            font-size:12px;
             font-weight:700;
             color:#1f2937;
             white-space:nowrap;
@@ -437,8 +437,9 @@
             white-space:nowrap;
             font-weight:800;
             color:#111827;
-            font-size:15px;
+            font-size:13px;
             line-height:1;
+            flex-shrink:0;
         }
         .fps-val b{
             color:#7C3AED;
@@ -508,24 +509,27 @@
             display:flex;
             align-items:center;
             justify-content:space-between;
-            flex-wrap:wrap;
-            gap:0 8px;
+            flex-wrap:nowrap;
+            gap:0 6px;
             padding:3px 0;
             min-width:0;
         }
         .reco-name{
-            font-size:13px;
+            font-size:12px;
             font-weight:700;
             color:#1f2937;
             white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
         }
         .reco-stars{
-            font-size:15px;
+            font-size:13px;
             line-height:1;
             letter-spacing:0;
             color:#f59e0b;
             white-space:nowrap;
             margin-left:auto;
+            flex-shrink:0;
         }
         .reco-stars .off{
             color:#e2e5ec;
