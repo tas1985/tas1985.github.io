@@ -89,7 +89,8 @@
             transition: box-shadow 0.3s ease;
             overflow: visible;
             display: flex;
-            align-items: flex-start;
+            flex-wrap: wrap; /* 标题独占一行拉通，主栏与右栏同行 */
+            align-items: stretch; /* 左右两列底部对齐 */
             gap: 16px;
         }
         .container-main{
@@ -97,10 +98,11 @@
             min-width: 0;
         }
         .title{
+            flex: 0 0 100%; /* 独占一行，横向拉通整个容器 */
             text-align:center;
             font-size: 24px;
             font-weight:bold;
-            margin-bottom: 15px;
+            margin-bottom: 0; /* 与下行间距由容器 gap 提供 */
             padding: 10px;
             border-radius: 8px;
             background: #fff; /* 标题白底 */
@@ -314,7 +316,7 @@
             width: 230px;
             position: sticky;
             top: 15px;
-            align-self: flex-start;
+            align-self: stretch; /* 与左列同高，底部对齐 */
             margin-top: 0;
             padding: 10px;
             background: #fbfcff;
@@ -2360,11 +2362,11 @@
 
 <div class="page-layout">
 <div class="container">
+<div class="title">
+    重庆塔司电脑工作室·DIY组装配置报价单58508218
+    <div class="subtitle">真诚装机不踩坑-不做新旧搭配-诚心下单可小刀</div>
+</div>
 <div class="container-main">
-    <div class="title">
-        重庆塔司电脑工作室·DIY组装配置报价单58508218
-        <div class="subtitle">真诚装机不踩坑-不做新旧搭配-诚心下单可小刀</div>
-    </div>
 
     <div class="user">
         <label onclick="clearConfigOnly()" title="点击清除配置：仅保留其他默认文案、备注与默认服务">客户名称</label>
