@@ -91,6 +91,16 @@ RAM_EXIST_END = '{n:"宏碁掠夺者 96G(48G×2)套 DDR5 6000凌霜",'
 RAM_INSERT_TARGET = '{n:"三星 DDR3 16G（拆机内存到手30天质保）",p:249},'
 RAM_EXCLUDE_LIST = ["科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 0
+RAM_ASC_TUF_DELTA = -50  # 阿斯加特 TUF 联名款固定减 50 元
+
+def ram_price_adjust(name, price):
+    """阿斯加特内存价格调整：TUF联名-50，普通阿斯加特+RAM_ASC_TECH_ADD，其他不变"""
+    if "阿斯加特" in name and "TUF" in name.upper():
+        return price + RAM_ASC_TUF_DELTA
+    if "阿斯加特" in name:
+        return price + RAM_ASC_TECH_ADD
+    return price
+
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
 # 新增机箱配置
@@ -663,7 +673,7 @@ def fetch_ram_prices_new():
                     if any(w in name for w in RAM_EXCLUDE_LIST):
                         continue
                     try:
-                        final_price = int(float(price)) + RAM_ASC_TECH_ADD if "阿斯加特" in name else int(float(price))
+                        final_price = int(ram_price_adjust(name, float(price)))
                         ram_list.append({"name": name.strip(), "price": final_price})
                     except:
                         pass
@@ -707,7 +717,7 @@ def fetch_ram_prices_new():
                                 else:
                                     continue
                         
-                        final_price = price + RAM_ASC_TECH_ADD if "阿斯加特" in name else price
+                        final_price = ram_price_adjust(name, price)
                         ram_list.append({"name": name, "price": final_price})
         
         # 方法3：从HTML表格中提取数据
@@ -726,7 +736,7 @@ def fetch_ram_prices_new():
                                 continue
                             try:
                                 price = int(float(price_match.group(1)))
-                                final_price = price + RAM_ASC_TECH_ADD if "阿斯加特" in name else price
+                                final_price = ram_price_adjust(name, price)
                                 ram_list.append({"name": name, "price": final_price})
                             except:
                                 pass
@@ -884,7 +894,7 @@ def fetch_processed_ram():
                     if any(w in name for w in RAM_EXCLUDE_LIST):
                         continue
                     try:
-                        final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                        final_p = str(int(ram_price_adjust(name, float(price))))
                         ram_list.append({"name": name.strip(), "price": final_p})
                     except:
                         pass
@@ -926,7 +936,7 @@ def fetch_processed_ram():
                             if any(w in name for w in RAM_EXCLUDE_LIST):
                                 continue
                             
-                            final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                            final_p = str(int(ram_price_adjust(name, float(price))))
                             ram_list.append({"name": name, "price": final_p})
         
         # 方法3：如果以上方法都失败，尝试旧方法（查找产品名称标签）
@@ -958,7 +968,7 @@ def fetch_processed_ram():
                     if any(w in name for w in RAM_EXCLUDE_LIST):
                         continue
                     
-                    final_p = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                    final_p = str(int(ram_price_adjust(name, float(price))))
                     ram_list.append({"name": name, "price": final_p})
         
         print(f"🔍 爬取到 {len(ram_list)} 个内存型号")
@@ -2991,7 +3001,7 @@ def fetch_raw_ram_prices_with_details():
                         brand, series, cas, capacity, freq = extract_ram_four_key(name)
                         
                         # 阿斯加特品牌价格增加
-                        final_price = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                        final_price = str(int(ram_price_adjust(name, float(price))))
                         
                         # 所有爬取到的数据都加入列表（不管是否能提取四要素）
                         ram_list.append({
@@ -3035,7 +3045,7 @@ def fetch_raw_ram_prices_with_details():
                     brand, series, cas, capacity, freq = extract_ram_four_key(name)
                     
                     # 阿斯加特品牌价格增加
-                    final_price = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                    final_price = str(int(ram_price_adjust(name, float(price))))
                     
                     # 所有爬取到的数据都加入列表（不管是否能提取四要素）
                     ram_list.append({
@@ -3055,7 +3065,7 @@ def fetch_raw_ram_prices_with_details():
                     brand, series, cas, capacity, freq = extract_ram_four_key(name.strip())
                     
                     # 阿斯加特品牌价格增加
-                    final_price = str(int(float(price) + RAM_ASC_TECH_ADD)) if "阿斯加特" in name else str(int(float(price)))
+                    final_price = str(int(ram_price_adjust(name, float(price))))
                     
                     ram_list.append({
                         'name': name.strip(),
