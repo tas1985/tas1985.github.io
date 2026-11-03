@@ -540,6 +540,13 @@
                 flex-direction: column;
                 max-width: 760px;
             }
+            /* 纵向下 flex-basis 会作用在高度上，必须重置为自动，否则标题/主栏被异常拉伸 */
+            .title{
+                flex: none;
+            }
+            .container-main{
+                flex: none;
+            }
             .fps-panel{
                 width: 100%;
                 flex: none;
