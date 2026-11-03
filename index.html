@@ -9316,6 +9316,7 @@
         { n: "燕云十六声", ico: "燕云", style: "background:linear-gradient(135deg,#44403c,#b45309);font-size:9px", img: "PNG_GAMES/yysls.jpg", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", img: "PNG_GAMES/delta.jpg", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
         { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", img: "PNG_GAMES/valorant.jpg", ladder: true, cap: 660 },
+        { n: "魔兽世界", ico: "WoW", style: "background:linear-gradient(135deg,#1e3a8a,#f59e0b);color:#fff;font-size:8px", img: "PNG_GAMES/wow.jpg", wowLadder: true, cap: 140 },
         { n: "CS2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", img: "PNG_GAMES/cs2.jpg", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
         { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", img: "PNG_GAMES/lol.jpg", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
         { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", img: "PNG_GAMES/apex.jpg", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 },
@@ -9425,6 +9426,25 @@
         return 620;
     }
 
+    // 魔兽世界专用：CPU 主导，帧数 30-120 按档位线性提升
+    function wowCpuFps(cpuFactor) {
+        if (cpuFactor <= 0.55) return 30;
+        if (cpuFactor <= 0.75) return 45;
+        if (cpuFactor <= 0.95) return 55;
+        if (cpuFactor <= 1.02) return 65;
+        if (cpuFactor <= 1.10) return 75;
+        if (cpuFactor <= 1.18) return 85;
+        if (cpuFactor <= 1.30) return 95;
+        if (cpuFactor <= 1.45) return 105;
+        if (cpuFactor <= 1.65) return 115;
+        return 120;
+    }
+    // 检测 AMD X3D 处理器（大缓存对魔兽世界特别友好）
+    function isX3dCpu(cpuValue) {
+        if (!cpuValue) return false;
+        return /X\s*3D/i.test(cpuValue);
+    }
+
     // CPU 游戏性能系数：优先查游戏性能表，未收录型号按鲁大师 CPU 分换算
     function getCpuFpsFactor(cpuValue) {
         if (!cpuValue || !cpuValue.trim()) return 1;
@@ -9494,6 +9514,11 @@
                 // CPU 主导型（如无畏契约）：以 CPU 档位为主，显卡越强也小幅提升（以 RX6500XT=45 为基准，最高约 +15%）
                 const gpuBoost = Math.max(1, 1 + (gpuIndex - 45) / 100 * 0.10);
                 fps = valCpuFps(cpuFactor) * gpuBoost * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
+            } else if (g.wowLadder) {
+                // 魔兽世界专用：CPU 主导，X3D 处理器额外 +20 帧
+                let base = wowCpuFps(cpuFactor);
+                if (isX3dCpu(cpuValue)) base += 20;
+                fps = base * (resIdx === 0 ? 1 : resIdx === 1 ? 0.97 : 0.94);
             } else if (g.cpuW !== undefined) {
                 // 更吃显卡的游戏（如三角洲行动）：按显卡权重加权，CPU 影响较小
                 // 品牌差异（AMD 显卡偏低、Intel CPU 偏高）仅在该游戏生效
