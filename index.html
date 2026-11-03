@@ -7668,9 +7668,9 @@
                 for (let i=1;i<pts.length;i++) if (pts[i].x < pts[li].x) li = i;
                 const leftSeg = start.x - pts[li].x;  // 第一段向左距离
                 const rightSeg = end.x - pts[li].x;   // 折返后向右距离
-                isLine = w >= 120 && h <= w*0.5       // 整体要够长且基本水平
+                isLine = w >= 70 && h <= w*0.5       // 整体要够长且基本水平
                     && li >= pts.length*0.15 && li <= pts.length*0.85 // 折返点在中段
-                    && leftSeg >= 60 && rightSeg >= 60               // 左右两段都要够长
+                    && leftSeg >= 35 && rightSeg >= 35               // 左右两段都要够长
                     && end.x >= start.x - 10;                        // 终点至少滑回起点附近
             }
 
