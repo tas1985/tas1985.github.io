@@ -588,12 +588,12 @@
             width: 976px !important;
             min-width: 976px !important;
             max-width: 976px !important;
-            flex-direction: row !important;
-            align-items: stretch !important; /* 截图时左右两列等高 */
+            flex-direction: column !important; /* 内部上下堆叠：配置单→总价栏→发票→同步 */
+            align-items: stretch !important;
         }
         body.shot-desktop .container-main{
-            flex: 0 0 726px !important;
-            width: 726px !important;
+            flex: 1 0 auto !important; /* column 模式下自适应内容高度 */
+            width: 100% !important;
             min-width: 0 !important;
             max-width: none !important;
         }
@@ -604,7 +604,10 @@
             position: static !important;
             margin-top: 0 !important;
             align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
+            display: flex !important;
+            flex-direction: column !important;
         }
+        body.shot-desktop .fps-panel .reco-sec{ margin-top:auto !important; /* 推荐度区域推到底部 */ }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
             left: 18px !important;
@@ -7718,10 +7721,7 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
-                    // 强制 fps-panel 高度 = container(含总价栏)高度，截图右侧栏底边与左侧总价栏底边精确对齐
-                    const ct = clonedDoc.querySelector('.container');
-                    const fp = clonedDoc.querySelector('.fps-panel');
-                    if (ct && fp) fp.style.height = ct.scrollHeight + 'px';
+                    // fps-panel 由 body.shot-desktop 的 align-items: stretch 自动拉伸到 container 全高，底边精确对齐
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -8328,10 +8328,7 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
-                    // 强制 fps-panel 高度 = container(含总价栏)高度，截图右侧栏底边与左侧总价栏底边精确对齐
-                    const ct = clonedDoc.querySelector('.container');
-                    const fp = clonedDoc.querySelector('.fps-panel');
-                    if (ct && fp) fp.style.height = ct.scrollHeight + 'px';
+                    // fps-panel 由 body.shot-desktop 的 align-items: stretch 自动拉伸到 container 全高，底边精确对齐
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
