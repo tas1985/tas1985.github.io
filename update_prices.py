@@ -1794,6 +1794,7 @@ def update_gpu_prices():
         no_match_count = 0
         chip_ref_count = 0
         smzdm_5090d_cache = None  # smzdm RTX5090D 搜索结果缓存，只请求一次
+        source_matched_positions = set()  # 已从源站匹配到价格的行号；5070/5070TI/5080 统价仅兜底未匹配型号
         
         # 更新现有显卡型号的价格
         pos = start_idx + 1
@@ -1874,6 +1875,7 @@ def update_gpu_prices():
                                 print(f"  ✅ smzdm回退匹配: {model_name[:40]}... ← {smzdm_title[:40]}... ￥{smzdm_price}")
 
                     if new_price is not None:
+                        source_matched_positions.add(pos)
                         new_price = int(new_price)
                         if "微星 RTX5060 8G VENTUS 2X OC WHITE白色" in model_name:
                             new_price += 150
@@ -1912,11 +1914,13 @@ def update_gpu_prices():
                             print(f"  ★ RTX5060TI 16G 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5060TI_16G_FIXED_PRICE}")
         print(f"✅ RTX5060TI 16G 统一固定价 ￥{RTX5060TI_16G_FIXED_PRICE} 更新 {special_count} 个型号")
 
-        # 特殊处理：RTX5070（非Ti）所有型号统一固定为 8799
-        # 2026-10-30 指定统一价；如需恢复按源站价格跟随，删除本段即可
+        # 特殊处理：RTX5070（非Ti）源站未匹配到的型号统一固定为 8799
+        # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
         RTX5070_FIXED_PRICE = 8799
         rtx5070_count = 0
         for i in range(start_idx + 1, end_idx):
+            if i in source_matched_positions:
+                continue
             line = lines[i]
             if '{n:"' in line and '",p:' in line:
                 model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
@@ -1929,13 +1933,15 @@ def update_gpu_prices():
                             lines[i] = re.sub(r'p:\d+', f'p:{RTX5070_FIXED_PRICE}', line)
                             rtx5070_count += 1
                             print(f"  ★ RTX5070 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5070_FIXED_PRICE}")
-        print(f"✅ RTX5070 统一固定价 ￥{RTX5070_FIXED_PRICE} 更新 {rtx5070_count} 个型号")
+        print(f"✅ RTX5070 统一固定价 ￥{RTX5070_FIXED_PRICE} 兜底更新 {rtx5070_count} 个未匹配型号（源站价格优先）")
 
-        # 特殊处理：RTX5070TI 所有型号统一固定为 13599
-        # 2026-10-30 指定统一价；如需恢复按源站价格跟随，删除本段即可
+        # 特殊处理：RTX5070TI 源站未匹配到的型号统一固定为 13599
+        # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
         RTX5070TI_FIXED_PRICE = 13599
         rtx5070ti_count = 0
         for i in range(start_idx + 1, end_idx):
+            if i in source_matched_positions:
+                continue
             line = lines[i]
             if '{n:"' in line and '",p:' in line:
                 model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
@@ -1948,13 +1954,15 @@ def update_gpu_prices():
                             lines[i] = re.sub(r'p:\d+', f'p:{RTX5070TI_FIXED_PRICE}', line)
                             rtx5070ti_count += 1
                             print(f"  ★ RTX5070TI 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5070TI_FIXED_PRICE}")
-        print(f"✅ RTX5070TI 统一固定价 ￥{RTX5070TI_FIXED_PRICE} 更新 {rtx5070ti_count} 个型号")
+        print(f"✅ RTX5070TI 统一固定价 ￥{RTX5070TI_FIXED_PRICE} 兜底更新 {rtx5070ti_count} 个未匹配型号（源站价格优先）")
 
-        # 特殊处理：RTX5080 所有型号统一固定为 18599
-        # 2026-10-30 指定统一价；如需恢复按源站价格跟随，删除本段即可
+        # 特殊处理：RTX5080 源站未匹配到的型号统一固定为 18599
+        # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
         RTX5080_FIXED_PRICE = 18599
         rtx5080_count = 0
         for i in range(start_idx + 1, end_idx):
+            if i in source_matched_positions:
+                continue
             line = lines[i]
             if '{n:"' in line and '",p:' in line:
                 model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
@@ -1967,7 +1975,7 @@ def update_gpu_prices():
                             lines[i] = re.sub(r'p:\d+', f'p:{RTX5080_FIXED_PRICE}', line)
                             rtx5080_count += 1
                             print(f"  ★ RTX5080 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5080_FIXED_PRICE}")
-        print(f"✅ RTX5080 统一固定价 ￥{RTX5080_FIXED_PRICE} 更新 {rtx5080_count} 个型号")
+        print(f"✅ RTX5080 统一固定价 ￥{RTX5080_FIXED_PRICE} 兜底更新 {rtx5080_count} 个未匹配型号（源站价格优先）")
 
         # 特殊处理：微星 RTX5060TI 8G 价格按"七彩虹 RTX5060TI 8G 战斧 DUO 双扇"价格+49更新
         # 16G 已在上方统一固定价处理，此处跳过
