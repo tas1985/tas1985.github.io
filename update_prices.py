@@ -101,6 +101,14 @@ def ram_price_adjust(name, price):
         return price + RAM_ASC_TECH_ADD
     return price
 
+def mb_price_adjust(name, price):
+    """特定型号主板爬取后统一 +69"""
+    if "微星" in name and "A520M-A PRO" in name.upper():
+        return price + 69
+    if "华硕" in name and "PRIME H610M-K ARGB" in name.upper():
+        return price + 69
+    return price
+
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
 # 新增机箱配置
@@ -768,7 +776,7 @@ def fetch_mb_prices():
             for name, price in matches:
                 if len(name.strip()) > 3 and MB_EXCLUDE not in name and not is_garbled(name):
                     try:
-                        mb_list.append({"name": name.strip(), "price": int(float(price))})
+                        mb_list.append({"name": name.strip(), "price": int(mb_price_adjust(name.strip(), float(price)))})
                     except:
                         pass
         
@@ -809,7 +817,7 @@ def fetch_mb_prices():
                                 else:
                                     continue
                             
-                            mb_list.append({"name": name, "price": price})
+                            mb_list.append({"name": name, "price": mb_price_adjust(name, price)})
         
         return mb_list
     except Exception:
