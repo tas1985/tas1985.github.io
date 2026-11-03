@@ -615,8 +615,8 @@
         /* 截图专用：推荐度区域文字和星星放大，行间距拉开撑满空白 */
         body.shot-desktop .reco-title{ font-size:16px !important; }
         body.shot-desktop .reco-sub{ font-size:12px !important; }
-        body.shot-desktop .reco-grid{ gap:6px !important; }
-        body.shot-desktop .reco-item{ padding:5px 0 !important; }
+        body.shot-desktop .reco-grid{ gap:1px !important; }
+        body.shot-desktop .reco-item{ padding:1px 0 !important; }
         body.shot-desktop .reco-name{ font-size:15px !important; }
         body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
         /* 移动端适配 */
@@ -7718,10 +7718,10 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
-                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
-                    const cm = clonedDoc.querySelector('.container-main');
+                    // 强制 fps-panel 高度 = container(含总价栏)高度，截图右侧栏底边与左侧总价栏底边精确对齐
+                    const ct = clonedDoc.querySelector('.container');
                     const fp = clonedDoc.querySelector('.fps-panel');
-                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
+                    if (ct && fp) fp.style.height = ct.scrollHeight + 'px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
@@ -8328,10 +8328,10 @@
                     clonedDoc.body.classList.remove('mobile-mode');
                     // 强制桌面左右排布，保证截图里帧数栏在配置单右侧
                     clonedDoc.body.classList.add('shot-desktop');
-                    // 强制 fps-panel 高度 = container-main(配置单卡片)高度，截图底边精确对齐
-                    const cm = clonedDoc.querySelector('.container-main');
+                    // 强制 fps-panel 高度 = container(含总价栏)高度，截图右侧栏底边与左侧总价栏底边精确对齐
+                    const ct = clonedDoc.querySelector('.container');
                     const fp = clonedDoc.querySelector('.fps-panel');
-                    if (cm && fp) fp.style.maxHeight = cm.scrollHeight + 'px';
+                    if (ct && fp) fp.style.height = ct.scrollHeight + 'px';
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
