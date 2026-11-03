@@ -593,11 +593,7 @@
             min-width: 200px !important;
             position: static !important;
             margin-top: 0 !important;
-            align-self: stretch !important;
-            display: flex !important;
-            flex-direction: column !important;
         }
-        body.shot-desktop .fps-panel .reco-sec{ margin-top: auto !important; }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
             left: 18px !important;
@@ -7713,6 +7709,10 @@
                     clonedDoc.body.classList.add('shot-desktop');
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
+
+                    // fps-panel 高度硬设为 container 全高，确保右侧栏底边精确对齐左侧总价栏底边
+                    const fp = clonedDoc.querySelector('.fps-panel');
+                    if (clonedContainer && fp) fp.style.height = clonedContainer.offsetHeight + 'px';
                     
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
