@@ -9288,14 +9288,14 @@
     // 每个游戏：base 为 RTX 4060 在 1080p 的显卡参考帧数，cpu 为参考处理器的帧数上限
     // （竞技类游戏以 CPU 上限为主），res 为 1K/2K/4K 的显卡负载系数，cap 为引擎/平台帧数上限
     const FPS_GAMES = [
-        { n: "黑神话：悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", img: "PNG_GAMES/wukong.jpg", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
+        { n: "黑神话悟空", ico: "悟", style: "background:linear-gradient(135deg,#7f1d1d,#b45309)", img: "PNG_GAMES/wukong.jpg", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
         { n: "影之刃零", ico: "影", style: "background:linear-gradient(135deg,#0f172a,#b91c1c)", img: "PNG_GAMES/yingzhiling.jpg", base: 89, res: [1, 0.66, 0.36], cpu: 260, cap: 320 },
         { n: "生化危机9", ico: "RE9", style: "background:linear-gradient(135deg,#14532d,#65a30d);font-size:9px", img: "PNG_GAMES/re9.jpg", base: 64.3, res: [1, 0.66, 0.36], cpu: 260, cap: 90, amdPenalty: 0.77 },
-        { n: "赛博朋克 2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", img: "PNG_GAMES/cp2077.jpg", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
+        { n: "赛博朋克2077", ico: "2077", style: "background:linear-gradient(135deg,#facc15,#f59e0b);color:#1f2937;font-size:9px", img: "PNG_GAMES/cp2077.jpg", base: 89, res: [1, 0.68, 0.38], cpu: 260, cap: 320 },
         { n: "绝地求生", ico: "PUBG", style: "background:linear-gradient(135deg,#0f766e,#22c55e);font-size:9px", img: "PNG_GAMES/pubg.jpg", base: 300, res: [1, 0.72, 0.42], cpu: 140, cap: 340 },
         { n: "三角洲行动", ico: "DF", style: "background:linear-gradient(135deg,#1e3a8a,#0ea5e9);font-size:9px", img: "PNG_GAMES/delta.jpg", base: 200, res: [1, 0.74, 0.46], cpuW: 0.22, cap: 560, brandRules: true },
         { n: "无畏契约", ico: "VAL", style: "background:linear-gradient(135deg,#7f1d1d,#ef4444);font-size:9px", img: "PNG_GAMES/valorant.jpg", ladder: true, cap: 660 },
-        { n: "反恐精英 2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", img: "PNG_GAMES/cs2.jpg", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
+        { n: "CS2", ico: "CS2", style: "background:linear-gradient(135deg,#0f172a,#475569);font-size:9px", img: "PNG_GAMES/cs2.jpg", base: 620, res: [1, 0.94, 0.88], cpu: 260, cap: 600 },
         { n: "英雄联盟", ico: "LOL", style: "background:linear-gradient(135deg,#1e3a8a,#2563EB);font-size:9px", img: "PNG_GAMES/lol.jpg", base: 700, res: [1, 0.97, 0.94], cpu: 320, cap: 700 },
         { n: "Apex 英雄", ico: "APEX", style: "background:linear-gradient(135deg,#b91c1c,#f97316);font-size:8.5px", img: "PNG_GAMES/apex.jpg", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 },
         { n: "永劫无间", ico: "永劫", style: "background:linear-gradient(135deg,#0f766e,#b91c1c);font-size:8.5px", img: "PNG_GAMES/naraka.jpg", base: 300, res: [1, 0.80, 0.50], cpu: 130, cap: 400 }
@@ -9324,7 +9324,7 @@
     // 实测帧数修正表：特定 CPU + 显卡组合下的实测值（以 1080p 为准），
     // 其他分辨率按该游戏的显卡负载系数等比换算
     const FPS_MEASURED = [
-        { cpu: /5500/, gpu: /6500XT/, games: { "英雄联盟": 150, "反恐精英 2": 160, "Apex 英雄": 95 } }
+        { cpu: /5500/, gpu: /6500XT/, games: { "英雄联盟": 150, "CS2": 160, "Apex 英雄": 95 } }
     ];
 
     function getMeasuredFps(g, cpuValue, vgaValue, resIdx) {
