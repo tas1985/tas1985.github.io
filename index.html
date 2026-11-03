@@ -580,7 +580,7 @@
             width: 1120px !important;
             max-width: none !important;
             flex-direction: row !important;
-            align-items: flex-start !important; /* fps-panel不自动拉伸，避免超过左侧配置单底边 */
+            align-items: stretch !important; /* 让右栏撑满高度 */
         }
         body.shot-desktop .container{
             display: flex !important;
@@ -603,7 +603,7 @@
             min-width: 200px !important;
             position: static !important;
             margin-top: 0 !important;
-            align-self: flex-start !important; /* 右栏保持自身内容高度，不被total区域拉高超过配置单底边 */
+            align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
         }
         /* 截图专用：价格框¥符号向右移并放大（网页端保持原样） */
         body.shot-desktop .item-price::before{
@@ -612,14 +612,17 @@
             line-height: 26px !important;
             margin-top: -13px !important;
         }
-        /* 截图专用：推荐度区域保持紧凑，保证右栏底部对齐配置单底边 */
-        body.shot-desktop .reco-title{ font-size:15px !important; }
-        body.shot-desktop .reco-sub{ font-size:11px !important; }
-        body.shot-desktop .reco-sec{ margin-top:8px !important; padding-top:8px !important; }
-        body.shot-desktop .reco-grid{ gap:1px !important; }
-        body.shot-desktop .reco-item{ padding:2px 0 !important; }
-        body.shot-desktop .reco-name{ font-size:14px !important; }
-        body.shot-desktop .reco-stars{ font-size:15px !important; letter-spacing:2px !important; }
+        /* 截图专用：推荐度区域文字和星星放大，行间距拉开撑满空白 */
+        body.shot-desktop .reco-title{ font-size:16px !important; }
+        body.shot-desktop .reco-sub{ font-size:12px !important; }
+        body.shot-desktop .reco-grid{ gap:6px !important; }
+        body.shot-desktop .reco-item{ padding:5px 0 !important; }
+        body.shot-desktop .reco-name{ font-size:15px !important; }
+        body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
+        /* 截图时隐藏砍一刀/发票/同步区域，让container高度=配置单卡片高度，fps-panel底边精确对齐 */
+        body.shot-desktop .total,
+        body.shot-desktop .invoice-btn-row,
+        body.shot-desktop .sync-footer-row{ display:none !important; }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
@@ -7657,9 +7660,9 @@
                 for (let i=1;i<pts.length;i++) if (pts[i].x < pts[li].x) li = i;
                 const leftSeg = start.x - pts[li].x;  // 第一段向左距离
                 const rightSeg = end.x - pts[li].x;   // 折返后向右距离
-                isLine = w >= 60 && h <= w*0.5        // 整体要够长且基本水平
+                isLine = w >= 120 && h <= w*0.5       // 整体要够长且基本水平
                     && li >= pts.length*0.15 && li <= pts.length*0.85 // 折返点在中段
-                    && leftSeg >= 30 && rightSeg >= 30               // 左右两段都要够长
+                    && leftSeg >= 60 && rightSeg >= 60               // 左右两段都要够长
                     && end.x >= start.x - 10;                        // 终点至少滑回起点附近
             }
 
