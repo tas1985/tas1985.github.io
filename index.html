@@ -2567,7 +2567,7 @@
         <div class="product-images-container">
             <!-- 机箱图片容器 -->
             <div class="case-image-container" id="caseImageContainer">
-                <img src="" alt="机箱图片" class="case-image" id="caseImage" loading="lazy" decoding="async">
+                <img src="" alt="机箱图片" class="case-image" id="caseImage" loading="lazy" decoding="async" crossorigin="anonymous">
                 <div id="caseImagePlaceholder" style="color: #333; text-align: center;">请选择机箱<br>查看图片</div>
             </div>
 
@@ -2576,7 +2576,7 @@
 
             <!-- 散热器图片容器 -->
             <div class="cooler-image-container" id="coolerImageContainer">
-                <img src="" alt="散热器图片" class="cooler-image" id="coolerImage" loading="lazy" decoding="async">
+                <img src="" alt="散热器图片" class="cooler-image" id="coolerImage" loading="lazy" decoding="async" crossorigin="anonymous">
                 <div id="coolerImagePlaceholder" style="color: #333; text-align: center;">请选择散热器<br>查看图片</div>
             </div>
 
@@ -2585,7 +2585,7 @@
 
             <!-- 显卡图片容器 -->
             <div class="vga-image-container" id="vgaImageContainer">
-                <img src="" alt="显卡图片" class="vga-image" id="vgaImage" loading="lazy" decoding="async">
+                <img src="" alt="显卡图片" class="vga-image" id="vgaImage" loading="lazy" decoding="async" crossorigin="anonymous">
                 <div id="vgaImagePlaceholder" style="color: #333; text-align: center;">请选择显卡<br>查看图片</div>
             </div>
         </div>
@@ -7710,7 +7710,7 @@
                 scale: 2, // 提高清晰度
                 useCORS: true, // 允许跨域图片
                 logging: false, // 关闭日志
-                allowTaint: true, // 允许跨域图片污染canvas
+                allowTaint: false, // 禁止污染canvas，否则toBlob导出会报Tainted canvases错误
                 foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
                 removeContainer: true, // 自动移除临时容器
                 imageTimeout: 15000, // 图片加载超时时间（15秒）
@@ -9492,7 +9492,7 @@
             return '<div class="fps-row">' +
                 '<div class="fps-ico" style="' + g.style + '">' +
                     '<span>' + g.ico + '</span>' +
-                    '<img src="' + g.img + '" alt="' + g.n + ' 封面" loading="lazy" onerror="this.remove()">' +
+                    '<img src="' + g.img + '" alt="' + g.n + ' 封面" loading="lazy" crossorigin="anonymous" onerror="this.remove()">' +
                 '</div>' +
                 '<div class="fps-main">' +
                     '<div class="fps-line">' +
