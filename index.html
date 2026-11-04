@@ -5528,11 +5528,19 @@
     const IMAGE_PATHS = {
         case: `${IMAGE_BASE_URL}/PNG`,
         cooler: `${IMAGE_BASE_URL}/PNG_SR`,
-        vga: `${IMAGE_BASE_URL}/PNG_VGA`
+        vga: `${IMAGE_BASE_URL}/PNG_VGA`,
+        games: `${IMAGE_BASE_URL}/PNG_GAMES`
     };
     // 安全拼接图片URL：对文件名中的中文/特殊字符做 encodeURIComponent
     function buildImgUrl(base, imageName) {
         return `${base}/${encodeURIComponent(imageName)}.png`;
+    }
+    // 游戏封面图缓存 key（去掉扩展名，与 FPS_GAMES 的 img 字段对应）
+    function gameCacheKey(img) {
+        return 'game_' + img.replace(/\.[^.]+$/, '');
+    }
+    function buildGameImgUrl(img) {
+        return `${IMAGE_PATHS.games}/${encodeURIComponent(img)}`;
     }
 
     // 从IndexedDB读取缓存的图片
@@ -9474,10 +9482,14 @@
         const list = document.getElementById("fpsList");
         if (!list || list.dataset.ready === "1") return;
         list.innerHTML = FPS_GAMES.map(function(g) {
+            const cacheKey = gameCacheKey(g.img);
+            const cached = getCachedImageSrc(cacheKey);
+            const remoteUrl = buildGameImgUrl(g.img);
+            const src = cached || remoteUrl;
             return '<div class="fps-row">' +
                 '<div class="fps-ico" style="' + g.style + '">' +
                     '<span>' + g.ico + '</span>' +
-                    '<img src="' + g.img + '" alt="' + g.n + ' 封面" loading="lazy" crossorigin="anonymous" onerror="this.remove()">' +
+                    '<img src="' + src + '" data-cache-key="' + cacheKey + '" data-remote="' + remoteUrl + '" alt="' + g.n + ' 封面" loading="lazy" crossorigin="anonymous" onerror="this.remove()">' +
                 '</div>' +
                 '<div class="fps-main">' +
                     '<div class="fps-line">' +
@@ -9489,6 +9501,39 @@
             '</div>';
         }).join("");
         list.dataset.ready = "1";
+        // 异步预拉取未缓存的游戏封面图，存进 IndexedDB 供下次使用
+        preloadGameCovers();
+    }
+
+    // 预拉取未缓存的游戏封面图：fetch 远程 → saveToCache(blob) → 若页面上有对应 img 则即时替换 src
+    let gameCoverPreloaded = false;
+    async function preloadGameCovers() {
+        if (gameCoverPreloaded) return;
+        gameCoverPreloaded = true;
+        try {
+            await Promise.all(FPS_GAMES.map(async function(g) {
+                const cacheKey = gameCacheKey(g.img);
+                if (hasCachedImage(cacheKey)) return;
+                // 先异步查 IndexedDB
+                const asyncSrc = await getCachedImageSrcAsync(cacheKey);
+                if (asyncSrc) {
+                    // IndexedDB 命中，替换当前显示
+                    const shown = document.querySelector('img[data-cache-key="' + cacheKey + '"]');
+                    if (shown && shown.src !== asyncSrc) shown.src = asyncSrc;
+                    return;
+                }
+                // 真没缓存 → 下载
+                const url = buildGameImgUrl(g.img);
+                const resp = await fetch(url);
+                if (!resp.ok) return;
+                const blob = await resp.blob();
+                await saveToCache(cacheKey, blob, true);
+                const objectURL = URL.createObjectURL(blob);
+                imageCache[cacheKey] = { src: objectURL, loaded: true };
+                const shown = document.querySelector('img[data-cache-key="' + cacheKey + '"]');
+                if (shown && shown.src !== objectURL) shown.src = objectURL;
+            }));
+        } catch (e) {}
     }
 
     function setFpsRes(res) {
