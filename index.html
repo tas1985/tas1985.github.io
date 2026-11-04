@@ -5539,8 +5539,10 @@
     function gameCacheKey(img) {
         return 'game_' + img.replace(/\.[^.]+$/, '');
     }
+    // FPS_GAMES 的 img 字段自带 "PNG_GAMES/" 前缀，这里只取文件名再拼远程目录，避免重复拼前缀
     function buildGameImgUrl(img) {
-        return `${IMAGE_PATHS.games}/${encodeURIComponent(img)}`;
+        const fileName = img.split('/').pop();
+        return `${IMAGE_PATHS.games}/${encodeURIComponent(fileName)}`;
     }
 
     // 从IndexedDB读取缓存的图片
@@ -9489,7 +9491,7 @@
             return '<div class="fps-row">' +
                 '<div class="fps-ico" style="' + g.style + '">' +
                     '<span>' + g.ico + '</span>' +
-                    '<img src="' + src + '" data-cache-key="' + cacheKey + '" data-remote="' + remoteUrl + '" alt="' + g.n + ' 封面" loading="lazy" crossorigin="anonymous" onerror="this.remove()">' +
+                    '<img src="' + src + '" data-cache-key="' + cacheKey + '" data-remote="' + remoteUrl + '" alt="' + g.n + ' 封面" loading="lazy" crossorigin="anonymous" onerror="if(this.dataset.remote&&this.getAttribute(\'src\')!==this.dataset.remote){this.src=this.dataset.remote;}else{this.remove()}">' +
                 '</div>' +
                 '<div class="fps-main">' +
                     '<div class="fps-line">' +
