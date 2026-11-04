@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -7715,13 +7715,13 @@
                 renderStarted = true;
                 html2canvas(container, {
                 backgroundColor: '#f5f5f7',
-                scale: 2, // 提高清晰度
+                scale: 1.5, // 降为1.5倍，画布面积减44%，渲染提速明显，肉眼差别极小
                 useCORS: true, // 允许跨域图片
                 logging: false, // 关闭日志
                 allowTaint: false, // 禁止污染canvas，否则toBlob导出会报Tainted canvases错误
                 foreignObjectRendering: false, // 使用html2canvas原生渲染方式，避免偏移
                 removeContainer: true, // 自动移除临时容器
-                imageTimeout: 15000, // 图片加载超时时间（15秒）
+                imageTimeout: 5000, // 图片加载超时时间缩短到5秒，避免网络慢时白等
                 windowWidth: 1200, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局（宽屏才显示右侧帧数栏）
                 // 移除手动设置的宽高和坐标，让html2canvas自动计算
                 onclone: function(clonedDoc) {
@@ -7737,6 +7737,8 @@
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
+                    // emoji灰度结果缓存：相同emoji只处理一次
+                    const emojiCache = {};
                     // 将图标转换为灰色（修复截图时filter不生效的问题）
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
@@ -7750,40 +7752,23 @@
                             const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
                             span.innerHTML = `<img src="${svgUrl}" width="22" height="22" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
                         }
-                        // 使用canvas将emoji转换为灰度图片（兼容所有浏览器）
+                        // 使用canvas+CSS filter快速生成灰度emoji（比像素遍历快数倍）
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
-                            // 使用克隆文档创建canvas，避免影响原始文档样式
-                            const canvas = clonedDoc.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            
-                            // 设置canvas大小
-                            canvas.width = 48;
-                            canvas.height = 48;
-                            
-                            // 绘制emoji
-                            ctx.font = '36px serif';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
-                            
-                            // 获取图像数据并转换为灰度
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const data = imageData.data;
-                            
-                            for (let i = 0; i < data.length; i += 4) {
-                                // 计算灰度值（使用标准的亮度公式）
-                                const gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-                                data[i] = gray;     // red
-                                data[i + 1] = gray; // green
-                                data[i + 2] = gray; // blue
-                                // alpha保持不变
+                            let grayEmojiUrl = emojiCache[emoji];
+                            if (!grayEmojiUrl) {
+                                const canvas = clonedDoc.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                canvas.width = 48;
+                                canvas.height = 48;
+                                ctx.font = '36px serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.filter = 'grayscale(1)'; // CSS filter方式，比手动像素遍历快很多
+                                ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+                                grayEmojiUrl = canvas.toDataURL('image/png');
+                                emojiCache[emoji] = grayEmojiUrl;
                             }
-                            
-                            ctx.putImageData(imageData, 0, 0);
-                            
-                            // 将canvas转换为data URL并替换span内容
-                            const grayEmojiUrl = canvas.toDataURL('image/png');
                             span.innerHTML = `<img src="${grayEmojiUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
                         }
                         
@@ -8236,11 +8221,11 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 性能优化：html2canvas scale:2 + 容器760px 输出宽度已约1520px，
+                // 性能优化：html2canvas scale:1.5 + container宽976px 输出宽度约1464px，
                 // 仅当输出宽度与目标差距较大时才做二次缩放，避免大尺寸canvas重复绘制
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
-                const targetW = 1520;
+                const targetW = 1464; // 与scale:1.5下container宽976px的输出基本一致
                 let outCanvas = canvas;
                 if (Math.abs(srcW - targetW) > 80) {
                     const scaleRatio = targetW / srcW;
@@ -8327,13 +8312,13 @@
                 renderStarted = true;
                 html2canvas(container, {
                 backgroundColor: '#f5f5f7',
-                scale: 2,
+                scale: 1.5,
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
                 foreignObjectRendering: false,
                 removeContainer: true,
-                imageTimeout: 15000,
+                imageTimeout: 5000,
                 windowWidth: 1200, // 强制以桌面宽度渲染，确保手机端截图也是电脑模式布局（宽屏才显示右侧帧数栏）
                 onclone: function(clonedDoc) {
                     // 移除手机模式，确保截图按电脑模式效果生成
@@ -8347,6 +8332,8 @@
                     const clonedContainer = clonedDoc.querySelector('.container');
                     const clonedRemark = clonedDoc.querySelector('.remark-input');
                     
+                    // emoji灰度结果缓存：相同emoji只处理一次
+                    const emojiCache = {};
                     // 将图标转换为灰色
                     const iconGraySpans = clonedDoc.querySelectorAll('.icon-gray');
                     iconGraySpans.forEach(function(span) {
@@ -8362,30 +8349,20 @@
                         }
                         const emoji = span.textContent || span.innerText;
                         if (emoji && emoji.length > 0) {
-                            const canvas = clonedDoc.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            
-                            canvas.width = 48;
-                            canvas.height = 48;
-                            
-                            ctx.font = '36px serif';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
-                            
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const data = imageData.data;
-                            
-                            for (let i = 0; i < data.length; i += 4) {
-                                const gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-                                data[i] = gray;
-                                data[i + 1] = gray;
-                                data[i + 2] = gray;
+                            let grayEmojiUrl = emojiCache[emoji];
+                            if (!grayEmojiUrl) {
+                                const canvas = clonedDoc.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                canvas.width = 48;
+                                canvas.height = 48;
+                                ctx.font = '36px serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.filter = 'grayscale(1)'; // CSS filter方式，比手动像素遍历快很多
+                                ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+                                grayEmojiUrl = canvas.toDataURL('image/png');
+                                emojiCache[emoji] = grayEmojiUrl;
                             }
-                            
-                            ctx.putImageData(imageData, 0, 0);
-                            
-                            const grayEmojiUrl = canvas.toDataURL('image/png');
                             span.innerHTML = `<img src="${grayEmojiUrl}" style="width:22px;height:22px;vertical-align:middle;margin-right:4px;" />`;
                         }
                         
@@ -8870,11 +8847,11 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 性能优化：html2canvas scale:2 + 容器760px 输出宽度已约1520px，
+                // 性能优化：html2canvas scale:1.5 + container宽976px 输出宽度约1464px，
                 // 仅当输出宽度与目标差距较大时才做二次缩放，避免大尺寸canvas重复绘制
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
-                const targetW = 1520;
+                const targetW = 1464; // 与scale:1.5下container宽976px的输出基本一致
                 let outCanvas = canvas;
                 if (Math.abs(srcW - targetW) > 80) {
                     const scaleRatio = targetW / srcW;
