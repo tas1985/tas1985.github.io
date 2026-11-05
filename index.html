@@ -1475,6 +1475,18 @@
             line-height: 1.5;
             white-space: nowrap;
         }
+        /* 砍一刀 - 发票标记（含普票/含专票） */
+        .kan-invoice-tag{
+            font-size: 12px;
+            font-weight: bold;
+            color: #2563eb;
+            background: rgba(37,99,235,0.1);
+            border: 1px solid rgba(37,99,235,0.45);
+            padding: 1px 8px;
+            border-radius: 20px;
+            line-height: 1.5;
+            white-space: nowrap;
+        }
         /* 砍一刀 - 优惠后总价（放大） */
         .kan-discount{
             font-size: 30px;
@@ -2605,6 +2617,7 @@
                 <span class="kan-original" id="final">0 元</span>
             </div>
             <div class="kan-row-discount">
+                <span class="kan-invoice-tag" id="kanInvoiceTag" style="display:none;"></span>
                 <span class="kan-badge">砍一刀</span>
                 <span class="kan-discount" id="finalDiscount">0 元</span>
             </div>
@@ -8976,6 +8989,21 @@
         kanDiscount = Math.min(kanDiscount, Math.floor(finalPrice / 2));
         let kanPrice = Math.max(0, finalPrice - kanDiscount);
         document.getElementById("finalDiscount").innerText=`${kanPrice} 元`;
+
+        // 砍一刀左侧发票标记：开启普票/专票后显示“含普票/含专票”
+        const invoiceTagEl = document.getElementById("kanInvoiceTag");
+        if (invoiceTagEl) {
+            if (invoiceType === 'pu') {
+                invoiceTagEl.innerText = "含普票";
+                invoiceTagEl.style.display = "";
+            } else if (invoiceType === 'zhuan') {
+                invoiceTagEl.innerText = "含专票";
+                invoiceTagEl.style.display = "";
+            } else {
+                invoiceTagEl.innerText = "";
+                invoiceTagEl.style.display = "none";
+            }
+        }
         
         // 计算鲁大师跑分
         calculateLudashiScore();
