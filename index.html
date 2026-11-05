@@ -8989,7 +8989,8 @@
         }
         // 安全保护：砍一刀不得超过不含开票价的 50%，最低砍一刀金额不得低于 0（即价格太小时不砍）
         kanDiscount = Math.min(kanDiscount, Math.floor(basePrice / 2));
-        let kanPrice = Math.max(0, basePrice - kanDiscount);
+        // 优惠价 = 含开票总价 - 砍一刀金额（砍一刀金额按不含开票价计算，相当于先去开票价再砍、砍完再加回开票价）
+        let kanPrice = Math.max(0, finalPrice - kanDiscount);
         document.getElementById("finalDiscount").innerText=`${kanPrice} 元`;
 
         // 砍一刀左侧发票标记：开启普票/专票后显示“含普票/含专票”
