@@ -2252,6 +2252,35 @@ def update_gpu_prices():
         update_count += hx_updated
         same_count += hx_kept
 
+        # 手动指定固定价（2026-11-05，最后执行，优先于所有自动规则，避免每日任务覆盖）
+        MANUAL_FIXED_GPU_PRICES = {
+            "映众 RTX5070 曜夜X2 12G D7 双风扇": 7400,
+            "映众 RTX5070 曜夜X3 OC 12G D7 三风扇": 7500,
+            "映众 RTX5070 超级冰龙 12G D7 三风扇": 8100,
+            "映众 RTX5070 ICHILL X3 WHITE 12G 雪域冰龙": 8000,
+            "七彩虹 RTX5070 橘影橙 12G 三风扇": 7700,
+            "七彩虹 RTX5070 Ultra OC 12GB V2 黑色 三风扇": 7900,
+            "七彩虹 RTX5070 Advanced OC 12G 银鲨 三风扇": 8100,
+            "微星-RTX5070 12G GAMING DUKE 3X OC PLUS 龙爵": 8000,
+        }
+        manual_count = 0
+        for i in range(start_idx + 1, end_idx):
+            line = lines[i]
+            if '{n:"' not in line or '",p:' not in line:
+                continue
+            m = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+            if not m:
+                continue
+            model_name = m.group(1)
+            if model_name in MANUAL_FIXED_GPU_PRICES:
+                target = MANUAL_FIXED_GPU_PRICES[model_name]
+                old_price = int(m.group(2))
+                if old_price != target:
+                    lines[i] = re.sub(r'p:\d+', f'p:{target}', line)
+                    manual_count += 1
+                    print(f"  ★ 手动固定价: {model_name[:40]}... ￥{old_price} -> ￥{target}")
+        print(f"✅ 手动固定价更新完成：{manual_count} 个型号")
+
         # 写入文件
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
