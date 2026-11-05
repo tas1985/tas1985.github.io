@@ -1941,9 +1941,9 @@ def update_gpu_prices():
             else:
                 pos += 1
         
-        # 特殊处理：RTX5060TI 16G 所有型号（含微星、华硕雪豹）统一固定为 6799
-        # 2026-10-30 指定统一价；如需恢复按源站/战斧DUO价格跟随，删除本段即可
-        RTX5060TI_16G_FIXED_PRICE = 6799
+        # 特殊处理：RTX5060TI 16G 所有型号（含微星、华硕雪豹）统一固定为 6650
+        # 2026-10-30 指定统一价 6799；2026-11-05 改为 6650；如需恢复按源站/战斧DUO价格跟随，删除本段即可
+        RTX5060TI_16G_FIXED_PRICE = 6650
         special_count = 0
         for i in range(start_idx + 1, end_idx):
             line = lines[i]
