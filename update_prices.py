@@ -2262,6 +2262,10 @@ def update_gpu_prices():
             "七彩虹 RTX5070 Ultra OC 12GB V2 黑色 三风扇": 7900,
             "七彩虹 RTX5070 Advanced OC 12G 银鲨 三风扇": 8100,
             "微星-RTX5070 12G GAMING DUKE 3X OC PLUS 龙爵": 8000,
+            # RTX5080 特殊低价（低于 18599 统一价，需在统一价逻辑之后覆盖）
+            "微星 RTX5080 16G VANGUARD SOC 神龙": 17300,
+            "映众 RTX5080 曜夜X3 OC 16G D7 三风扇": 15900,
+            "华硕 RTX5080 16G ULTRA W OC": 16300,
         }
         manual_count = 0
         for i in range(start_idx + 1, end_idx):
