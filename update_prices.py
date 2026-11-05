@@ -1670,6 +1670,10 @@ def hanxun_vram_key(name):
 # 撼讯手动指定固定价（优先于自动参考价计算，避免每日任务覆盖）
 HANXUN_FIXED_PRICES = {
     '撼讯 RX9060XT 16G 游荡者 黑': 4299,
+    # 2026-11-05：7650GRE 全系统一 2398（撼讯部分也走固定价，防止参考价重算覆盖）
+    '撼讯 RX 7650GRE-8G 暗黑犬': 2398,
+    '撼讯 RX 7650GRE-8G 游荡者 白': 2398,
+    '撼讯 RX 7650GRE-8G 游荡者 黑': 2398,
 }
 
 
@@ -1959,6 +1963,24 @@ def update_gpu_prices():
                             special_count += 1
                             print(f"  ★ RTX5060TI 16G 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5060TI_16G_FIXED_PRICE}")
         print(f"✅ RTX5060TI 16G 统一固定价 ￥{RTX5060TI_16G_FIXED_PRICE} 更新 {special_count} 个型号")
+
+        # 特殊处理：RX7650GRE 所有型号统一固定为 2398（2026-11-05 指定统一价；防止被自动更新覆盖）
+        RX7650GRE_FIXED_PRICE = 2398
+        rx7650_count = 0
+        for i in range(start_idx + 1, end_idx):
+            line = lines[i]
+            if '{n:"' in line and '",p:' in line:
+                model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
+                if model_match:
+                    model_name = model_match.group(1)
+                    old_price = int(model_match.group(2))
+                    model_compact = re.sub(r'\s+', '', model_name).lower()
+                    if "7650gre" in model_compact:
+                        if old_price != RX7650GRE_FIXED_PRICE:
+                            lines[i] = re.sub(r'p:\d+', f'p:{RX7650GRE_FIXED_PRICE}', line)
+                            rx7650_count += 1
+                            print(f"  ★ RX7650GRE 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RX7650GRE_FIXED_PRICE}")
+        print(f"✅ RX7650GRE 统一固定价 ￥{RX7650GRE_FIXED_PRICE} 更新 {rx7650_count} 个型号")
 
         # 特殊处理：RTX5070（非Ti）源站未匹配到的型号统一固定为 8799
         # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
