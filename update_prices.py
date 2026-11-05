@@ -1667,6 +1667,12 @@ def hanxun_vram_key(name):
     return f"{m.group(1)}G" if m else None
 
 
+# 撼讯手动指定固定价（优先于自动参考价计算，避免每日任务覆盖）
+HANXUN_FIXED_PRICES = {
+    '撼讯 RX9060XT 16G 游荡者 黑': 4299,
+}
+
+
 def update_hanxun_prices(lines, start_idx, end_idx):
     """
     撼讯显卡：源网站没有该品牌，改为参考其他品牌同型号（同芯片+同显存）的价格，
@@ -1697,6 +1703,18 @@ def update_hanxun_prices(lines, start_idx, end_idx):
         if not name.startswith('撼讯'):
             continue
         
+        # 手动指定固定价优先于参考价计算
+        fixed = HANXUN_FIXED_PRICES.get(name)
+        if fixed is not None:
+            if fixed != old_price:
+                lines[pos] = re.sub(r'p:\d+', f'p:{fixed}', lines[pos])
+                updated_count += 1
+                print(f"  ✓ 撼讯固定价: {name[:40]}... ￥{old_price} -> ￥{fixed}")
+            else:
+                kept_count += 1
+                print(f"  ≡ 撼讯固定价已正确: {name[:40]}... ￥{fixed}")
+            continue
+
         candidates = refs.get((hanxun_chip_key(name), hanxun_vram_key(name)), [])
         if not candidates:
             kept_count += 1
