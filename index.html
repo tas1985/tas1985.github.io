@@ -579,17 +579,18 @@
             overflow-x: hidden !important;
         }
         body.shot-desktop .page-layout{
-            width: 1120px !important;
+            width: 1090px !important;
             max-width: none !important;
             flex-direction: row !important;
             align-items: stretch !important; /* 让右栏撑满高度 */
         }
+        /* 截图总宽 946px = 主栏 726 + 间距 16 + 右栏 170 + 内边距/边框 34，标题栏随之收窄 */
         body.shot-desktop .container{
             display: flex !important;
-            flex: 0 0 976px !important;
-            width: 976px !important;
-            min-width: 976px !important;
-            max-width: 976px !important;
+            flex: 0 0 946px !important;
+            width: 946px !important;
+            min-width: 946px !important;
+            max-width: 946px !important;
             flex-direction: row !important;
             align-items: stretch !important; /* 截图时左右两列等高 */
         }
@@ -600,9 +601,10 @@
             max-width: none !important;
         }
         body.shot-desktop .fps-panel{
-            flex: 0 0 200px !important;
-            width: 200px !important;
-            min-width: 200px !important;
+            flex: 0 0 170px !important;
+            width: 170px !important;
+            min-width: 170px !important;
+            padding: 6px !important;
             position: static !important;
             margin-top: 0 !important;
             align-self: stretch !important; /* 右列随左列拉伸，保证截图左右底边对齐 */
@@ -621,16 +623,24 @@
             margin-top: -17px !important;
         }
         /* 截图专用：压缩帧数列表行间距（红框区域） */
-        body.shot-desktop .fps-row{ padding:5px 0 !important; }
-        body.shot-desktop .fps-line{ margin-bottom:3px !important; }
+        body.shot-desktop .fps-row{ padding:5px 0 !important; gap:4px !important; }
+        body.shot-desktop .fps-line{ margin-bottom:3px !important; gap:0 3px !important; }
+        /* 截图专用：右栏收窄后收紧图标、游戏名与帧数文字，避免文字挤压溢出 */
+        body.shot-desktop .fps-ico{ width:24px !important; height:24px !important; flex:0 0 24px !important; font-size:8px !important; }
+        body.shot-desktop .fps-game{ font-size:11px !important; }
+        body.shot-desktop .fps-val{ font-size:12px !important; }
+        body.shot-desktop .fps-val i{ font-size:8px !important; margin-left:1px !important; }
+        body.shot-desktop .fps-title{ font-size:14px !important; letter-spacing:0 !important; }
+        body.shot-desktop .fps-head{ margin-bottom:8px !important; }
+        body.shot-desktop .fps-tabs{ margin-bottom:8px !important; }
         /* 截图专用：推荐度区域文字和星星放大，行间距收紧（绿框区域） */
-        body.shot-desktop .reco-title{ font-size:16px !important; }
-        body.shot-desktop .reco-sub{ font-size:12px !important; }
+        body.shot-desktop .reco-title{ font-size:15px !important; letter-spacing:0 !important; }
+        body.shot-desktop .reco-sub{ font-size:11px !important; }
         body.shot-desktop .reco-head{ margin-bottom:4px !important; }
         body.shot-desktop .reco-grid{ gap:0px !important; }
         body.shot-desktop .reco-item{ padding:1px 0 !important; }
-        body.shot-desktop .reco-name{ font-size:18.75px !important; }
-        body.shot-desktop .reco-stars{ font-size:17px !important; letter-spacing:3px !important; }
+        body.shot-desktop .reco-name{ font-size:16px !important; }
+        body.shot-desktop .reco-stars{ font-size:15px !important; letter-spacing:2px !important; }
         /* 移动端适配 */
         @media screen and (max-width: 500px) {
             html {
@@ -8350,11 +8360,11 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 性能优化：html2canvas scale:1.5 + container宽976px 输出宽度约1464px，
+                // 性能优化：html2canvas scale:1.5 + container宽946px 输出宽度约1419px，
                 // 仅当输出宽度与目标差距较大时才做二次缩放，避免大尺寸canvas重复绘制
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
-                const targetW = 1464; // 与scale:1.5下container宽976px的输出基本一致
+                const targetW = 1419; // 与scale:1.5下container宽946px的输出基本一致
                 let outCanvas = canvas;
                 if (Math.abs(srcW - targetW) > 80) {
                     const scaleRatio = targetW / srcW;
@@ -8976,11 +8986,11 @@
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 const fileName = `匿名配置单_${year}${month}${day}_${hours}${minutes}${seconds}.jpg`;
 
-                // 性能优化：html2canvas scale:1.5 + container宽976px 输出宽度约1464px，
+                // 性能优化：html2canvas scale:1.5 + container宽946px 输出宽度约1419px，
                 // 仅当输出宽度与目标差距较大时才做二次缩放，避免大尺寸canvas重复绘制
                 const srcW = (canvas && canvas.width > 0) ? canvas.width : 760;
                 const srcH = (canvas && canvas.height > 0) ? canvas.height : 1200;
-                const targetW = 1464; // 与scale:1.5下container宽976px的输出基本一致
+                const targetW = 1419; // 与scale:1.5下container宽946px的输出基本一致
                 let outCanvas = canvas;
                 if (Math.abs(srcW - targetW) > 80) {
                     const scaleRatio = targetW / srcW;
