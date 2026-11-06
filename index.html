@@ -3072,7 +3072,7 @@
             {n:"中文原盒 i7-14790F 20核28线程",p:1960},
             {n:"中文原盒 i5-14600KF 14核20线程",p:1300},
             {n:"中文原盒 i5-14600K 14核20线程",p:1400},
-            {n:"中文原盒 i5-14490F",p:850},
+            {n:"中文原盒 i5-14490F",p:929},
             {n:"中文原盒 i5-12600KF",p:899},
             {n:"中文原盒 i5-12490F",p:760},
             {n:"Ultra 5 245K 盒装 14核心14线程",p:1050},
@@ -3811,9 +3811,7 @@
             {n:"海盗船电源/RM850e 850W 金牌全模组 ATX3.0 黑(CP-9020263-CN)",p:799},
             {n:"海盗船电源/RM750x 750w 金牌全模组 ATX3.1 黑(CP-9020285-CN)",p:799},
             {n:"海盗船电源/RM1000x 金牌全模组 ATX3.1 黑(CP-9020271-CN)",p:1199},
-            {n:"技嘉 P650GS 650W 金牌直出  3.1",p:240},
-            {n:"微星  B65ON-H 650w atx3.1  铜牌",p:250},
-            {n:"华硕 TUF-GAMING-700B-EVO 铜牌全模组",p:350},
+            {n:"华硕 TUF-GAMING-700B-EVO 铜牌全模组",p:450},
             {n:"华硕 ROG STRIX 雷鹰氮化镓白色 1000P GAMING 1000W 白金全模组 ATX3.0",p:1550},
             {n:"华硕 ROG STRIX 雷鹰氮化镓 1000P GAMING 1000W EQ线 白金全模组 ATX3.0",p:1450},
             {n:"华硕 ROG STRIX 雷神3白色氮化镓 1200P GAMING 1200W EQ线 白金全模组",p:3799},
@@ -9948,13 +9946,16 @@
         const ramGB = recoRamGB(ramValue);
         officeStars = ramGB !== null && ramGB >= 64 ? 5 : Math.min(4, officeStars);
 
+        // 直播：看 CPU，Intel 同档高一星；i7/i9（含 Ultra 7/9）直接 4 星以上
+        let liveStars = cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1;
+        if (/i7-|i9-|ultra\s*[79]/i.test(cpuName)) liveStars = Math.max(4, liveStars);
         const stars = [
             // 网游：看 CPU，AMD 同档高一星，有独立显卡再加一星
             onlineStars,
             // 3A 游戏：看显卡，N 卡同档高一星
             gpuStars,
             // 直播：看 CPU，Intel 同档高一星
-            cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1,
+            liveStars,
             // 剪辑：同直播，N 卡 5050 以上加一星
             cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, nv5050) : 1,
             // 科研：固态 ≥1T 给 4 星，内存 ≥64G 才给 5 星
