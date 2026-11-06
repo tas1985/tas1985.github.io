@@ -3802,9 +3802,7 @@
             {n:"海盗船电源/RM850e 850W 金牌全模组 ATX3.0 黑(CP-9020263-CN)",p:799},
             {n:"海盗船电源/RM750x 750w 金牌全模组 ATX3.1 黑(CP-9020285-CN)",p:799},
             {n:"海盗船电源/RM1000x 金牌全模组 ATX3.1 黑(CP-9020271-CN)",p:1199},
-            {n:"技嘉 P650GS 650W 金牌直出  3.1",p:240},
-            {n:"微星  B65ON-H 650w atx3.1  铜牌",p:250},
-            {n:"华硕 TUF-GAMING-700B-EVO 铜牌全模组",p:350},
+            {n:"华硕 TUF-GAMING-700B-EVO 铜牌全模组",p:450},
             {n:"华硕 ROG STRIX 雷鹰氮化镓白色 1000P GAMING 1000W 白金全模组 ATX3.0",p:1550},
             {n:"华硕 ROG STRIX 雷鹰氮化镓 1000P GAMING 1000W EQ线 白金全模组 ATX3.0",p:1450},
             {n:"华硕 ROG STRIX 雷神3白色氮化镓 1200P GAMING 1200W EQ线 白金全模组",p:3799},
@@ -9764,7 +9762,7 @@
         { n: "建模", tip: "同剪辑" },
         { n: "渲染", tip: "同 3A" },
         { n: "AI部署", tip: "同 3A，16G 显存以上加两星" },
-        { n: "颜值", tip: "有风扇=2星，散热>200、机箱>300 各加一星" }
+        { n: "颜值", tip: "散热+机箱+风扇>2000=5星；否则有风扇=2星，散热>200、机箱>300 各加一星" }
     ];
 
     // 是否 Intel 平台（Intel 在直播、剪辑、科研、建模上同档高一星）
@@ -9855,8 +9853,10 @@
         return Math.min(5, base + (isN ? 1 : 0));
     }
 
-    // 颜值：有风扇=2星（无风扇=1星），散热器 >200 加 1 星，机箱 >300 加 1 星
+    // 颜值：散热+机箱+风扇总价 > 2000 直接 5 星；否则 有风扇=2星，散热器>200 加 1 星，机箱>300 加 1 星
     function recoLookStars(coolerP, caseP, fanQty) {
+        const fanTotalP = fanQty * fanUnitPrice;
+        if (coolerP + caseP + fanTotalP > 2000) return 5;
         let s = fanQty > 0 ? 2 : 1;
         if (coolerP > 200) s += 1;
         if (caseP > 300) s += 1;
