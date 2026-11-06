@@ -9947,8 +9947,9 @@
         officeStars = ramGB !== null && ramGB >= 64 ? 5 : Math.min(4, officeStars);
 
         // 直播：看 CPU，Intel 同档高一星；i7/i9（含 Ultra 7/9）直接 4 星以上
+        // 注意：cpuName 已由 normalizeFpsModel 去掉空格/横线并转大写（如 I712700KF散、中文原盒I914900KF）
         let liveStars = cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1;
-        if (/i7-|i9-|ultra\s*[79]/i.test(cpuName)) liveStars = Math.max(4, liveStars);
+        if (/(^|[^A-Z0-9])I[79]\d|ULTRA[79]/.test(cpuName)) liveStars = Math.max(4, liveStars);
         const stars = [
             // 网游：看 CPU，AMD 同档高一星，有独立显卡再加一星
             onlineStars,
