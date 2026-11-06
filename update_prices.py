@@ -2281,6 +2281,28 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到技嘉 RTX5060 WF2 MAX OC 8G 风魔 参考型号，映众曜夜X2 V2 价格未更新")
 
+        # 特殊处理：映众 RTX5050 8G 曜夜X2 双风扇 价格跟随"技嘉 RTX5050 WF2 8G 风魔"（2026-11-06 指定，优先级高于源站匹配）
+        # 参考行（技嘉）在目标行（映众）之后，必须作为后置规则读取更新后的价格；行内读取会拿到上一轮旧价
+        yz5050_ref = None
+        for ref_line in lines[start_idx:end_idx]:
+            if '{n:"技嘉 RTX5050 WF2 8G 风魔",' in ref_line:
+                ref_price_match = re.search(r'p:(\d+)', ref_line)
+                if ref_price_match:
+                    yz5050_ref = int(ref_price_match.group(1))
+                    break
+        if yz5050_ref is not None:
+            for i in range(start_idx + 1, end_idx):
+                if '{n:"映众 RTX5050 8G 曜夜X2 双风扇",' in lines[i]:
+                    yz5050_old = re.search(r'p:(\d+)', lines[i])
+                    if yz5050_old and int(yz5050_old.group(1)) != yz5050_ref:
+                        lines[i] = re.sub(r'p:\d+', f'p:{yz5050_ref}', lines[i])
+                        print(f"  ★ 映众曜夜X2 5050 跟随技嘉风魔: ￥{yz5050_old.group(1)} -> ￥{yz5050_ref}")
+                    else:
+                        print(f"  ≡ 映众曜夜X2 5050 价格已正确: ￥{yz5050_ref}")
+                    break
+        else:
+            print("⚠️ 未找到技嘉 RTX5050 WF2 8G 风魔 参考型号，映众曜夜X2 5050 价格未更新")
+
         # 撼讯：参考其他品牌同芯片同显存的价格（在其他品牌价格都更新完之后执行）
         hx_updated, hx_kept = update_hanxun_prices(lines, start_idx, end_idx)
         update_count += hx_updated
