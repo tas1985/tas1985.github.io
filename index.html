@@ -7935,7 +7935,25 @@
                         clonedContainer.style.overflow = 'visible';
                         clonedContainer.style.position = 'static';
                     }
-                    
+
+                    // 手机模式与电脑模式统一：截图时压缩右栏与标题宽度（内联 !important，避免被手机模式样式/媒体查询覆盖）
+                    if (clonedContainer) {
+                        clonedContainer.style.setProperty('width', '946px', 'important');
+                        clonedContainer.style.setProperty('min-width', '946px', 'important');
+                        clonedContainer.style.setProperty('max-width', '946px', 'important');
+                        clonedContainer.style.setProperty('display', 'flex', 'important');
+                        clonedContainer.style.setProperty('flex-wrap', 'wrap', 'important');
+                    }
+                    const clonedFpsPanel = clonedDoc.querySelector('.fps-panel');
+                    if (clonedFpsPanel) {
+                        clonedFpsPanel.style.setProperty('flex', '0 0 170px', 'important');
+                        clonedFpsPanel.style.setProperty('width', '170px', 'important');
+                        clonedFpsPanel.style.setProperty('min-width', '170px', 'important');
+                        clonedFpsPanel.style.setProperty('padding', '6px', 'important');
+                        clonedFpsPanel.style.setProperty('position', 'static', 'important');
+                        clonedFpsPanel.style.setProperty('margin-top', '0', 'important');
+                    }
+
                     // 确保备注栏样式正确
                     if (clonedRemark) {
                         clonedRemark.style.whiteSpace = 'pre-wrap';
@@ -8573,7 +8591,25 @@
                         clonedContainer.style.overflow = 'visible';
                         clonedContainer.style.position = 'static';
                     }
-                    
+
+                    // 手机模式与电脑模式统一：截图时压缩右栏与标题宽度（内联 !important，避免被手机模式样式/媒体查询覆盖）
+                    if (clonedContainer) {
+                        clonedContainer.style.setProperty('width', '946px', 'important');
+                        clonedContainer.style.setProperty('min-width', '946px', 'important');
+                        clonedContainer.style.setProperty('max-width', '946px', 'important');
+                        clonedContainer.style.setProperty('display', 'flex', 'important');
+                        clonedContainer.style.setProperty('flex-wrap', 'wrap', 'important');
+                    }
+                    const clonedFpsPanel = clonedDoc.querySelector('.fps-panel');
+                    if (clonedFpsPanel) {
+                        clonedFpsPanel.style.setProperty('flex', '0 0 170px', 'important');
+                        clonedFpsPanel.style.setProperty('width', '170px', 'important');
+                        clonedFpsPanel.style.setProperty('min-width', '170px', 'important');
+                        clonedFpsPanel.style.setProperty('padding', '6px', 'important');
+                        clonedFpsPanel.style.setProperty('position', 'static', 'important');
+                        clonedFpsPanel.style.setProperty('margin-top', '0', 'important');
+                    }
+
                     if (clonedRemark) {
                         clonedRemark.style.whiteSpace = 'pre-wrap';
                         clonedRemark.style.wordWrap = 'break-word';
