@@ -1941,11 +1941,13 @@ def update_gpu_prices():
             else:
                 pos += 1
         
-        # 特殊处理：RTX5060TI 16G 所有型号（含微星、华硕雪豹）统一固定为 6650
-        # 2026-10-30 指定统一价 6799；2026-11-05 改为 6650；如需恢复按源站/战斧DUO价格跟随，删除本段即可
+        # 特殊处理：RTX5060TI 16G 源站未匹配到的型号统一固定为 6650
+        # 2026-10-30 指定统一价 6799；2026-11-05 改为 6650；2026-11-06 起源站价格优先，仅兜底未匹配型号
         RTX5060TI_16G_FIXED_PRICE = 6650
         special_count = 0
         for i in range(start_idx + 1, end_idx):
+            if i in source_matched_positions:
+                continue
             line = lines[i]
             if '{n:"' in line and '",p:' in line:
                 model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
@@ -2041,6 +2043,8 @@ def update_gpu_prices():
         msi_count = 0
         if msi_ref:
             for i in range(start_idx + 1, end_idx):
+                if i in source_matched_positions:
+                    continue
                 line = lines[i]
                 if '{n:"' in line and '",p:' in line:
                     model_match = re.search(r'{n:"([^"]+)",p:(\d+)}', line)
@@ -2091,6 +2095,8 @@ def update_gpu_prices():
         if rtx5060_8g_ref_price is not None:
             msi5060_count = 0
             for i in range(start_idx + 1, end_idx):
+                if i in source_matched_positions:
+                    continue
                 line = lines[i]
                 if '{n:"' not in line or '",p:' not in line:
                     continue
@@ -2131,6 +2137,8 @@ def update_gpu_prices():
         if rtx3050_ref_price is not None:
             rtx3050_count = 0
             for i in range(start_idx + 1, end_idx):
+                if i in source_matched_positions:
+                    continue
                 line = lines[i]
                 if '{n:"' not in line or '",p:' not in line:
                     continue
@@ -2171,6 +2179,8 @@ def update_gpu_prices():
         if rtx5050_ref_price is not None:
             rtx5050_count = 0
             for i in range(start_idx + 1, end_idx):
+                if i in source_matched_positions:
+                    continue
                 line = lines[i]
                 if '{n:"' not in line or '",p:' not in line:
                     continue
@@ -2216,6 +2226,8 @@ def update_gpu_prices():
         if rtx5060_8g_ref_price2 is not None:
             rtx5060_8g_count = 0
             for i in range(start_idx + 1, end_idx):
+                if i in source_matched_positions:
+                    continue
                 line = lines[i]
                 if '{n:"' not in line or '",p:' not in line:
                     continue
