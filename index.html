@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -9806,7 +9806,7 @@
         { n: "3A", tip: "看显卡，N 卡同档高一星" },
         { n: "直播", tip: "看 CPU，Intel 同档高一星" },
         { n: "剪辑", tip: "同直播，N 卡 5050 以上加一星" },
-        { n: "科研", tip: "固态≥1T=4星，内存≥64G=5星" },
+        { n: "科研", tip: "固态≥1T=4星（AMD低端U=3星），内存≥64G=5星" },
         { n: "建模", tip: "同剪辑" },
         { n: "渲染", tip: "同 3A" },
         { n: "AI部署", tip: "同 3A，16G 显存以上加两星" },
@@ -9941,10 +9941,13 @@
         // AI：同 3A，16G 显存及以上再加两星
         const aiStars = gpuIndex !== null
             ? Math.min(5, gpuStars + (recoGpuVram(vgaValue) >= 16 ? 2 : 0)) : 1;
-        // 科研：固态 ≥1T 直接给 4 星；低于 1T 在直播基础上扣一星；内存 ≥64G 才能五星
+        // 科研：固态 ≥1T 给 4 星（AMD 低端 U 即性能系数 <1.15 的型号封顶 3 星）；
+        // 低于 1T 在直播基础上扣一星；内存 ≥64G 才能五星
         let officeStars = cpuFactor !== null ? recoCpuWorkStars(cpuFactor, isAmd, false) : 1;
         const ssdTB = recoSsdTB(ssdValue);
-        if (ssdTB !== null && ssdTB >= 1) officeStars = 4;
+        if (ssdTB !== null && ssdTB >= 1) {
+            officeStars = (isAmd && cpuFactor !== null && cpuFactor < 1.15) ? 3 : 4;
+        }
         else if (ssdTB !== null && ssdTB < 1) officeStars = Math.max(1, officeStars - 1);
         const ramGB = recoRamGB(ramValue);
         officeStars = ramGB !== null && ramGB >= 64 ? 5 : Math.min(4, officeStars);
