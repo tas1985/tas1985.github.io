@@ -1533,17 +1533,21 @@ def update_ssd_prices():
             
             # 准备新SSD数据（只包含不在HTML文件中的新硬盘）
             existing_names = set()
-            # 收集HTML文件中已存在的SSD名称
+            existing_keys = set()
+            # 收集HTML文件中已存在的SSD名称与型号key，用于去重
             for line in lines:
                 match = re.search(r'{n:"([^"]+)",p:\d+}', line)
                 if match:
-                    existing_names.add(match.group(1))
+                    nm = match.group(1)
+                    existing_names.add(nm)
+                    existing_keys.add(extract_ssd_exact_key(nm))
             
             new_ssd_lines = []
             
             for ssd in ssd_list:
-                # 只添加不在HTML文件中的新SSD
-                if ssd["name"] not in existing_names:
+                # 只添加不在HTML文件中的新SSD：名称未出现 且 型号key未出现（避免改名后重复追加）
+                ssd_key = extract_ssd_exact_key(ssd["name"])
+                if ssd["name"] not in existing_names and (not ssd_key or ssd_key not in existing_keys):
                     # 应用容量加成
                     bonus = get_ssd_capacity_bonus(ssd["name"])
                     final_price = ssd["price"] + bonus
