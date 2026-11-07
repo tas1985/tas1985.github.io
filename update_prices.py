@@ -1353,7 +1353,10 @@ def find_next_non_ssd_line(lines, start_pos):
     return pos
 
 def get_ssd_capacity_bonus(name):
-    """根据SSD容量返回价格加成：1T+50，2T+100"""
+    """根据SSD容量返回价格加成：1T+50，2T+100（雷克沙不享受容量加成）"""
+    # 雷克沙固态不再享受容量加成（1T 不加 +50，2T 不加 +100）
+    if '雷克沙' in name or 'LEXAR' in name.upper():
+        return 0
     name_upper = name.upper()
     if '1T' in name_upper and not ('2T' in name_upper or '4T' in name_upper or '8T' in name_upper or '16T' in name_upper):
         return 50
@@ -1411,11 +1414,12 @@ def update_ssd_prices():
             "佰维 NV7400 1T TLC颗粒 读速7400MB/s": {"adjust": -90,  "base_price": nv7400_1t_price},
             "佰维 NV7400 2T TLC颗粒 读速7400MB/s": {"adjust": -300, "base_price": nv7400_2t_price},
             # ---- 雷克沙 NQ790 / NM710：爬取源没有这两个型号，用雷神 THOR 作基准 ----
+            # 注意：雷克沙不享受容量加成，公式 = base_price + adjust
             # NM710 1T = THOR 1T（同代 PCIe4.0，性能接近，用同一爬取价）
             "雷克沙 NM710 1T PCIE4.0 5000/4000":   {"adjust": 0,    "base_price": thor_1t_price},
-            # NQ790 1T 比 THOR 1T 略贵（QLC 高寿命），HTML 现价 950 = 899 + 1 + 50
+            # NQ790 1T 比 THOR 1T 略贵（QLC 高寿命），现价 900 = 899 + 1
             "雷克沙 NQ790 1T PCIE4.0 读7000 写6000 QLC": {"adjust": 1, "base_price": thor_1t_price},
-            # NQ790 2T 比 THOR 2T 略便宜（QLC vs TLC），HTML 现价 1699 = 1660 - 61 + 100
+            # NQ790 2T 比 THOR 2T 略便宜（QLC vs TLC），现价 1599 = 1660 - 61
             "雷克沙 NQ790 2T PCIE4.0 读7000 写6000 QLC": {"adjust": -61, "base_price": thor_2t_price},
             # ---- 西数 SN850X 2T = 4T 价格 / 2，adjust -100 用于抵消 2T 容量加成 ----
             "西数 黑盘 SN850X 2T PCIE 4.0 读7300写6600": {"adjust": -100, "base_price": sn850x_2t_price},
