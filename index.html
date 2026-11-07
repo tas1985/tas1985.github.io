@@ -628,7 +628,7 @@
         /* 截图专用：右栏收窄后收紧图标、游戏名与帧数文字，避免文字挤压溢出 */
         body.shot-desktop .fps-ico{ width:24px !important; height:24px !important; flex:0 0 24px !important; font-size:8px !important; }
         /* 截图专用：浏览器最小字号限制会使 font-size<12px 不生效，改用 transform:scale 缩放文字（html2canvas支持），12px*0.917≈11px；以底边为缩放基点保证与帧数数字底边齐平 */
-        body.shot-desktop .fps-game{ font-size:12px !important; line-height:16px !important; letter-spacing:0 !important; overflow:visible !important; text-overflow:clip !important; flex:1 1 auto !important; min-width:0 !important; padding-right:6px !important; transform:scale(0.917) !important; transform-origin:left bottom !important; }
+        body.shot-desktop .fps-game{ font-size:12px !important; line-height:16px !important; letter-spacing:1px !important; overflow:visible !important; text-overflow:clip !important; flex:1 1 auto !important; min-width:0 !important; padding-right:6px !important; transform:scale(0.917) !important; transform-origin:left bottom !important; }
         body.shot-desktop.shot-mobile .fps-game{ transform:scale(1) !important; transform-origin:left bottom !important; }
         body.shot-desktop .fps-val{ font-size:12px !important; line-height:16px !important; font-family:"Microsoft YaHei","微软雅黑","PingFang SC",sans-serif !important; transform:scale(0.9) !important; transform-origin:right bottom !important; }
         body.shot-desktop .fps-val i{ font-size:8px !important; margin-left:1px !important; }
