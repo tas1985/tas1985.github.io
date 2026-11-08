@@ -98,8 +98,11 @@ RAM_ASC_TUF_32G_DELTA = -100  # TUF 32G 16*2 -100
 def ram_price_adjust(name, price):
     """阿斯加特内存价格调整：
     - TUF 16G 8*2 -50；TUF 32G 16*2 -100；其他 TUF 默认 -50
+    - 女武神 +100
     - 普通阿斯加特 +RAM_ASC_TECH_ADD
     - 其他不变"""
+    if "阿斯加特" in name and "女武神" in name:
+        return price + 100
     if "阿斯加特" in name and "TUF" in name.upper():
         n = name.upper()
         if "32G" in n and ("16*2" in n or "16G*2" in n):
