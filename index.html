@@ -6016,13 +6016,13 @@
                     progressDone++;
                     if (withProgress) updateProgress(progressDone, cachedItems.length);
                     try {
-                        const headResp = await fetchTO(encodeURI(item.src), { method: 'HEAD' }, 10000);
+                        const headResp = await fetchTO(item.src, { method: 'HEAD' }, 10000);
                         if (!headResp || !headResp.ok) continue;
                         const remoteEtag = headResp.headers.get('ETag') || '';
                         // ETag 一致 → 仓库图片未变，跳过
                         if (rec.etag && remoteEtag && rec.etag === remoteEtag) continue;
                         // ETag 变了（或旧缓存没有 ETag）→ 重新下载替换缓存
-                        const getResp = await fetchTO(encodeURI(item.src), {}, 20000);
+                        const getResp = await fetchTO(item.src, {}, 20000);
                         if (!getResp || !getResp.ok) continue;
                         const blob = await getResp.blob();
                         const etag = getResp.headers.get('ETag') || remoteEtag || '';
@@ -6147,8 +6147,8 @@
                     img.onerror = function() {
                         resolve();
                     };
-                    // 对URL进行编码，处理中文文件名
-                    const encodedSrc = encodeURI(item.src);
+                    // item.src 已由 buildImgUrl 用 encodeURIComponent 编码，无需再编码
+                    const encodedSrc = item.src;
                     img.src = encodedSrc;
                 });
             });
@@ -6564,7 +6564,7 @@
             let lastErr = null;
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
                 try {
-                    const encodedSrc = encodeURI(item.src);
+                    const encodedSrc = item.src;
                     const resp = await fetchWithTimeout(encodedSrc, { mode: 'cors' });
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const blob = await resp.blob();
