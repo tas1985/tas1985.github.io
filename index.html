@@ -6508,7 +6508,7 @@
         let successCount = 0;
         let failCount = 0;
         let skippedCount = 0;
-        const maxConcurrent = 24; // 提高并发数（GitHub Pages 支持 HTTP/2，可承载更高并发）
+        const maxConcurrent = 12; // 降低并发数，减少瞬时超时失败
         let progressDirty = false;
         let progressRafId = null;
         // 节流进度更新：避免每张都触发 DOM 重排
@@ -6534,7 +6534,7 @@
         }
 
         // 带超时的 fetch，使用 AbortController 确保超时后连接被释放
-        function fetchWithTimeout(url, options, timeout = 10000) {
+        function fetchWithTimeout(url, options, timeout = 20000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeout);
             return fetch(url, { ...options, signal: controller.signal })
@@ -6560,7 +6560,7 @@
                 scheduleProgressUpdate();
                 return;
             }
-            const maxRetries = 1; // 失败重试1次，应对网络抖动
+            const maxRetries = 3; // 失败重试3次，应对网络抖动
             let lastErr = null;
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
                 try {
