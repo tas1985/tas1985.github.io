@@ -2581,6 +2581,7 @@ def update_ram_prices_new():
             ("光威 天策 32G（16*2）3200 白色", "金百达 银爵 32G 16x2 3200 D4 C16"),
             ("阿斯加特 弗雷 16G 8*2 3200 黑甲", "金百达 银爵 16G 8x2 3200 D4 C16"),
             ("阿斯加特 弗雷 32G 16*2 3200 黑甲", "金百达 银爵 32G 16x2 3200 D4 C16"),
+            ("阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲", "金百达 银爵 32G 16x2 3200 D4 C16"),
         ]
         for target_keyword, ref_keyword in special_ram_ref_pairs:
             ref_price = None
@@ -3066,6 +3067,7 @@ def update_exist_ram_prices():
             ("光威 天策 32G（16*2）3200 白色", "金百达 银爵 32G 16x2 3200 D4 C16"),
             ("阿斯加特 弗雷 16G 8*2 3200 黑甲", "金百达 银爵 16G 8x2 3200 D4 C16"),
             ("阿斯加特 弗雷 32G 16*2 3200 黑甲", "金百达 银爵 32G 16x2 3200 D4 C16"),
+            ("阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲", "金百达 银爵 32G 16x2 3200 D4 C16"),
         ]
         for gw_keyword, ref_keyword in special_ram_ref_pairs_exist:
             ref_price = None
