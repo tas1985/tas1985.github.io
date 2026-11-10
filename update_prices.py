@@ -1433,9 +1433,9 @@ def update_ssd_prices():
             # NQ790 2T 比 THOR 2T 略便宜（QLC vs TLC），现价 1599 = 1660 - 61
             "雷克沙 NQ790 2T PCIE4.0 读7000 写6000 QLC": {"adjust": -61, "base_price": thor_2t_price},
             # ---- 雷克沙 战神 ARES 2T/4T：以 ARES 1T 源价为基准，按固定差价浮动 ----
-            # 公式：2T = ares_1t + 900（基准 1899 = 999 + 900），4T = ares_1t + 2681（基准 3680 = 999 + 2681）
+            # 公式：2T = ares_1t + 850（基准 1849 = 999 + 850），4T = ares_1t + 2681（基准 3680 = 999 + 2681）
             # 源站 1T 涨跌多少，2T/4T 同步涨跌多少；雷克沙不享受容量加成
-            "雷克沙 战神ARES 2T 读7400 PCIE 4.0 TLC颗粒": {"adjust": 900,  "base_price": ares_1t_price},
+            "雷克沙 战神ARES 2T 读7400 PCIE 4.0 TLC颗粒": {"adjust": 850,  "base_price": ares_1t_price},
             "雷克沙 战神ARES 4T 读7400 PCIE 4.0":          {"adjust": 2681, "base_price": ares_1t_price},
             # ---- 西数 SN850X 2T = 4T 价格 / 2，adjust -100 用于抵消 2T 容量加成 ----
             "西数 黑盘 SN850X 2T PCIE 4.0 读7300写6600": {"adjust": -100, "base_price": sn850x_2t_price},
