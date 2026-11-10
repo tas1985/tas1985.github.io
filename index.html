@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -3155,7 +3155,7 @@
         ],
         ram: [
             {n:"阿斯加特 TUF联名 16G 8*2 3200 C18 黑橙甲",p:749},
-            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1350},
+            {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1299},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲",p:699},
             {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲",p:1299},
             {n:"阿斯加特 TUF联名 金伦加 8*2 3200 C18 白色",p:699},
@@ -10520,6 +10520,11 @@
                         data[type][gwModelIndex].p = newPrice;
                         updateCount++;
                     }
+                    const tufModelIndex = data[type].findIndex(item => item.n.trim() === "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲");
+                    if (tufModelIndex !== -1) {
+                        data[type][tufModelIndex].p = newPrice;
+                        updateCount++;
+                    }
                 }
             } else {
                 notFoundList.push(`${typeName}: ${name} (型号未找到)`);
@@ -10752,6 +10757,7 @@
             if(eq(name,"金百达 银爵 32G 16x2 3200 D4 C16")){
                 push("ram","光威 天策 32G（16*2）3200 白色 ", price, "与银爵32G同价");
                 push("ram","阿斯加特 弗雷 32G 16*2 3200 黑甲", price, "与银爵32G同价");
+                push("ram","阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲", price, "与银爵32G同价");
             }
             if(eq(name,"金百达 银爵 32G 16x2 3600 D4 C18")){
                 push("ram","光威 天策 64G（32*2）3200 白色 ", price*2, "天策64G=银爵3600×2");
