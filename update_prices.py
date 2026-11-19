@@ -2007,9 +2007,22 @@ def update_gpu_prices():
                             print(f"  ★ RTX5070 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5070_FIXED_PRICE}")
         print(f"✅ RTX5070 统一固定价 ￥{RTX5070_FIXED_PRICE} 兜底更新 {rtx5070_count} 个未匹配型号（源站价格优先）")
 
-        # 特殊处理：RTX5070TI 源站未匹配到的型号统一固定为 13599
+        # 特殊处理：RTX5070TI 源站未匹配到的型号，统一按源站中价格最高的 RTX5070TI 更新
         # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
-        RTX5070TI_FIXED_PRICE = 13599
+        rtx5070ti_source_prices = []
+        for source_name, source_price in gpu_dict.items():
+            if "rtx5070ti" in re.sub(r'\s+', '', source_name).lower():
+                try:
+                    price_value = int(float(source_price))
+                except (TypeError, ValueError):
+                    continue
+                if price_value > 0:
+                    rtx5070ti_source_prices.append(price_value)
+        RTX5070TI_FIXED_PRICE = max(rtx5070ti_source_prices) if rtx5070ti_source_prices else 13599
+        if rtx5070ti_source_prices:
+            print(f"📊 源站 RTX5070TI 共 {len(rtx5070ti_source_prices)} 个价格，最高价 ￥{RTX5070TI_FIXED_PRICE}，用于未匹配型号兜底")
+        else:
+            print(f"⚠️ 源站未获取到 RTX5070TI 价格，兜底价回退为 ￥{RTX5070TI_FIXED_PRICE}")
         rtx5070ti_count = 0
         for i in range(start_idx + 1, end_idx):
             if i in source_matched_positions:
@@ -2026,7 +2039,7 @@ def update_gpu_prices():
                             lines[i] = re.sub(r'p:\d+', f'p:{RTX5070TI_FIXED_PRICE}', line)
                             rtx5070ti_count += 1
                             print(f"  ★ RTX5070TI 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5070TI_FIXED_PRICE}")
-        print(f"✅ RTX5070TI 统一固定价 ￥{RTX5070TI_FIXED_PRICE} 兜底更新 {rtx5070ti_count} 个未匹配型号（源站价格优先）")
+        print(f"✅ RTX5070TI 统一按源站最高价 ￥{RTX5070TI_FIXED_PRICE} 兜底更新 {rtx5070ti_count} 个未匹配型号（源站价格优先）")
 
         # 特殊处理：RTX5080 源站未匹配到的型号统一固定为 18599
         # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
