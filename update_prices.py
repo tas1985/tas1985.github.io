@@ -2041,9 +2041,22 @@ def update_gpu_prices():
                             print(f"  ★ RTX5070TI 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5070TI_FIXED_PRICE}")
         print(f"✅ RTX5070TI 统一按源站最高价 ￥{RTX5070TI_FIXED_PRICE} 兜底更新 {rtx5070ti_count} 个未匹配型号（源站价格优先）")
 
-        # 特殊处理：RTX5080 源站未匹配到的型号统一固定为 18599
+        # 特殊处理：RTX5080 源站未匹配到的型号，统一按源站中 RTX5080 的平均价格更新
         # 源站价格优先：已从源站匹配到价格的型号不覆盖，仅兜底未匹配型号
-        RTX5080_FIXED_PRICE = 18599
+        rtx5080_source_prices = []
+        for source_name, source_price in gpu_dict.items():
+            if "rtx5080" in re.sub(r'\s+', '', source_name).lower():
+                try:
+                    price_value = int(float(source_price))
+                except (TypeError, ValueError):
+                    continue
+                if price_value > 0:
+                    rtx5080_source_prices.append(price_value)
+        RTX5080_FIXED_PRICE = round(sum(rtx5080_source_prices) / len(rtx5080_source_prices)) if rtx5080_source_prices else 18599
+        if rtx5080_source_prices:
+            print(f"📊 源站 RTX5080 共 {len(rtx5080_source_prices)} 个价格，平均价 ￥{RTX5080_FIXED_PRICE}，用于未匹配型号兜底")
+        else:
+            print(f"⚠️ 源站未获取到 RTX5080 价格，兜底价回退为 ￥{RTX5080_FIXED_PRICE}")
         rtx5080_count = 0
         for i in range(start_idx + 1, end_idx):
             if i in source_matched_positions:
@@ -2059,8 +2072,8 @@ def update_gpu_prices():
                         if old_price != RTX5080_FIXED_PRICE:
                             lines[i] = re.sub(r'p:\d+', f'p:{RTX5080_FIXED_PRICE}', line)
                             rtx5080_count += 1
-                            print(f"  ★ RTX5080 统一定价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5080_FIXED_PRICE}")
-        print(f"✅ RTX5080 统一固定价 ￥{RTX5080_FIXED_PRICE} 兜底更新 {rtx5080_count} 个未匹配型号（源站价格优先）")
+                            print(f"  ★ RTX5080 按源站均价: {model_name[:40]}... ￥{old_price} -> ￥{RTX5080_FIXED_PRICE}")
+        print(f"✅ RTX5080 统一按源站平均价 ￥{RTX5080_FIXED_PRICE} 兜底更新 {rtx5080_count} 个未匹配型号（源站价格优先）")
 
         # 特殊处理：微星 RTX5060TI 8G 价格按"七彩虹 RTX5060TI 8G 战斧 DUO 双扇"价格+49更新
         # 16G 已在上方统一固定价处理，此处跳过
