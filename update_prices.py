@@ -93,11 +93,12 @@ RAM_EXCLUDE_LIST = ["科摩思", "现代", "梵想"]
 RAM_ASC_TECH_ADD = 0
 RAM_ASC_TUF_DELTA = -50  # 阿斯加特 TUF 联名款默认减 50 元
 RAM_ASC_TUF_16G_DELTA = -50   # TUF 16G 8*2 -50
+RAM_ASC_TUF_16G_3200_DELTA = -100  # TUF 16G 8*2 3200 黑橙甲：源站价 -100（在 -50 基础上再减 50）
 RAM_ASC_TUF_32G_DELTA = -100  # TUF 32G 16*2 -100
 
 def ram_price_adjust(name, price):
     """阿斯加特内存价格调整：
-    - TUF 16G 8*2 -50；TUF 32G 16*2 -100；其他 TUF 默认 -50
+    - TUF 16G 8*2 3200 -100；TUF 16G 8*2 -50；TUF 32G 16*2 -100；其他 TUF 默认 -50
     - 女武神 I代 +100；女武神 II代 +200
     - 普通阿斯加特 +RAM_ASC_TECH_ADD
     - 其他不变"""
@@ -111,6 +112,8 @@ def ram_price_adjust(name, price):
         n = name.upper()
         if "32G" in n and ("16*2" in n or "16G*2" in n):
             return price + RAM_ASC_TUF_32G_DELTA
+        if "16G" in n and "3200" in n and ("8*2" in n or "8G*2" in n):
+            return price + RAM_ASC_TUF_16G_3200_DELTA
         if "16G" in n and ("8*2" in n or "8G*2" in n):
             return price + RAM_ASC_TUF_16G_DELTA
         return price + RAM_ASC_TUF_DELTA
