@@ -2292,6 +2292,9 @@ def update_gpu_prices():
                 # 参考型号本身不参与统价，保持源站价格
                 if model_name == "七彩虹 RTX5060 8G 战斧 DUO 双扇":
                     continue
+                # 华硕 PRIME 5060 8G 固定为战斧DUO+600（见下方规则），不参与 +50 统价
+                if model_name == "华硕 PRIME RTX5060 8G 大师三风扇黑色":
+                    continue
                 chip_key = extract_gpu_chip_key(model_name)
                 if not chip_key:
                     continue
@@ -2311,6 +2314,17 @@ def update_gpu_prices():
             print(f"✅ RTX5060 8G 统一按七彩虹战斧DUO价格+50更新 {rtx5060_8g_count} 个型号（参考价￥{rtx5060_8g_ref_price2}+50=￥{rtx5060_8g_ref_price2 + 50}）")
         else:
             print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，RTX5060 8G价格未更新")
+
+        # 特殊处理：华硕 PRIME RTX5060 8G 大师三风扇黑色 固定按"七彩虹 RTX5060 8G 战斧 DUO 双扇"价格+600
+        if rtx5060_8g_ref_price2 is not None:
+            for i in range(start_idx + 1, end_idx):
+                if '{n:"华硕 PRIME RTX5060 8G 大师三风扇黑色",' in lines[i]:
+                    asus_price_match = re.search(r'p:(\d+)', lines[i])
+                    asus_new_price = rtx5060_8g_ref_price2 + 600
+                    if asus_price_match and int(asus_price_match.group(1)) != asus_new_price:
+                        print(f"  ★ 华硕PRIME RTX5060 8G: ￥{asus_price_match.group(1)} -> ￥{asus_new_price}（七彩虹战斧DUO ￥{rtx5060_8g_ref_price2}+600）")
+                        lines[i] = re.sub(r'p:\d+', f'p:{asus_new_price}', lines[i])
+                    break
 
         # 特殊处理：映众 RTX5060 8G 曜夜X2 V2 双风扇 价格跟随"技嘉 RTX5060 WF2 MAX OC 8G 风魔"（2026-11-06 指定，优先级高于源站匹配）
         # 参考行（技嘉）在目标行（映众）之后，必须作为后置规则读取更新后的价格；行内读取会拿到上一轮旧价
