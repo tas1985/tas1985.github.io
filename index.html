@@ -3854,6 +3854,7 @@
             {n:"七彩虹 RTX5060TI 16G ULTRA W DUO OC 白色双扇",p:6200},
             {n:"双敏6500XT 暴雪白色",p:1198},
             {n:"华硕 PRIME RTX5060TI 16G 大师三风扇黑色",p:6200},
+            {n:"华硕 PRIME RTX5060 8G 大师三风扇黑色",p:4050},
             {n:"华硕 RTX5060TI 16G DUAL 雪豹 黑色",p:6200},
             {n:"微星-RTX5070Ti 16G VENTUS  3X OC",p:12099},
             {n:"七彩虹 RTX5060 8G ULTRA DUO OC 黑色双扇",p:3710},
@@ -5365,6 +5366,7 @@
         'Quadro RTX A2000-12G 工包': 'Quadro RTX A2000-12G 工包',
         'Quadro RTX A4000 16G 工包': 'Quadro RTX A4000 16G 工包',
         '华硕 PRIME RTX5060TI 16G 大师三风扇黑色': '华硕 PRIME RTX5060TI 16G 大师三风扇黑色',
+        '华硕 PRIME RTX5060 8G 大师三风扇黑色': '华硕 PRIME RTX5060TI 16G 大师三风扇黑色',
         '撼讯 RX 550-4G 红龙': '撼讯 RX 550-4G 红龙',
         '撼讯 RX9070XT 16G 红魔': '撼讯 RX9070XT 16G 红魔',
         '撼讯 RX9070XT 16G 暗黑犬': '撼讯 RX9070XT 16G 暗黑犬',
@@ -10783,6 +10785,7 @@
                 });
             }
             if(eq(name,"七彩虹 RTX5060 8G 战斧 DUO 双扇")){
+                push("vga","华硕 PRIME RTX5060 8G 大师三风扇黑色", price+600, "华硕PRIME5060=战斧+600");
                 data.vga.forEach(it=>{
                     const nn = it.n.replace(/\s+/g,"").toUpperCase();
                     if(!nn.includes("RTX5060") || nn.includes("RTX5060TI")) return;
