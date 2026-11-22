@@ -913,8 +913,8 @@ def match_manmanbuy_price(model_name, results):
         if not title or not price or any(w in title for w in bad_words):
             continue
         title_norm = _norm_gpu_text(title)
-        # 排除 +650W、Cube750W、电源套装等非单卡价格
-        if re.search(r"\+\s*(?:蓝宝石)?\s*(?:CUBE)?\s*\d{2,4}W|电源|套装", title_norm):
+        # 排除 +650W、Cube750W、电源/金牌电源套装等非单卡价格
+        if re.search(r"(?:CUBE)?\s*\d{2,4}W|电源|套装|全模|金牌电源", title_norm, re.IGNORECASE):
             continue
         # 多型号商品以标题最后标出的芯片为所选规格，避免误取其它芯片价格
         chip_matches = list(re.finditer(GPU_CHIP_TOKEN_PATTERN, title_norm))
