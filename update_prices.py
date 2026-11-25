@@ -96,6 +96,15 @@ RAM_ASC_TUF_16G_DELTA = -50   # TUF 16G 8*2 -50
 RAM_ASC_TUF_16G_3200_DELTA = -100  # TUF 16G 8*2 3200 黑橙甲：源站价 -100（在 -50 基础上再减 50）
 RAM_ASC_TUF_32G_DELTA = -100  # TUF 32G 16*2 -100
 RAM_GLOWAY_ADD = 99  # 光威内存：在当前更新逻辑结果上再 +99
+RAM_TUF_32G_3200_ADD = 99  # 阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲：金百达银爵 32G 16x2 3200 C16 价 +99
+
+def ram_ref_sync_extra(target_keyword):
+    """参考价同步时的额外加价：光威 +99；TUF联名 32G 3200 黑甲 +99；其他 0"""
+    if "光威" in target_keyword:
+        return RAM_GLOWAY_ADD
+    if "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲" in target_keyword:
+        return RAM_TUF_32G_3200_ADD
+    return 0
 
 def ram_price_adjust(name, price):
     """阿斯加特内存价格调整：
@@ -2591,8 +2600,8 @@ def update_ram_prices_new():
             if ref_price is None:
                 print(f"  ⚠️ 特殊更新跳过：未找到参考型号 {ref_keyword}，{target_keyword} 保留原价")
                 continue
-            # 光威内存：在参考价基础上再加 +99
-            synced_price = ref_price + (RAM_GLOWAY_ADD if "光威" in target_keyword else 0)
+            # 光威内存 +99；TUF联名 32G 3200 黑甲 +99
+            synced_price = ref_price + ram_ref_sync_extra(target_keyword)
             for ref_pos in range(start_idx, end_idx + 1):
                 if target_keyword in lines[ref_pos]:
                     old_target_match = re.search(r'p:(\d+)', lines[ref_pos])
@@ -3079,8 +3088,8 @@ def update_exist_ram_prices():
             if ref_price is None:
                 print(f"  ⚠ 最终同步跳过：未找到参考型号 {ref_keyword}，{gw_keyword} 保留原价")
                 continue
-            # 光威内存：在参考价基础上再加 +99
-            synced_price = ref_price + (RAM_GLOWAY_ADD if "光威" in gw_keyword else 0)
+            # 光威内存 +99；TUF联名 32G 3200 黑甲 +99
+            synced_price = ref_price + ram_ref_sync_extra(gw_keyword)
             for idx, temp_line in enumerate(lines):
                 if gw_keyword in temp_line and re.search(r'p:\d+', temp_line):
                     old_gw_match = re.search(r'p:(\d+)', temp_line)
