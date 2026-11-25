@@ -2246,6 +2246,10 @@ def update_gpu_prices():
                         if "RTX5050" in model_upper and "RTX5050TI" not in model_upper:
                             new_price += 149
                             print(f"  💰 RTX5050加价+149: {model_name[:40]}... ￥{new_price}")
+                        # RX7650GRE 全部源价 +400
+                        if "7650GRE" in model_upper:
+                            new_price += 400
+                            print(f"  💰 RX7650GRE加价+400: {model_name[:40]}... ￥{new_price}")
                         if "微星 RTX5060 8G VENTUS 2X OC WHITE白色" in model_name:
                             new_price += 150
                             print(f"  💰 微星白色版加价+150: {model_name[:40]}... ￥{new_price}")
