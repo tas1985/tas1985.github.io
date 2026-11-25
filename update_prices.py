@@ -830,142 +830,6 @@ def match_smzdm_price(model_name, smzdm_results):
     return None, None
 
 
-def _parse_manmanbuy_gpu_results(html):
-    """解析慢慢买搜索结果，排除会员、淘金币、国补等带条件价格"""
-    if not html:
-        return []
-    soup = BeautifulSoup(html, "html.parser")
-    results = []
-    conditional_words = ("淘金币", "88VIP", "PLUS会员", "会员价", "国补", "补贴",
-                         "优惠券", "凑单", "满减", "定金", "预售")
-    for item in soup.select('[class*="DiscountItemPC_discountItem"]'):
-        title_el = item.select_one('[class*="itemTitle"]')
-        price_el = item.select_one('[class*="itemSubTitle"]')
-        if not title_el or not price_el:
-            continue
-        title = title_el.get_text(" ", strip=True)
-        title = re.sub(r"^(?:精选\s*)?(?:已结束\s*)?", "", title).strip()
-        price_text = price_el.get_text(" ", strip=True)
-        if not title or any(w in title or w in price_text for w in conditional_words):
-            continue
-        price_match = re.search(r"(\d{1,6}(?:\.\d+)?)\s*元", price_text)
-        if not price_match:
-            continue
-        price = int(float(price_match.group(1)))
-        if not 300 <= price <= 100000:
-            continue
-        date_el = item.select_one('[class*="itemTime"]')
-        date_text = date_el.get_text(" ", strip=True) if date_el else ""
-        date_match = re.search(r"\d{2}-\d{2}(?:\s+\d{2}:\d{2})?", date_text)
-        results.append({
-            "title": title,
-            "price": price,
-            "date": date_match.group(0) if date_match else "",
-        })
-    return results
-
-
-def fetch_manmanbuy_gpu_prices(model_name):
-    """按完整型号搜索慢慢买，取近期单卡价格作为源站缺失时的参考"""
-    url = ("https://s.manmanbuy.com/pc/search/result?keyword="
-           + quote(model_name) + "&btnSearch=" + quote("搜索"))
-    headers = dict(HEADERS)
-    headers["Referer"] = "https://www.manmanbuy.com/"
-    html = ""
-    try:
-        res = requests.get(url, headers=headers, timeout=25)
-        res.raise_for_status()
-        res.encoding = "utf-8"
-        html = res.text
-    except Exception as e:
-        print(f"⚠️ 慢慢买 requests 获取失败: {e}")
-
-    results = _parse_manmanbuy_gpu_results(html)
-    if not results and PLAYWRIGHT_AVAILABLE:
-        browser = get_browser()
-        if browser:
-            page = None
-            try:
-                page = browser.new_page()
-                page.goto(url, wait_until="domcontentloaded", timeout=30000)
-                page.wait_for_selector('[class*="DiscountItemPC_discountItem"]', timeout=15000)
-                results = _parse_manmanbuy_gpu_results(page.content())
-            except Exception as e:
-                print(f"⚠️ 慢慢买 Playwright 渲染失败: {e}")
-            finally:
-                if page:
-                    try:
-                        page.close()
-                    except Exception:
-                        pass
-    print(f"🔍 慢慢买搜索「{model_name[:30]}」获取到 {len(results)} 条无条件价格")
-    return results
-
-
-def match_manmanbuy_price(model_name, results):
-    """选最新的同品牌/芯片/显存/系列/配色单卡价格，排除套装及多型号价格歧义"""
-    model_chip = extract_gpu_chip_token(model_name)
-    if not model_chip or not results:
-        return None, None, None
-    model_norm = _norm_gpu_text(model_name)
-    model_vram_match = re.search(r"(?<!\d)(\d{1,2})\s*G(?:B)?(?![A-Z0-9])", model_name.upper())
-    model_vram = str(int(model_vram_match.group(1))) if model_vram_match else ""
-    model_color = extract_gpu_color(model_name)
-    model_brand_match = re.search(GPU_BRAND_PATTERN, model_norm)
-    model_brand = model_brand_match.group(1) if model_brand_match else ""
-    model_tokens = extract_gpu_series_tokens(model_name)
-    bad_words = ("二手", "拆机", "矿卡", "翻新", "租赁", "维修", "整机", "笔记本",
-                 "游戏本", "台式机", "组装电脑", "准系统", "无箱说", "仅拆封")
-    now = time.localtime()
-    candidates = []
-
-    for item in results:
-        title = item.get("title", "")
-        price = item.get("price")
-        if not title or not price or any(w in title for w in bad_words):
-            continue
-        title_norm = _norm_gpu_text(title)
-        # 排除 +650W、Cube750W、电源/金牌电源套装等非单卡价格
-        if re.search(r"(?:CUBE)?\s*\d{2,4}W|电源|套装|全模|金牌电源", title_norm, re.IGNORECASE):
-            continue
-        # 多型号商品以标题最后标出的芯片为所选规格，避免误取其它芯片价格
-        chip_matches = list(re.finditer(GPU_CHIP_TOKEN_PATTERN, title_norm))
-        if not chip_matches or chip_matches[-1].group(0).replace(" ", "") != model_chip:
-            continue
-        # 显存和配色只认最后所选规格，不能拿商品总标题中的其它变体凑匹配
-        selected_norm = title_norm[chip_matches[-1].start():]
-        title_brands = set(re.findall(GPU_BRAND_PATTERN, title_norm))
-        if model_brand and model_brand not in title_brands:
-            continue
-        if model_vram:
-            selected_vram = re.search(r"(\d{1,2})G(?:B)?(?![A-Z])", selected_norm)
-            if not selected_vram or str(int(selected_vram.group(1))) != model_vram:
-                continue
-        title_color = extract_gpu_color(selected_norm)
-        if model_color:
-            if title_color != model_color:
-                continue
-        elif title_color and title_color != "黑":
-            continue
-        if model_tokens and not any(tok in title_norm for tok in model_tokens):
-            continue
-
-        date_match = re.search(r"(\d{2})-(\d{2})", item.get("date", ""))
-        if date_match:
-            month, day = int(date_match.group(1)), int(date_match.group(2))
-            year = now.tm_year - (1 if month > now.tm_mon else 0)
-            date_key = (year, month, day)
-        else:
-            date_key = (0, 0, 0)
-        candidates.append((date_key, title, price, item.get("date", "")))
-
-    if not candidates:
-        return None, None, None
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    _, title, price, date_text = candidates[0]
-    return price, title, date_text
-
-
 def fetch_ram_prices_new():
     """爬取内存价格，返回列表格式（不依赖Playwright）"""
     try:
@@ -2148,7 +2012,6 @@ def update_gpu_prices():
         same_count = 0
         no_match_count = 0
         chip_ref_count = 0
-        manmanbuy_cache = {}  # 慢慢买按完整型号搜索并缓存结果
         smzdm_cache = {}  # smzdm 搜索结果缓存，按芯片型号只请求一次
         source_matched_positions = set()  # 已从源站匹配到价格的行号；5070/5070TI/5080 统价仅兜底未匹配型号
         
@@ -2219,28 +2082,18 @@ def update_gpu_prices():
                             else:
                                 print(f"  ⚠️ 相似度匹配跳过(芯片/显存不一致): {model_name[:30]}... ≈ {best_match[:30]}... ({score}%)")
 
-                    # 方法6：源站未匹配时，慢慢买近期单卡价优先，smzdm 备用
-                    # 均要求品牌/芯片/显存/系列/配色一致；慢慢买排除套装和会员、淘金币等条件价
+                    # 方法6：源站未匹配时，smzdm 近期价兜底
+                    # 要求品牌/芯片/显存/系列/配色一致
                     if new_price is None:
                         chip_token = extract_gpu_chip_token(model_name)
                         if chip_token:
-                            if model_name not in manmanbuy_cache:
-                                manmanbuy_cache[model_name] = fetch_manmanbuy_gpu_prices(model_name)
-                                time.sleep(1)  # 控制请求频率
-                            mm_price, mm_title, mm_date = match_manmanbuy_price(
-                                model_name, manmanbuy_cache[model_name]
-                            )
-                            if mm_price:
-                                new_price = mm_price
-                                print(f"  ✅ 慢慢买回退匹配({mm_date}): {model_name[:40]}... ← {mm_title[:40]}... ￥{mm_price}")
-                            else:
-                                if chip_token not in smzdm_cache:
-                                    smzdm_cache[chip_token] = fetch_smzdm_gpu_prices(chip_token)
-                                    time.sleep(1.5)  # 控制请求频率，降低 smzdm 风控概率
-                                smzdm_price, smzdm_title = match_smzdm_price(model_name, smzdm_cache[chip_token])
-                                if smzdm_price:
-                                    new_price = smzdm_price
-                                    print(f"  ✅ smzdm回退匹配: {model_name[:40]}... ← {smzdm_title[:40]}... ￥{smzdm_price}")
+                            if chip_token not in smzdm_cache:
+                                smzdm_cache[chip_token] = fetch_smzdm_gpu_prices(chip_token)
+                                time.sleep(1.5)  # 控制请求频率，降低 smzdm 风控概率
+                            smzdm_price, smzdm_title = match_smzdm_price(model_name, smzdm_cache[chip_token])
+                            if smzdm_price:
+                                new_price = smzdm_price
+                                print(f"  ✅ smzdm回退匹配: {model_name[:40]}... ← {smzdm_title[:40]}... ￥{smzdm_price}")
 
                     if new_price is not None:
                         source_matched_positions.add(pos)
