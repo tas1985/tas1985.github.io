@@ -3158,10 +3158,10 @@
             {n:"阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲",p:1300},
             {n:"阿斯加特 弗雷 16G 8*2 3200 黑甲",p:580},
             {n:"阿斯加特 弗雷 32G 16*2 3200 黑甲",p:1160},
-            {n:"光威 天策 16G（8*2）3200 白色 ",p:580},
-            {n:"光威 天策 32G（16*2）3200 白色 ",p:1160},
+            {n:"光威 天策 16G（8*2）3200 白色 ",p:679},
+            {n:"光威 天策 32G（16*2）3200 白色 ",p:1259},
             {n:"阿斯加特 TUF联名 金伦加 8*2 3200 C18 白色",p:580},
-            {n:"光威 32GB(16GBx2) 6000 龙武 海力士A-die CL28 星空灯条黑",p:3750},
+            {n:"光威 32GB(16GBx2) 6000 龙武 海力士A-die CL28 星空灯条黑",p:3849},
             {n:"金百达 星刃黑甲 32G(16GBx2) 6800(海力士A-DIEC32 XMP) ",p:3650},
             {n:"阿斯加特 64G(32X2)-D5-6000-Mr-C40 海姆达尔",p:5599},
             {n:"雷克沙DDR5 64G(32X2) 6000灯条",p:5150},
@@ -3176,7 +3176,7 @@
             {n:"金士顿KST 64G（32GX2）-D4-3600 野兽",p:3699},
             {n:"阿斯加特女武II RGB白 64G(32G*2) 6000D5 海A-C30",p:7400},
             {n:"阿斯加特女武II RGB 96G(48G*2) 6400 D5 海M-C32",p:3400},
-            {n:"光威 天策 64G（32*2）3200 白色 ",p:2699},
+            {n:"光威 天策 64G（32*2）3200 白色 ",p:2819},
             {n:"金百达_银爵 32G 6000(16*2)套装 c30 m-die",p:1770},
             {n:"金百达_银爵 32G 6000(16*2)套装 c36 ",p:3300},
             {n:"金百达 银爵 16G 6000 D5 C36 长鑫",p:1650},
@@ -10573,7 +10573,7 @@
                 if (type === "ram" && name.trim() === "金百达 银爵 16G 8x2 3200 D4 C16") {
                     const gwModelIndex = data[type].findIndex(item => item.n.trim() === "光威 天策 16G（8*2）3200 白色 ");
                     if (gwModelIndex !== -1) {
-                        data[type][gwModelIndex].p = newPrice;
+                        data[type][gwModelIndex].p = newPrice + 99;
                         updateCount++;
                     }
                     const jljModelIndex = data[type].findIndex(item => item.n.trim() === "阿斯加特 TUF联名 金伦加 8*2 3200 C18 白色");
@@ -10586,7 +10586,7 @@
                 if (type === "ram" && name.trim() === "金百达 银爵 32G 16x2 3200 D4 C16") {
                     const gwModelIndex = data[type].findIndex(item => item.n.trim() === "光威 天策 32G（16*2）3200 白色 ");
                     if (gwModelIndex !== -1) {
-                        data[type][gwModelIndex].p = newPrice;
+                        data[type][gwModelIndex].p = newPrice + 99;
                         updateCount++;
                     }
                     const tufModelIndex = data[type].findIndex(item => item.n.trim() === "阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲");
@@ -10820,17 +10820,17 @@
         }
         if(type==="ram"){
             if(eq(name,"金百达 银爵 16G 8x2 3200 D4 C16")){
-                push("ram","光威 天策 16G（8*2）3200 白色 ", price, "与银爵16G同价");
+                push("ram","光威 天策 16G（8*2）3200 白色 ", price+99, "与银爵16G同价+99");
                 push("ram","阿斯加特 弗雷 16G 8*2 3200 黑甲", price, "与银爵16G同价");
                 push("ram","阿斯加特 TUF联名 金伦加 8*2 3200 C18 白色", price, "与银爵16G同价");
             }
             if(eq(name,"金百达 银爵 32G 16x2 3200 D4 C16")){
-                push("ram","光威 天策 32G（16*2）3200 白色 ", price, "与银爵32G同价");
+                push("ram","光威 天策 32G（16*2）3200 白色 ", price+99, "与银爵32G同价+99");
                 push("ram","阿斯加特 弗雷 32G 16*2 3200 黑甲", price, "与银爵32G同价");
                 push("ram","阿斯加特 TUF联名 32G 16*2 3200 C18 黑甲", price, "与银爵32G同价");
             }
             if(eq(name,"金百达 银爵 32G 16x2 3600 D4 C18")){
-                push("ram","光威 天策 64G（32*2）3200 白色 ", price*2, "天策64G=银爵3600×2");
+                push("ram","光威 天策 64G（32*2）3200 白色 ", price*2+99, "天策64G=银爵3600×2+99");
             }
         }
         return out;
