@@ -129,6 +129,14 @@ def mb_price_adjust(name, price):
         return price + 69
     return price
 
+CPU_R5_5500_SAN_DELTA = 40  # AMD R5 5500 散：源站价 +40
+def cpu_price_adjust(name, price):
+    """特定型号 CPU 价格调整"""
+    # AMD R5 5500 散 = 源网站价格 +40
+    if "AMD" in name.upper() and "5500" in name and "散" in name:
+        return price + CPU_R5_5500_SAN_DELTA
+    return price
+
 SSD_EXCLUDE_LIST = ["金百达", "金士顿", "西部数据", "现代", "技嘉"]
 SSD_TARGET_LINE = '{n:"品牌SSD 512G（到手10天质保）",p:149},'
 # 新增机箱配置
@@ -1923,7 +1931,7 @@ def update_cpu_accurate():
                         new_price = fuzzy_match_price(model_name, cpu_dict)
                     
                     if new_price is not None:
-                        new_price = int(new_price)
+                        new_price = int(cpu_price_adjust(model_name, float(new_price)))
                         if new_price != old_price:
                             # 更新价格
                             new_line = re.sub(r'p:\d+', f'p:{new_price}', line)
