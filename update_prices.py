@@ -159,6 +159,12 @@ CASE_INDENT = "            "  # 12个空格
 POWER_TARGET_LINE = '{n:"追风者 AMP GH850 850W 金牌全模组 ATX3.1 蟒纹线 白色",p:750},'
 POWER_EXCLUDE_LIST = ["玄武", "Tt"]
 POWER_INDENT = "            "  # 12个空格
+# 源站未收录的固定电源型号（价格已含 +99 加价），每次重建电源列表后追加
+POWER_EXTRA_MODELS = {
+    "微星 MEG Ai1300TS PCIE5 钛金全模组 1300W": 2099,
+    "微星 MEG Ai1600TS PCIE5 钛金全模组 1600W": 2699,
+    "微星 MEG Ai1600T PCIE5 钛金全模组 1600W": 3599,
+}
 # 新增散热器配置
 COOLER_TARGET_LINE = '{n:"创氪星系展域SE 360 ARGB 白色 6.5寸裸眼3D屏幕",p:1549},'
 COOLER_BRANDS = ["钛钽", "瓦尔基里", "华硕", "利民", "九州风神", "乔思伯"]
@@ -1250,7 +1256,12 @@ def generate_case_content(case_list):
 
 # 新增电源内容生成函数
 def generate_power_content(power_list):
-    return "".join([f'{POWER_INDENT}{{n:"{p["name"]}",p:{p["price"]}}},\n' for p in power_list])
+    content = "".join([f'{POWER_INDENT}{{n:"{p["name"]}",p:{p["price"]}}},\n' for p in power_list])
+    # 追加源站未收录的固定型号，避免电源列表整体重建后丢失
+    for name, price in POWER_EXTRA_MODELS.items():
+        if not any(p["name"] == name for p in power_list):
+            content += f'{POWER_INDENT}{{n:"{name}",p:{price}}},\n'
+    return content
 
 # 新增散热器内容生成函数
 def generate_cooler_content(cooler_list):
