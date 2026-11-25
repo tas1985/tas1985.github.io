@@ -95,13 +95,17 @@ RAM_ASC_TUF_DELTA = -50  # 阿斯加特 TUF 联名款默认减 50 元
 RAM_ASC_TUF_16G_DELTA = -50   # TUF 16G 8*2 -50
 RAM_ASC_TUF_16G_3200_DELTA = -100  # TUF 16G 8*2 3200 黑橙甲：源站价 -100（在 -50 基础上再减 50）
 RAM_ASC_TUF_32G_DELTA = -100  # TUF 32G 16*2 -100
+RAM_GLOWAY_ADD = 99  # 光威内存：在当前更新逻辑结果上再 +99
 
 def ram_price_adjust(name, price):
     """阿斯加特内存价格调整：
     - TUF 16G 8*2 3200 -100；TUF 16G 8*2 -50；TUF 32G 16*2 -100；其他 TUF 默认 -50
     - 女武神 I代 +100；女武神 II代 +200
     - 普通阿斯加特 +RAM_ASC_TECH_ADD
+    - 光威内存 +RAM_GLOWAY_ADD
     - 其他不变"""
+    if "光威" in name:
+        return price + RAM_GLOWAY_ADD
     if "阿斯加特" in name and "女武神" in name:
         # 女武神 II代（检测"女武神"后紧跟/附近有"II"）+200；非 II代 +100
         import re as _re
@@ -2981,17 +2985,19 @@ def update_ram_prices_new():
             if ref_price is None:
                 print(f"  ⚠️ 特殊更新跳过：未找到参考型号 {ref_keyword}，{target_keyword} 保留原价")
                 continue
+            # 光威内存：在参考价基础上再加 +99
+            synced_price = ref_price + (RAM_GLOWAY_ADD if "光威" in target_keyword else 0)
             for ref_pos in range(start_idx, end_idx + 1):
                 if target_keyword in lines[ref_pos]:
                     old_target_match = re.search(r'p:(\d+)', lines[ref_pos])
                     old_target_price = int(old_target_match.group(1)) if old_target_match else None
-                    lines[ref_pos] = re.sub(r'p:\d+', f'p:{ref_price}', lines[ref_pos])
-                    if old_target_price == ref_price:
+                    lines[ref_pos] = re.sub(r'p:\d+', f'p:{synced_price}', lines[ref_pos])
+                    if old_target_price == synced_price:
                         same_count += 1
-                        print(f"  ≡ 特殊价格不变：{target_keyword} = {ref_keyword} ￥{ref_price}")
+                        print(f"  ≡ 特殊价格不变：{target_keyword} = {ref_keyword} ￥{synced_price}")
                     else:
                         update_count += 1
-                        print(f"  ★ 特殊更新：{target_keyword} = {ref_keyword}(￥{ref_price})")
+                        print(f"  ★ 特殊更新：{target_keyword} = {ref_keyword}(￥{ref_price}) -> ￥{synced_price}")
                     break
 
         # 自动追加新的内存型号
@@ -3202,9 +3208,9 @@ def update_exist_ram_prices():
                             break
                 
                 if ref_price > 0:
-                    final_price = ref_price * 2
+                    final_price = ref_price * 2 + RAM_GLOWAY_ADD
                     special_handled = True
-                    print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 3600海力士c18 × 2 = {int(final_price)}")
+                    print(f"  ★ 匹配成功: {ram_name} -> 金百达_银爵 32G 3600海力士c18 × 2 + {RAM_GLOWAY_ADD} = {int(final_price)}")
                 else:
                     print(f"  ⚠ 金百达_银爵 32G 3600(16*2)套装 海力士c18 价格未获取到，跳过更新")
                     special_handled = True
@@ -3224,9 +3230,9 @@ def update_exist_ram_prices():
                             break
                 
                 if ref_price > 0:
-                    final_price = ref_price
+                    final_price = ref_price + RAM_GLOWAY_ADD
                     special_handled = True
-                    print(f"  ★ 匹配成功: {ram_name} -> 金百达 银爵 16G 8x2 3200 D4 C16 = {int(final_price)}")
+                    print(f"  ★ 匹配成功: {ram_name} -> 金百达 银爵 16G 8x2 3200 D4 C16 + {RAM_GLOWAY_ADD} = {int(final_price)}")
                 else:
                     print(f"  ⚠ 金百达 银爵 16G 8x2 3200 D4 C16 价格未获取到，跳过更新")
                     special_handled = True
@@ -3246,9 +3252,9 @@ def update_exist_ram_prices():
                             break
                 
                 if ref_price > 0:
-                    final_price = ref_price
+                    final_price = ref_price + RAM_GLOWAY_ADD
                     special_handled = True
-                    print(f"  ★ 匹配成功: {ram_name} -> 金百达 银爵 32G 16x2 3200 D4 C16 = {int(final_price)}")
+                    print(f"  ★ 匹配成功: {ram_name} -> 金百达 银爵 32G 16x2 3200 D4 C16 + {RAM_GLOWAY_ADD} = {int(final_price)}")
                 else:
                     print(f"  ⚠ 金百达 银爵 32G 16x2 3200 D4 C16 价格未获取到，跳过更新")
                     special_handled = True
@@ -3467,14 +3473,16 @@ def update_exist_ram_prices():
             if ref_price is None:
                 print(f"  ⚠ 最终同步跳过：未找到参考型号 {ref_keyword}，{gw_keyword} 保留原价")
                 continue
+            # 光威内存：在参考价基础上再加 +99
+            synced_price = ref_price + (RAM_GLOWAY_ADD if "光威" in gw_keyword else 0)
             for idx, temp_line in enumerate(lines):
                 if gw_keyword in temp_line and re.search(r'p:\d+', temp_line):
                     old_gw_match = re.search(r'p:(\d+)', temp_line)
                     old_gw_price = int(old_gw_match.group(1)) if old_gw_match else None
-                    lines[idx] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{ref_price}", temp_line)
-                    if old_gw_price != ref_price:
+                    lines[idx] = re.sub(r"p:\d+(?:\.\d+)?", f"p:{synced_price}", temp_line)
+                    if old_gw_price != synced_price:
                         cnt += 1
-                        print(f"  ★ 最终同步：{gw_keyword} = {ref_keyword}(￥{ref_price})")
+                        print(f"  ★ 最终同步：{gw_keyword} = {ref_keyword}(￥{ref_price}) + {synced_price - ref_price} -> ￥{synced_price}")
                     break
 
         with open(HTML_FILE, "w", encoding="utf-8") as f:
@@ -4222,8 +4230,8 @@ def update_ram_accurate():
                             temp_pos += 1
                         
                         if ref_price_from_html > 0:
-                            new_price = str(ref_price_from_html * 2)
-                            print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵(￥{ref_price_from_html}) × 2 = ￥{new_price}")
+                            new_price = str(ref_price_from_html * 2 + RAM_GLOWAY_ADD)
+                            print(f"  ★ 特殊更新：光威 天策 64G 白色 = 金百达_银爵(￥{ref_price_from_html}) × 2 + {RAM_GLOWAY_ADD} = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 64G 白色 缺少参考价格，跳过更新")
                     # 特殊处理：光威 天策 16G（8*2）3200 白色 = 金百达 银爵 16G 8x2 3200 D4 C16
@@ -4244,8 +4252,8 @@ def update_ram_accurate():
                             temp_pos += 1
 
                         if ref_price_from_html > 0:
-                            new_price = str(ref_price_from_html)
-                            print(f"  ★ 特殊更新：光威 天策 16G 白色 = 金百达 银爵(￥{ref_price_from_html}) = ￥{new_price}")
+                            new_price = str(ref_price_from_html + RAM_GLOWAY_ADD)
+                            print(f"  ★ 特殊更新：光威 天策 16G 白色 = 金百达 银爵(￥{ref_price_from_html}) + {RAM_GLOWAY_ADD} = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 16G 白色 缺少参考价格，跳过更新")
                     # 特殊处理：光威 天策 32G（16*2）3200 白色 = 金百达 银爵 32G 16x2 3200 D4 C16
@@ -4266,8 +4274,8 @@ def update_ram_accurate():
                             temp_pos += 1
 
                         if ref_price_from_html > 0:
-                            new_price = str(ref_price_from_html)
-                            print(f"  ★ 特殊更新：光威 天策 32G 白色 = 金百达 银爵(￥{ref_price_from_html}) = ￥{new_price}")
+                            new_price = str(ref_price_from_html + RAM_GLOWAY_ADD)
+                            print(f"  ★ 特殊更新：光威 天策 32G 白色 = 金百达 银爵(￥{ref_price_from_html}) + {RAM_GLOWAY_ADD} = ￥{new_price}")
                         else:
                             print(f"  ⚠️ 光威 天策 32G 白色 缺少参考价格，跳过更新")
                     # 特殊处理：阿斯加特 弗雷 16G 8*2 3200 黑甲 = 金百达 银爵 16G 8x2 3200 D4 C16
