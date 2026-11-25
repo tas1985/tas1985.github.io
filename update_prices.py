@@ -2241,6 +2241,11 @@ def update_gpu_prices():
                     if new_price is not None:
                         source_matched_positions.add(pos)
                         new_price = int(new_price)
+                        # RTX5050 全部源价 +149
+                        model_upper = model_name.upper()
+                        if "RTX5050" in model_upper and "RTX5050TI" not in model_upper:
+                            new_price += 149
+                            print(f"  💰 RTX5050加价+149: {model_name[:40]}... ￥{new_price}")
                         if "微星 RTX5060 8G VENTUS 2X OC WHITE白色" in model_name:
                             new_price += 150
                             print(f"  💰 微星白色版加价+150: {model_name[:40]}... ￥{new_price}")
@@ -2511,8 +2516,8 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲 参考型号，RTX3050价格未更新")
 
-        # 特殊处理：所有RTX5050型号价格统一按"技嘉 RTX5050 WF2 8G 风魔"价格+50更新
-        # 参考型号本身保持源站价格不动
+        # 特殊处理：RTX5050 未匹配型号按"技嘉 RTX5050 WF2 8G 风魔"最终价对齐
+        # （技嘉风魔在主循环已完成 源价+149，此处其他未匹配型号直接跟随它的最终价）
         rtx5050_ref_price = None
         for ref_line in lines[start_idx:end_idx]:
             if "技嘉 RTX5050 WF2 8G 风魔" in ref_line:
@@ -2533,7 +2538,6 @@ def update_gpu_prices():
                     continue
                 model_name = model_match.group(1)
                 old_price = int(model_match.group(2))
-                # 参考型号本身不参与统价，保持源站价格
                 if model_name == "技嘉 RTX5050 WF2 8G 风魔":
                     continue
                 chip_key = extract_gpu_chip_key(model_name)
@@ -2542,19 +2546,19 @@ def update_gpu_prices():
                 chip_model = chip_key.split("|")[0]
                 if chip_model != "RTX5050":
                     continue
-                new_price = rtx5050_ref_price + 50
+                new_price = rtx5050_ref_price  # 技嘉风魔在主循环已 +149，此处不再叠加
                 if old_price != new_price:
                     lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
                     rtx5050_count += 1
-                    print(f"  ★ RTX5050 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（技嘉风魔 ￥{rtx5050_ref_price}+50）")
+                    print(f"  ★ RTX5050 未匹配统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（跟随技嘉风魔最终价）")
                 else:
                     print(f"  ≡ RTX5050 价格已正确: {model_name[:40]}... ￥{old_price}")
-            print(f"✅ RTX5050 统一按技嘉风魔价格+50更新 {rtx5050_count} 个型号（参考价￥{rtx5050_ref_price}+50=￥{rtx5050_ref_price + 50}）")
+            print(f"✅ RTX5050 未匹配型号按技嘉风魔最终价对齐 更新 {rtx5050_count} 个（￥{rtx5050_ref_price}）")
         else:
             print("⚠️ 未找到技嘉 RTX5050 WF2 8G 风魔 参考型号，RTX5050价格未更新")
 
-        # 特殊处理：所有RTX5060 8G型号价格统一按"七彩虹 RTX5060 8G 战斧 DUO 双扇"价格+50更新
-        # 参考型号本身保持源站价格不动
+        # 特殊处理：所有RTX5060 8G型号价格统一按"七彩虹 RTX5060 8G 战斧 DUO 双扇"价格+249更新
+        # 参考型号本身保持源站价格不动；所有型号（含已源站匹配的）统一覆盖
         rtx5060_8g_ref_price2 = None
         for ref_line in lines[start_idx:end_idx]:
             ref_match = re.search(r'{n:"([^"]+)",p:(\d+)}', ref_line)
@@ -2570,8 +2574,6 @@ def update_gpu_prices():
         if rtx5060_8g_ref_price2 is not None:
             rtx5060_8g_count = 0
             for i in range(start_idx + 1, end_idx):
-                if i in source_matched_positions:
-                    continue
                 line = lines[i]
                 if '{n:"' not in line or '",p:' not in line:
                     continue
@@ -2583,7 +2585,7 @@ def update_gpu_prices():
                 # 参考型号本身不参与统价，保持源站价格
                 if model_name == "七彩虹 RTX5060 8G 战斧 DUO 双扇":
                     continue
-                # 华硕 PRIME 5060 8G 固定为战斧DUO+600（见下方规则），不参与 +50 统价
+                # 华硕 PRIME 5060 8G 固定为战斧DUO+600（见下方规则），不参与 +249 统价
                 if model_name == "华硕 PRIME RTX5060 8G 大师三风扇黑色":
                     continue
                 chip_key = extract_gpu_chip_key(model_name)
@@ -2595,14 +2597,14 @@ def update_gpu_prices():
                 # 必须是 8G 显存（排除 16G 等其他容量）
                 if not re.search(r'(?<!\d)8g', model_name.lower()):
                     continue
-                new_price = rtx5060_8g_ref_price2 + 50
+                new_price = rtx5060_8g_ref_price2 + 249
                 if old_price != new_price:
                     lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
                     rtx5060_8g_count += 1
-                    print(f"  ★ RTX5060 8G 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（七彩虹战斧DUO ￥{rtx5060_8g_ref_price2}+50）")
+                    print(f"  ★ RTX5060 8G 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（七彩虹战斧DUO ￥{rtx5060_8g_ref_price2}+249）")
                 else:
                     print(f"  ≡ RTX5060 8G 价格已正确: {model_name[:40]}... ￥{old_price}")
-            print(f"✅ RTX5060 8G 统一按七彩虹战斧DUO价格+50更新 {rtx5060_8g_count} 个型号（参考价￥{rtx5060_8g_ref_price2}+50=￥{rtx5060_8g_ref_price2 + 50}）")
+            print(f"✅ RTX5060 8G 统一按七彩虹战斧DUO价格+249更新 {rtx5060_8g_count} 个型号（参考价￥{rtx5060_8g_ref_price2}+249=￥{rtx5060_8g_ref_price2 + 249}）")
         else:
             print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，RTX5060 8G价格未更新")
 
