@@ -2109,7 +2109,7 @@ def update_gpu_prices():
             print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，微星 RTX5060 价格未更新")
 
         # 特殊处理：RTX3050 型号按磐镭黑鳞甲参考型号统一定价
-        # 6G型号：按"磐镭 RTX3050 6GD6 BLACK 双风扇 黑鳞甲"价格+200（统一覆盖，含已源站匹配型号）
+        # 6G型号：按"磐镭 RTX3050 6GD6 BLACK 双风扇 黑鳞甲"价格+300（统一覆盖，含已源站匹配型号）
         # 8G型号：按"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲"价格+350（仅未源站匹配型号）
         # 两个参考型号本身保持源站价格不动
         rtx3050_8g_ref_price = None
@@ -2151,8 +2151,8 @@ def update_gpu_prices():
                 if re.search(r'(?<!\d)6G', model_name.strip()):
                     if rtx3050_6g_ref_price is None:
                         continue
-                    new_price = rtx3050_6g_ref_price + 200
-                    ref_desc = f"磐镭6GD6黑鳞甲 ￥{rtx3050_6g_ref_price}+200"
+                    new_price = rtx3050_6g_ref_price + 300
+                    ref_desc = f"磐镭6GD6黑鳞甲 ￥{rtx3050_6g_ref_price}+300"
                     is_6g = True
                 else:
                     if i in source_matched_positions or rtx3050_8g_ref_price is None:
@@ -2169,7 +2169,7 @@ def update_gpu_prices():
                     print(f"  ★ RTX3050 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（{ref_desc}）")
                 else:
                     print(f"  ≡ RTX3050 价格已正确: {model_name[:40]}... ￥{old_price}")
-            print(f"✅ RTX3050 统价完成：6G 更新 {rtx3050_6g_count} 个（磐镭6GD6+200），8G 更新 {rtx3050_8g_count} 个（磐镭8GD6+350）")
+            print(f"✅ RTX3050 统价完成：6G 更新 {rtx3050_6g_count} 个（磐镭6GD6+300），8G 更新 {rtx3050_8g_count} 个（磐镭8GD6+350）")
         else:
             print("⚠️ 未找到磐镭 RTX3050 黑鳞甲 参考型号，RTX3050价格未更新")
 
