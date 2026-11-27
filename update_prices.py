@@ -2120,7 +2120,8 @@ def update_gpu_prices():
                     rtx3050_8g_ref_price = int(ref_price_match.group(1))
                     break
         rtx3050_6g_ref_price = None
-        for ref_line in lines[start_idx:end_idx]:
+        # 6GD6 参考型号位于"显卡自动更新区域"之外，需在整个文件里查找参考价
+        for ref_line in lines:
             if "磐镭 RTX3050 6GD6 BLACK 双风扇 黑鳞甲" in ref_line:
                 ref_price_match = re.search(r'p:(\d+)', ref_line)
                 if ref_price_match:
