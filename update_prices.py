@@ -2108,20 +2108,28 @@ def update_gpu_prices():
         else:
             print("⚠️ 未找到七彩虹 RTX5060 8G 战斧 DUO 双扇 参考型号，微星 RTX5060 价格未更新")
 
-        # 特殊处理：所有RTX3050型号价格统一按"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲"价格+350更新
-        # 6G/8G、各品牌均统一；参考型号本身保持源站价格不动
-        rtx3050_ref_price = None
+        # 特殊处理：RTX3050 型号按磐镭黑鳞甲参考型号统一定价
+        # 6G型号：按"磐镭 RTX3050 6GD6 BLACK 双风扇 黑鳞甲"价格+200（统一覆盖，含已源站匹配型号）
+        # 8G型号：按"磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲"价格+350（仅未源站匹配型号）
+        # 两个参考型号本身保持源站价格不动
+        rtx3050_8g_ref_price = None
         for ref_line in lines[start_idx:end_idx]:
             if "磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲" in ref_line:
                 ref_price_match = re.search(r'p:(\d+)', ref_line)
                 if ref_price_match:
-                    rtx3050_ref_price = int(ref_price_match.group(1))
+                    rtx3050_8g_ref_price = int(ref_price_match.group(1))
                     break
-        if rtx3050_ref_price is not None:
-            rtx3050_count = 0
+        rtx3050_6g_ref_price = None
+        for ref_line in lines[start_idx:end_idx]:
+            if "磐镭 RTX3050 6GD6 BLACK 双风扇 黑鳞甲" in ref_line:
+                ref_price_match = re.search(r'p:(\d+)', ref_line)
+                if ref_price_match:
+                    rtx3050_6g_ref_price = int(ref_price_match.group(1))
+                    break
+        if rtx3050_8g_ref_price is not None or rtx3050_6g_ref_price is not None:
+            rtx3050_8g_count = 0
+            rtx3050_6g_count = 0
             for i in range(start_idx + 1, end_idx):
-                if i in source_matched_positions:
-                    continue
                 line = lines[i]
                 if '{n:"' not in line or '",p:' not in line:
                     continue
@@ -2131,24 +2139,39 @@ def update_gpu_prices():
                 model_name = model_match.group(1)
                 old_price = int(model_match.group(2))
                 # 参考型号本身不参与统价，保持源站价格
-                if model_name == "磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲":
+                if model_name in ("磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲", "磐镭 RTX3050 6GD6 BLACK 双风扇 黑鳞甲"):
                     continue
                 chip_key = extract_gpu_chip_key(model_name)
                 if not chip_key:
                     continue
-                chip_model = chip_key.split("|")[0]
-                if chip_model != "RTX3050":
+                chip_parts = chip_key.split("|")
+                if chip_parts[0] != "RTX3050":
                     continue
-                new_price = rtx3050_ref_price + 350
+                # 按型号名判断显存：6G/6GB 归入 6G 规则，其余沿用 8G 规则
+                if re.search(r'(?<!\d)6G', model_name.strip()):
+                    if rtx3050_6g_ref_price is None:
+                        continue
+                    new_price = rtx3050_6g_ref_price + 200
+                    ref_desc = f"磐镭6GD6黑鳞甲 ￥{rtx3050_6g_ref_price}+200"
+                    is_6g = True
+                else:
+                    if i in source_matched_positions or rtx3050_8g_ref_price is None:
+                        continue
+                    new_price = rtx3050_8g_ref_price + 350
+                    ref_desc = f"磐镭8GD6黑鳞甲 ￥{rtx3050_8g_ref_price}+350"
+                    is_6g = False
                 if old_price != new_price:
                     lines[i] = re.sub(r'p:\d+', f'p:{new_price}', line)
-                    rtx3050_count += 1
-                    print(f"  ★ RTX3050 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（磐镭黑鳞甲 ￥{rtx3050_ref_price}+350）")
+                    if is_6g:
+                        rtx3050_6g_count += 1
+                    else:
+                        rtx3050_8g_count += 1
+                    print(f"  ★ RTX3050 统价: {model_name[:40]}... ￥{old_price} -> ￥{new_price}（{ref_desc}）")
                 else:
                     print(f"  ≡ RTX3050 价格已正确: {model_name[:40]}... ￥{old_price}")
-            print(f"✅ RTX3050 统一按磐镭黑鳞甲价格+350更新 {rtx3050_count} 个型号（参考价￥{rtx3050_ref_price}+350=￥{rtx3050_ref_price + 350}）")
+            print(f"✅ RTX3050 统价完成：6G 更新 {rtx3050_6g_count} 个（磐镭6GD6+200），8G 更新 {rtx3050_8g_count} 个（磐镭8GD6+350）")
         else:
-            print("⚠️ 未找到磐镭 RTX3050 8GD6 BLACK 双风扇 黑鳞甲 参考型号，RTX3050价格未更新")
+            print("⚠️ 未找到磐镭 RTX3050 黑鳞甲 参考型号，RTX3050价格未更新")
 
         # 特殊处理：RTX5050 未匹配型号按"技嘉 RTX5050 WF2 8G 风魔"最终价对齐
         # （技嘉风魔在主循环已完成 源价+149，此处其他未匹配型号直接跟随它的最终价）
