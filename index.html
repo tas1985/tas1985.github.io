@@ -2008,13 +2008,24 @@
             left: 0;
             right: 0;
             bottom: 0;
-            height: 10px;
-            line-height: 10px;
-            text-align: center;
-            font-size: 6px;
+            height: 12px;
+            padding-bottom: 3px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            overflow: hidden;
             color: #666;
             background: rgba(255,255,255,0.88);
             pointer-events: none;
+        }
+
+        .vga-image-note span {
+            font-size: 12px;
+            line-height: 12px;
+            white-space: nowrap;
+            transform: scale(0.55);
+            transform-origin: center bottom;
         }
 
         .image-separator {
@@ -2633,7 +2644,7 @@
             <!-- 显卡图片容器 -->
             <div class="vga-image-container" id="vgaImageContainer">
                 <img src="" alt="显卡图片" class="vga-image" id="vgaImage" loading="lazy" decoding="async" crossorigin="anonymous">
-                <div class="vga-image-note">仅支持HDMI DP</div>
+                <div class="vga-image-note"><span>仅支持HDMI DP</span></div>
                 <div id="vgaImagePlaceholder" style="color: #333; text-align: center;">请选择显卡<br>查看图片</div>
             </div>
         </div>
