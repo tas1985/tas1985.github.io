@@ -9675,7 +9675,7 @@
     // 实测帧数修正表：特定 CPU + 显卡组合下的实测值（以 1080p 为准），
     // 其他分辨率按该游戏的显卡负载系数等比换算
     const FPS_MEASURED = [
-        { cpu: /3400G/, gpu: /VEGA/, games: { "英雄联盟": 90 } },
+        { cpu: /3400G/, gpu: /VEGA/, games: { "英雄联盟": 90, "CS2": 55 } },
         { cpu: /14100F/, gpu: /6500XT/, games: { "无畏契约": 200, "英雄联盟": 250 } },
         { cpu: /5600(?!X|G)/, gpu: /RTX5060(?!TI)/, games: { "三角洲行动": 200 } },
         { cpu: /5500/, gpu: /6500XT/, games: { "英雄联盟": 150, "CS2": 160, "Apex 英雄": 95 } },
@@ -9732,6 +9732,21 @@
                 return Math.max(5, Math.round(ludashiScores.vga[LUDASHI_VGA_KEYS[i]] / refScore * 100));
             }
         }
+        return null;
+    }
+
+    // 未选独显时（集显配置）：按 CPU 型号判断自带核显，返回核显名称参与帧数/推荐度估算
+    function getIgpuFallbackName(cpuValue) {
+        const n = normalizeFpsModel(cpuValue);
+        if (!n) return null;
+        const isIntel = /酷睿|ULTRA|INTEL|I[3579]\d{3,5}/.test(n);
+        const isAmd = /锐龙|RYZEN|AMD|R[3579]\d{3,4}/.test(n);
+        // 型号名里直接标注了核显/集显
+        if (/集显|核显/.test(n)) return isIntel ? "Intel UHD 核显" : "AMD Vega 核显";
+        // AMD APU：型号数字后以 G / GT 结尾（3400G、5600G、5600GT、5700G 等）
+        if (isAmd && /\d{3,4}G(?:T)?(?:散|盒|中文原盒|$)/.test(n)) return "AMD Vega 核显";
+        // Intel 不带 F 的型号自带核显
+        if (isIntel && !/F/.test(n)) return "Intel UHD 核显";
         return null;
     }
 
@@ -9868,9 +9883,17 @@
         renderFpsRows();
         const vgaEl = document.getElementById("vga");
         const cpuEl = document.getElementById("cpu");
-        const vgaValue = vgaEl ? vgaEl.value : "";
         const cpuValue = cpuEl ? cpuEl.value : "";
-        const gpuIndex = getGpuFpsIndex(vgaValue);
+        // 未选独显时按 CPU 自带核显估算（集显配置），避免整栏显示「—」
+        let vgaValue = vgaEl ? vgaEl.value : "";
+        let gpuIndex = getGpuFpsIndex(vgaValue);
+        if (gpuIndex === null) {
+            const igpuName = getIgpuFallbackName(cpuValue);
+            if (igpuName) {
+                vgaValue = igpuName;
+                gpuIndex = getGpuFpsIndex(igpuName);
+            }
+        }
         const cpuFactor = getCpuFpsFactor(cpuValue);
         const resIdx = FPS_RES_INDEX[fpsResolution] || 0;
         const hasGpu = gpuIndex !== null;
@@ -10047,7 +10070,7 @@
         const grid = document.getElementById("recoGrid");
         if (!grid) return;
         const cpuValue = (document.getElementById("cpu") || {}).value || "";
-        const vgaValue = (document.getElementById("vga") || {}).value || "";
+        let vgaValue = (document.getElementById("vga") || {}).value || "";
         const ssdValue = (document.getElementById("ssd") || {}).value || "";
         const ramValue = (document.getElementById("ram") || {}).value || "";
         const coolerP = Number((document.getElementById("cooler-p") || {}).value) || 0;
@@ -10056,7 +10079,15 @@
         const fanQty = fanQtyEl ? parseInt(fanQtyEl.textContent, 10) || 0 : 0;
 
         const cpuFactor = cpuValue.trim() ? getCpuFpsFactor(cpuValue) : null;
-        const gpuIndex = getGpuFpsIndex(vgaValue);
+        // 未选独显时按 CPU 自带核显评估（集显配置）
+        let gpuIndex = getGpuFpsIndex(vgaValue);
+        if (gpuIndex === null) {
+            const igpuName = getIgpuFallbackName(cpuValue);
+            if (igpuName) {
+                vgaValue = igpuName;
+                gpuIndex = getGpuFpsIndex(igpuName);
+            }
+        }
         const cpuName = normalizeFpsModel(cpuValue);
         const isAmd = recoIsAmdCpu(cpuName);
         const isN = recoIsNvidia(vgaValue);
